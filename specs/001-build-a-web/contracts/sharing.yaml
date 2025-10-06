@@ -1,0 +1,441 @@
+openapi: 3.0.3
+info:
+  title: GeoAnnotator Sharing API
+  version: 1.0.0
+  description: Share GPS points with other users via email invitations
+
+servers:
+  - url: http://localhost:8000/api/v1
+    description: Local development
+  - url: https://api.geoannotator.example.com/v1
+    description: Production
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Share:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        gps_point:
+          $ref: '#/components/schemas/GPSPointSummary'
+        owner:
+          $ref: '#/components/schemas/UserSummary'
+        recipient_email:
+          type: string
+          format: email
+        recipient_user:
+          $ref: '#/components/schemas/UserSummary'
+          nullable: true
+          description: Null if recipient not registered
+        permission_level:
+          type: string
+          enum: [view, edit, transfer]
+        invitation_status:
+          type: string
+          enum: [pending, accepted]
+        invitation_sent_at:
+          type: string
+          format: date-time
+        accepted_at:
+          type: string
+          format: date-time
+          nullable: true
+        is_active:
+          type: boolean
+          description: False when point is trashed
+        created_at:
+          type: string
+          format: date-time
+      required: [id, gps_point, owner, recipient_email, permission_level, invitation_status, invitation_sent_at, is_active, created_at]
+
+    CreateShareRequest:
+      type: object
+      properties:
+        recipient_email:
+          type: string
+          format: email
+        permission_level:
+          type: string
+          enum: [view, edit, transfer]
+          default: view
+      required: [recipient_email]
+
+    UpdateShareRequest:
+      type: object
+      properties:
+        permission_level:
+          type: string
+          enum: [view, edit, transfer]
+      required: [permission_level]
+
+    GPSPointSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+      required: [id, title]
+
+    UserSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+      required: [id, email]
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+      required: [error, message]
+
+paths:
+  /points/{point_id}/shares:
+    get:
+      summary: List point's shares
+      description: |
+        Returns all shares for a GPS point.
+        Only point owner can view shares list.
+      operationId: listShares
+      tags: [Sharing]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: point_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          description: Filter by invitation status
+          schema:
+            type: string
+            enum: [pending, accepted, all]
+            default: all
+      responses:
+        '200':
+          description: Shares retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Share'
+        '403':
+          description: Access denied (not owner)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Point not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      summary: Create share invitation
+      description: |
+        Shares a GPS point with a user via email.
+        Sends invitation email with acceptance link (token valid 7 days).
+        Creates share record immediately (status=pending).
+      operationId: createShare
+      tags: [Sharing]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: point_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateShareRequest'
+      responses:
+        '201':
+          description: Share created and invitation sent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Share'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                duplicate_share:
+                  value:
+                    error: DUPLICATE_SHARE
+                    message: Point already shared with this email
+                    details:
+                      recipient_email: user@example.com
+                share_with_self:
+                  value:
+                    error: INVALID_RECIPIENT
+                    message: Cannot share with yourself
+        '403':
+          description: Access denied (not owner or no transfer permission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Point not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /shares/{share_id}:
+    get:
+      summary: Get share details
+      description: |
+        Returns share details.
+        Accessible by owner or recipient.
+      operationId: getShare
+      tags: [Sharing]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: share_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Share retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Share'
+        '403':
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Share not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    patch:
+      summary: Update share permission level
+      description: |
+        Updates permission level for an existing share.
+        Only owner can update permissions.
+        Cannot downgrade transfer permission if recipient also granted transfer to others.
+      operationId: updateShare
+      tags: [Sharing]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: share_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateShareRequest'
+      responses:
+        '200':
+          description: Share updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Share'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Access denied (not owner)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Share not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      summary: Revoke share
+      description: |
+        Permanently revokes share (cannot be restored even if point is restored from trash).
+        Only owner can revoke shares.
+        If recipient has transfer permission and granted shares, those are also revoked (cascade).
+      operationId: revokeShare
+      tags: [Sharing]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: share_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Share revoked successfully
+        '403':
+          description: Access denied (not owner)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Share not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /shares/accept/{invitation_token}:
+    post:
+      summary: Accept share invitation
+      description: |
+        Accepts a share invitation using the token from the email.
+        Sets accepted_at timestamp and links recipient_user if authenticated.
+        Token valid for 7 days.
+      operationId: acceptShare
+      tags: [Sharing]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: invitation_token
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Share accepted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Share'
+        '400':
+          description: Invalid or expired token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                expired_token:
+                  value:
+                    error: INVITATION_EXPIRED
+                    message: Invitation token expired (valid 7 days)
+                    details:
+                      invitation_sent_at: "2025-01-01T10:00:00Z"
+                      expires_at: "2025-01-08T10:00:00Z"
+                already_accepted:
+                  value:
+                    error: ALREADY_ACCEPTED
+                    message: Invitation already accepted
+        '401':
+          description: Unauthorized (must be logged in)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Invitation not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /shares/received:
+    get:
+      summary: List received shares
+      description: |
+        Returns all shares received by the current user.
+        Includes both pending invitations and accepted shares.
+      operationId: listReceivedShares
+      tags: [Sharing]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          description: Filter by invitation status
+          schema:
+            type: string
+            enum: [pending, accepted, all]
+            default: all
+        - name: active
+          in: query
+          description: Filter by active status (false = point in trash)
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: Received shares retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Share'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+tags:
+  - name: Sharing
+    description: Share GPS points with other users

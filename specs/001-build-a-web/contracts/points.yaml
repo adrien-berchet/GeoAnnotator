@@ -1,0 +1,551 @@
+openapi: 3.0.3
+info:
+  title: GeoAnnotator GPS Points API
+  version: 1.0.0
+  description: CRUD operations for GPS points with spatial search and tagging
+
+servers:
+  - url: http://localhost:8000/api/v1
+    description: Local development
+  - url: https://api.geoannotator.example.com/v1
+    description: Production
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    GPSPoint:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+          nullable: true
+          description: Rich text HTML with emoticons
+        location:
+          $ref: '#/components/schemas/GeoJSONPoint'
+        latitude:
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+        longitude:
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+        owner:
+          $ref: '#/components/schemas/UserSummary'
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tag'
+        is_public:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        editing_lock:
+          $ref: '#/components/schemas/EditingLock'
+          nullable: true
+        permission:
+          type: string
+          enum: [view, edit, transfer, owner]
+          description: Current user's permission level
+      required: [id, title, location, latitude, longitude, owner, tags, is_public, created_at, updated_at, permission]
+
+    CreateGPSPointRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+          nullable: true
+        latitude:
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+        longitude:
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+        tags:
+          type: array
+          items:
+            type: string
+            maxLength: 50
+          description: Tag names (auto-created if not exist)
+        is_public:
+          type: boolean
+          default: false
+      required: [title, latitude, longitude]
+
+    UpdateGPSPointRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+          nullable: true
+        latitude:
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+        longitude:
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+        tags:
+          type: array
+          items:
+            type: string
+            maxLength: 50
+        is_public:
+          type: boolean
+
+    GeoJSONPoint:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [Point]
+        coordinates:
+          type: array
+          items:
+            type: number
+          minItems: 2
+          maxItems: 2
+          description: [longitude, latitude]
+      required: [type, coordinates]
+
+    UserSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+      required: [id, email]
+
+    Tag:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          maxLength: 50
+        created_at:
+          type: string
+          format: date-time
+      required: [id, name, created_at]
+
+    EditingLock:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/UserSummary'
+        acquired_at:
+          type: string
+          format: date-time
+        expires_at:
+          type: string
+          format: date-time
+          description: acquired_at + 15 minutes
+      required: [user, acquired_at, expires_at]
+
+    PaginatedGPSPoints:
+      type: object
+      properties:
+        count:
+          type: integer
+          description: Total number of points
+        next:
+          type: string
+          format: uri
+          nullable: true
+        previous:
+          type: string
+          format: uri
+          nullable: true
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/GPSPoint'
+      required: [count, results]
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+      required: [error, message]
+
+paths:
+  /points:
+    get:
+      summary: List GPS points
+      description: |
+        Returns paginated list of points accessible to the user (owned, shared, or public).
+        Supports filtering by bounding box, tags, and text search.
+      operationId: listPoints
+      tags: [Points]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: bbox
+          in: query
+          description: Bounding box (minLon,minLat,maxLon,maxLat)
+          schema:
+            type: string
+            example: "-122.5,37.7,-122.3,37.8"
+        - name: tags
+          in: query
+          description: Comma-separated tag names (AND filter)
+          schema:
+            type: string
+            example: "forest,hiking"
+        - name: search
+          in: query
+          description: Full-text search in title/description
+          schema:
+            type: string
+        - name: visibility
+          in: query
+          description: Filter by visibility
+          schema:
+            type: string
+            enum: [owned, shared, public, all]
+            default: all
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            default: 25
+            maximum: 100
+      responses:
+        '200':
+          description: Points retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedGPSPoints'
+        '400':
+          description: Invalid query parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      summary: Create new GPS point
+      description: Creates a GPS point owned by the authenticated user
+      operationId: createPoint
+      tags: [Points]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateGPSPointRequest'
+      responses:
+        '201':
+          description: Point created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GPSPoint'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /points/{point_id}:
+    get:
+      summary: Get GPS point details
+      description: Returns full point details if user has access
+      operationId: getPoint
+      tags: [Points]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: point_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Point retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GPSPoint'
+        '403':
+          description: Access denied (not owner, recipient, or public)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Point not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    put:
+      summary: Update GPS point
+      description: |
+        Updates point if user has edit permission.
+        Automatically acquires/refreshes editing lock (released after 15min of inactivity).
+      operationId: updatePoint
+      tags: [Points]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: point_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateGPSPointRequest'
+      responses:
+        '200':
+          description: Point updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GPSPoint'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Access denied (no edit permission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Point not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Point locked by another user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: POINT_LOCKED
+                message: Point is being edited by another user
+                details:
+                  locked_by: user@example.com
+                  lock_expires_at: "2025-01-06T15:30:00Z"
+
+    delete:
+      summary: Delete GPS point (move to trash)
+      description: |
+        Soft-deletes point (30-day retention).
+        Deactivates all shares (can be reactivated if restored within 30 days).
+      operationId: deletePoint
+      tags: [Points]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: point_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Point moved to trash
+        '403':
+          description: Access denied (not owner)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Point not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /points/{point_id}/lock:
+    post:
+      summary: Acquire editing lock
+      description: |
+        Explicitly acquires editing lock for 15 minutes.
+        Returns 409 if already locked by another user.
+      operationId: acquireLock
+      tags: [Points]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: point_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Lock acquired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EditingLock'
+        '403':
+          description: No edit permission
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Point not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Already locked by another user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      summary: Release editing lock
+      description: Manually releases the editing lock
+      operationId: releaseLock
+      tags: [Points]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: point_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Lock released
+        '403':
+          description: Lock not held by current user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Point not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /tags:
+    get:
+      summary: List all tags
+      description: Returns all tags created by all users (for autocomplete)
+      operationId: listTags
+      tags: [Tags]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: search
+          in: query
+          description: Filter tags by name prefix
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Tags retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tag'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+tags:
+  - name: Points
+    description: GPS point CRUD operations
+  - name: Tags
+    description: Tag management

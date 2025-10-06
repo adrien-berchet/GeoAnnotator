@@ -1,0 +1,274 @@
+openapi: 3.0.3
+info:
+  title: GeoAnnotator Authentication API
+  version: 1.0.0
+  description: User authentication and account management endpoints
+
+servers:
+  - url: http://localhost:8000/api/v1
+    description: Local development
+  - url: https://api.geoannotator.example.com/v1
+    description: Production
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        date_joined:
+          type: string
+          format: date-time
+        storage_used:
+          type: integer
+          format: int64
+          description: Bytes used
+        storage_limit:
+          type: integer
+          format: int64
+          description: Max bytes allowed (default 2GB)
+        storage_percentage:
+          type: number
+          format: float
+          description: (storage_used / storage_limit) * 100
+      required: [id, email, date_joined, storage_used, storage_limit]
+
+    RegisterRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+          minLength: 8
+          description: Must contain uppercase, lowercase, and numbers
+      required: [email, password]
+
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+      required: [email, password]
+
+    TokenResponse:
+      type: object
+      properties:
+        access:
+          type: string
+          description: JWT access token (valid 1 hour)
+        refresh:
+          type: string
+          description: JWT refresh token (valid 7 days)
+        user:
+          $ref: '#/components/schemas/User'
+      required: [access, refresh, user]
+
+    RefreshRequest:
+      type: object
+      properties:
+        refresh:
+          type: string
+          description: Refresh token
+      required: [refresh]
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Human-readable error message
+        details:
+          type: object
+          description: Additional error context (validation errors)
+      required: [error, message]
+
+paths:
+  /auth/register:
+    post:
+      summary: Register new user account
+      description: |
+        Creates a new user account with default 2GB storage quota.
+        Sends welcome email with email verification link (optional).
+      operationId: registerUser
+      tags: [Authentication]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: VALIDATION_ERROR
+                message: Invalid registration data
+                details:
+                  email: ["Email already registered"]
+                  password: ["Password must contain uppercase letters"]
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/login:
+    post:
+      summary: Login with email and password
+      description: Authenticates user and returns JWT tokens
+      operationId: loginUser
+      tags: [Authentication]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: INVALID_CREDENTIALS
+                message: Email or password incorrect
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/refresh:
+    post:
+      summary: Refresh access token
+      description: |
+        Generates new access token using valid refresh token.
+        Access tokens expire after 1 hour, refresh tokens after 7 days.
+      operationId: refreshToken
+      tags: [Authentication]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access:
+                    type: string
+                    description: New JWT access token
+                required: [access]
+        '401':
+          description: Invalid or expired refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: INVALID_TOKEN
+                message: Refresh token expired or invalid
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/logout:
+    post:
+      summary: Logout (client-side only)
+      description: |
+        Client should discard tokens from localStorage.
+        No server-side session invalidation (JWT is stateless).
+      operationId: logoutUser
+      tags: [Authentication]
+      security:
+        - BearerAuth: []
+      responses:
+        '204':
+          description: Logout acknowledged (client should clear tokens)
+        '401':
+          description: Unauthorized (invalid token)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/me:
+    get:
+      summary: Get current user profile
+      description: Returns authenticated user's profile and storage quota
+      operationId: getCurrentUser
+      tags: [Authentication]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User profile retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized (invalid token)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+tags:
+  - name: Authentication
+    description: User registration, login, and account management

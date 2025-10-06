@@ -1,0 +1,498 @@
+openapi: 3.0.3
+info:
+  title: GeoAnnotator Annotations API
+  version: 1.0.0
+  description: Manage text notes and file attachments for GPS points
+
+servers:
+  - url: http://localhost:8000/api/v1
+    description: Local development
+  - url: https://api.geoannotator.example.com/v1
+    description: Production
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Annotation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        gps_point_id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [text, image, document, file]
+        text_content:
+          type: string
+          nullable: true
+          description: Rich text HTML (only for type=text)
+        file:
+          $ref: '#/components/schemas/FileMetadata'
+          nullable: true
+          description: File details (only for type≠text)
+        created_at:
+          type: string
+          format: date-time
+      required: [id, gps_point_id, type, created_at]
+
+    FileMetadata:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+          description: File download URL (signed URL for S3)
+        file_name:
+          type: string
+        file_size:
+          type: integer
+          format: int64
+          description: Bytes
+        mime_type:
+          type: string
+        can_preview:
+          type: boolean
+          description: True for images, PDFs, and supported docs
+      required: [url, file_name, file_size, mime_type, can_preview]
+
+    CreateTextAnnotationRequest:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [text]
+        text_content:
+          type: string
+          description: Rich text HTML with emoticons
+      required: [type, text_content]
+
+    CreateFileAnnotationRequest:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [image, document, file]
+        file:
+          type: string
+          format: binary
+          description: File upload (multipart/form-data)
+      required: [type, file]
+
+    UpdateTextAnnotationRequest:
+      type: object
+      properties:
+        text_content:
+          type: string
+      required: [text_content]
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+      required: [error, message]
+
+paths:
+  /points/{point_id}/annotations:
+    get:
+      summary: List point's annotations
+      description: Returns all annotations for a GPS point (if user has access)
+      operationId: listAnnotations
+      tags: [Annotations]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: point_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: type
+          in: query
+          description: Filter by annotation type
+          schema:
+            type: string
+            enum: [text, image, document, file]
+      responses:
+        '200':
+          description: Annotations retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Annotation'
+        '403':
+          description: Access denied (no view permission for point)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Point not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      summary: Create annotation (text or file)
+      description: |
+        Creates a text annotation or uploads a file annotation.
+        For file uploads, use multipart/form-data.
+        Enforces 1GB file limit and user storage quota.
+      operationId: createAnnotation
+      tags: [Annotations]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: point_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTextAnnotationRequest'
+            example:
+              type: text
+              text_content: "<p>Beautiful sunset 🌅</p>"
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreateFileAnnotationRequest'
+            encoding:
+              file:
+                contentType: image/jpeg, image/png, image/tiff, image/gif, application/pdf, application/vnd.oasis.opendocument.*, application/vnd.openxmlformats-officedocument.*, application/msword, application/vnd.ms-excel
+      responses:
+        '201':
+          description: Annotation created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Annotation'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalid_file_type:
+                  value:
+                    error: INVALID_FILE_TYPE
+                    message: File type not allowed
+                    details:
+                      mime_type: application/x-executable
+                file_too_large:
+                  value:
+                    error: FILE_TOO_LARGE
+                    message: File exceeds 1GB limit
+                    details:
+                      file_size: 1200000000
+                      max_size: 1073741824
+        '403':
+          description: Access denied or quota exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                no_permission:
+                  value:
+                    error: ACCESS_DENIED
+                    message: No edit permission for this point
+                quota_exceeded:
+                  value:
+                    error: QUOTA_EXCEEDED
+                    message: Storage quota exceeded
+                    details:
+                      user_storage_used: 1900000000
+                      user_storage_limit: 2147483648
+                      file_size: 500000000
+        '404':
+          description: Point not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: Request entity too large (file > 1GB)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /points/{point_id}/annotations/{annotation_id}:
+    get:
+      summary: Get annotation details
+      description: Returns full annotation details with file download URL
+      operationId: getAnnotation
+      tags: [Annotations]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: point_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: annotation_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Annotation retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Annotation'
+        '403':
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Annotation or point not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    put:
+      summary: Update text annotation
+      description: |
+        Updates text content for text-type annotations.
+        File annotations cannot be updated (delete and recreate).
+      operationId: updateAnnotation
+      tags: [Annotations]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: point_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: annotation_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTextAnnotationRequest'
+      responses:
+        '200':
+          description: Annotation updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Annotation'
+        '400':
+          description: Validation error or not a text annotation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: INVALID_OPERATION
+                message: Cannot update file annotations
+                details:
+                  annotation_type: image
+        '403':
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Annotation or point not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      summary: Delete annotation
+      description: |
+        Permanently deletes annotation.
+        For file annotations, deletes file from storage and updates user's storage_used quota.
+      operationId: deleteAnnotation
+      tags: [Annotations]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: point_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: annotation_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Annotation deleted successfully
+        '403':
+          description: Access denied (no edit permission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Annotation or point not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /annotations/{annotation_id}/download:
+    get:
+      summary: Download annotation file
+      description: |
+        Returns file content with appropriate Content-Type and Content-Disposition headers.
+        For S3 storage, redirects to signed URL (valid 1 hour).
+      operationId: downloadAnnotation
+      tags: [Annotations]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: annotation_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: File download
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+              description: attachment; filename="original_filename.ext"
+            Content-Type:
+              schema:
+                type: string
+              description: File's MIME type
+        '302':
+          description: Redirect to S3 signed URL (production)
+          headers:
+            Location:
+              schema:
+                type: string
+                format: uri
+        '400':
+          description: Not a file annotation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Annotation not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /annotations/{annotation_id}/preview:
+    get:
+      summary: Get file preview (images and PDFs)
+      description: |
+        Returns inline preview for supported file types.
+        Images: returns resized version (max 1920x1080).
+        PDFs: returns first page thumbnail.
+        Documents: returns rendered preview if supported.
+      operationId: previewAnnotation
+      tags: [Annotations]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: annotation_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Preview image
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+            image/png:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Preview not supported for this file type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Annotation not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+tags:
+  - name: Annotations
+    description: Text notes and file attachments

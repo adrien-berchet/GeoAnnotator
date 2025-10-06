@@ -1,0 +1,474 @@
+openapi: 3.0.3
+info:
+  title: GeoAnnotator Export/Import API
+  version: 1.0.0
+  description: Import/export GPS points with multiple file format support
+
+servers:
+  - url: http://localhost:8000/api/v1
+    description: Local development
+  - url: https://api.geoannotator.example.com/v1
+    description: Production
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ExportFormat:
+      type: string
+      enum: [geojson, gpx, kml, csv, zip]
+      description: |
+        - geojson: GeoJSON FeatureCollection (points only, no annotations)
+        - gpx: GPS Exchange Format (points only)
+        - kml: Keyhole Markup Language (points only)
+        - csv: Comma-separated values (points only)
+        - zip: Full bundle (GeoJSON + all annotation files)
+
+    ExportRequest:
+      type: object
+      properties:
+        format:
+          $ref: '#/components/schemas/ExportFormat'
+        point_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: Specific points to export (omit for all accessible points)
+        include_annotations:
+          type: boolean
+          default: false
+          description: Include annotation text in export (ignored for zip format)
+      required: [format]
+
+    ImportRequest:
+      type: object
+      properties:
+        format:
+          type: string
+          enum: [geojson, gpx, kml, csv]
+        file:
+          type: string
+          format: binary
+          description: File upload (multipart/form-data)
+        merge_strategy:
+          type: string
+          enum: [skip, overwrite, create_new]
+          default: create_new
+          description: |
+            - skip: Skip points with duplicate coordinates
+            - overwrite: Update existing points at same coordinates
+            - create_new: Always create new points
+      required: [format, file]
+
+    ImportResult:
+      type: object
+      properties:
+        total_points:
+          type: integer
+          description: Total points in import file
+        imported_points:
+          type: integer
+          description: Points successfully imported
+        skipped_points:
+          type: integer
+          description: Points skipped (duplicates)
+        failed_points:
+          type: integer
+          description: Points failed validation
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ImportError'
+        created_point_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: IDs of newly created points
+      required: [total_points, imported_points, skipped_points, failed_points, errors]
+
+    ImportError:
+      type: object
+      properties:
+        line_number:
+          type: integer
+          description: Line/feature index in import file
+        error:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error details
+      required: [line_number, error, message]
+
+    TrashItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        gps_point:
+          $ref: '#/components/schemas/GPSPointSummary'
+        deleted_by:
+          $ref: '#/components/schemas/UserSummary'
+        deleted_at:
+          type: string
+          format: date-time
+        permanent_deletion_at:
+          type: string
+          format: date-time
+          description: deleted_at + 30 days
+        days_remaining:
+          type: integer
+          description: Days until permanent deletion
+      required: [id, gps_point, deleted_by, deleted_at, permanent_deletion_at, days_remaining]
+
+    GPSPointSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+      required: [id, title, latitude, longitude]
+
+    UserSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+      required: [id, email]
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+      required: [error, message]
+
+paths:
+  /export:
+    post:
+      summary: Export GPS points
+      description: |
+        Exports points in specified format.
+        - For geojson/gpx/kml/csv: Returns single file with points (annotations as text attributes if include_annotations=true)
+        - For zip: Returns archive with points.geojson + all annotation files in subdirectories
+
+        Only exports points accessible to the user (owned, shared, or public).
+      operationId: exportPoints
+      tags: [Export]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExportRequest'
+      responses:
+        '200':
+          description: Export file generated successfully
+          content:
+            application/geo+json:
+              schema:
+                type: object
+                description: GeoJSON FeatureCollection
+            application/gpx+xml:
+              schema:
+                type: string
+                format: binary
+                description: GPX XML file
+            application/vnd.google-earth.kml+xml:
+              schema:
+                type: string
+                format: binary
+                description: KML XML file
+            text/csv:
+              schema:
+                type: string
+                format: binary
+                description: CSV file
+            application/zip:
+              schema:
+                type: string
+                format: binary
+                description: ZIP archive with GeoJSON + annotation files
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+              description: attachment; filename="geoannotator_export_YYYYMMDD_HHMMSS.{ext}"
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Access denied (no access to requested points)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: No points found matching criteria
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /import:
+    post:
+      summary: Import GPS points from file
+      description: |
+        Imports points from uploaded file.
+        Supported formats: GeoJSON, GPX, KML, CSV.
+
+        CSV format expected columns:
+        - Required: latitude, longitude, title
+        - Optional: description, tags (pipe-separated)
+
+        Enforces 1GB file limit.
+        Returns detailed import results with per-point error messages.
+      operationId: importPoints
+      tags: [Import]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ImportRequest'
+            encoding:
+              file:
+                contentType: application/geo+json, application/gpx+xml, application/vnd.google-earth.kml+xml, text/csv
+      responses:
+        '200':
+          description: Import completed (may include partial failures)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportResult'
+              examples:
+                full_success:
+                  value:
+                    total_points: 100
+                    imported_points: 100
+                    skipped_points: 0
+                    failed_points: 0
+                    errors: []
+                    created_point_ids: ["uuid1", "uuid2", "..."]
+                partial_success:
+                  value:
+                    total_points: 100
+                    imported_points: 85
+                    skipped_points: 10
+                    failed_points: 5
+                    errors:
+                      - line_number: 12
+                        error: INVALID_COORDINATES
+                        message: Latitude out of range (-90 to 90)
+                      - line_number: 23
+                        error: MISSING_TITLE
+                        message: Title field required
+                    created_point_ids: ["uuid1", "..."]
+        '400':
+          description: Validation error (entire file invalid)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalid_format:
+                  value:
+                    error: INVALID_FORMAT
+                    message: File is not valid GeoJSON
+                file_too_large:
+                  value:
+                    error: FILE_TOO_LARGE
+                    message: Import file exceeds 1GB limit
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: Request entity too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /trash:
+    get:
+      summary: List trashed points
+      description: |
+        Returns all points in trash (deleted within last 30 days).
+        Sorted by deletion time (most recent first).
+      operationId: listTrash
+      tags: [Trash]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Trash items retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TrashItem'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /trash/{point_id}/restore:
+    post:
+      summary: Restore point from trash
+      description: |
+        Restores a trashed point (must be within 30-day retention period).
+        Reactivates all non-revoked shares.
+        Only point owner can restore.
+      operationId: restorePoint
+      tags: [Trash]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: point_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Point restored successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GPSPointSummary'
+        '403':
+          description: Access denied (not owner)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Point not found in trash
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '410':
+          description: Point permanently deleted (>30 days)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: PERMANENTLY_DELETED
+                message: Point deleted more than 30 days ago
+                details:
+                  deleted_at: "2024-11-01T10:00:00Z"
+                  permanent_deletion_at: "2024-12-01T10:00:00Z"
+
+  /trash/{point_id}/permanent:
+    delete:
+      summary: Permanently delete point
+      description: |
+        Immediately and permanently deletes point from trash.
+        Cannot be undone. Deletes all annotations and shares.
+        Only point owner can permanently delete.
+      operationId: permanentlyDeletePoint
+      tags: [Trash]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: point_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Point permanently deleted
+        '403':
+          description: Access denied (not owner)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Point not found in trash
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /trash/empty:
+    delete:
+      summary: Empty entire trash
+      description: |
+        Permanently deletes all points in current user's trash.
+        Cannot be undone.
+      operationId: emptyTrash
+      tags: [Trash]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Trash emptied successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deleted_count:
+                    type: integer
+                    description: Number of points permanently deleted
+                required: [deleted_count]
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+tags:
+  - name: Export
+    description: Export GPS points in multiple formats
+  - name: Import
+    description: Import GPS points from files
+  - name: Trash
+    description: Manage deleted points (30-day retention)
