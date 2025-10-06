@@ -1,0 +1,26 @@
+# Development Requirements
+# Tools and libraries for local development
+
+-r base.txt
+
+# Testing
+pytest>=7.4
+pytest-django>=4.7
+pytest-cov>=4.1  # Coverage reporting
+factory-boy>=3.3  # Test fixtures
+faker>=22.0  # Fake data generation
+
+# Code quality
+black>=23.12  # Code formatter
+flake8>=7.0  # Linter
+mypy>=1.8  # Type checker
+django-stubs>=4.2  # Django type stubs
+isort>=5.13  # Import sorting
+
+# Development tools
+django-extensions>=3.2  # Extra management commands
+ipython>=8.20  # Enhanced Python shell
+django-debug-toolbar>=4.2  # Debug toolbar
+
+# Pre-commit hooks
+pre-commit>=3.6

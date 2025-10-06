@@ -1,0 +1,14 @@
+# Production Requirements
+# Dependencies for production deployment
+
+-r base.txt
+
+# Production server
+gunicorn>=21.2  # WSGI HTTP server
+whitenoise>=6.6  # Static file serving
+
+# Monitoring and logging
+sentry-sdk>=1.39  # Error tracking
+
+# Security
+django-csp>=3.8  # Content Security Policy

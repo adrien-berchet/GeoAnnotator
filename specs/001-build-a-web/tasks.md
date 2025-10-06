@@ -45,67 +45,67 @@
 
 ---
 
-## Phase 3.1: Setup & Infrastructure (T001-T010)
+## Phase 3.1: Setup & Infrastructure (T001-T010) ✅
 
 ### Backend Setup
-- [ ] **T001** [P] Initialize Django 4.2+ project in `backend/` with config/settings split (base/development/production)
-- [ ] **T002** [P] Create requirements files in `backend/requirements/` (base.txt: Django, DRF, PostGIS; development.txt: pytest, black, mypy; production.txt: gunicorn, boto3)
-- [ ] **T003** [P] Configure PostgreSQL 15+ with PostGIS extension in `backend/config/settings/base.py` (connection, GEOS/GDAL paths)
-- [ ] **T004** [P] Set up pytest + pytest-django in `backend/pytest.ini` with coverage reporting (≥80% target, ≥95% critical paths)
+- [x] **T001** [P] Initialize Django 4.2+ project in `backend/` with config/settings split (base/development/production)
+- [x] **T002** [P] Create requirements files in `backend/requirements/` (base.txt: Django, DRF, PostGIS; development.txt: pytest, black, mypy; production.txt: gunicorn, boto3)
+- [x] **T003** [P] Configure PostgreSQL 15+ with PostGIS extension in `backend/config/settings/base.py` (connection, GEOS/GDAL paths)
+- [x] **T004** [P] Set up pytest + pytest-django in `backend/pytest.ini` with coverage reporting (≥80% target, ≥95% critical paths)
 
 ### Frontend Setup
-- [ ] **T005** [P] Initialize React 18 + Vite 5 project in `frontend/` with TypeScript strict mode
-- [ ] **T006** [P] Configure ESLint, Prettier, TypeScript in `frontend/` (Airbnb style guide, strict type checking)
-- [ ] **T007** [P] Install Leaflet 1.9+, Axios, React Router in `frontend/package.json`
-- [ ] **T008** [P] Set up Vitest + React Testing Library in `frontend/vitest.config.ts` (≥80% coverage)
+- [x] **T005** [P] Initialize React 18 + Vite 5 project in `frontend/` with TypeScript strict mode
+- [x] **T006** [P] Configure ESLint, Prettier, TypeScript in `frontend/` (Airbnb style guide, strict type checking)
+- [x] **T007** [P] Install Leaflet 1.9+, Axios, React Router in `frontend/package.json`
+- [x] **T008** [P] Set up Vitest + React Testing Library in `frontend/vitest.config.ts` (≥80% coverage)
 
 ### Code Quality
-- [ ] **T009** [P] Configure Black, Flake8, mypy in `backend/` (.flake8, mypy.ini, pyproject.toml)
-- [ ] **T010** [P] Set up pre-commit hooks in `.pre-commit-config.yaml` (black, flake8, eslint, prettier)
+- [x] **T009** [P] Configure Black, Flake8, mypy in `backend/` (.flake8, mypy.ini, pyproject.toml)
+- [x] **T010** [P] Set up pre-commit hooks in `.pre-commit-config.yaml` (black, flake8, eslint, prettier)
 
 ---
 
-## Phase 3.2: Contract Tests (TDD - MUST COMPLETE BEFORE 3.3) (T011-T038)
+## Phase 3.2: Contract Tests (TDD - MUST COMPLETE BEFORE 3.3) (T011-T038) ✅
 
 **CRITICAL: These tests MUST be written and MUST FAIL before ANY implementation**
 
 ### Authentication Endpoints (5 contract tests)
-- [ ] **T011** [P] Contract test POST /api/v1/auth/register in `backend/apps/authentication/tests/test_contract_register.py`
-- [ ] **T012** [P] Contract test POST /api/v1/auth/login in `backend/apps/authentication/tests/test_contract_login.py`
-- [ ] **T013** [P] Contract test POST /api/v1/auth/refresh in `backend/apps/authentication/tests/test_contract_refresh.py`
-- [ ] **T014** [P] Contract test POST /api/v1/auth/logout in `backend/apps/authentication/tests/test_contract_logout.py`
-- [ ] **T015** [P] Contract test GET /api/v1/auth/me in `backend/apps/authentication/tests/test_contract_profile.py`
+- [x] **T011** [P] Contract test POST /api/v1/auth/register in `backend/apps/authentication/test_contract_auth.py`
+- [x] **T012** [P] Contract test POST /api/v1/auth/login in `backend/apps/authentication/test_contract_auth.py`
+- [x] **T013** [P] Contract test POST /api/v1/auth/refresh in `backend/apps/authentication/test_contract_auth.py`
+- [x] **T014** [P] Contract test POST /api/v1/auth/logout in `backend/apps/authentication/test_contract_auth.py`
+- [x] **T015** [P] Contract test GET /api/v1/auth/me in `backend/apps/authentication/test_contract_auth.py`
 
 ### Points Endpoints (6 contract tests)
-- [ ] **T016** [P] Contract test GET /api/v1/points (list + filters) in `backend/apps/points/tests/test_contract_list.py`
-- [ ] **T017** [P] Contract test POST /api/v1/points in `backend/apps/points/tests/test_contract_create.py`
-- [ ] **T018** [P] Contract test GET /api/v1/points/{id} in `backend/apps/points/tests/test_contract_get.py`
-- [ ] **T019** [P] Contract test PUT /api/v1/points/{id} in `backend/apps/points/tests/test_contract_update.py`
-- [ ] **T020** [P] Contract test DELETE /api/v1/points/{id} in `backend/apps/points/tests/test_contract_delete.py`
-- [ ] **T021** [P] Contract test POST/DELETE /api/v1/points/{id}/lock in `backend/apps/points/tests/test_contract_lock.py`
+- [x] **T016** [P] Contract test GET /api/v1/points (list + filters) in `backend/apps/points/test_contract_points.py`
+- [x] **T017** [P] Contract test POST /api/v1/points in `backend/apps/points/test_contract_points.py`
+- [x] **T018** [P] Contract test GET /api/v1/points/{id} in `backend/apps/points/test_contract_points.py`
+- [x] **T019** [P] Contract test PUT /api/v1/points/{id} in `backend/apps/points/test_contract_points.py`
+- [x] **T020** [P] Contract test DELETE /api/v1/points/{id} in `backend/apps/points/test_contract_points.py`
+- [x] **T021** [P] Contract test POST/DELETE /api/v1/points/{id}/lock in `backend/apps/points/test_contract_points.py`
 
 ### Annotations Endpoints (6 contract tests)
-- [ ] **T022** [P] Contract test GET /api/v1/points/{id}/annotations in `backend/apps/annotations/tests/test_contract_list.py`
-- [ ] **T023** [P] Contract test POST /api/v1/points/{id}/annotations (text + file) in `backend/apps/annotations/tests/test_contract_create.py`
-- [ ] **T024** [P] Contract test GET /api/v1/points/{id}/annotations/{id} in `backend/apps/annotations/tests/test_contract_get.py`
-- [ ] **T025** [P] Contract test PUT /api/v1/points/{id}/annotations/{id} in `backend/apps/annotations/tests/test_contract_update.py`
-- [ ] **T026** [P] Contract test DELETE /api/v1/points/{id}/annotations/{id} in `backend/apps/annotations/tests/test_contract_delete.py`
-- [ ] **T027** [P] Contract test GET /api/v1/annotations/{id}/download + /preview in `backend/apps/annotations/tests/test_contract_files.py`
+- [x] **T022** [P] Contract test GET /api/v1/points/{id}/annotations in `backend/apps/annotations/test_contract_annotations.py`
+- [x] **T023** [P] Contract test POST /api/v1/points/{id}/annotations (text + file) in `backend/apps/annotations/test_contract_annotations.py`
+- [x] **T024** [P] Contract test GET /api/v1/points/{id}/annotations/{id} in `backend/apps/annotations/test_contract_annotations.py`
+- [x] **T025** [P] Contract test PUT /api/v1/points/{id}/annotations/{id} in `backend/apps/annotations/test_contract_annotations.py`
+- [x] **T026** [P] Contract test DELETE /api/v1/points/{id}/annotations/{id} in `backend/apps/annotations/test_contract_annotations.py`
+- [x] **T027** [P] Contract test GET /api/v1/annotations/{id}/download + /preview in `backend/apps/annotations/test_contract_annotations.py`
 
 ### Sharing Endpoints (6 contract tests)
-- [ ] **T028** [P] Contract test GET /api/v1/points/{id}/shares in `backend/apps/sharing/tests/test_contract_list.py`
-- [ ] **T029** [P] Contract test POST /api/v1/points/{id}/shares in `backend/apps/sharing/tests/test_contract_create.py`
-- [ ] **T030** [P] Contract test GET /api/v1/shares/{id} in `backend/apps/sharing/tests/test_contract_get.py`
-- [ ] **T031** [P] Contract test PATCH /api/v1/shares/{id} in `backend/apps/sharing/tests/test_contract_update.py`
-- [ ] **T032** [P] Contract test DELETE /api/v1/shares/{id} in `backend/apps/sharing/tests/test_contract_revoke.py`
-- [ ] **T033** [P] Contract test POST /api/v1/shares/accept/{token} + GET /received in `backend/apps/sharing/tests/test_contract_accept.py`
+- [x] **T028** [P] Contract test GET /api/v1/points/{id}/shares in `backend/apps/sharing/test_contract_sharing.py`
+- [x] **T029** [P] Contract test POST /api/v1/points/{id}/shares in `backend/apps/sharing/test_contract_sharing.py`
+- [x] **T030** [P] Contract test GET /api/v1/shares/{id} in `backend/apps/sharing/test_contract_sharing.py`
+- [x] **T031** [P] Contract test PATCH /api/v1/shares/{id} in `backend/apps/sharing/test_contract_sharing.py`
+- [x] **T032** [P] Contract test DELETE /api/v1/shares/{id} in `backend/apps/sharing/test_contract_sharing.py`
+- [x] **T033** [P] Contract test POST /api/v1/shares/accept/{token} + GET /received in `backend/apps/sharing/test_contract_sharing.py`
 
 ### Export/Import + Trash Endpoints (5 contract tests)
-- [ ] **T034** [P] Contract test POST /api/v1/export (all formats) in `backend/apps/export_import/tests/test_contract_export.py`
-- [ ] **T035** [P] Contract test POST /api/v1/import (all formats) in `backend/apps/export_import/tests/test_contract_import.py`
-- [ ] **T036** [P] Contract test GET /api/v1/trash in `backend/apps/trash/tests/test_contract_list.py`
-- [ ] **T037** [P] Contract test POST /api/v1/trash/{id}/restore in `backend/apps/trash/tests/test_contract_restore.py`
-- [ ] **T038** [P] Contract test DELETE /api/v1/trash/{id}/permanent + /empty in `backend/apps/trash/tests/test_contract_delete.py`
+- [x] **T034** [P] Contract test POST /api/v1/export (all formats) in `backend/apps/export_import/test_contract_export_import.py`
+- [x] **T035** [P] Contract test POST /api/v1/import (all formats) in `backend/apps/export_import/test_contract_export_import.py`
+- [x] **T036** [P] Contract test GET /api/v1/trash in `backend/apps/export_import/test_contract_export_import.py`
+- [x] **T037** [P] Contract test POST /api/v1/trash/{id}/restore in `backend/apps/export_import/test_contract_export_import.py`
+- [x] **T038** [P] Contract test DELETE /api/v1/trash/{id}/permanent + /empty in `backend/apps/export_import/test_contract_export_import.py`
 
 ---
 

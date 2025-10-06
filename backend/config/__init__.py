@@ -1,0 +1,3 @@
+"""
+GeoAnnotator Django Configuration Package.
+"""
