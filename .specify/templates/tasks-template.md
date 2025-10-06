@@ -45,7 +45,9 @@
 ## Phase 3.1: Setup
 - [ ] T001 Create project structure per implementation plan
 - [ ] T002 Initialize [language] project with [framework] dependencies
-- [ ] T003 [P] Configure linting and formatting tools
+- [ ] T003 [P] Configure linting and formatting tools (code quality)
+- [ ] T004 [P] Configure type checking and static analysis
+- [ ] T005 [P] Set up code coverage reporting (≥80% target)
 
 ## Phase 3.2: Tests First (TDD) ⚠️ MUST COMPLETE BEFORE 3.3
 **CRITICAL: These tests MUST be written and MUST FAIL before ANY implementation**
@@ -71,10 +73,11 @@
 
 ## Phase 3.5: Polish
 - [ ] T019 [P] Unit tests for validation in tests/unit/test_validation.py
-- [ ] T020 Performance tests (<200ms)
-- [ ] T021 [P] Update docs/api.md
-- [ ] T022 Remove duplication
-- [ ] T023 Run manual-testing.md
+- [ ] T020 Performance tests (validate <200ms p95 for reads, <500ms p95 for writes)
+- [ ] T021 Accessibility testing (WCAG 2.1 Level AA compliance)
+- [ ] T022 [P] Update docs/api.md (English documentation)
+- [ ] T023 Remove duplication and refactor complex functions
+- [ ] T024 Run manual-testing.md and verify English error messages
 
 ## Dependencies
 - Tests (T004-T007) before implementation (T008-T014)
@@ -103,11 +106,11 @@ Task: "Integration test auth in tests/integration/test_auth.py"
 1. **From Contracts**:
    - Each contract file → contract test task [P]
    - Each endpoint → implementation task
-   
+
 2. **From Data Model**:
    - Each entity → model creation task [P]
    - Relationships → service layer tasks
-   
+
 3. **From User Stories**:
    - Each story → integration test [P]
    - Quickstart scenarios → validation tasks

@@ -1,50 +1,150 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+  Sync Impact Report
+  ==================
+  Version Change: 1.0.0 → 1.0.1 (Clarification of code documentation language requirements)
+
+  Modified Sections:
+  - Language Requirements: Expanded to explicitly include inline comments, docstrings,
+    code annotations, and all forms of developer-facing documentation
+
+  Clarifications:
+  - Made explicit that ALL code comments (inline, block, TODOs) must be in English
+  - Specified that docstrings, type hints annotations, and JSDoc must be in English
+  - Clarified that test descriptions and assertion messages must be in English
+
+  Templates Status:
+  - ✅ .specify/templates/plan-template.md (no changes needed)
+  - ✅ .specify/templates/spec-template.md (no changes needed)
+  - ✅ .specify/templates/tasks-template.md (no changes needed)
+
+  Follow-up TODOs:
+  - None (all clarifications complete)
+-->
+
+# GeoAnnotator Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Code Quality Standards
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+All code MUST adhere to industry-standard quality practices:
+- **Static Analysis**: All code MUST pass linting and type checking before commit. No exceptions.
+- **Code Review**: Every change MUST be reviewed by at least one other developer. Self-merges are prohibited.
+- **Documentation**: All public APIs, components, and modules MUST include English-language documentation describing purpose, parameters, return values, and usage examples.
+- **Naming Conventions**: Use clear, descriptive, English names. Abbreviations are permitted only for widely-recognized terms (e.g., HTTP, API, URL).
+- **Complexity Limits**: Functions exceeding 50 lines or cyclomatic complexity >10 MUST be refactored or explicitly justified in code comments.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+**Rationale**: Consistent quality standards ensure maintainability, reduce technical debt, and facilitate onboarding of new contributors.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### II. Testing Requirements
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+Testing is non-negotiable and MUST follow Test-Driven Development (TDD):
+- **Test-First Development**: Tests MUST be written before implementation code. Red-Green-Refactor cycle strictly enforced.
+- **Coverage Minimum**: All features MUST achieve ≥80% code coverage. Critical paths (authentication, data persistence, payments) require ≥95% coverage.
+- **Test Types Required**:
+  - **Unit Tests**: All business logic, utilities, and data transformations
+  - **Integration Tests**: API contracts, database operations, external service interactions
+  - **End-to-End Tests**: Critical user journeys and happy paths
+- **Test Quality**: Tests MUST be deterministic, independent, and fast (<100ms per unit test). Flaky tests MUST be fixed immediately or disabled with a tracking issue.
+- **Continuous Integration**: All tests MUST pass in CI before merge. Breaking the build blocks all deployments.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+**Rationale**: TDD prevents regressions, documents expected behavior, and enables confident refactoring.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+### III. User Experience Consistency
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+All user-facing features MUST deliver a consistent, accessible experience:
+- **English-First Design**: All UI text, messages, labels, and documentation MUST be in English (US). Future internationalization is acceptable but English is the primary language.
+- **Accessibility Standards**: MUST comply with WCAG 2.1 Level AA guidelines (keyboard navigation, screen reader support, color contrast ratios ≥4.5:1).
+- **Responsive Design**: Interfaces MUST function correctly on viewport widths from 320px (mobile) to 2560px (desktop).
+- **Error Handling**: User-facing errors MUST provide clear, actionable English messages. No technical stack traces or cryptic codes shown to end users.
+- **Consistent Patterns**: Reuse established UI components, interaction patterns, and design tokens. Custom components require design review approval.
+- **Loading & Feedback**: Operations exceeding 200ms MUST show progress indicators. Users MUST receive confirmation for all destructive actions.
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+**Rationale**: Consistency reduces cognitive load, improves accessibility, and builds user trust.
+
+### IV. Performance Requirements
+
+Performance is a feature with measurable targets:
+- **Response Times**:
+  - API endpoints MUST respond within 200ms (p95) for read operations
+  - API endpoints MUST respond within 500ms (p95) for write operations
+  - Page loads MUST complete initial render within 1.5s (p95) on 3G networks
+- **Resource Efficiency**:
+  - Client-side bundles MUST remain under 300KB (gzipped) for initial load
+  - Memory usage MUST not exceed 512MB for typical user sessions
+  - Database queries MUST be optimized (no N+1 queries, indexes on foreign keys)
+- **Scalability**: Features MUST support ≥1000 concurrent users without degradation
+- **Monitoring**: All performance-critical paths MUST be instrumented with metrics (response time, throughput, error rates)
+- **Performance Testing**: Load tests MUST validate targets before production deployment
+
+**Rationale**: Poor performance degrades UX, increases infrastructure costs, and limits adoption.
+
+## Language Requirements
+
+**Project Language**: English (US)
+
+All project artifacts MUST be in English:
+- **Source code**:
+  - Variable names, function names, class names, constants
+  - Inline comments (single-line `//` or `#`, multi-line `/* */` or `"""`)
+  - Docstrings and documentation strings (Python docstrings, JSDoc, Javadoc, etc.)
+  - Code annotations and decorators descriptions
+  - TODO, FIXME, NOTE, and other code markers
+  - Type hints and type annotations
+- **Tests**:
+  - Test function/method names
+  - Test descriptions and assertion messages
+  - Test fixture names and mock data labels
+- **User interface**: Labels, messages, help text, placeholders
+- **Documentation**: API docs, endpoints, parameters, responses, README files
+- **Project management**: Commit messages, PR descriptions, issue reports, specs, plans
+
+**Exceptions**:
+- Translatable content may be stored in internationalization (i18n) resource files
+- User-generated content (e.g., annotations, comments) may be in any language
+- External dependencies or libraries may use their native languages
+- Domain-specific terminology may retain original language if universally recognized (e.g., "locale", "résumé" in HR context)
+
+**Rationale**: English is the lingua franca of software development, ensuring broad accessibility to contributors and users globally. Consistent language in code and documentation reduces cognitive overhead and facilitates collaboration.
+
+## Development Workflow
+
+**Workflow Principles**:
+1. **Feature Branching**: All work MUST occur on feature branches named `###-feature-description` (e.g., `001-user-authentication`)
+2. **Specification First**: Features MUST begin with a written spec (`spec.md`) defining requirements before implementation
+3. **Planning Before Coding**: Implementation plans (`plan.md`) MUST define architecture, dependencies, and task breakdown
+4. **Task Tracking**: Tasks (`tasks.md`) MUST be created from plans and marked complete as work progresses
+5. **Incremental Commits**: Commits MUST be small, focused, and include descriptive messages following Conventional Commits format
+6. **Review Gates**: No merge to main without passing tests, code review approval, and constitution compliance verification
+7. **Documentation Updates**: User-facing changes MUST include corresponding documentation updates in the same PR
+
+**Constitution Compliance**:
+- All reviews MUST verify adherence to these principles
+- Violations require explicit justification or refactoring
+- Complexity that cannot be simplified MUST be documented in `Complexity Tracking` sections of plans
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+**Authority**: This constitution supersedes all other development practices, guidelines, or conventions.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Amendment Procedure**:
+1. Proposed amendments MUST be documented in a pull request
+2. Amendments require approval from project maintainers
+3. Breaking changes (MAJOR version bumps) require migration plan and deprecation notice
+4. Minor additions (MINOR version bumps) require documentation of new requirements
+5. Clarifications (PATCH version bumps) may be merged with single maintainer approval
+
+**Versioning**:
+- Follow Semantic Versioning (MAJOR.MINOR.PATCH)
+- MAJOR: Backward-incompatible governance changes or principle redefinitions
+- MINOR: New principles or materially expanded guidance
+- PATCH: Clarifications, wording improvements, typo fixes
+
+**Compliance Review**:
+- Constitution compliance MUST be verified during code review
+- Automated linting and testing gates enforce testable principles
+- Quarterly audits review adherence and identify improvement opportunities
+
+**Runtime Guidance**: For AI-assisted development, agent-specific guidance files (e.g., `CLAUDE.md`, `.github/copilot-instructions.md`) supplement this constitution but never override it.
+
+**Version**: 1.0.1 | **Ratified**: 2025-10-06 | **Last Amended**: 2025-10-06
