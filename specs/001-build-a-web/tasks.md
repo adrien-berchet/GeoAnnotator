@@ -109,16 +109,16 @@
 
 ---
 
-## Phase 3.3: Data Models (ONLY after contract tests failing) (T039-T045)
+## Phase 3.3: Data Models (ONLY after contract tests failing) (T039-T045) ✅
 
 ### Core Models
-- [ ] **T039** [P] User model extension in `backend/apps/authentication/models.py` (storage_used, storage_limit fields, UUID PK)
-- [ ] **T040** [P] GPSPoint model in `backend/apps/points/models.py` (PostGIS PointField, editing locks, tags M2M)
-- [ ] **T041** [P] Tag model in `backend/apps/points/models.py` (case-insensitive unique name)
-- [ ] **T042** [P] Annotation model in `backend/apps/annotations/models.py` (polymorphic text/image/document/file, FileField)
-- [ ] **T043** [P] Share model in `backend/apps/sharing/models.py` (permission levels, invitation token, cascade logic)
-- [ ] **T044** [P] Trash model in `backend/apps/trash/models.py` (30-day retention, permanent_deletion_at auto-calc)
-- [ ] **T045** Initial migration with PostGIS indexes in `backend/apps/points/migrations/0001_initial.py` (GIST spatial, GIN full-text)
+- [x] **T039** [P] User model extension in `backend/apps/authentication/models.py` (storage_used, storage_limit fields, UUID PK)
+- [x] **T040** [P] GPSPoint model in `backend/apps/points/models.py` (PostGIS PointField, editing locks, tags M2M)
+- [x] **T041** [P] Tag model in `backend/apps/points/models.py` (case-insensitive unique name)
+- [x] **T042** [P] Annotation model in `backend/apps/annotations/models.py` (polymorphic text/image/document/file, FileField)
+- [x] **T043** [P] Share model in `backend/apps/sharing/models.py` (permission levels, invitation token, cascade logic)
+- [x] **T044** [P] Trash model in `backend/apps/trash/models.py` (30-day retention, permanent_deletion_at auto-calc)
+- [ ] **T045** Initial migration with PostGIS indexes in `backend/apps/*/migrations/0001_initial.py` (GIST spatial, GIN full-text)
 
 ---
 

@@ -8,9 +8,16 @@ For production, see settings/production.py
 
 import os
 from pathlib import Path
+import environ
 
 # Build paths inside the project
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
+
+# Load environment variables from .env file
+env = environ.Env()
+env_file = BASE_DIR / '.env'
+if env_file.exists():
+    environ.Env.read_env(env_file)
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get(
@@ -33,13 +40,13 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'corsheaders',
 
-    # Local apps (to be created)
-    # 'apps.authentication',
-    # 'apps.points',
-    # 'apps.annotations',
-    # 'apps.sharing',
-    # 'apps.trash',
-    # 'apps.export_import',
+    # Local apps
+    'apps.authentication',
+    'apps.points',
+    'apps.annotations',
+    'apps.sharing',
+    'apps.trash',
+    'apps.export_import',
 ]
 
 MIDDLEWARE = [
@@ -126,6 +133,9 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Custom User Model
+AUTH_USER_MODEL = 'authentication.User'
+
 # REST Framework configuration
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -182,7 +192,9 @@ DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@geoannotator.
 
 # CORS settings
 CORS_ALLOW_ALL_ORIGINS = False  # Override in development
-CORS_ALLOWED_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS', '').split(',')
+# Parse CORS origins from environment variable (comma-separated)
+_cors_origins = os.environ.get('CORS_ALLOWED_ORIGINS', '')
+CORS_ALLOWED_ORIGINS = [origin.strip() for origin in _cors_origins.split(',') if origin.strip()]
 
 # GeoDjango configuration
 # GDAL and GEOS library paths (set if not in default locations)
