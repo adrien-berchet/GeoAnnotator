@@ -118,18 +118,18 @@
 - [x] **T042** [P] Annotation model in `backend/apps/annotations/models.py` (polymorphic text/image/document/file, FileField)
 - [x] **T043** [P] Share model in `backend/apps/sharing/models.py` (permission levels, invitation token, cascade logic)
 - [x] **T044** [P] Trash model in `backend/apps/trash/models.py` (30-day retention, permanent_deletion_at auto-calc)
-- [ ] **T045** Initial migration with PostGIS indexes in `backend/apps/*/migrations/0001_initial.py` (GIST spatial, GIN full-text)
+- [x] **T045** Initial migration with PostGIS indexes in `backend/apps/*/migrations/0001_initial.py` (GIST spatial, GIN full-text) ✅
 
 ---
 
-## Phase 3.4: Serializers (T046-T051)
+## Phase 3.4: Serializers (T046-T051) ✅
 
-- [ ] **T046** [P] Authentication serializers in `backend/apps/authentication/serializers.py` (RegisterSerializer, LoginSerializer, UserSerializer)
-- [ ] **T047** [P] Points serializers in `backend/apps/points/serializers.py` (GPSPointSerializer, TagSerializer, CreatePointSerializer)
-- [ ] **T048** [P] Annotations serializers in `backend/apps/annotations/serializers.py` (AnnotationSerializer, CreateTextSerializer, FileMetadataSerializer)
-- [ ] **T049** [P] Sharing serializers in `backend/apps/sharing/serializers.py` (ShareSerializer, CreateShareSerializer, UpdateShareSerializer)
-- [ ] **T050** [P] Export/Import serializers in `backend/apps/export_import/serializers.py` (ExportRequestSerializer, ImportResultSerializer)
-- [ ] **T051** [P] Trash serializers in `backend/apps/trash/serializers.py` (TrashItemSerializer)
+- [x] **T046** [P] Authentication serializers in `backend/apps/authentication/serializers.py` (RegisterSerializer, LoginSerializer, UserSerializer, TokenSerializer, RefreshTokenSerializer) ✅
+- [x] **T047** [P] Points serializers in `backend/apps/points/serializers.py` (GPSPointSerializer, TagSerializer, CreateGPSPointSerializer, UpdateGPSPointSerializer, GPSPointListSerializer, EditingLockSerializer) ✅
+- [x] **T048** [P] Annotations serializers in `backend/apps/annotations/serializers.py` (AnnotationSerializer, CreateTextAnnotationSerializer, CreateFileAnnotationSerializer, UpdateTextAnnotationSerializer) ✅
+- [x] **T049** [P] Sharing serializers in `backend/apps/sharing/serializers.py` (ShareSerializer, CreateShareSerializer, UpdateShareSerializer, AcceptShareSerializer) ✅
+- [x] **T050** [P] Export/Import serializers in `backend/apps/export_import/serializers.py` (ExportRequestSerializer, ImportRequestSerializer, ImportResultSerializer, ImportErrorSerializer) ✅
+- [x] **T051** [P] Trash serializers in `backend/apps/trash/serializers.py` (TrashSerializer, RestoreTrashSerializer, DeletePermanentlySerializer, EmptyTrashSerializer) ✅
 
 ---
 
