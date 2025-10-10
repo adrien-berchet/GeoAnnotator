@@ -3,7 +3,23 @@
 **Input**: Design documents from `/specs/001-build-a-web/`
 **Prerequisites**: plan.md ✅, research.md ✅, data-model.md ✅, contracts/ ✅, quickstart.md ✅
 
-## Execution Flow (main)
+## Exe### UI Components - Points
+- [x] **T080** [P] PointList component in `frontend/src/components/points/PointList.tsx` (display list, click to navigate)
+- [x] **T081** PointDetail component in `frontend/src/components/points/PointDetail.tsx` (display point, show annotations, edit button)
+- [x] **T082** [P] PointForm component in `frontend/src/components/points/PointForm.tsx` (title, description rich text, tags autocomplete)
+- [x] **T083** [P] SearchFilter component in `frontend/src/components/points/SearchFilter.tsx` (bounding box, tags, text search)
+
+### UI Components - Annotations
+- [x] **T084** [P] AnnotationList component in `frontend/src/components/annotations/AnnotationList.tsx` (group by type, download buttons)
+- [x] **T085** AnnotationUpload component in `frontend/src/components/annotations/AnnotationUpload.tsx` (file upload with progress, quota warning)
+- [x] **T086** [P] TextAnnotationPreview component in `frontend/src/components/annotations/TextAnnotationPreview.tsx` (Quill editor, emoji support)
+- [x] **T087** [P] ImagePreview component in `frontend/src/components/annotations/ImagePreview.tsx` (lightbox, zoom)
+- [x] **T088** [P] DocumentPreview component in `frontend/src/components/annotations/DocumentPreview.tsx` (PDF viewer, download fallback)
+
+### UI Components - Sharing
+- [x] **T089** [P] ShareModal component in `frontend/src/components/sharing/ShareModal.tsx` (email input, permission selector)
+- [x] **T090** [P] PermissionSelector component in `frontend/src/components/sharing/PermissionSelector.tsx` (view/edit/transfer radio buttons)
+- [x] **T091** [P] SharedPointsList component in `frontend/src/components/sharing/SharedPointsList.tsx` (sent/received tabs, revoke button)n Flow (main)
 ```
 1. Load plan.md from feature directory
    → ✅ Found: Django + React + PostGIS tech stack
