@@ -4,7 +4,7 @@ Authentication app URL configuration.
 from django.urls import path
 from . import views
 
-app_name = 'auth'
+app_name = 'authentication'
 
 urlpatterns = [
     path('register/', views.RegisterView.as_view(), name='register'),

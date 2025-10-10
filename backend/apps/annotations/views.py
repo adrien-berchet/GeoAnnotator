@@ -48,7 +48,7 @@ class AnnotationViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """Return annotations for the specified point."""
-        point_id = self.kwargs.get('point_id')
+        point_id = self.kwargs.get('point_pk')  # Changed from 'point_id' to 'point_pk'
         if point_id:
             # Annotations for a specific point
             return Annotation.objects.filter(gps_point_id=point_id)
@@ -58,13 +58,13 @@ class AnnotationViewSet(viewsets.ModelViewSet):
             accessible_points = PermissionService.get_accessible_points(user, include_public=True)
             return Annotation.objects.filter(gps_point__in=accessible_points)
 
-    def create(self, request, point_id=None):
+    def create(self, request, point_pk=None):  # Changed from point_id to point_pk
         """Create new annotation (text or file)."""
         from apps.points.models import GPSPoint
 
         # Get the point from URL
         try:
-            point = GPSPoint.objects.get(pk=point_id)
+            point = GPSPoint.objects.get(pk=point_pk)
         except GPSPoint.DoesNotExist:
             return Response(
                 {'error': 'POINT_NOT_FOUND', 'message': 'Point not found'},
@@ -86,7 +86,7 @@ class AnnotationViewSet(viewsets.ModelViewSet):
 
             # Create text annotation
             annotation = AnnotationService.create_text_annotation(
-                gps_point_id=point_id,
+                gps_point_id=point_pk,
                 text_content=serializer.validated_data['text_content']
             )
 
@@ -100,7 +100,7 @@ class AnnotationViewSet(viewsets.ModelViewSet):
             try:
                 # Create file annotation (validates quota)
                 annotation = AnnotationService.create_file_annotation(
-                    gps_point_id=point_id,
+                    gps_point_id=point_pk,
                     annotation_type=annotation_type,
                     uploaded_file=serializer.validated_data['file'],
                     user=request.user
@@ -120,7 +120,7 @@ class AnnotationViewSet(viewsets.ModelViewSet):
         response_serializer = AnnotationSerializer(annotation, context={'request': request})
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
-    def retrieve(self, request, pk=None, point_id=None):
+    def retrieve(self, request, pk=None, point_pk=None):
         """Get annotation detail."""
         annotation = self.get_object()
 
@@ -134,7 +134,7 @@ class AnnotationViewSet(viewsets.ModelViewSet):
         serializer = AnnotationSerializer(annotation, context={'request': request})
         return Response(serializer.data)
 
-    def partial_update(self, request, pk=None, point_id=None):
+    def partial_update(self, request, pk=None, point_pk=None):
         """Update annotation (text only)."""
         annotation = self.get_object()
 
@@ -167,11 +167,11 @@ class AnnotationViewSet(viewsets.ModelViewSet):
         response_serializer = AnnotationSerializer(annotation, context={'request': request})
         return Response(response_serializer.data)
 
-    def update(self, request, pk=None, point_id=None):
+    def update(self, request, pk=None, point_pk=None):
         """Update annotation (PUT method - same as PATCH for text annotations)."""
-        return self.partial_update(request, pk=pk, point_id=point_id)
+        return self.partial_update(request, pk=pk, point_pk=point_pk)
 
-    def destroy(self, request, pk=None, point_id=None):
+    def destroy(self, request, pk=None, point_pk=None):
         """Delete annotation."""
         annotation = self.get_object()
 
@@ -188,7 +188,7 @@ class AnnotationViewSet(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=True, methods=['get'])
-    def download(self, request, pk=None, point_id=None):
+    def download(self, request, pk=None, point_pk=None):
         """Download file annotation."""
         annotation = self.get_object()
 

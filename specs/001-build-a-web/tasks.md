@@ -238,14 +238,14 @@
 
 ## Phase 3.9: Integration Tests (from quickstart.md) (T095-T102)
 
-- [ ] **T095** [P] Integration test Scenario 1: User Registration and Authentication in `backend/tests/integration/test_scenario_auth.py`
-- [ ] **T096** [P] Integration test Scenario 2: GPS Point Creation and Management in `backend/tests/integration/test_scenario_points.py`
-- [ ] **T097** [P] Integration test Scenario 3: Annotations (Text and Files) in `backend/tests/integration/test_scenario_annotations.py`
-- [ ] **T098** [P] Integration test Scenario 4: Sharing and Permissions in `backend/tests/integration/test_scenario_sharing.py`
-- [ ] **T099** [P] Integration test Scenario 5: Import/Export in `backend/tests/integration/test_scenario_import_export.py`
-- [ ] **T100** [P] Integration test Scenario 6: Trash and Restoration in `backend/tests/integration/test_scenario_trash.py`
-- [ ] **T101** [P] Integration test Scenario 7: Public Point Browsing in `backend/tests/integration/test_scenario_public.py`
-- [ ] **T102** [P] Integration test Scenario 8: Editing Locks and Concurrency in `backend/tests/integration/test_scenario_locks.py`
+- [x] **T095** [P] Integration test Scenario 1: User Registration and Authentication in `backend/tests/integration/test_scenario_auth.py`
+- [x] **T096** [P] Integration test Scenario 2: GPS Point Creation and Management in `backend/tests/integration/test_scenario_points.py`
+- [x] **T097** [P] Integration test Scenario 3: Annotations (Text and Files) in `backend/tests/integration/test_scenario_annotations.py`
+- [x] **T098** [P] Integration test Scenario 4: Sharing and Permissions in `backend/tests/integration/test_scenario_sharing.py`
+- [x] **T099** [P] Integration test Scenario 5: Import/Export in `backend/tests/integration/test_scenario_import_export.py`
+- [x] **T100** [P] Integration test Scenario 6: Trash and Restoration in `backend/tests/integration/test_scenario_trash.py`
+- [x] **T101** [P] Integration test Scenario 7: Public Point Browsing in `backend/tests/integration/test_scenario_public.py`
+- [x] **T102** [P] Integration test Scenario 8: Editing Locks and Concurrency in `backend/tests/integration/test_scenario_locks.py`
 
 ---
 

@@ -20,8 +20,16 @@ class TrashSerializer(serializers.ModelSerializer):
     """
     gps_point = GPSPointListSerializer(read_only=True)
     deleted_by = UserSerializer(read_only=True)
-    days_remaining = serializers.IntegerField(read_only=True)
-    is_expired = serializers.BooleanField(read_only=True)
+    days_remaining = serializers.SerializerMethodField()
+    is_expired = serializers.SerializerMethodField()
+
+    def get_days_remaining(self, obj):
+        """Get days remaining from model property."""
+        return obj.days_remaining
+
+    def get_is_expired(self, obj):
+        """Get is_expired from model property."""
+        return obj.is_expired
 
     class Meta:
         model = Trash

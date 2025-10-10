@@ -39,7 +39,7 @@ class TestSharingContract:
     def owner_with_point(self, api_client):
         """Create owner user with a GPS point."""
         # Register owner
-        register_url = reverse('auth:register')
+        register_url = reverse('authentication:register')
         register_data = {
             'email': 'owner@example.com',
             'password': 'SecurePass123'

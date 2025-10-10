@@ -40,7 +40,7 @@ class TestPointsContract:
     def authenticated_user(self, api_client):
         """Create and authenticate a user, return (client, user_data)."""
         # Register user
-        register_url = reverse('auth:register')
+        register_url = reverse('authentication:register')
         register_data = {
             'email': 'test@example.com',
             'password': 'SecurePass123'

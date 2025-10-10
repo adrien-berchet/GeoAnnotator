@@ -40,7 +40,7 @@ class TestAnnotationsContract:
     def authenticated_user(self, api_client):
         """Create and authenticate a user with a GPS point."""
         # Register user
-        register_url = reverse('auth:register')
+        register_url = reverse('authentication:register')
         register_data = {
             'email': 'test@example.com',
             'password': 'SecurePass123'

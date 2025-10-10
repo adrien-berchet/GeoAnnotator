@@ -23,7 +23,7 @@ class TrashViewSet(viewsets.ReadOnlyModelViewSet):
     """
     permission_classes = [IsAuthenticated]
     serializer_class = TrashSerializer
-    pagination_class = None
+    # pagination_class = None  # Use default pagination
 
     def get_queryset(self):
         """Return trash items for current user's points."""
@@ -50,8 +50,8 @@ class TrashViewSet(viewsets.ReadOnlyModelViewSet):
         # Check if expired
         if trash.is_expired:
             return Response(
-                {'error': 'Cannot restore expired trash items'},
-                status=status.HTTP_400_BAD_REQUEST
+                {'error': 'PERMANENTLY_DELETED', 'message': 'This point has been permanently deleted (>30 days)'},
+                status=status.HTTP_410_GONE
             )
 
         # Restore via service
@@ -85,7 +85,7 @@ class TrashViewSet(viewsets.ReadOnlyModelViewSet):
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @action(detail=False, methods=['post'])
+    @action(detail=False, methods=['delete'])
     def empty(self, request):
         """Empty entire trash for current user."""
         count = TrashService.empty_trash(request.user)

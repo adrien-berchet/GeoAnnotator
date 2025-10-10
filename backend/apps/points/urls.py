@@ -8,9 +8,14 @@ app_name = 'points'
 
 urlpatterns = [
     # GPS Points CRUD
-    path('', views.GPSPointViewSet.as_view({'get': 'list', 'post': 'create'}), name='list'),
-    path('<uuid:pk>/', views.GPSPointViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'}), name='detail'),
+    path('', views.GPSPointViewSet.as_view({'get': 'list', 'post': 'create'}), name='gpspoint-list'),
+    path('<uuid:pk>/', views.GPSPointViewSet.as_view({
+        'get': 'retrieve',
+        'put': 'update',
+        'patch': 'partial_update',
+        'delete': 'destroy'
+    }), name='gpspoint-detail'),
 
     # Lock management
-    path('<uuid:pk>/lock/', views.GPSPointViewSet.as_view({'post': 'acquire_lock', 'delete': 'release_lock'}), name='lock'),
+    path('<uuid:pk>/lock/', views.GPSPointViewSet.as_view({'post': 'acquire_lock', 'delete': 'release_lock'}), name='gpspoint-lock'),
 ]

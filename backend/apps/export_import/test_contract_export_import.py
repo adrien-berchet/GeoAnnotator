@@ -39,7 +39,7 @@ class TestExportImportContract:
     def authenticated_user_with_points(self, api_client):
         """Create user with GPS points."""
         # Register and authenticate
-        register_url = reverse('auth:register')
+        register_url = reverse('authentication:register')
         register_data = {
             'email': 'test@example.com',
             'password': 'SecurePass123'
