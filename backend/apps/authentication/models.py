@@ -5,9 +5,60 @@ Extends Django's built-in User model with storage quota tracking.
 """
 
 import uuid
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.core.validators import MinValueValidator
+
+
+class UserManager(BaseUserManager):
+    """Custom manager for User model with email as username."""
+
+    def create_user(self, email, password=None, **extra_fields):
+        """
+        Create and return a regular user with email and password.
+
+        Args:
+            email: User's email address (used as username)
+            password: User's password
+            **extra_fields: Additional fields
+
+        Returns:
+            User object
+        """
+        if not email:
+            raise ValueError('Email is required')
+
+        email = self.normalize_email(email)
+        user = self.model(
+            email=email,
+            username=email,  # Set both email and username
+            **extra_fields
+        )
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, email, password=None, **extra_fields):
+        """
+        Create and return a superuser with email and password.
+
+        Args:
+            email: Superuser's email address
+            password: Superuser's password
+            **extra_fields: Additional fields
+
+        Returns:
+            User object with superuser privileges
+        """
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+
+        if extra_fields.get('is_staff') is not True:
+            raise ValueError('Superuser must have is_staff=True')
+        if extra_fields.get('is_superuser') is not True:
+            raise ValueError('Superuser must have is_superuser=True')
+
+        return self.create_user(email, password, **extra_fields)
 
 
 class User(AbstractUser):
@@ -60,6 +111,9 @@ class User(AbstractUser):
     # Use email as the login field
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []  # No additional required fields for createsuperuser
+
+    # Use custom manager
+    objects = UserManager()
 
     class Meta:
         db_table = 'users'

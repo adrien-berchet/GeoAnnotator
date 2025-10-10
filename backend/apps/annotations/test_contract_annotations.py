@@ -21,6 +21,7 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 
+@pytest.mark.django_db
 @pytest.mark.contract
 @pytest.mark.critical
 class TestAnnotationsContract:
@@ -418,7 +419,7 @@ class TestAnnotationsContract:
         annotation_id = create_response.data['id']
 
         # Download file
-        download_url = reverse('annotations:download', kwargs={'pk': annotation_id})
+        download_url = reverse('annotations:download', kwargs={'point_id': point_id, 'pk': annotation_id})
         response = api_client.get(download_url)
 
         # Accept both 200 (local storage) and 302 (S3 redirect)
@@ -445,7 +446,7 @@ class TestAnnotationsContract:
         annotation_id = create_response.data['id']
 
         # Try to download
-        download_url = reverse('annotations:download', kwargs={'pk': annotation_id})
+        download_url = reverse('annotations:download', kwargs={'point_id': point_id, 'pk': annotation_id})
         response = api_client.get(download_url)
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST

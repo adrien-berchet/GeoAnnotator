@@ -7,6 +7,7 @@ Handles user registration, login, profile, and token management.
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import User
@@ -15,12 +16,13 @@ from .models import User
 class UserSerializer(serializers.ModelSerializer):
     """
     User profile serializer.
-    
+
     Includes storage quota information (read-only).
     Matches OpenAPI schema: User
     """
+    email = serializers.EmailField(read_only=True)
     storage_percentage = serializers.FloatField(read_only=True)
-    
+
     class Meta:
         model = User
         fields = [
@@ -33,6 +35,7 @@ class UserSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             'id',
+            'email',
             'date_joined',
             'storage_used',
             'storage_limit',
@@ -43,7 +46,7 @@ class UserSerializer(serializers.ModelSerializer):
 class RegisterSerializer(serializers.ModelSerializer):
     """
     User registration serializer.
-    
+
     Validates password strength (min 8 chars, uppercase, lowercase, numbers).
     Matches OpenAPI schema: RegisterRequest
     """
@@ -54,11 +57,11 @@ class RegisterSerializer(serializers.ModelSerializer):
         style={'input_type': 'password'},
         min_length=8,
     )
-    
+
     class Meta:
         model = User
         fields = ['email', 'password']
-    
+
     def validate_password(self, value):
         """
         Validate password contains uppercase, lowercase, and numbers.
@@ -76,7 +79,7 @@ class RegisterSerializer(serializers.ModelSerializer):
                 "Password must contain at least one number."
             )
         return value
-    
+
     def create(self, validated_data):
         """
         Create user with hashed password and default storage quota (2GB).
@@ -91,7 +94,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 class LoginSerializer(serializers.Serializer):
     """
     User login serializer.
-    
+
     Validates credentials and returns JWT tokens.
     Matches OpenAPI schema: LoginRequest
     """
@@ -101,38 +104,38 @@ class LoginSerializer(serializers.Serializer):
         required=True,
         style={'input_type': 'password'},
     )
-    
+
     def validate(self, attrs):
         """
         Validate email and password, authenticate user.
         """
         email = attrs.get('email')
         password = attrs.get('password')
-        
+
         user = authenticate(
             request=self.context.get('request'),
             username=email,  # Our User model uses email as USERNAME_FIELD
             password=password,
         )
-        
+
         if user is None:
-            raise serializers.ValidationError(
-                {
+            raise AuthenticationFailed(
+                detail={
                     'error': 'INVALID_CREDENTIALS',
                     'message': 'Invalid email or password.',
                 },
                 code='authentication_failed',
             )
-        
+
         if not user.is_active:
-            raise serializers.ValidationError(
-                {
+            raise AuthenticationFailed(
+                detail={
                     'error': 'ACCOUNT_DISABLED',
                     'message': 'User account is disabled.',
                 },
                 code='authentication_failed',
             )
-        
+
         attrs['user'] = user
         return attrs
 
@@ -140,24 +143,24 @@ class LoginSerializer(serializers.Serializer):
 class TokenSerializer(serializers.Serializer):
     """
     JWT token response serializer.
-    
+
     Returns access token, refresh token, and user profile.
     Matches OpenAPI schema: TokenResponse
     """
     access = serializers.CharField(read_only=True)
     refresh = serializers.CharField(read_only=True)
     user = UserSerializer(read_only=True)
-    
+
     @staticmethod
     def get_tokens_for_user(user):
         """
         Generate JWT tokens for authenticated user.
-        
+
         Returns:
             dict: {access: str, refresh: str, user: User}
         """
         refresh = RefreshToken.for_user(user)
-        
+
         return {
             'access': str(refresh.access_token),
             'refresh': str(refresh),
@@ -168,12 +171,12 @@ class TokenSerializer(serializers.Serializer):
 class RefreshTokenSerializer(serializers.Serializer):
     """
     Refresh token serializer.
-    
+
     Accepts refresh token and returns new access token.
     Matches OpenAPI schema: RefreshRequest
     """
     refresh = serializers.CharField(required=True)
-    
+
     def validate_refresh(self, value):
         """
         Validate refresh token is valid and not expired.
@@ -181,11 +184,11 @@ class RefreshTokenSerializer(serializers.Serializer):
         try:
             RefreshToken(value)
         except Exception as e:
-            raise serializers.ValidationError(
-                {
+            raise AuthenticationFailed(
+                detail={
                     'error': 'INVALID_TOKEN',
                     'message': 'Refresh token is invalid or expired.',
-                    'details': str(e),
-                }
+                },
+                code='token_not_valid',
             )
         return value

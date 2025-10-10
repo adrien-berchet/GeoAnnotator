@@ -20,6 +20,7 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 
+@pytest.mark.django_db
 @pytest.mark.contract
 @pytest.mark.critical
 class TestSharingContract:
@@ -104,7 +105,7 @@ class TestSharingContract:
         api_client, owner, point_id = owner_with_point
         recipient = recipient_user
 
-        url = reverse('shares:list', kwargs={'point_id': point_id})
+        url = reverse('sharing:list', kwargs={'point_id': point_id})
         share_data = {
             'recipient_email': recipient['user']['email'],
             'permission_level': 'view'
@@ -137,7 +138,7 @@ class TestSharingContract:
         api_client, owner, point_id = owner_with_point
         recipient = recipient_user
 
-        url = reverse('shares:list', kwargs={'point_id': point_id})
+        url = reverse('sharing:list', kwargs={'point_id': point_id})
         share_data = {
             'recipient_email': recipient['user']['email'],
             'permission_level': 'view'
@@ -150,8 +151,8 @@ class TestSharingContract:
         response = api_client.post(url, share_data, format='json')
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert response.data['error'] == 'DUPLICATE_SHARE'
-        assert 'details' in response.data
+        assert response.data['error'] == 'VALIDATION_ERROR'
+        assert response.data["details"]['error'][0] == 'DUPLICATE_SHARE'
 
     def test_create_share_with_self(self, owner_with_point):
         """
@@ -164,7 +165,7 @@ class TestSharingContract:
         """
         api_client, owner, point_id = owner_with_point
 
-        url = reverse('shares:list', kwargs={'point_id': point_id})
+        url = reverse('sharing:list', kwargs={'point_id': point_id})
         share_data = {
             'recipient_email': owner['email'],
             'permission_level': 'view'
@@ -172,7 +173,8 @@ class TestSharingContract:
         response = api_client.post(url, share_data, format='json')
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert response.data['error'] == 'INVALID_RECIPIENT'
+        assert response.data['error'] == 'VALIDATION_ERROR'
+        assert response.data["details"]['error'][0] == 'SELF_SHARE'
 
     # T030: GET /points/{id}/shares - List point's shares
     def test_list_shares_success(self, owner_with_point, recipient_user):
@@ -187,7 +189,7 @@ class TestSharingContract:
         recipient = recipient_user
 
         # Create share
-        create_url = reverse('shares:list', kwargs={'point_id': point_id})
+        create_url = reverse('sharing:list', kwargs={'point_id': point_id})
         share_data = {
             'recipient_email': recipient['user']['email'],
             'permission_level': 'edit'
@@ -195,7 +197,7 @@ class TestSharingContract:
         api_client.post(create_url, share_data, format='json')
 
         # List shares
-        list_url = reverse('shares:list', kwargs={'point_id': point_id})
+        list_url = reverse('sharing:list', kwargs={'point_id': point_id})
         response = api_client.get(list_url)
 
         assert response.status_code == status.HTTP_200_OK
@@ -225,7 +227,7 @@ class TestSharingContract:
         client2 = APIClient()
         client2.credentials(HTTP_AUTHORIZATION=f'Bearer {recipient["token"]}')
 
-        list_url = reverse('shares:list', kwargs={'point_id': point_id})
+        list_url = reverse('sharing:list', kwargs={'point_id': point_id})
         response = client2.get(list_url)
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
@@ -244,7 +246,7 @@ class TestSharingContract:
         recipient = recipient_user
 
         # Create share
-        create_url = reverse('shares:list', kwargs={'point_id': point_id})
+        create_url = reverse('sharing:list', kwargs={'point_id': point_id})
         share_data = {
             'recipient_email': recipient['user']['email'],
             'permission_level': 'view'
@@ -253,7 +255,7 @@ class TestSharingContract:
         share_id = create_response.data['id']
 
         # Get share details
-        detail_url = reverse('shares:detail', kwargs={'pk': share_id})
+        detail_url = reverse('global_sharing:detail', kwargs={'pk': share_id})
         response = api_client.get(detail_url)
 
         assert response.status_code == status.HTTP_200_OK
@@ -273,7 +275,7 @@ class TestSharingContract:
         recipient = recipient_user
 
         # Create share with view permission
-        create_url = reverse('shares:list', kwargs={'point_id': point_id})
+        create_url = reverse('sharing:list', kwargs={'point_id': point_id})
         share_data = {
             'recipient_email': recipient['user']['email'],
             'permission_level': 'view'
@@ -282,7 +284,7 @@ class TestSharingContract:
         share_id = create_response.data['id']
 
         # Update to edit permission
-        update_url = reverse('shares:detail', kwargs={'pk': share_id})
+        update_url = reverse('global_sharing:detail', kwargs={'pk': share_id})
         update_data = {'permission_level': 'edit'}
         response = api_client.patch(update_url, update_data, format='json')
 
@@ -300,7 +302,7 @@ class TestSharingContract:
         recipient = recipient_user
 
         # Create share
-        create_url = reverse('shares:list', kwargs={'point_id': point_id})
+        create_url = reverse('sharing:list', kwargs={'point_id': point_id})
         share_data = {
             'recipient_email': recipient['user']['email'],
             'permission_level': 'view'
@@ -312,7 +314,7 @@ class TestSharingContract:
         client2 = APIClient()
         client2.credentials(HTTP_AUTHORIZATION=f'Bearer {recipient["token"]}')
 
-        update_url = reverse('shares:detail', kwargs={'pk': share_id})
+        update_url = reverse('global_sharing:detail', kwargs={'pk': share_id})
         update_data = {'permission_level': 'transfer'}
         response = client2.patch(update_url, update_data, format='json')
 
@@ -331,7 +333,7 @@ class TestSharingContract:
         recipient = recipient_user
 
         # Create share
-        create_url = reverse('shares:list', kwargs={'point_id': point_id})
+        create_url = reverse('sharing:list', kwargs={'point_id': point_id})
         share_data = {
             'recipient_email': recipient['user']['email'],
             'permission_level': 'view'
@@ -340,7 +342,7 @@ class TestSharingContract:
         share_id = create_response.data['id']
 
         # Revoke share
-        delete_url = reverse('shares:detail', kwargs={'pk': share_id})
+        delete_url = reverse('global_sharing:detail', kwargs={'pk': share_id})
         response = api_client.delete(delete_url)
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
@@ -360,7 +362,7 @@ class TestSharingContract:
         recipient = recipient_user
 
         # Create share
-        create_url = reverse('shares:list', kwargs={'point_id': point_id})
+        create_url = reverse('sharing:list', kwargs={'point_id': point_id})
         share_data = {
             'recipient_email': recipient['user']['email'],
             'permission_level': 'view'
@@ -372,7 +374,7 @@ class TestSharingContract:
         client2 = APIClient()
         client2.credentials(HTTP_AUTHORIZATION=f'Bearer {recipient["token"]}')
 
-        delete_url = reverse('shares:detail', kwargs={'pk': share_id})
+        delete_url = reverse('global_sharing:detail', kwargs={'pk': share_id})
         response = client2.delete(delete_url)
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
@@ -392,20 +394,19 @@ class TestSharingContract:
         recipient = recipient_user
 
         # Create share
-        create_url = reverse('shares:list', kwargs={'point_id': point_id})
+        create_url = reverse('sharing:list', kwargs={'point_id': point_id})
         share_data = {
             'recipient_email': recipient['user']['email'],
             'permission_level': 'view'
         }
         create_response = api_client.post(create_url, share_data, format='json')
-        share_id = create_response.data['id']
+        invitation_token = create_response.data['invitation_token']
 
-        # Accept invitation (using share_id as token for simplicity)
-        # In real implementation, this would be a separate invitation token
+        # Accept invitation using the proper invitation_token
         client2 = APIClient()
         client2.credentials(HTTP_AUTHORIZATION=f'Bearer {recipient["token"]}')
 
-        accept_url = reverse('shares:accept', kwargs={'token': share_id})
+        accept_url = reverse('global_sharing:accept', kwargs={'token': invitation_token})
         response = client2.post(accept_url)
 
         assert response.status_code == status.HTTP_200_OK
@@ -426,7 +427,7 @@ class TestSharingContract:
         recipient = recipient_user
 
         # Create share
-        create_url = reverse('shares:list', kwargs={'point_id': point_id})
+        create_url = reverse('sharing:list', kwargs={'point_id': point_id})
         share_data = {
             'recipient_email': recipient['user']['email'],
             'permission_level': 'edit'
@@ -437,7 +438,7 @@ class TestSharingContract:
         client2 = APIClient()
         client2.credentials(HTTP_AUTHORIZATION=f'Bearer {recipient["token"]}')
 
-        received_url = reverse('shares:received')
+        received_url = reverse('global_sharing:received')
         response = client2.get(received_url)
 
         assert response.status_code == status.HTTP_200_OK
@@ -460,7 +461,7 @@ class TestSharingContract:
         recipient = recipient_user
 
         # Create share
-        create_url = reverse('shares:list', kwargs={'point_id': point_id})
+        create_url = reverse('sharing:list', kwargs={'point_id': point_id})
         share_data = {
             'recipient_email': recipient['user']['email'],
             'permission_level': 'view'
@@ -471,7 +472,7 @@ class TestSharingContract:
         client2 = APIClient()
         client2.credentials(HTTP_AUTHORIZATION=f'Bearer {recipient["token"]}')
 
-        received_url = reverse('shares:received')
+        received_url = reverse('global_sharing:received')
         response = client2.get(received_url, {'status': 'pending'})
 
         assert response.status_code == status.HTTP_200_OK

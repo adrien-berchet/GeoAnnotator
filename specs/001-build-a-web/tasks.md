@@ -149,26 +149,26 @@
 ## Phase 3.6: API Views & Endpoints (T060-T065)
 
 ### Authentication Views
-- [ ] **T060** Authentication views in `backend/apps/authentication/views.py` (RegisterView, LoginView, RefreshView, LogoutView, ProfileView)
+- [x] **T060** Authentication views in `backend/apps/authentication/views.py` (RegisterView, LoginView, RefreshView, LogoutView, ProfileView)
 
 ### Points Views
-- [ ] **T061** Points views in `backend/apps/points/views.py` (PointViewSet with list/create/get/update/delete, lock acquire/release)
+- [x] **T061** Points views in `backend/apps/points/views.py` (PointViewSet with list/create/get/update/delete, lock acquire/release)
 
 ### Annotations Views
-- [ ] **T062** Annotations views in `backend/apps/annotations/views.py` (AnnotationViewSet, download view, preview view)
+- [x] **T062** Annotations views in `backend/apps/annotations/views.py` (AnnotationViewSet, download view, preview view)
 
 ### Sharing Views
-- [ ] **T063** Sharing views in `backend/apps/sharing/views.py` (ShareViewSet, accept invitation, list received shares)
+- [x] **T063** Sharing views in `backend/apps/sharing/views.py` (ShareViewSet, accept invitation, list received shares)
 
 ### Export/Import + Trash Views
-- [ ] **T064** Export/Import views in `backend/apps/export_import/views.py` (ExportView, ImportView)
-- [ ] **T065** Trash views in `backend/apps/trash/views.py` (TrashViewSet with list/restore/permanent delete/empty)
+- [x] **T064** Export/Import views in `backend/apps/export_import/views.py` (ExportView, ImportView)
+- [x] **T065** Trash views in `backend/apps/trash/views.py` (TrashViewSet with list/restore/permanent delete/empty)
 
 ---
 
 ## Phase 3.7: URL Routing (T066)
 
-- [ ] **T066** Configure all URL routes in `backend/config/urls.py` and app-level `urls.py` files (auth, points, annotations, sharing, export, trash)
+- [x] **T066** Configure all URL routes in `backend/config/urls.py` and app-level `urls.py` files (auth, points, annotations, sharing, export, trash)
 
 ---
 

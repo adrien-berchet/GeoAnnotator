@@ -21,6 +21,7 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 
+@pytest.mark.django_db
 @pytest.mark.contract
 @pytest.mark.critical
 class TestPointsContract:

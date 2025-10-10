@@ -206,7 +206,7 @@ paths:
                       recipient_email: user@example.com
                 share_with_self:
                   value:
-                    error: INVALID_RECIPIENT
+                    error: SELF_SHARE
                     message: Cannot share with yourself
         '403':
           description: Access denied (not owner or no transfer permission)
