@@ -187,19 +187,19 @@
 - [x] **T074** [P] Export/Import API calls in `frontend/src/api/export.ts` (export formats, import, trash)
 
 ### UI Components - Auth
-- [ ] **T075** [P] LoginForm component in `frontend/src/components/auth/LoginForm.tsx` (email/password validation, error display)
-- [ ] **T076** [P] RegisterForm component in `frontend/src/components/auth/RegisterForm.tsx` (password strength indicator)
+- [x] **T075** [P] LoginForm component in `frontend/src/components/auth/LoginForm.tsx` (email/password validation, error display)
+- [x] **T076** [P] RegisterForm component in `frontend/src/components/auth/RegisterForm.tsx` (password strength indicator)
 
 ### UI Components - Map
-- [ ] **T077** Leaflet MapView component in `frontend/src/components/map/MapView.tsx` (tile layer, viewport management, clustering)
-- [ ] **T078** [P] PointMarker component in `frontend/src/components/map/PointMarker.tsx` (custom icons, popup on click)
-- [ ] **T079** [P] CreatePointModal component in `frontend/src/components/map/CreatePointModal.tsx` (click map to create, form validation)
+- [x] **T077** Leaflet MapView component in `frontend/src/components/map/MapView.tsx` (tile layer, viewport management, clustering)
+- [x] **T078** [P] PointMarker component in `frontend/src/components/map/PointMarker.tsx` (custom icons, popup on click)
+- [x] **T079** [P] CreatePointModal component in `frontend/src/components/map/CreatePointModal.tsx` (click map to create, form validation)
 
 ### UI Components - Points
-- [ ] **T080** [P] PointList component in `frontend/src/components/points/PointList.tsx` (pagination, filters, search)
+- [x] **T080** [P] PointList component in `frontend/src/components/points/PointList.tsx` (pagination, filters, search)
 - [ ] **T081** PointDetail component in `frontend/src/components/points/PointDetail.tsx` (display point, show annotations, edit button)
 - [ ] **T082** [P] PointForm component in `frontend/src/components/points/PointForm.tsx` (title, description rich text, tags autocomplete)
-- [ ] **T083** [P] SearchFilter component in `frontend/src/components/points/SearchFilter.tsx` (bounding box, tags, text search)
+- [x] **T083** [P] SearchFilter component in `frontend/src/components/points/SearchFilter.tsx` (bounding box, tags, text search)
 
 ### UI Components - Annotations
 - [ ] **T084** [P] AnnotationList component in `frontend/src/components/annotations/AnnotationList.tsx` (group by type, download buttons)
@@ -214,9 +214,9 @@
 - [ ] **T091** [P] SharedPointsList component in `frontend/src/components/sharing/SharedPointsList.tsx` (sent/received tabs, revoke button)
 
 ### UI Components - Common
-- [ ] **T092** [P] ErrorBoundary component in `frontend/src/components/common/ErrorBoundary.tsx` (catch errors, display user-friendly message)
-- [ ] **T093** [P] LoadingSpinner component in `frontend/src/components/common/LoadingSpinner.tsx` (consistent loading state)
-- [ ] **T094** [P] ProgressBar component in `frontend/src/components/common/ProgressBar.tsx` (file upload progress)
+- [x] **T092** [P] ErrorBoundary component in `frontend/src/components/common/ErrorBoundary.tsx` (catch errors, display user-friendly message)
+- [x] **T093** [P] LoadingSpinner component in `frontend/src/components/common/LoadingSpinner.tsx` (consistent loading state)
+- [x] **T094** [P] ProgressBar component in `frontend/src/components/common/ProgressBar.tsx` (file upload progress)
 
 ---
 

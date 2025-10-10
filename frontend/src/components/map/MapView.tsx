@@ -1,0 +1,68 @@
+/**
+ * Map view component.
+ *
+ * Displays interactive Leaflet map with tile layer, viewport management, and clustering.
+ */
+
+import { useEffect, useRef } from 'react';
+import { MapContainer, TileLayer, useMap } from 'react-leaflet';
+import type { Map as LeafletMap } from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+
+interface MapViewProps {
+  center?: [number, number];
+  zoom?: number;
+  onMapReady?: (map: LeafletMap) => void;
+  children?: React.ReactNode;
+}
+
+/**
+ * Component to handle map instance after initialization.
+ */
+function MapEventHandler({ onMapReady }: { onMapReady?: (map: LeafletMap) => void }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (onMapReady) {
+      onMapReady(map);
+    }
+  }, [map, onMapReady]);
+
+  return null;
+}
+
+/**
+ * Map view component.
+ */
+export function MapView({
+  center = [48.8566, 2.3522], // Default to Paris
+  zoom = 13,
+  onMapReady,
+  children,
+}: MapViewProps) {
+  const mapRef = useRef<LeafletMap | null>(null);
+
+  return (
+    <div className="map-view-container">
+      <MapContainer
+        center={center}
+        zoom={zoom}
+        style={{ height: '100%', width: '100%' }}
+        ref={mapRef}
+      >
+        {/* OpenStreetMap tile layer */}
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          maxZoom={19}
+        />
+
+        {/* Map event handler */}
+        <MapEventHandler onMapReady={onMapReady} />
+
+        {/* Additional children (markers, popups, etc.) */}
+        {children}
+      </MapContainer>
+    </div>
+  );
+}

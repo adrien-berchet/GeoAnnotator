@@ -7,11 +7,11 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
 import App from './App';
+import { LoginPage } from './pages/LoginPage';
+import { RegisterPage } from './pages/RegisterPage';
+import { MapPage } from './pages/MapPage';
 
 // Placeholder components - to be implemented
-const LoginPage = () => <div>Login Page</div>;
-const RegisterPage = () => <div>Register Page</div>;
-const MapPage = () => <div>Map Page</div>;
 const PointDetailPage = () => <div>Point Detail Page</div>;
 const ProfilePage = () => <div>Profile Page</div>;
 const SharedPointsPage = () => <div>Shared Points Page</div>;
