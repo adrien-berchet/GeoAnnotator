@@ -1,0 +1,143 @@
+/**
+ * Application routes configuration.
+ *
+ * Defines all routes with authentication protection.
+ */
+
+import { createBrowserRouter, Navigate } from 'react-router-dom';
+import { useAuth } from './hooks/useAuth';
+import App from './App';
+
+// Placeholder components - to be implemented
+const LoginPage = () => <div>Login Page</div>;
+const RegisterPage = () => <div>Register Page</div>;
+const MapPage = () => <div>Map Page</div>;
+const PointDetailPage = () => <div>Point Detail Page</div>;
+const ProfilePage = () => <div>Profile Page</div>;
+const SharedPointsPage = () => <div>Shared Points Page</div>;
+const TrashPage = () => <div>Trash Page</div>;
+
+/**
+ * Protected route wrapper.
+ * Redirects to login if user is not authenticated.
+ */
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <>{children}</>;
+};
+
+/**
+ * Public route wrapper.
+ * Redirects to map if user is already authenticated.
+ */
+const PublicRoute = ({ children }: { children: React.ReactNode }) => {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (isAuthenticated) {
+    return <Navigate to="/map" replace />;
+  }
+
+  return <>{children}</>;
+};
+
+/**
+ * Router configuration.
+ */
+export const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <App />,
+    children: [
+      // Redirect root to map or login
+      {
+        index: true,
+        element: <Navigate to="/map" replace />,
+      },
+
+      // Public routes
+      {
+        path: 'login',
+        element: (
+          <PublicRoute>
+            <LoginPage />
+          </PublicRoute>
+        ),
+      },
+      {
+        path: 'register',
+        element: (
+          <PublicRoute>
+            <RegisterPage />
+          </PublicRoute>
+        ),
+      },
+
+      // Protected routes
+      {
+        path: 'map',
+        element: (
+          <ProtectedRoute>
+            <MapPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'points/:id',
+        element: (
+          <ProtectedRoute>
+            <PointDetailPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'profile',
+        element: (
+          <ProtectedRoute>
+            <ProfilePage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'shared',
+        element: (
+          <ProtectedRoute>
+            <SharedPointsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'trash',
+        element: (
+          <ProtectedRoute>
+            <TrashPage />
+          </ProtectedRoute>
+        ),
+      },
+
+      // Share acceptance route (public)
+      {
+        path: 'shares/accept/:token',
+        element: <div>Accept Share Page</div>,
+      },
+
+      // 404 page
+      {
+        path: '*',
+        element: <div>404 - Page Not Found</div>,
+      },
+    ],
+  },
+]);

@@ -133,16 +133,16 @@
 
 ---
 
-## Phase 3.5: Business Logic Services (T052-T059)
+## Phase 3.5: Business Logic Services (T052-T059) ✅
 
-- [ ] **T052** [P] JWT authentication service in `backend/apps/authentication/services.py` (token generation, validation, refresh logic)
-- [ ] **T053** Editing lock service in `backend/apps/points/services.py` (acquire, release, auto-expire 15min)
-- [ ] **T054** Storage quota service in `backend/apps/annotations/services.py` (check quota, update on upload/delete, reclaim on trash)
-- [ ] **T055** [P] Permission checking service in `backend/apps/sharing/services.py` (check view/edit/transfer, cascade revoke)
-- [ ] **T056** [P] Email invitation service in `backend/apps/sharing/services.py` (send invitation, generate token, 7-day expiry)
-- [ ] **T057** [P] File upload/preview service in `backend/apps/annotations/services.py` (validate MIME, resize images, PDF thumbnails)
-- [ ] **T058** [P] Multi-format export service in `backend/apps/export_import/services.py` (GeoJSON, GPX, KML, CSV, ZIP handlers)
-- [ ] **T059** [P] Multi-format import service in `backend/apps/export_import/services.py` (parse formats, merge strategies, validation)
+- [x] **T052** [P] JWT authentication service in `backend/apps/authentication/services.py` (token generation, validation, refresh logic)
+- [x] **T053** Editing lock service in `backend/apps/points/services.py` (acquire, release, auto-expire 15min)
+- [x] **T054** Storage quota service in `backend/apps/annotations/services.py` (check quota, update on upload/delete, reclaim on trash)
+- [x] **T055** [P] Permission checking service in `backend/apps/sharing/services.py` (check view/edit/transfer, cascade revoke)
+- [x] **T056** [P] Email invitation service in `backend/apps/sharing/services.py` (send invitation, generate token, 7-day expiry)
+- [x] **T057** [P] File upload/preview service in `backend/apps/annotations/services.py` (validate MIME, resize images, PDF thumbnails)
+- [x] **T058** [P] Multi-format export service in `backend/apps/export_import/services.py` (GeoJSON, GPX, KML, CSV, ZIP handlers)
+- [x] **T059** [P] Multi-format import service in `backend/apps/export_import/services.py` (parse formats, merge strategies, validation)
 
 ---
 
@@ -175,16 +175,16 @@
 ## Phase 3.8: Frontend Core (T067-T075)
 
 ### React Setup & Routing
-- [ ] **T067** React Router setup in `frontend/src/main.tsx` (auth routes, protected routes, public routes)
-- [ ] **T068** [P] Auth context and JWT storage in `frontend/src/hooks/useAuth.ts` (localStorage, token refresh logic)
+- [x] **T067** React Router setup in `frontend/src/main.tsx` (auth routes, protected routes, public routes)
+- [x] **T068** [P] Auth context and JWT storage in `frontend/src/hooks/useAuth.tsx` (localStorage, token refresh logic)
 
 ### API Layer
-- [ ] **T069** [P] API client setup in `frontend/src/api/` (axios instance with JWT interceptor, error handling)
-- [ ] **T070** [P] Auth API calls in `frontend/src/api/auth.ts` (register, login, refresh, logout, profile)
-- [ ] **T071** [P] Points API calls in `frontend/src/api/points.ts` (CRUD, search, tags, locks)
-- [ ] **T072** [P] Annotations API calls in `frontend/src/api/annotations.ts` (CRUD, upload, download, preview)
-- [ ] **T073** [P] Sharing API calls in `frontend/src/api/sharing.ts` (create, accept, revoke, list)
-- [ ] **T074** [P] Export/Import API calls in `frontend/src/api/export.ts` (export formats, import, trash)
+- [x] **T069** [P] API client setup in `frontend/src/api/client.ts` (axios instance with JWT interceptor, error handling)
+- [x] **T070** [P] Auth API calls in `frontend/src/api/auth.ts` (register, login, refresh, logout, profile)
+- [x] **T071** [P] Points API calls in `frontend/src/api/points.ts` (CRUD, search, tags, locks)
+- [x] **T072** [P] Annotations API calls in `frontend/src/api/annotations.ts` (CRUD, upload, download, preview)
+- [x] **T073** [P] Sharing API calls in `frontend/src/api/sharing.ts` (create, accept, revoke, list)
+- [x] **T074** [P] Export/Import API calls in `frontend/src/api/export.ts` (export formats, import, trash)
 
 ### UI Components - Auth
 - [ ] **T075** [P] LoginForm component in `frontend/src/components/auth/LoginForm.tsx` (email/password validation, error display)
