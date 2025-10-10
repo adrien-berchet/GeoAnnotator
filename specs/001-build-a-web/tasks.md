@@ -236,9 +236,9 @@
 ## Phase 3.10: Polish & Quality (T103-T112)
 
 ### Unit Tests
-- [ ] **T103** [P] Unit tests for storage quota calculations in `backend/apps/annotations/tests/test_unit_quota.py`
-- [ ] **T104** [P] Unit tests for permission checking logic in `backend/apps/sharing/tests/test_unit_permissions.py`
-- [ ] **T105** [P] Unit tests for coordinate validation in `backend/apps/points/tests/test_unit_validation.py`
+- [x] **T103** [P] Unit tests for storage quota calculations in `backend/apps/annotations/tests/test_unit_quota.py`
+- [x] **T104** [P] Unit tests for permission checking logic in `backend/apps/sharing/tests/test_unit_permissions.py`
+- [x] **T105** [P] Unit tests for coordinate validation in `backend/apps/points/tests/test_unit_validation.py`
 - [ ] **T106** [P] Unit tests for file MIME type validation in `backend/apps/annotations/tests/test_unit_file_validation.py`
 
 ### Performance & Load Testing

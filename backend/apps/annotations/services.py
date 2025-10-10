@@ -90,6 +90,44 @@ class StorageQuotaService:
 
         return total_reclaimed
 
+    @staticmethod
+    def is_quota_warning(user: User) -> bool:
+        """
+        Check if user is at quota warning threshold (90% or more).
+
+        Args:
+            user: User object
+
+        Returns:
+            bool: True if at or above 90% quota usage
+        """
+        if user.storage_limit == 0:
+            return False
+        usage_percentage = (user.storage_used / user.storage_limit) * 100
+        return usage_percentage >= 90.0
+
+    @staticmethod
+    def get_quota_info(user: User) -> dict:
+        """
+        Get detailed quota information for user.
+
+        Args:
+            user: User object
+
+        Returns:
+            dict: Quota information including usage, limit, remaining, percentage
+        """
+        storage_remaining = user.storage_limit - user.storage_used
+        usage_percentage = (user.storage_used / user.storage_limit * 100) if user.storage_limit > 0 else 0
+
+        return {
+            'storage_used': user.storage_used,
+            'storage_limit': user.storage_limit,
+            'storage_remaining': storage_remaining,
+            'usage_percentage': round(usage_percentage, 2),
+            'is_warning': StorageQuotaService.is_quota_warning(user)
+        }
+
 
 class FileUploadService:
     """Service for file uploads and validation."""
