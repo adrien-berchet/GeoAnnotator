@@ -24,11 +24,11 @@ class ShareViewSet(viewsets.ModelViewSet):
     ViewSet for Share CRUD operations and invitation management.
 
     Endpoints:
-    - GET /api/points/{point_pk}/shares/ - List shares for specific point
-    - POST /api/points/{point_pk}/shares/ - Create new share (send invitation)
-    - GET /api/points/{point_pk}/shares/{id}/ - Retrieve share detail
-    - PUT /api/points/{point_pk}/shares/{id}/ - Update share permission level
-    - DELETE /api/points/{point_pk}/shares/{id}/ - Revoke share
+    - GET /api/points/{point_id}/shares/ - List shares for specific point
+    - POST /api/points/{point_id}/shares/ - Create new share (send invitation)
+    - GET /api/points/{point_id}/shares/{id}/ - Retrieve share detail
+    - PUT /api/points/{point_id}/shares/{id}/ - Update share permission level
+    - DELETE /api/points/{point_id}/shares/{id}/ - Revoke share
     - POST /api/shares/accept/{token}/ - Accept invitation by token
     - GET /api/shares/received/ - List received shares
     """
@@ -48,12 +48,12 @@ class ShareViewSet(viewsets.ModelViewSet):
         """Return shares for points owned by current user, or shares where user is recipient."""
         user = self.request.user
 
-        # If point_pk in URL kwargs (nested route), filter by that point
-        point_pk = self.kwargs.get('point_pk')
-        if point_pk:
+        # If point_id in URL kwargs (nested route), filter by that point
+        point_id = self.kwargs.get('point_id')
+        if point_id:
             # For listing shares of a specific point, user must be owner
             return Share.objects.filter(
-                gps_point_id=point_pk,
+                gps_point_id=point_id,
                 gps_point__owner=user,
                 is_active=True
             ).select_related('gps_point', 'owner', 'recipient_user')
@@ -63,12 +63,12 @@ class ShareViewSet(viewsets.ModelViewSet):
             models.Q(gps_point__owner=user) | models.Q(recipient_email=user.email)
         ).select_related('gps_point', 'owner', 'recipient_user')
 
-    def list(self, request, point_pk=None):
+    def list(self, request, point_id=None):
         """List shares for a point (owner only)."""
-        if point_pk:
+        if point_id:
             # Check if user is owner of the point
             try:
-                point = GPSPoint.objects.get(id=point_pk)
+                point = GPSPoint.objects.get(id=point_id)
             except GPSPoint.DoesNotExist:
                 raise Http404("Point not found")
 
@@ -82,11 +82,11 @@ class ShareViewSet(viewsets.ModelViewSet):
         serializer = ShareSerializer(queryset, many=True, context={'request': request})
         return Response(serializer.data)
 
-    def create(self, request, point_pk=None):
+    def create(self, request, point_id=None):
         """Create new share (send invitation)."""
         # Get point from URL kwargs (nested route)
         try:
-            point = GPSPoint.objects.get(id=point_pk)
+            point = GPSPoint.objects.get(id=point_id)
         except GPSPoint.DoesNotExist:
             raise Http404("Point not found")
 
@@ -129,7 +129,7 @@ class ShareViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-    def retrieve(self, request, pk=None, point_pk=None):
+    def retrieve(self, request, pk=None, point_id=None):
         """Get share detail."""
         share = self.get_object()
 
@@ -144,11 +144,11 @@ class ShareViewSet(viewsets.ModelViewSet):
         serializer = ShareSerializer(share, context={'request': request})
         return Response(serializer.data)
 
-    def update(self, request, pk=None, point_pk=None):
+    def update(self, request, pk=None, point_id=None):
         """Update share permission level."""
-        return self.partial_update(request, pk, point_pk)
+        return self.partial_update(request, pk, point_id)
 
-    def partial_update(self, request, pk=None, point_pk=None):
+    def partial_update(self, request, pk=None, point_id=None):
         """Update share permission level."""
         share = self.get_object()
 
@@ -181,7 +181,7 @@ class ShareViewSet(viewsets.ModelViewSet):
         response_serializer = ShareSerializer(share, context={'request': request})
         return Response(response_serializer.data)
 
-    def destroy(self, request, pk=None, point_pk=None):
+    def destroy(self, request, pk=None, point_id=None):
         """Revoke share."""
         share = self.get_object()
 

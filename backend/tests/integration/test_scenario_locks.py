@@ -54,7 +54,7 @@ class TestScenario8EditingLocks:
         # Create a test point owned by Alice
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.alice_token}")
         point_response = self.client.post(
-            reverse("points:gpspoint-list"),
+            reverse("points:list"),
             {
                 "title": "Shared Point for Locking",
                 "latitude": 45.5231,
@@ -65,7 +65,7 @@ class TestScenario8EditingLocks:
         self.point_id = point_response.data["id"]
 
         # Share with Bob (edit permission)
-        shares_url = reverse("sharing:share-list", kwargs={"point_pk": self.point_id})
+        shares_url = reverse("sharing:list", kwargs={"point_id": self.point_id})
         share_response = self.client.post(
             shares_url,
             {
@@ -77,11 +77,11 @@ class TestScenario8EditingLocks:
 
         # Bob accepts share
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.bob_token}")
-        accept_url = reverse("sharing_global:share-accept", kwargs={"token": share_response.data["invitation_token"]})
+        accept_url = reverse("global_sharing:accept", kwargs={"token": share_response.data["invitation_token"]})
         self.client.post(accept_url)
 
-        self.point_url = reverse("points:gpspoint-detail", kwargs={"pk": self.point_id})
-        self.lock_url = reverse("points:gpspoint-lock", kwargs={"pk": self.point_id})
+        self.point_url = reverse("points:detail", kwargs={"pk": self.point_id})
+        self.lock_url = reverse("points:lock", kwargs={"pk": self.point_id})
 
     def test_step_1_alice_acquires_lock(self):
         """

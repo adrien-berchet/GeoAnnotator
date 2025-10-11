@@ -73,7 +73,7 @@ class TestSharingContract:
         api_client.credentials()
 
         # Register recipient
-        register_url = reverse('auth:register')
+        register_url = reverse('authentication:register')
         register_data = {
             'email': 'recipient@example.com',
             'password': 'SecurePass123'

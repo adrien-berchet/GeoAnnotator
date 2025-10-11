@@ -12,17 +12,31 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
 
-    # API endpoints
-    path('api/auth/', include(('apps.authentication.urls', 'authentication'))),
-    path('api/points/', include(('apps.points.urls', 'points'))),
-    path('api/points/<uuid:point_pk>/annotations/', include(('apps.annotations.urls', 'annotations'))),
-    path('api/points/<uuid:point_pk>/sharing/', include(('apps.sharing.urls', 'sharing'))),
-    path('api/sharing/', include(('apps.sharing.global_urls', 'sharing_global'))),
-    path('api/', include(('apps.export_import.urls', 'export_import'))),
-    path('api/trash/', include(('apps.trash.urls', 'trash'))),
+    # # API endpoints
+    # path('api/auth/', include(('apps.authentication.urls', 'authentication'))),
+    # path('api/points/', include(('apps.points.urls', 'points'))),
+    # path('api/points/<uuid:point_id>/annotations/', include(('apps.annotations.urls', 'annotations'))),
+    # path('api/points/<uuid:point_id>/sharing/', include(('apps.sharing.urls', 'sharing'))),
+    # path('api/sharing/', include(('apps.sharing.global_urls', 'global_sharing'))),
+    # path('api/', include(('apps.export_import.urls', 'export_import'))),
+    # path('api/trash/', include(('apps.trash.urls', 'trash'))),
+
+    # # Tags endpoint
+    # path('api/tags/', include(('apps.points.tags_urls', 'tags'))),
+
+
+    path('api/auth/', include('apps.authentication.urls')),
+    path('api/points/', include('apps.points.urls')),
+    path('api/points/<uuid:point_id>/annotations/', include('apps.annotations.urls')),
+    path('api/points/<uuid:point_id>/sharing/', include('apps.sharing.urls')),
+    # path('api/shares/', include(('apps.sharing.global_urls', 'shares'))),
+    # path('api/sharing/', include('apps.sharing.urls')),
+    path('api/sharing/', include('apps.sharing.global_urls')),
+    path('api/', include('apps.export_import.urls')),
+    path('api/trash/', include('apps.trash.urls')),
 
     # Tags endpoint
-    path('api/tags/', include(('apps.points.tags_urls', 'tags'))),
+    path('api/tags/', include('apps.points.tags_urls')),
 ]
 
 # Serve media files in development

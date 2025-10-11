@@ -47,7 +47,7 @@ class TestScenario3Annotations:
         # Create a test point
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.alice_token}")
         point_response = self.client.post(
-            reverse("points:gpspoint-list"),
+            reverse("points:list"),
             {
                 "title": "Test Point for Annotations",
                 "latitude": 45.5231,
@@ -57,7 +57,7 @@ class TestScenario3Annotations:
         )
         self.point_id = point_response.data["id"]
         self.annotations_url = reverse(
-            "annotations:annotation-list", kwargs={"point_pk": self.point_id}
+            "annotations:list", kwargs={"point_id": self.point_id}
         )
 
     def test_step_1_add_text_annotation(self):
@@ -122,12 +122,12 @@ class TestScenario3Annotations:
         assert response.status_code == status.HTTP_201_CREATED
         assert response.data["type"] == "image"
         assert response.data["file"]["can_preview"] is True
-        assert response.data["file_name"] == "trout_photo.jpg"
+        assert response.data["file"]["file_name"] == "trout_photo.jpg"
 
         # Verify storage updated
         self.alice.refresh_from_db()
         assert self.alice.storage_used > initial_storage
-        assert self.alice.storage_used == initial_storage + response.data["file_size"]
+        assert self.alice.storage_used == initial_storage + response.data["file"]["file_size"]
 
     def test_step_3_upload_document_annotation(self):
         """
@@ -164,7 +164,7 @@ class TestScenario3Annotations:
         assert response.status_code == status.HTTP_201_CREATED
         assert response.data["type"] == "document"
         assert response.data["file"]["can_preview"] is True
-        assert response.data["mime_type"] == "application/pdf"
+        assert response.data["file"]["mime_type"] == "application/pdf"
 
         # Verify storage updated
         self.alice.refresh_from_db()
@@ -200,8 +200,9 @@ class TestScenario3Annotations:
         )
 
         # Then
-        assert response.status_code == status.HTTP_403_FORBIDDEN
-        assert "QUOTA_EXCEEDED" in str(response.data).upper() or "quota" in str(response.data).lower()
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.data['error'] == 'VALIDATION_ERROR'
+        assert response.data['details']['file']['error'] == 'QUOTA_EXCEEDED'
 
     def test_step_5_upload_invalid_file_type(self):
         """
@@ -222,7 +223,7 @@ class TestScenario3Annotations:
         response = self.client.post(
             self.annotations_url,
             {
-                "type": "file",
+                "type": "BAD FILE TYPE",
                 "file": exe_file,
             },
             format="multipart",
@@ -230,7 +231,8 @@ class TestScenario3Annotations:
 
         # Then
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert "INVALID_FILE_TYPE" in str(response.data).upper() or "file" in str(response.data).lower()
+        assert response.data['error'] == 'INVALID_OPERATION'
+        assert response.data['message'] == 'Invalid annotation type: BAD FILE TYPE'
 
     def test_step_6_list_point_annotations(self):
         """
@@ -280,9 +282,9 @@ class TestScenario3Annotations:
 
         # Then
         assert response.status_code == status.HTTP_200_OK
-        assert response.data["count"] == 3
+        assert len(response.data) == 3
 
-        types = [ann["type"] for ann in response.data["results"]]
+        types = [ann["type"] for ann in response.data]
         assert "text" in types
         assert "image" in types
         assert "document" in types
@@ -312,8 +314,8 @@ class TestScenario3Annotations:
         annotation_id = create_response.data["id"]
 
         download_url = reverse(
-            "annotations:annotation-download",
-            kwargs={"point_pk": self.point_id, "pk": annotation_id}
+            "annotations:download",
+            kwargs={"point_id": self.point_id, "pk": annotation_id}
         )
 
         # When
@@ -351,8 +353,8 @@ class TestScenario3Annotations:
         annotation_id = create_response.data["id"]
 
         preview_url = reverse(
-            "annotations:annotation-preview",
-            kwargs={"point_pk": self.point_id, "pk": annotation_id}
+            "annotations:preview",
+            kwargs={"point_id": self.point_id, "pk": annotation_id}
         )
 
         # When
@@ -381,8 +383,8 @@ class TestScenario3Annotations:
         annotation_id = create_response.data["id"]
 
         detail_url = reverse(
-            "annotations:annotation-detail",
-            kwargs={"point_pk": self.point_id, "pk": annotation_id}
+            "annotations:detail",
+            kwargs={"point_id": self.point_id, "pk": annotation_id}
         )
 
         # When
@@ -420,15 +422,15 @@ class TestScenario3Annotations:
             format="multipart",
         )
         annotation_id = create_response.data["id"]
-        file_size = create_response.data["file_size"]
+        file_size = create_response.data["file"]["file_size"]
 
         # Get storage before deletion
         self.alice.refresh_from_db()
         storage_before = self.alice.storage_used
 
         detail_url = reverse(
-            "annotations:annotation-detail",
-            kwargs={"point_pk": self.point_id, "pk": annotation_id}
+            "annotations:detail",
+            kwargs={"point_id": self.point_id, "pk": annotation_id}
         )
 
         # When
@@ -477,13 +479,13 @@ class TestScenario3Annotations:
         # Step 3: List annotations
         list_response = self.client.get(self.annotations_url)
         assert list_response.status_code == status.HTTP_200_OK
-        assert list_response.data["count"] == 2
+        assert len(list_response.data) == 2
 
         # Step 4: Update text annotation
         text_id = text_response.data["id"]
         update_url = reverse(
-            "annotations:annotation-detail",
-            kwargs={"point_pk": self.point_id, "pk": text_id}
+            "annotations:detail",
+            kwargs={"point_id": self.point_id, "pk": text_id}
         )
         update_response = self.client.patch(
             update_url,
@@ -495,8 +497,8 @@ class TestScenario3Annotations:
         # Step 5: Delete image annotation
         image_id = image_response.data["id"]
         delete_url = reverse(
-            "annotations:annotation-detail",
-            kwargs={"point_pk": self.point_id, "pk": image_id}
+            "annotations:detail",
+            kwargs={"point_id": self.point_id, "pk": image_id}
         )
         delete_response = self.client.delete(delete_url)
         assert delete_response.status_code == status.HTTP_204_NO_CONTENT

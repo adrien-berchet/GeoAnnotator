@@ -27,7 +27,7 @@ class TestScenario1AuthenticationFlow:
         self.register_url = reverse("authentication:register")
         self.login_url = reverse("authentication:login")
         self.refresh_url = reverse("authentication:refresh")
-        self.profile_url = reverse("authentication:me")
+        self.profile_url = reverse("authentication:profile")
 
     def test_step_1_register_new_user(self):
         """

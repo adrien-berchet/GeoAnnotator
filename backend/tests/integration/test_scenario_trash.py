@@ -45,7 +45,7 @@ class TestScenario6TrashRestoration:
 
         # Create a test point
         point_response = self.client.post(
-            reverse("points:gpspoint-list"),
+            reverse("points:list"),
             {
                 "title": "Point to Trash",
                 "latitude": 45.5231,
@@ -55,7 +55,7 @@ class TestScenario6TrashRestoration:
         )
         self.point_id = point_response.data["id"]
 
-        self.trash_list_url = reverse("trash:trash-list")
+        self.trash_list_url = reverse("trash:list")
 
     def test_step_1_delete_point_move_to_trash(self):
         """
@@ -67,7 +67,7 @@ class TestScenario6TrashRestoration:
         - All shares set is_active = false
         """
         # Given
-        point_url = reverse("points:gpspoint-detail", kwargs={"pk": self.point_id})
+        point_url = reverse("points:detail", kwargs={"pk": self.point_id})
 
         # When
         response = self.client.delete(point_url)
@@ -93,7 +93,7 @@ class TestScenario6TrashRestoration:
         - days_remaining = 30 (for newly deleted point)
         """
         # Given - Delete a point
-        point_url = reverse("points:gpspoint-detail", kwargs={"pk": self.point_id})
+        point_url = reverse("points:detail", kwargs={"pk": self.point_id})
         self.client.delete(point_url)
 
         # When
@@ -121,11 +121,11 @@ class TestScenario6TrashRestoration:
         - Shares reactivated (is_active = true)
         """
         # Given - Delete a point
-        point_url = reverse("points:gpspoint-detail", kwargs={"pk": self.point_id})
+        point_url = reverse("points:detail", kwargs={"pk": self.point_id})
         self.client.delete(point_url)
 
         # When - Restore the point
-        restore_url = reverse("trash:trash-restore", kwargs={"pk": self.point_id})
+        restore_url = reverse("trash:restore", kwargs={"pk": self.point_id})
         response = self.client.post(restore_url)
 
         # Then
@@ -152,11 +152,11 @@ class TestScenario6TrashRestoration:
         self.alice.refresh_from_db()
         initial_storage = self.alice.storage_used
 
-        point_url = reverse("points:gpspoint-detail", kwargs={"pk": self.point_id})
+        point_url = reverse("points:detail", kwargs={"pk": self.point_id})
         self.client.delete(point_url)
 
         # When - Permanently delete
-        permanent_delete_url = reverse("trash:trash-permanent", kwargs={"pk": self.point_id})
+        permanent_delete_url = reverse("trash:permanent", kwargs={"pk": self.point_id})
         response = self.client.delete(permanent_delete_url)
 
         # Then
@@ -180,7 +180,7 @@ class TestScenario6TrashRestoration:
         - All trashed points permanently deleted
         """
         # Given - Create and delete multiple points
-        points_url = reverse("points:gpspoint-list")
+        points_url = reverse("points:list")
 
         point_ids = []
         for i in range(3):
@@ -197,11 +197,11 @@ class TestScenario6TrashRestoration:
             point_ids.append(point_id)
 
             # Delete each point
-            point_url = reverse("points:gpspoint-detail", kwargs={"pk": point_id})
+            point_url = reverse("points:detail", kwargs={"pk": point_id})
             self.client.delete(point_url)
 
         # When - Empty trash
-        empty_url = reverse("trash:trash-empty")
+        empty_url = reverse("trash:empty")
         response = self.client.delete(empty_url)
 
         # Then
@@ -221,7 +221,7 @@ class TestScenario6TrashRestoration:
         - Response 410 with error "PERMANENTLY_DELETED"
         """
         # Given - Delete a point and manually set deletion date to 31 days ago
-        point_url = reverse("points:gpspoint-detail", kwargs={"pk": self.point_id})
+        point_url = reverse("points:detail", kwargs={"pk": self.point_id})
         self.client.delete(point_url)
 
         # Manually update trash entry to simulate 31 days ago
@@ -231,7 +231,7 @@ class TestScenario6TrashRestoration:
         trash_entry.save()
 
         # When - Attempt to restore
-        restore_url = reverse("trash:trash-restore", kwargs={"pk": self.point_id})
+        restore_url = reverse("trash:restore", kwargs={"pk": self.point_id})
         response = self.client.post(restore_url)
 
         # Then
@@ -245,7 +245,7 @@ class TestScenario6TrashRestoration:
         This test validates the entire trash lifecycle.
         """
         # Step 1: Delete point
-        point_url = reverse("points:gpspoint-detail", kwargs={"pk": self.point_id})
+        point_url = reverse("points:detail", kwargs={"pk": self.point_id})
         delete_response = self.client.delete(point_url)
         assert delete_response.status_code == status.HTTP_204_NO_CONTENT
 
@@ -255,7 +255,7 @@ class TestScenario6TrashRestoration:
         assert list_response.data["count"] >= 1
 
         # Step 3: Restore point
-        restore_url = reverse("trash:trash-restore", kwargs={"pk": self.point_id})
+        restore_url = reverse("trash:restore", kwargs={"pk": self.point_id})
         restore_response = self.client.post(restore_url)
         assert restore_response.status_code == status.HTTP_200_OK
 
@@ -268,7 +268,7 @@ class TestScenario6TrashRestoration:
         assert delete_response_2.status_code == status.HTTP_204_NO_CONTENT
 
         # Step 6: Permanently delete
-        permanent_url = reverse("trash:trash-permanent", kwargs={"pk": self.point_id})
+        permanent_url = reverse("trash:permanent", kwargs={"pk": self.point_id})
         permanent_response = self.client.delete(permanent_url)
         assert permanent_response.status_code == status.HTTP_204_NO_CONTENT
 
@@ -288,7 +288,7 @@ class TestScenario6TrashRestoration:
             email="bob@example.com", password="SecurePass456"
         )
 
-        shares_url = reverse("sharing:share-list", kwargs={"point_pk": self.point_id})
+        shares_url = reverse("sharing:list", kwargs={"point_id": self.point_id})
         share_response = self.client.post(
             shares_url,
             {
@@ -300,7 +300,7 @@ class TestScenario6TrashRestoration:
         share_id = share_response.data["id"]
 
         # When - Delete the point
-        point_url = reverse("points:gpspoint-detail", kwargs={"pk": self.point_id})
+        point_url = reverse("points:detail", kwargs={"pk": self.point_id})
         self.client.delete(point_url)
 
         # Then - Share should be deactivated
@@ -309,7 +309,7 @@ class TestScenario6TrashRestoration:
         assert share.is_active is False
 
         # When - Restore the point
-        restore_url = reverse("trash:trash-restore", kwargs={"pk": self.point_id})
+        restore_url = reverse("trash:restore", kwargs={"pk": self.point_id})
         self.client.post(restore_url)
 
         # Then - Share should be reactivated

@@ -41,7 +41,7 @@ class TestScenario2PointManagement:
         self.alice_token = login_response.data["access"]
 
         # URLs
-        self.points_list_url = reverse("points:gpspoint-list")
+        self.points_list_url = reverse("points:list")
 
     def test_step_1_create_private_gps_point(self):
         """
@@ -305,7 +305,7 @@ class TestScenario2PointManagement:
             format="json",
         )
         point_id = create_response.data["id"]
-        point_detail_url = reverse("points:gpspoint-detail", kwargs={"pk": point_id})
+        point_detail_url = reverse("points:detail", kwargs={"pk": point_id})
 
         # When - Update the point
         update_data = {
@@ -344,7 +344,7 @@ class TestScenario2PointManagement:
             format="json",
         )
         point_id = create_response.data["id"]
-        point_detail_url = reverse("points:gpspoint-detail", kwargs={"pk": point_id})
+        point_detail_url = reverse("points:detail", kwargs={"pk": point_id})
 
         # When - Delete the point
         response = self.client.delete(point_detail_url)
@@ -395,7 +395,7 @@ class TestScenario2PointManagement:
         assert search_response.data["count"] >= 1
 
         # Step 4: Update point
-        point_detail_url = reverse("points:gpspoint-detail", kwargs={"pk": point_id})
+        point_detail_url = reverse("points:detail", kwargs={"pk": point_id})
         update_response = self.client.patch(
             point_detail_url, {"title": "Updated Lifecycle Point"}, format="json"
         )

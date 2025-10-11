@@ -78,7 +78,7 @@ class TestExportImportContract:
         """
         api_client, user, point_ids = authenticated_user_with_points
 
-        url = reverse('export:export')
+        url = reverse('export_import:export')
         export_data = {
             'format': 'geojson',
             'point_ids': point_ids[:2],  # Export first 2 points
@@ -108,7 +108,7 @@ class TestExportImportContract:
         """
         api_client, user, point_ids = authenticated_user_with_points
 
-        url = reverse('export:export')
+        url = reverse('export_import:export')
         export_data = {
             'format': 'gpx'
         }
@@ -129,7 +129,7 @@ class TestExportImportContract:
         """
         api_client, user, point_ids = authenticated_user_with_points
 
-        url = reverse('export:export')
+        url = reverse('export_import:export')
         export_data = {
             'format': 'csv'
         }
@@ -155,7 +155,7 @@ class TestExportImportContract:
         """
         api_client, user, point_ids = authenticated_user_with_points
 
-        url = reverse('export:export')
+        url = reverse('export_import:export')
         export_data = {
             'format': 'zip'
         }
@@ -175,7 +175,7 @@ class TestExportImportContract:
         """
         api_client, user, _ = authenticated_user_with_points
 
-        url = reverse('export:export')
+        url = reverse('export_import:export')
         export_data = {
             'format': 'geojson',
             'point_ids': ['00000000-0000-0000-0000-000000000000']
@@ -232,7 +232,7 @@ class TestExportImportContract:
             content_type="application/geo+json"
         )
 
-        url = reverse('export:import')
+        url = reverse('export_import:import')
         data = {
             'format': 'geojson',
             'file': uploaded_file,
@@ -278,7 +278,7 @@ class TestExportImportContract:
             content_type="text/csv"
         )
 
-        url = reverse('export:import')
+        url = reverse('export_import:import')
         data = {
             'format': 'csv',
             'file': uploaded_file,
@@ -325,7 +325,7 @@ class TestExportImportContract:
             content_type="application/geo+json"
         )
 
-        url = reverse('export:import')
+        url = reverse('export_import:import')
         data = {
             'format': 'geojson',
             'file': uploaded_file
@@ -360,7 +360,7 @@ class TestExportImportContract:
             content_type="application/geo+json"
         )
 
-        url = reverse('export:import')
+        url = reverse('export_import:import')
         data = {
             'format': 'geojson',
             'file': uploaded_file
@@ -390,7 +390,7 @@ class TestTrashContract:
     def authenticated_user_with_trashed_point(self, api_client):
         """Create user with a trashed GPS point."""
         # Register and authenticate
-        register_url = reverse('auth:register')
+        register_url = reverse('authentication:register')
         register_data = {
             'email': 'test@example.com',
             'password': 'SecurePass123'
@@ -433,11 +433,14 @@ class TestTrashContract:
         response = api_client.get(url)
 
         assert response.status_code == status.HTTP_200_OK
-        assert isinstance(response.data, list)
-        assert len(response.data) >= 1
+
+        results = response.data["results"]
+
+        assert isinstance(results, list)
+        assert len(results) >= 1
 
         # Validate trash item structure
-        item = response.data[0]
+        item = results[0]
         assert 'id' in item
         assert 'gps_point' in item
         assert item['gps_point']['id'] == point_id
@@ -519,7 +522,7 @@ class TestTrashContract:
 
         # Create second user
         client2 = APIClient()
-        register_url = reverse('auth:register')
+        register_url = reverse('authentication:register')
         register_data = {'email': 'user2@example.com', 'password': 'SecurePass123'}
         register_response = client2.post(register_url, register_data, format='json')
         client2.credentials(HTTP_AUTHORIZATION=f'Bearer {register_response.data["access"]}')

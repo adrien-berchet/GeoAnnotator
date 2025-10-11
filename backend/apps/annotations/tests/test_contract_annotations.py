@@ -382,7 +382,7 @@ class TestAnnotationsContract:
 
         # Try to delete as user2
         client2 = APIClient()
-        register_url = reverse('auth:register')
+        register_url = reverse('authentication:register')
         register_data = {'email': 'user2@example.com', 'password': 'SecurePass123'}
         register_response = client2.post(register_url, register_data, format='json')
         client2.credentials(HTTP_AUTHORIZATION=f'Bearer {register_response.data["access"]}')

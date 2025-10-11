@@ -48,7 +48,7 @@ class TestScenario7PublicPointBrowsing:
         )
         self.bob_token = bob_login.data["access"]
 
-        self.points_url = reverse("points:gpspoint-list")
+        self.points_url = reverse("points:list")
 
     def test_step_1_alice_creates_public_point(self):
         """
@@ -154,7 +154,7 @@ class TestScenario7PublicPointBrowsing:
 
         # When - Bob views the public point
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.bob_token}")
-        point_url = reverse("points:gpspoint-detail", kwargs={"pk": public_point_id})
+        point_url = reverse("points:detail", kwargs={"pk": public_point_id})
         response = self.client.get(point_url)
 
         # Then
@@ -187,7 +187,7 @@ class TestScenario7PublicPointBrowsing:
 
         # When - Bob attempts to edit
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.bob_token}")
-        point_url = reverse("points:gpspoint-detail", kwargs={"pk": public_point_id})
+        point_url = reverse("points:detail", kwargs={"pk": public_point_id})
         update_data = {"title": "Bob's Update"}
         response = self.client.patch(point_url, update_data, format="json")
 
@@ -250,7 +250,7 @@ class TestScenario7PublicPointBrowsing:
             format="json",
         )
         point_id = create_response.data["id"]
-        point_url = reverse("points:gpspoint-detail", kwargs={"pk": point_id})
+        point_url = reverse("points:detail", kwargs={"pk": point_id})
 
         # Step 2: Bob can view public point
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.bob_token}")

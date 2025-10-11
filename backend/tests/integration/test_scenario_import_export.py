@@ -42,7 +42,7 @@ class TestScenario5ImportExport:
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.alice_token}")
 
         # Create test points
-        points_url = reverse("points:gpspoint-list")
+        points_url = reverse("points:list")
 
         self.point1 = self.client.post(
             points_url,
