@@ -81,6 +81,9 @@ export function Navbar() {
               <Link to="/points" className="nav-link">
                 📌 Points
               </Link>
+              <Link to="/tags" className="nav-link">
+                🏷️ Tags
+              </Link>
               <Link to="/trash" className="nav-link">
                 🗑️ Trash
               </Link>

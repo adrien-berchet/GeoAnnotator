@@ -102,3 +102,26 @@ export async function searchTags(query: string): Promise<Tag[]> {
   const response = await apiClient.get<Tag[]>(`/tags/?search=${query}`);
   return response.data;
 }
+
+/**
+ * Create a new tag.
+ */
+export async function createTag(name: string): Promise<Tag> {
+  const response = await apiClient.post<Tag>('/tags/', { name });
+  return response.data;
+}
+
+/**
+ * Update a tag.
+ */
+export async function updateTag(id: string, name: string): Promise<Tag> {
+  const response = await apiClient.patch<Tag>(`/tags/${id}/`, { name });
+  return response.data;
+}
+
+/**
+ * Delete a tag.
+ */
+export async function deleteTag(id: string): Promise<void> {
+  await apiClient.delete(`/tags/${id}/`);
+}

@@ -327,11 +327,16 @@ class GPSPointViewSet(viewsets.ModelViewSet):
         return Response({'is_locked': False})
 
 
-class TagViewSet(viewsets.ReadOnlyModelViewSet):
+class TagViewSet(viewsets.ModelViewSet):
     """
-    ViewSet for listing and searching tags.
+    ViewSet for managing tags (CRUD operations).
 
-    Read-only: tags are created automatically when creating/updating points.
+    Endpoints:
+    - GET /api/tags/ - List all tags
+    - POST /api/tags/ - Create new tag
+    - GET /api/tags/{id}/ - Get tag detail
+    - PUT/PATCH /api/tags/{id}/ - Update tag
+    - DELETE /api/tags/{id}/ - Delete tag
     """
     from .models import Tag
     from .serializers import TagSerializer
@@ -350,3 +355,13 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
             queryset = queryset.filter(name__istartswith=search)
 
         return queryset
+
+    def destroy(self, request, *args, **kwargs):
+        """
+        Delete a tag.
+
+        The tag will be removed from all points that use it.
+        """
+        tag = self.get_object()
+        tag.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
