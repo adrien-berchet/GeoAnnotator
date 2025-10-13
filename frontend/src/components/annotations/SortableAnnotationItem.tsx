@@ -50,7 +50,7 @@ export function SortableAnnotationItem({
     transform,
     transition,
     isDragging,
-  } = useSortable({ 
+  } = useSortable({
     id: annotation.id,
     disabled: !isReorderMode,
   });

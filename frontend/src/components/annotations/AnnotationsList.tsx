@@ -110,13 +110,13 @@ export function AnnotationsList({
 
     // Reorder locally first for immediate UI feedback
     const reordered = arrayMove(localAnnotations, oldIndex, newIndex);
-    
+
     // Update order property for each annotation
     const reorderedWithOrder = reordered.map((annotation: Annotation, index: number) => ({
       ...annotation,
       order: index,
     }));
-    
+
     setLocalAnnotations(reorderedWithOrder);
 
     // Update order numbers and save to server

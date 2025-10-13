@@ -43,9 +43,20 @@ class GPSPointViewSet(viewsets.ModelViewSet):
         return GPSPointSerializer
 
     def get_queryset(self):
-        """Return points accessible to current user."""
+        """Return points accessible to current user with optional search filtering."""
         user = self.request.user
-        return PermissionService.get_accessible_points(user, include_public=True)
+        queryset = PermissionService.get_accessible_points(user, include_public=True)
+
+        # Apply search filter if provided
+        search_query = self.request.query_params.get('search', None)
+        if search_query:
+            queryset = queryset.filter(
+                Q(title__icontains=search_query) |
+                Q(description__icontains=search_query) |
+                Q(tags__name__icontains=search_query)
+            ).distinct()
+
+        return queryset
 
     def create(self, request):
         """Create new GPS point."""
