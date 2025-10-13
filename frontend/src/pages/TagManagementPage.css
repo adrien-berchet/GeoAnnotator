@@ -63,6 +63,7 @@
   font-weight: 600;
   margin-bottom: 1rem;
   color: #2d3748;
+  text-align: center;
 }
 
 .create-error {
@@ -78,16 +79,18 @@
 .form-group {
   display: flex;
   gap: 0.75rem;
+  align-items: center;
 }
 
 .tag-name-input {
-  flex: 1;
+  width: 300px;
   padding: 0.5rem 0.75rem;
   border: 1px solid #cbd5e0;
   border-radius: 4px;
   font-size: 1rem;
   color: #2d3748;
   transition: border-color 0.2s;
+  flex-shrink: 0;
 }
 
 .tag-name-input:focus {
@@ -112,6 +115,7 @@
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.2s;
+  flex-shrink: 0;
 }
 
 .create-button:hover:not(:disabled) {
@@ -174,18 +178,22 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 2rem;
 }
 
 .tag-name {
   font-size: 1rem;
   color: #2d3748;
   font-weight: 500;
+  flex: 1;
+  min-width: 0;
 }
 
 .tag-actions {
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
+  flex-shrink: 0;
 }
 
 .view-points-button,
