@@ -367,7 +367,23 @@ class AnnotationService:
     @staticmethod
     def delete_annotation(annotation: Annotation, user: User) -> None:
         """
-        Delete annotation and reclaim quota.
+        Soft delete annotation by moving it to trash (30-day retention).
+
+        Args:
+            annotation: Annotation object
+            user: User (for quota management)
+        """
+        # Import here to avoid circular import
+        from apps.trash.services import AnnotationTrashService
+
+        # Move to trash (soft delete)
+        AnnotationTrashService.move_to_trash(annotation, user)
+
+    @staticmethod
+    def permanently_delete_annotation(annotation: Annotation, user: User) -> None:
+        """
+        Permanently delete annotation and reclaim quota.
+        Used only when emptying trash or when trash retention expires.
 
         Args:
             annotation: Annotation object

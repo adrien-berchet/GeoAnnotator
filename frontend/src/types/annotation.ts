@@ -19,6 +19,9 @@ export interface Annotation {
   order: number;
   created_at: string;
   updated_at?: string;
+  is_trashed: boolean;
+  trash_days_remaining: number | null;
+  trash_id: string | null;
 }
 
 export interface CreateTextAnnotationData {

@@ -14,12 +14,12 @@ import { PointsListPage } from './pages/PointsListPage';
 import { PointDetailPage } from './pages/PointDetailPage';
 import { EditPointPage } from './pages/EditPointPage';
 import TagManagementPage from './pages/TagManagementPage';
+import { TrashPage } from './pages/TrashPage';
 
 // Placeholder components - to be implemented
 const ProfilePage = () => <div>Profile Page</div>;
 const SettingsPage = () => <div>Settings Page</div>;
 const SharedPointsPage = () => <div>Shared Points Page</div>;
-const TrashPage = () => <div>Trash Page</div>;
 
 /**
  * Protected route wrapper.

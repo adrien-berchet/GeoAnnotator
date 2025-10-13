@@ -1,0 +1,403 @@
+/**
+ * Styles for trash cards (points and annotations).
+ */
+
+.trash-card {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.2s;
+}
+
+.trash-card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.trash-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.trash-card-info {
+  flex: 1;
+}
+
+.trash-card-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.trash-card-title .icon {
+  font-size: 1.5rem;
+}
+
+.trash-card-meta {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.trash-card-meta span {
+  display: inline-block;
+}
+
+.days-remaining {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+
+.days-remaining.normal {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.days-remaining.warning {
+  background-color: #fff3e0;
+  color: #e65100;
+}
+
+.days-remaining.critical {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+.trash-card-description {
+  margin: 0 0 1rem 0;
+  color: #666;
+  line-height: 1.5;
+}
+
+.trash-card-details {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.detail-item .icon {
+  font-size: 1rem;
+}
+
+.toggle-details-btn {
+  background: none;
+  border: none;
+  color: #1976d2;
+  cursor: pointer;
+  font-size: 0.875rem;
+  padding: 0.5rem 0;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: color 0.2s;
+}
+
+.toggle-details-btn:hover {
+  color: #1565c0;
+  text-decoration: underline;
+}
+
+.trash-card-expanded {
+  border-top: 1px solid #e0e0e0;
+  padding-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.expanded-section {
+  margin-bottom: 1.5rem;
+}
+
+.expanded-section:last-child {
+  margin-bottom: 0;
+}
+
+.expanded-section h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem 0;
+  color: #555;
+}
+
+.annotations-list,
+.shares-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.annotation-item,
+.share-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  background-color: #f9f9f9;
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
+
+.annotation-item .icon,
+.share-item .icon {
+  font-size: 1.25rem;
+}
+
+.annotation-preview {
+  flex: 1;
+  color: #666;
+}
+
+.share-email {
+  flex: 1;
+  color: #333;
+}
+
+.share-permission {
+  padding: 0.25rem 0.5rem;
+  background-color: #e3f2fd;
+  color: #1976d2;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.shares-note {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background-color: #e3f2fd;
+  border-left: 3px solid #1976d2;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  color: #1565c0;
+}
+
+.tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tag {
+  padding: 0.25rem 0.75rem;
+  background-color: #f5f5f5;
+  border: 1px solid #e0e0e0;
+  border-radius: 16px;
+  font-size: 0.875rem;
+  color: #555;
+}
+
+.trash-card-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-restore {
+  background-color: #4caf50;
+  color: white;
+}
+
+.btn-restore:hover:not(:disabled) {
+  background-color: #45a049;
+}
+
+.btn-delete {
+  background-color: #f44336;
+  color: white;
+}
+
+.btn-delete:hover:not(:disabled) {
+  background-color: #da190b;
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: #1976d2;
+  cursor: pointer;
+  font-size: 0.875rem;
+  padding: 0;
+  text-decoration: underline;
+  transition: color 0.2s;
+}
+
+.btn-link:hover {
+  color: #1565c0;
+}
+
+.expired-notice {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background-color: #ffebee;
+  border-left: 3px solid #c62828;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  color: #c62828;
+  font-weight: 500;
+}
+
+/* Trash Annotation Card Specific Styles */
+
+.trash-annotation-card .annotation-preview {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background-color: #f9f9f9;
+  border-radius: 4px;
+}
+
+.annotation-preview-content {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.annotation-preview-content .icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.annotation-preview-content.text .text-preview {
+  flex: 1;
+  color: #666;
+  line-height: 1.5;
+  font-size: 0.875rem;
+}
+
+.annotation-preview-content.file {
+  align-items: center;
+}
+
+.file-info {
+  flex: 1;
+}
+
+.file-name {
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 0.25rem;
+}
+
+.file-meta {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.file-type {
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.associated-point {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background-color: #e8f5e9;
+  border-radius: 4px;
+  border: 1px solid #c8e6c9;
+}
+
+.associated-point-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.associated-point-header h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+  color: #2e7d32;
+}
+
+.point-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.point-info .icon {
+  font-size: 1.25rem;
+}
+
+.point-title {
+  font-weight: 500;
+  color: #1b5e20;
+}
+
+.point-note {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #2e7d32;
+}
+
+/* Responsive */
+
+@media (max-width: 768px) {
+  .trash-card-header {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .days-remaining {
+    align-self: flex-start;
+  }
+
+  .trash-card-details {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .trash-card-actions {
+    flex-direction: column;
+  }
+
+  .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

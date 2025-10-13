@@ -49,14 +49,27 @@ class AnnotationViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """Return annotations for the specified point."""
         point_id = self.kwargs.get('point_id')
+
+        # Check if we should include trashed annotations
+        include_trashed = self.request.query_params.get('include_trashed', 'true').lower() == 'true'
+
         if point_id:
             # Annotations for a specific point
-            return Annotation.objects.filter(gps_point_id=point_id)
+            queryset = Annotation.objects.filter(gps_point_id=point_id)
         else:
             # All annotations for accessible points (if called without point_id)
             user = self.request.user
             accessible_points = PermissionService.get_accessible_points(user, include_public=True)
-            return Annotation.objects.filter(gps_point__in=accessible_points)
+            queryset = Annotation.objects.filter(gps_point__in=accessible_points)
+
+        # Always select_related trash_entry to enable SerializerMethodFields
+        queryset = queryset.select_related('trash_entry')
+
+        # Filter out trashed annotations unless explicitly requested
+        if not include_trashed:
+            queryset = queryset.filter(trash_entry__isnull=True)
+
+        return queryset
 
     def create(self, request, point_id=None):
         """Create new annotation (text or file)."""
@@ -177,6 +190,16 @@ class AnnotationViewSet(viewsets.ModelViewSet):
     def destroy(self, request, pk=None, point_id=None):
         """Delete annotation."""
         annotation = self.get_object()
+
+        # Check if already in trash
+        if hasattr(annotation, 'trash_entry') and annotation.trash_entry:
+            return Response(
+                {
+                    'error': 'ALREADY_IN_TRASH',
+                    'message': 'Annotation is already in trash. Use the trash endpoint to permanently delete or restore it.'
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         # Check if owner (only owner can delete)
         if not PermissionService.is_owner(annotation.gps_point, request.user):

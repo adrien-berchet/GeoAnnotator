@@ -78,13 +78,14 @@
 
 /* Annotation Item */
 .annotation-item {
-  background: white;
+  background: white; /* Même fond blanc que .point-info-card */
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   display: flex;
   gap: 0.5rem;
   transition: box-shadow 0.2s;
   position: relative;
+  padding: 1rem; /* Ajout de padding pour meilleur espacement */
 }
 
 .annotation-item:hover {
@@ -447,35 +448,46 @@
   }
 
   .annotation-item {
-    background: #2d3748;
-    border-color: #4a5568;
+    background: #2d3748 !important; /* Force le fond sombre même avec les règles qui viennent après */
+    border-color: #4a5568 !important;
   }
 
   .annotation-type-badge {
-    background: #4a5568;
-    color: #e2e8f0;
+    background: #4a5568 !important;
+    color: #e2e8f0 !important;
+    font-weight: 600 !important;
   }
 
   .annotation-date {
-    color: #cbd5e0;
+    color: #cbd5e0 !important;
   }
 
   .text-annotation {
-    background: #1a202c;
-    border-left-color: #63b3ed;
+    background: #1a202c !important;
+    border-left-color: #63b3ed !important;
   }
 
   .text-annotation p {
-    color: #f7fafc;
+    color: #f7fafc !important;
+  }
+
+  .text-preview {
+    background: #1a202c !important;
+    border-left-color: #63b3ed !important;
+  }
+
+  .text-preview .wmde-markdown,
+  .text-preview .wmde-markdown * {
+    color: #f7fafc !important;
   }
 
   .annotation-image {
-    background: #1a202c;
+    background: #1a202c !important;
   }
 
   .file-info,
   .file-annotation {
-    background: #1a202c;
+    background: #1a202c !important;
   }
 
   .file-name {
@@ -508,6 +520,41 @@
     border-color: #fc8181;
     color: #feb2b2;
   }
+
+  /* Trashed annotations in dark mode - même style que .point-info-card */
+  .annotation-item.trashed {
+    background: #2d3748 !important; /* Même fond que .point-info-card en dark mode */
+    border-color: #fc8181 !important; /* Bordure rouge pour distinction */
+  }
+
+  .annotation-item.trashed .annotation-content {
+    color: #f7fafc !important; /* Même que .point-info-card h1 */
+  }
+
+  .annotation-item.trashed .annotation-meta {
+    color: #cbd5e0 !important; /* Même que .point-description p */
+  }
+
+  .annotation-item.trashed .text-preview,
+  .annotation-item.trashed .text-preview * {
+    color: #f7fafc !important;
+  }
+
+  .annotation-item.trashed .file-name,
+  .annotation-item.trashed .file-details {
+    color: #f7fafc !important;
+  }
+
+  /* Motif hachuré adapté pour dark mode */
+  .annotation-item.trashed::before {
+    background: repeating-linear-gradient(
+      45deg,
+      rgba(252, 129, 129, 0.05), /* Rouge plus visible sur fond sombre */
+      rgba(252, 129, 129, 0.05) 10px,
+      rgba(252, 129, 129, 0.1) 10px,
+      rgba(252, 129, 129, 0.1) 20px
+    );
+  }
 }
 
 /* Responsive */
@@ -521,4 +568,90 @@
     width: 100%;
     text-align: center;
   }
+}
+
+/* Trashed Annotation Styles - Improved Readability */
+.annotation-item.trashed {
+  position: relative;
+  opacity: 1; /* Opacité complète pour meilleure lisibilité */
+  background: white; /* Même fond blanc que les annotations normales */
+  border: 2px solid #fc8181; /* Bordure rouge pour distinction */
+}
+
+.annotation-item.trashed::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(252, 129, 129, 0.03), /* Rouge très subtil - ne gêne pas la lecture */
+    rgba(252, 129, 129, 0.03) 10px,
+    rgba(252, 129, 129, 0.06) 10px,
+    rgba(252, 129, 129, 0.06) 20px
+  );
+  pointer-events: none;
+  z-index: 1;
+  border-radius: 8px;
+}
+
+.annotation-item.trashed .annotation-content-wrapper {
+  position: relative;
+  z-index: 2;
+}
+
+.annotation-item.trashed .trashed-annotation-banner {
+  background: linear-gradient(135deg, #fc8181 0%, #f56565 100%); /* Plus clair */
+  color: white;
+  padding: 0.75rem 1rem;
+  border-radius: 6px 6px 0 0;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600; /* Plus gras pour meilleure lisibilité */
+  z-index: 3;
+  position: relative;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Ombre légère */
+}
+
+.annotation-item.trashed .trashed-annotation-banner .banner-content {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.annotation-item.trashed .annotation-content {
+  color: #2d3748 !important; /* Même couleur que les annotations normales */
+}
+
+.annotation-item.trashed .annotation-meta {
+  color: #4a5568 !important; /* Même couleur que les annotations normales */
+}
+
+/* Assurer que le texte dans MDEditor est lisible */
+.annotation-item.trashed .text-preview,
+.annotation-item.trashed .text-preview * {
+  color: #2d3748 !important;
+}
+
+/* Nom de fichier plus lisible */
+.annotation-item.trashed .file-name,
+.annotation-item.trashed .file-details {
+  color: #2d3748 !important;
+}
+
+.annotation-item.trashed .annotation-actions {
+  display: none;
+}
+
+/* Ajout d'un indicateur visuel supplémentaire */
+.annotation-item.trashed::after {
+  content: '🗑️';
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  font-size: 1.5rem;
+  opacity: 0.3;
+  z-index: 2;
 }

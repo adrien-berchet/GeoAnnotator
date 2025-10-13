@@ -1,0 +1,51 @@
+/**
+ * Additional styles for AnnotationList with trashed annotations.
+ */
+
+/* Trashed annotation card - grayed out */
+.annotation-card.trashed {
+  opacity: 0.6;
+  background-color: #f5f5f5;
+  position: relative;
+}
+
+.annotation-card.trashed::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    rgba(0, 0, 0, 0.03) 10px,
+    rgba(0, 0, 0, 0.03) 20px
+  );
+  pointer-events: none;
+  border-radius: 8px;
+}
+
+.annotation-card.trashed .annotation-header,
+.annotation-card.trashed .annotation-description,
+.annotation-card.trashed .annotation-meta {
+  opacity: 0.7;
+}
+
+.annotation-card.trashed .annotation-type {
+  color: #f44336 !important;
+  font-weight: 600;
+}
+
+/* Hide download/delete actions for trashed annotations */
+.annotation-card.trashed .annotation-actions {
+  display: none;
+}
+
+/* Ensure banner is visible */
+.annotation-card.trashed .trashed-annotation-banner {
+  opacity: 1;
+  position: relative;
+  z-index: 1;
+}

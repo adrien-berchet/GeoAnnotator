@@ -42,6 +42,10 @@ export function AnnotationsList({
   onAnnotationUpdated,
   onAnnotationsReordered,
 }: AnnotationsListProps) {
+  console.log('🚀 AnnotationsList component loaded for point:', pointId);
+  console.log('📥 Received annotations:', annotations);
+  console.log('📊 Trashed annotations:', annotations.filter(a => a.is_trashed));
+
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [previewAnnotation, setPreviewAnnotation] = useState<Annotation | null>(null);
@@ -144,14 +148,27 @@ export function AnnotationsList({
       return;
     }
 
+    console.log('🗑️ Deleting annotation:', annotationId);
     setDeletingId(annotationId);
     setError('');
 
     try {
       await deleteAnnotation(pointId, annotationId);
+      console.log('✅ Annotation deleted successfully');
+
+      // IMPORTANT: Ne pas retirer l'annotation, juste notifier le parent
+      // Le parent devra recharger les annotations pour voir l'état "trashed"
       onAnnotationDeleted(annotationId);
     } catch (err) {
-      setError(getErrorMessage(err));
+      const errorMsg = getErrorMessage(err);
+      console.error('❌ Delete error:', errorMsg);
+
+      // Check if already in trash
+      if (errorMsg.includes('ALREADY_IN_TRASH') || errorMsg.includes('already in trash')) {
+        setError('This annotation is already in the trash. Please use the restore button to recover it.');
+      } else {
+        setError(errorMsg);
+      }
     } finally {
       setDeletingId(null);
     }

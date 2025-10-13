@@ -148,3 +148,133 @@ class Trash(models.Model):
             count += 1
 
         return count
+
+
+class AnnotationTrash(models.Model):
+    """
+    Soft-deleted annotation with 30-day retention period.
+
+    Lifecycle:
+    1. Annotation deleted → AnnotationTrash entry created
+    2. Annotation restored (within 30 days) → AnnotationTrash entry deleted
+    3. 30 days elapsed → Scheduled task permanently deletes annotation
+
+    Note: When a point is deleted, its annotations are deleted via CASCADE,
+    NOT moved to AnnotationTrash. AnnotationTrash is only for individually
+    deleted annotations.
+    """
+
+    # Retention period: 30 days
+    RETENTION_DAYS = 30
+
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+        help_text="Unique trash entry identifier"
+    )
+
+    annotation = models.OneToOneField(
+        'annotations.Annotation',
+        on_delete=models.CASCADE,
+        related_name='trash_entry',
+        help_text="Trashed annotation (one-to-one relationship)"
+    )
+
+    deleted_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='deleted_annotations',
+        help_text="User who deleted the annotation"
+    )
+
+    deleted_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text="Deletion timestamp"
+    )
+
+    permanent_deletion_at = models.DateTimeField(
+        db_index=True,
+        help_text="Auto-calculated: deleted_at + 30 days"
+    )
+
+    class Meta:
+        db_table = 'annotation_trash'
+        verbose_name = 'Annotation Trash Item'
+        verbose_name_plural = 'Annotation Trash Items'
+        indexes = [
+            models.Index(fields=['permanent_deletion_at'], name='idx_annot_trash_perm_del'),
+            models.Index(fields=['deleted_by'], name='idx_annot_trash_deleted_by'),
+            models.Index(fields=['-deleted_at'], name='idx_annot_trash_deleted_at'),
+        ]
+        ordering = ['-deleted_at']  # Most recent first
+
+    def save(self, *args, **kwargs):
+        """Auto-calculate permanent_deletion_at if not set."""
+        if not self.permanent_deletion_at:
+            self.permanent_deletion_at = self.deleted_at or timezone.now()
+            self.permanent_deletion_at += timedelta(days=self.RETENTION_DAYS)
+
+        super().save(*args, **kwargs)
+
+    @property
+    def days_remaining(self):
+        """Calculate days remaining until permanent deletion."""
+        if timezone.now() >= self.permanent_deletion_at:
+            return 0
+
+        delta = self.permanent_deletion_at - timezone.now()
+        return max(0, delta.days)
+
+    @property
+    def is_expired(self):
+        """Check if retention period has expired."""
+        return timezone.now() >= self.permanent_deletion_at
+
+    def restore(self):
+        """
+        Restore annotation from trash.
+
+        Returns:
+            Annotation: The restored annotation
+
+        Raises:
+            ValueError: If retention period expired
+        """
+        if self.is_expired:
+            raise ValueError("Cannot restore: retention period expired")
+
+        # Get the annotation before deleting trash entry
+        annotation = self.annotation
+
+        # Delete trash entry (annotation is now active)
+        self.delete()
+
+        return annotation
+
+    def __str__(self):
+        days = self.days_remaining
+        return f"🗑️ Annotation {self.annotation.id} ({days} days remaining)"
+
+    @classmethod
+    def cleanup_expired(cls):
+        """
+        Permanently delete all expired annotation trash items.
+
+        This should be called by a scheduled task (e.g., daily cron job).
+
+        Returns:
+            int: Number of annotations permanently deleted
+        """
+        expired_items = cls.objects.filter(
+            permanent_deletion_at__lte=timezone.now()
+        )
+
+        count = 0
+        for item in expired_items:
+            # Delete the annotation (will reclaim quota)
+            item.annotation.delete()
+            count += 1
+
+        return count

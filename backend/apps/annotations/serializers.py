@@ -37,10 +37,14 @@ class AnnotationSerializer(serializers.ModelSerializer):
     Annotation serializer with full details.
 
     Handles polymorphic types: text, image, document, file.
+    Includes trash status for annotations in the trash.
     Matches OpenAPI schema: Annotation
     """
     gps_point_id = serializers.UUIDField(source='gps_point.id', read_only=True)
     file = serializers.SerializerMethodField()
+    is_trashed = serializers.SerializerMethodField()
+    trash_days_remaining = serializers.SerializerMethodField()
+    trash_id = serializers.SerializerMethodField()
 
     class Meta:
         model = Annotation
@@ -52,12 +56,34 @@ class AnnotationSerializer(serializers.ModelSerializer):
             'file',
             'order',
             'created_at',
+            'is_trashed',
+            'trash_days_remaining',
+            'trash_id',
         ]
         read_only_fields = [
             'id',
             'created_at',
             'updated_at',
+            'is_trashed',
+            'trash_days_remaining',
+            'trash_id',
         ]
+
+    def get_is_trashed(self, obj):
+        """Check if annotation is in trash."""
+        return hasattr(obj, 'trash_entry') and obj.trash_entry is not None
+
+    def get_trash_days_remaining(self, obj):
+        """Get days remaining before permanent deletion (None if not trashed)."""
+        if hasattr(obj, 'trash_entry') and obj.trash_entry:
+            return obj.trash_entry.days_remaining
+        return None
+
+    def get_trash_id(self, obj):
+        """Get trash entry ID (None if not trashed)."""
+        if hasattr(obj, 'trash_entry') and obj.trash_entry:
+            return str(obj.trash_entry.id)
+        return None
 
     def get_file(self, obj):
         """

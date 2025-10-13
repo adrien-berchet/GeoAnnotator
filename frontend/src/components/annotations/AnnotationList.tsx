@@ -8,7 +8,9 @@ import { useState, useEffect } from 'react';
 import { getAnnotations, downloadAnnotation, deleteAnnotation } from '../../api/annotations';
 import { getErrorMessage } from '../../api/client';
 import { LoadingSpinner } from '../common/LoadingSpinner';
+import { TrashedAnnotationBanner } from './TrashedAnnotationBanner';
 import type { Annotation } from '../../types/annotation';
+import './AnnotationListTrashed.css';
 
 interface AnnotationListProps {
   pointId: string;
@@ -19,6 +21,8 @@ interface AnnotationListProps {
  * Annotation list component.
  */
 export function AnnotationList({ pointId, onAnnotationDeleted }: AnnotationListProps) {
+  console.log('🚀 AnnotationList component loaded for point:', pointId);
+
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -33,6 +37,8 @@ export function AnnotationList({ pointId, onAnnotationDeleted }: AnnotationListP
 
     try {
       const data = await getAnnotations(pointId);
+      console.log('📥 Loaded annotations:', data);
+      console.log('📊 Trashed annotations:', data.filter(a => a.is_trashed));
       setAnnotations(data);
     } catch (err) {
       setError(getErrorMessage(err));
@@ -46,7 +52,7 @@ export function AnnotationList({ pointId, onAnnotationDeleted }: AnnotationListP
    */
   const handleDownload = async (annotation: Annotation) => {
     try {
-      await downloadAnnotation(annotation.id);
+      await downloadAnnotation(pointId, annotation.id);
     } catch (err) {
       alert(`Download error: ${getErrorMessage(err)}`);
     }
@@ -60,17 +66,29 @@ export function AnnotationList({ pointId, onAnnotationDeleted }: AnnotationListP
       return;
     }
 
+    console.log('🗑️ Deleting annotation:', annotationId);
     setDeletingId(annotationId);
 
     try {
       await deleteAnnotation(pointId, annotationId);
-      setAnnotations(prev => prev.filter(a => a.id !== annotationId));
+      console.log('✅ Annotation deleted, reloading...');
+
+      // Reload annotations to show the deleted one as trashed
+      await loadAnnotations();
+      console.log('✅ Annotations reloaded');
 
       if (onAnnotationDeleted) {
         onAnnotationDeleted();
       }
     } catch (err) {
-      alert(`Delete error: ${getErrorMessage(err)}`);
+      const errorMsg = getErrorMessage(err);
+      console.error('❌ Delete error:', errorMsg);
+      // Check if already in trash
+      if (errorMsg.includes('ALREADY_IN_TRASH') || errorMsg.includes('already in trash')) {
+        alert('This annotation is already in the trash. Please use the restore button to recover it.');
+      } else {
+        alert(`Delete error: ${errorMsg}`);
+      }
     } finally {
       setDeletingId(null);
     }
@@ -118,6 +136,7 @@ export function AnnotationList({ pointId, onAnnotationDeleted }: AnnotationListP
 
   // Load annotations on mount
   useEffect(() => {
+    console.log('⚡ useEffect triggered - Loading annotations for point:', pointId);
     loadAnnotations();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pointId]);
@@ -153,18 +172,32 @@ export function AnnotationList({ pointId, onAnnotationDeleted }: AnnotationListP
       <h3>Annotations ({annotations.length})</h3>
 
       <div className="annotations-grid">
-        {annotations.map(annotation => (
-          <div key={annotation.id} className="annotation-card">
+        {annotations.map(annotation => {
+          console.log(`🔍 Rendering annotation ${annotation.id.slice(0, 8)}:`, {
+            is_trashed: annotation.is_trashed,
+            trash_days_remaining: annotation.trash_days_remaining,
+          });
+
+          return (
+          <div key={annotation.id} className={`annotation-card ${annotation.is_trashed ? 'trashed' : ''}`}>
+            {annotation.is_trashed && (
+              <TrashedAnnotationBanner
+                annotation={annotation}
+                onRestore={loadAnnotations}
+              />
+            )}
+
             <div className="annotation-header">
               <span className="annotation-icon">
                 {getAnnotationIcon(annotation)}
               </span>
               <div className="annotation-info">
                 <h4>
-                  {annotation.type === 'text' ? 'Text Note' : annotation.file_name || 'Untitled'}
+                  {annotation.type === 'text' ? 'Text Note' : annotation.file?.file_name || 'Untitled'}
                 </h4>
                 <span className="annotation-type">
                   {annotation.type}
+                  {annotation.is_trashed && ' (Dans la corbeille)'}
                 </span>
               </div>
             </div>
@@ -180,32 +213,35 @@ export function AnnotationList({ pointId, onAnnotationDeleted }: AnnotationListP
               <span className="annotation-date">
                 {formatDate(annotation.created_at)}
               </span>
-              {annotation.file_size && (
+              {annotation.file?.file_size && (
                 <span className="annotation-size">
-                  {formatFileSize(annotation.file_size)}
+                  {formatFileSize(annotation.file.file_size)}
                 </span>
               )}
             </div>
 
-            <div className="annotation-actions">
-              {annotation.file && (
+            {!annotation.is_trashed && (
+              <div className="annotation-actions">
+                {annotation.file && (
+                  <button
+                    onClick={() => handleDownload(annotation)}
+                    className="btn-secondary btn-small"
+                  >
+                    Download
+                  </button>
+                )}
                 <button
-                  onClick={() => handleDownload(annotation)}
-                  className="btn-secondary btn-small"
+                  onClick={() => handleDelete(annotation.id)}
+                  disabled={deletingId === annotation.id}
+                  className="btn-danger btn-small"
                 >
-                  Download
+                  {deletingId === annotation.id ? 'Deleting...' : 'Delete'}
                 </button>
-              )}
-              <button
-                onClick={() => handleDelete(annotation.id)}
-                disabled={deletingId === annotation.id}
-                className="btn-danger btn-small"
-              >
-                {deletingId === annotation.id ? 'Deleting...' : 'Delete'}
-              </button>
-            </div>
+              </div>
+            )}
           </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

@@ -61,12 +61,29 @@ export function SortableAnnotationItem({
     opacity: isDragging ? 0.5 : 1,
   };
 
+  console.log(`🔍 Rendering annotation ${annotation.id.slice(0, 8)}:`, {
+    is_trashed: annotation.is_trashed,
+    trash_days_remaining: annotation.trash_days_remaining,
+  });
+
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className="annotation-item"
+      className={`annotation-item ${annotation.is_trashed ? 'trashed' : ''}`}
     >
+      {/* Trash Banner - only visible if annotation is trashed */}
+      {annotation.is_trashed && (
+        <div className="trashed-annotation-banner">
+          <div className="banner-content">
+            🗑️ Trashed
+            {annotation.trash_days_remaining !== null && (
+              <span> - {annotation.trash_days_remaining} day(s) left</span>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Drag Handle - only visible in reorder mode */}
       {isReorderMode && (
         <div className="drag-handle" {...attributes} {...listeners} title="Drag to reorder">
@@ -106,13 +123,16 @@ export function SortableAnnotationItem({
                   >
                     <MDEditor.Markdown source={annotation.text_content} />
                   </div>
-                  <button
-                    onClick={onEditStart}
-                    className="edit-text-button"
-                    title="Edit text"
-                  >
-                    ✏️ Edit
-                  </button>
+                  {/* Hide edit button if annotation is trashed */}
+                  {!annotation.is_trashed && (
+                    <button
+                      onClick={onEditStart}
+                      className="edit-text-button"
+                      title="Edit text"
+                    >
+                      ✏️ Edit
+                    </button>
+                  )}
                 </div>
               )}
             </>
@@ -143,13 +163,16 @@ export function SortableAnnotationItem({
                     )}
                   </div>
                 )}
-                <button
-                  onClick={() => onDownload(annotation)}
-                  className="download-button"
-                  disabled={isDownloading}
-                >
-                  {isDownloading ? '⏳ Downloading...' : '⬇️ Download'}
-                </button>
+                {/* Hide download button if annotation is trashed */}
+                {!annotation.is_trashed && (
+                  <button
+                    onClick={() => onDownload(annotation)}
+                    className="download-button"
+                    disabled={isDownloading}
+                  >
+                    {isDownloading ? '⏳ Downloading...' : '⬇️ Download'}
+                  </button>
+                )}
               </div>
             </div>
           )}
@@ -169,35 +192,41 @@ export function SortableAnnotationItem({
                   <div className="file-size">{formatFileSize(annotation.file.file_size)}</div>
                 )}
               </div>
-              <div className="file-actions">
-                <button
-                  onClick={() => onPreview(annotation)}
-                  className="preview-button"
-                  title="Preview"
-                >
-                  👁️ Preview
-                </button>
-                <button
-                  onClick={() => onDownload(annotation)}
-                  className="download-button"
-                  disabled={isDownloading}
-                >
-                  {isDownloading ? '⏳ Downloading...' : '⬇️ Download'}
-                </button>
-              </div>
+              {/* Hide file actions if annotation is trashed */}
+              {!annotation.is_trashed && (
+                <div className="file-actions">
+                  <button
+                    onClick={() => onPreview(annotation)}
+                    className="preview-button"
+                    title="Preview"
+                  >
+                    👁️ Preview
+                  </button>
+                  <button
+                    onClick={() => onDownload(annotation)}
+                    className="download-button"
+                    disabled={isDownloading}
+                  >
+                    {isDownloading ? '⏳ Downloading...' : '⬇️ Download'}
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
 
-        <div className="annotation-actions">
-          <button
-            onClick={() => onDelete(annotation.id)}
-            className="delete-button"
-            disabled={isDeleting}
-          >
-            {isDeleting ? '🗑️ Deleting...' : '🗑️ Delete'}
-          </button>
-        </div>
+        {/* Hide actions if annotation is trashed */}
+        {!annotation.is_trashed && (
+          <div className="annotation-actions">
+            <button
+              onClick={() => onDelete(annotation.id)}
+              className="delete-button"
+              disabled={isDeleting}
+            >
+              {isDeleting ? '🗑️ Deleting...' : '🗑️ Delete'}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
