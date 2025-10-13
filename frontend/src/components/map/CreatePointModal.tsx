@@ -4,11 +4,12 @@
  * Modal for creating a new GPS point by clicking on the map.
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { FormEvent } from 'react';
-import { createPoint } from '../../api/points';
+import { createPoint, getTags } from '../../api/points';
 import { getErrorMessage } from '../../api/client';
-import type { GPSPoint } from '../../types/point';
+import type { GPSPoint, Tag } from '../../types/point';
+import { TagSelector } from '../common/TagSelector';
 import './CreatePointModal.css';
 
 interface CreatePointModalProps {
@@ -31,10 +32,30 @@ export function CreatePointModal({
 }: CreatePointModalProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [tags, setTags] = useState('');
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [availableTags, setAvailableTags] = useState<Tag[]>([]);
   const [isPublic, setIsPublic] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  /**
+   * Load available tags on mount.
+   */
+  useEffect(() => {
+    loadAvailableTags();
+  }, []);
+
+  /**
+   * Load available tags from API.
+   */
+  const loadAvailableTags = async () => {
+    try {
+      const tags = await getTags();
+      setAvailableTags(tags);
+    } catch (err) {
+      console.error('Error loading tags:', err);
+    }
+  };
 
   /**
    * Handle form submission.
@@ -57,12 +78,6 @@ export function CreatePointModal({
     setIsLoading(true);
 
     try {
-      // Parse tags
-      const tagList = tags
-        .split(',')
-        .map(tag => tag.trim())
-        .filter(tag => tag.length > 0);
-
       // Create point
       const point = await createPoint({
         title: title.trim(),
@@ -70,13 +85,13 @@ export function CreatePointModal({
         latitude,
         longitude,
         is_public: isPublic,
-        tags: tagList.length > 0 ? tagList : undefined,
+        tags: selectedTags.length > 0 ? selectedTags : undefined,
       });
 
       // Reset form
       setTitle('');
       setDescription('');
-      setTags('');
+      setSelectedTags([]);
       setIsPublic(false);
 
       // Notify parent
@@ -151,17 +166,12 @@ export function CreatePointModal({
           {/* Tags field */}
           <div className="form-group">
             <label htmlFor="tags">Tags</label>
-            <input
-              id="tags"
-              type="text"
-              value={tags}
-              onChange={(e) => setTags(e.target.value)}
-              placeholder="Enter tags separated by commas"
+            <TagSelector
+              selectedTags={selectedTags}
+              availableTags={availableTags}
+              onTagsChange={setSelectedTags}
               disabled={isLoading}
             />
-            <small className="form-text">
-              Separate multiple tags with commas (e.g., "hiking, mountain, photo spot")
-            </small>
           </div>
 
           {/* Public checkbox */}

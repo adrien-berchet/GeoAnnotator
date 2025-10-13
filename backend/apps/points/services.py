@@ -185,7 +185,13 @@ class PointService:
         # Add tags
         if tags:
             for tag_name in tags:
-                tag, _ = Tag.objects.get_or_create(name=tag_name.lower().strip())
+                tag_name_clean = tag_name.strip()
+                # Try to find existing tag (case-insensitive)
+                try:
+                    tag = Tag.objects.get(name__iexact=tag_name_clean)
+                except Tag.DoesNotExist:
+                    # Create new tag with lowercase name
+                    tag = Tag.objects.create(name=tag_name_clean.lower())
                 point.tags.add(tag)
 
         return point
@@ -236,7 +242,13 @@ class PointService:
         if tags is not None:
             point.tags.clear()
             for tag_name in tags:
-                tag, _ = Tag.objects.get_or_create(name=tag_name.lower().strip())
+                tag_name_clean = tag_name.strip()
+                # Try to find existing tag (case-insensitive)
+                try:
+                    tag = Tag.objects.get(name__iexact=tag_name_clean)
+                except Tag.DoesNotExist:
+                    # Create new tag with lowercase name
+                    tag = Tag.objects.create(name=tag_name_clean.lower())
                 point.tags.add(tag)
 
         return point

@@ -1,0 +1,240 @@
+/**
+ * Tag selector styles.
+ */
+
+.tag-selector {
+  position: relative;
+  width: 100%;
+}
+
+/* Selected tags container */
+.selected-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 42px;
+  padding: 0.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: white;
+  transition: all 0.2s;
+}
+
+.selected-tags:focus-within {
+  border-color: #4299e1;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+}
+
+/* Tag pill */
+.tag-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  background: #ebf8ff;
+  color: #2c5282;
+  border: 1px solid #90cdf4;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.tag-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-left: 0.25rem;
+  background: none;
+  border: none;
+  color: #2c5282;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: all 0.15s;
+}
+
+.tag-remove:hover {
+  background: #bee3f8;
+  color: #2b6cb0;
+}
+
+/* Input field */
+.tag-input {
+  flex: 1;
+  min-width: 150px;
+  padding: 0.25rem;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 1rem;
+  font-family: inherit;
+  color: #2d3748;
+}
+
+.tag-input::placeholder {
+  color: #a0aec0;
+}
+
+.tag-input:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Suggestions dropdown */
+.tag-suggestions {
+  position: absolute;
+  top: calc(100% + 0.25rem);
+  left: 0;
+  right: 0;
+  max-height: 250px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+}
+
+.suggestions-header {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #718096;
+  background: #f7fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.tag-suggestion {
+  display: block;
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  text-align: left;
+  background: none;
+  border: none;
+  color: #2d3748;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.15s;
+  border-bottom: 1px solid #f7fafc;
+}
+
+.tag-suggestion:hover {
+  background: #ebf8ff;
+}
+
+.tag-suggestion:last-child {
+  border-bottom: none;
+}
+
+.tag-suggestion.create-new {
+  font-style: italic;
+  color: #4299e1;
+}
+
+.tag-suggestion.create-new:hover {
+  background: #f0f9ff;
+}
+
+.suggestions-divider {
+  height: 1px;
+  background: #e2e8f0;
+  margin: 0.25rem 0;
+}
+
+/* Help text */
+.tag-help {
+  display: block;
+  margin-top: 0.5rem;
+  color: #718096;
+  font-size: 0.875rem;
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  .selected-tags {
+    background: #1a202c;
+    border-color: #4a5568;
+  }
+
+  .selected-tags:focus-within {
+    border-color: #63b3ed;
+    box-shadow: 0 0 0 3px rgba(99, 179, 237, 0.1);
+  }
+
+  .tag-pill {
+    background: #2c5282;
+    color: #bee3f8;
+    border-color: #2b6cb0;
+  }
+
+  .tag-remove {
+    color: #bee3f8;
+  }
+
+  .tag-remove:hover {
+    background: #2b6cb0;
+    color: #e6fffa;
+  }
+
+  .tag-input {
+    color: #f7fafc;
+  }
+
+  .tag-input::placeholder {
+    color: #718096;
+  }
+
+  .tag-suggestions {
+    background: #2d3748;
+    border-color: #4a5568;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  .suggestions-header {
+    background: #1a202c;
+    border-bottom-color: #4a5568;
+    color: #a0aec0;
+  }
+
+  .tag-suggestion {
+    color: #f7fafc;
+    border-bottom-color: #2d3748;
+  }
+
+  .tag-suggestion:hover {
+    background: #4a5568;
+  }
+
+  .tag-suggestion.create-new {
+    color: #63b3ed;
+  }
+
+  .tag-suggestion.create-new:hover {
+    background: #2d3748;
+  }
+
+  .suggestions-divider {
+    background: #4a5568;
+  }
+
+  .tag-help {
+    color: #a0aec0;
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .tag-input {
+    min-width: 100px;
+  }
+
+  .tag-suggestions {
+    max-height: 200px;
+  }
+}

@@ -75,8 +75,16 @@ export async function deletePoint(id: string): Promise<void> {
 /**
  * Acquire editing lock.
  */
-export async function acquireLock(id: string): Promise<{ success: boolean; message: string }> {
-  const response = await apiClient.post<{ success: boolean; message: string }>(`/points/${id}/lock/`);
+export async function acquireLock(id: string): Promise<{
+  locked_by: { id: string; email: string };
+  acquired_at: string;
+  expires_at: string;
+}> {
+  const response = await apiClient.post<{
+    locked_by: { id: string; email: string };
+    acquired_at: string;
+    expires_at: string;
+  }>(`/points/${id}/lock/`);
   return response.data;
 }
 

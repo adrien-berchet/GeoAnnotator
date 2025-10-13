@@ -12,6 +12,7 @@ import { RegisterPage } from './pages/RegisterPage';
 import { MapPage } from './pages/MapPage';
 import { PointsListPage } from './pages/PointsListPage';
 import { PointDetailPage } from './pages/PointDetailPage';
+import { EditPointPage } from './pages/EditPointPage';
 import TagManagementPage from './pages/TagManagementPage';
 
 // Placeholder components - to be implemented
@@ -110,6 +111,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <PointDetailPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'points/:id/edit',
+        element: (
+          <ProtectedRoute>
+            <EditPointPage />
           </ProtectedRoute>
         ),
       },
