@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { login } from '../../api/auth';
 import { getErrorMessage } from '../../api/client';
+import './LoginForm.css';
 
 /**
  * Login form component.
