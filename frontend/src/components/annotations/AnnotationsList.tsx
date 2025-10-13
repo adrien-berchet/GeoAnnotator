@@ -4,10 +4,11 @@
  * Displays all annotations for a point with preview and actions.
  */
 
-import { useState } from 'react';
-import { deleteAnnotation, downloadAnnotation, getPreviewUrl } from '../../api/annotations';
+import { useState, useEffect } from 'react';
+import { deleteAnnotation, downloadAnnotation } from '../../api/annotations';
 import { getErrorMessage } from '../../api/client';
 import type { Annotation } from '../../types/annotation';
+import { AnnotationPreview } from './AnnotationPreview';
 import './AnnotationsList.css';
 
 interface AnnotationsListProps {
@@ -24,7 +25,39 @@ export function AnnotationsList({
 }: AnnotationsListProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [previewAnnotation, setPreviewAnnotation] = useState<Annotation | null>(null);
   const [error, setError] = useState('');
+  const [imageBlobUrls, setImageBlobUrls] = useState<Record<string, string>>({});
+
+  // Load images as blob URLs for authenticated preview
+  useEffect(() => {
+    const loadImages = async () => {
+      const imageAnnotations = annotations.filter(a => a.type === 'image' && a.file);
+      const blobUrls: Record<string, string> = {};
+
+      for (const annotation of imageAnnotations) {
+        try {
+          const blob = await downloadAnnotation(pointId, annotation.id);
+          const url = window.URL.createObjectURL(blob);
+          blobUrls[annotation.id] = url;
+        } catch (err) {
+          console.error(`Failed to load image ${annotation.id}:`, err);
+        }
+      }
+
+      setImageBlobUrls(blobUrls);
+    };
+
+    loadImages();
+
+    // Cleanup blob URLs on unmount or when annotations change
+    return () => {
+      Object.values(imageBlobUrls).forEach(url => {
+        window.URL.revokeObjectURL(url);
+      });
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [annotations, pointId]);
 
   const handleDelete = async (annotationId: string) => {
     if (!confirm('Are you sure you want to delete this annotation?')) {
@@ -50,17 +83,17 @@ export function AnnotationsList({
 
     try {
       const blob = await downloadAnnotation(pointId, annotation.id);
-      
+
       // Create a temporary URL for the blob
       const url = window.URL.createObjectURL(blob);
-      
+
       // Create a temporary link and trigger download
       const link = document.createElement('a');
       link.href = url;
       link.download = annotation.file?.file_name || 'download';
       document.body.appendChild(link);
       link.click();
-      
+
       // Cleanup
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
@@ -116,7 +149,11 @@ export function AnnotationsList({
           <div className="annotation-content">
             {/* Text Annotation */}
             {annotation.type === 'text' && annotation.text_content && (
-              <div className="text-annotation">
+              <div
+                className="text-annotation clickable"
+                onClick={() => setPreviewAnnotation(annotation)}
+                title="Click to preview"
+              >
                 <p>{annotation.text_content}</p>
               </div>
             )}
@@ -124,11 +161,17 @@ export function AnnotationsList({
             {/* Image Annotation */}
             {annotation.type === 'image' && annotation.file && (
               <div className="image-annotation">
-                <img
-                  src={getPreviewUrl(annotation.id)}
-                  alt={annotation.file.file_name || 'Image'}
-                  className="annotation-image"
-                />
+                {imageBlobUrls[annotation.id] ? (
+                  <img
+                    src={imageBlobUrls[annotation.id]}
+                    alt={annotation.file.file_name || 'Image'}
+                    className="annotation-image clickable"
+                    onClick={() => setPreviewAnnotation(annotation)}
+                    title="Click to preview full size"
+                  />
+                ) : (
+                  <div className="image-loading">⏳ Loading image...</div>
+                )}
                 <div className="image-info">
                   {annotation.file.file_name && (
                     <div className="file-info">
@@ -166,13 +209,22 @@ export function AnnotationsList({
                     <div className="file-size">{formatFileSize(annotation.file.file_size)}</div>
                   )}
                 </div>
-                <button
-                  onClick={() => handleDownload(annotation)}
-                  className="download-button"
-                  disabled={downloadingId === annotation.id}
-                >
-                  {downloadingId === annotation.id ? '⏳ Downloading...' : '⬇️ Download'}
-                </button>
+                <div className="file-actions">
+                  <button
+                    onClick={() => setPreviewAnnotation(annotation)}
+                    className="preview-button"
+                    title="Preview"
+                  >
+                    👁️ Preview
+                  </button>
+                  <button
+                    onClick={() => handleDownload(annotation)}
+                    className="download-button"
+                    disabled={downloadingId === annotation.id}
+                  >
+                    {downloadingId === annotation.id ? '⏳ Downloading...' : '⬇️ Download'}
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -188,6 +240,15 @@ export function AnnotationsList({
           </div>
         </div>
       ))}
+
+      {/* Preview Modal */}
+      {previewAnnotation && (
+        <AnnotationPreview
+          annotation={previewAnnotation}
+          pointId={pointId}
+          onClose={() => setPreviewAnnotation(null)}
+        />
+      )}
     </div>
   );
 }
