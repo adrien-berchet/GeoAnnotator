@@ -9,6 +9,7 @@ import type { FormEvent } from 'react';
 import { createPoint } from '../../api/points';
 import { getErrorMessage } from '../../api/client';
 import type { GPSPoint } from '../../types/point';
+import './CreatePointModal.css';
 
 interface CreatePointModalProps {
   latitude: number;
@@ -88,23 +89,20 @@ export function CreatePointModal({
     }
   };
 
-  if (!isOpen) {
-    return null;
-  }
-
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
+    <>
+      {/* Backdrop overlay */}
+      {isOpen && (
+        <div
+          className={`create-point-backdrop ${isOpen ? 'open' : ''}`}
+          onClick={onClose}
+        />
+      )}
+
+      {/* Create point drawer */}
+      <div className={`create-point-drawer ${isOpen ? 'open' : ''}`} onClick={(e) => e.stopPropagation()}>
+        <div className="drawer-header">
           <h2>Create New Point</h2>
-          <button
-            type="button"
-            className="modal-close"
-            onClick={onClose}
-            aria-label="Close"
-          >
-            ×
-          </button>
         </div>
 
         <form onSubmit={handleSubmit} className="create-point-form">
@@ -145,7 +143,7 @@ export function CreatePointModal({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Enter point description (optional)"
-              rows={4}
+              rows={3}
               disabled={isLoading}
             />
           </div>
@@ -202,6 +200,6 @@ export function CreatePointModal({
           </div>
         </form>
       </div>
-    </div>
+    </>
   );
 }

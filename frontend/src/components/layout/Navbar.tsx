@@ -13,6 +13,7 @@ export function Navbar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const userMenuRef = useRef<HTMLDivElement>(null);
 
@@ -55,9 +56,20 @@ export function Navbar() {
           </Link>
         </div>
 
-        {/* Search Bar */}
+        {/* Mobile menu toggle */}
         {user && (
-          <form className="navbar-search" onSubmit={handleSearch}>
+          <button
+            className="mobile-menu-toggle"
+            onClick={() => setShowMobileMenu(!showMobileMenu)}
+            aria-label="Toggle menu"
+          >
+            {showMobileMenu ? '✕' : '☰'}
+          </button>
+        )}
+
+        {/* Search Bar - Desktop */}
+        {user && (
+          <form className="navbar-search navbar-search-desktop" onSubmit={handleSearch}>
             <input
               type="search"
               placeholder="Search points..."
@@ -72,20 +84,34 @@ export function Navbar() {
         )}
 
         {/* Navigation Links */}
-        <div className="navbar-links">
+        <div className={`navbar-links ${showMobileMenu ? 'mobile-open' : ''}`}>
           {user ? (
             <>
-              <Link to="/" className="nav-link">
-                🗺️ Map
+              {/* Search Bar - Mobile */}
+              <form className="navbar-search navbar-search-mobile" onSubmit={handleSearch}>
+                <input
+                  type="search"
+                  placeholder="Search points..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="search-input"
+                />
+                <button type="submit" className="search-button">
+                  🔍
+                </button>
+              </form>
+
+              <Link to="/" className="nav-link" onClick={() => setShowMobileMenu(false)}>
+                🗺️ <span>Map</span>
               </Link>
-              <Link to="/points" className="nav-link">
-                📌 Points
+              <Link to="/points" className="nav-link" onClick={() => setShowMobileMenu(false)}>
+                📌 <span>Points</span>
               </Link>
-              <Link to="/tags" className="nav-link">
-                🏷️ Tags
+              <Link to="/tags" className="nav-link" onClick={() => setShowMobileMenu(false)}>
+                🏷️ <span>Tags</span>
               </Link>
-              <Link to="/trash" className="nav-link">
-                🗑️ Trash
+              <Link to="/trash" className="nav-link" onClick={() => setShowMobileMenu(false)}>
+                🗑️ <span>Trash</span>
               </Link>
 
               {/* User Menu */}
@@ -112,14 +138,20 @@ export function Navbar() {
                     <Link
                       to="/profile"
                       className="user-menu-item"
-                      onClick={() => setShowUserMenu(false)}
+                      onClick={() => {
+                        setShowUserMenu(false);
+                        setShowMobileMenu(false);
+                      }}
                     >
                       👤 Profile
                     </Link>
                     <Link
                       to="/settings"
                       className="user-menu-item"
-                      onClick={() => setShowUserMenu(false)}
+                      onClick={() => {
+                        setShowUserMenu(false);
+                        setShowMobileMenu(false);
+                      }}
                     >
                       ⚙️ Settings
                     </Link>
@@ -128,6 +160,7 @@ export function Navbar() {
                       className="user-menu-item logout-button"
                       onClick={() => {
                         setShowUserMenu(false);
+                        setShowMobileMenu(false);
                         handleLogout();
                       }}
                     >
