@@ -100,10 +100,58 @@ apiClient.interceptors.response.use(
  */
 export function getErrorMessage(error: unknown): string {
   if (axios.isAxiosError(error)) {
-    const axiosError = error as AxiosError<{ detail?: string; message?: string }>;
+    const axiosError = error as AxiosError<{
+      detail?: string;
+      message?: string;
+      error?: string;
+      details?: any;
+      [key: string]: any;
+    }>;
 
     if (axiosError.response?.data) {
-      return axiosError.response.data.detail || axiosError.response.data.message || 'An error occurred';
+      const data = axiosError.response.data;
+
+      // Debug: log the error structure
+      console.log('Error response data:', data);
+      console.log('Error status:', axiosError.response.status);
+
+      // Check for custom error format with details field
+      if (data.details) {
+        // If details is an object, try to extract the first error message
+        if (typeof data.details === 'object' && !Array.isArray(data.details)) {
+          for (const key of Object.keys(data.details)) {
+            const value = data.details[key];
+            if (Array.isArray(value) && value.length > 0) {
+              return value[0];
+            }
+            if (typeof value === 'string') {
+              return value;
+            }
+          }
+        }
+        // If details is a string, return it
+        if (typeof data.details === 'string') {
+          return data.details;
+        }
+      }
+
+      // Check for standard error fields
+      if (data.detail) return data.detail;
+      if (data.message && data.message !== 'Invalid request data') return data.message;
+
+      // Check for field-specific validation errors (e.g., { "file": ["error message"] })
+      for (const key of Object.keys(data)) {
+        if (key === 'error' || key === 'message' || key === 'details') continue;
+
+        if (Array.isArray(data[key]) && data[key].length > 0) {
+          return data[key][0]; // Return first error message
+        }
+        if (typeof data[key] === 'string') {
+          return data[key];
+        }
+      }
+
+      return data.message || 'An error occurred';
     }
 
     if (axiosError.message) {

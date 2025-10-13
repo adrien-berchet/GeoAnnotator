@@ -5,6 +5,7 @@
  */
 
 import { useState } from 'react';
+import MDEditor from '@uiw/react-md-editor';
 import { createTextAnnotation, createFileAnnotation } from '../../api/annotations';
 import { getErrorMessage } from '../../api/client';
 import type { Annotation } from '../../types/annotation';
@@ -126,17 +127,17 @@ export function AnnotationForm({ pointId, onAnnotationCreated, onCancel }: Annot
         {annotationType === 'text' && (
           <div className="form-group">
             <label htmlFor="text-content">Text Content</label>
-            <textarea
-              id="text-content"
-              value={textContent}
-              onChange={(e) => setTextContent(e.target.value)}
-              placeholder="Enter your annotation text here..."
-              rows={6}
-              className="textarea-input"
-              disabled={isSubmitting}
-            />
+            <div data-color-mode="light">
+              <MDEditor
+                value={textContent}
+                onChange={(val) => setTextContent(val || '')}
+                preview="edit"
+                height={300}
+                visibleDragbar={false}
+              />
+            </div>
             <div className="input-hint">
-              You can add formatted text, notes, or descriptions
+              💡 Use Markdown for formatting (bold, italic, lists, links, etc.)
             </div>
           </div>
         )}

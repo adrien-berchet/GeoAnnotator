@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { RouterProvider } from 'react-router-dom'
 import { AuthProvider } from './hooks/useAuth'
 import './index.css'
+import './styles/markdown-editor.css'
 import { router } from './routes'
 
 createRoot(document.getElementById('root')!).render(

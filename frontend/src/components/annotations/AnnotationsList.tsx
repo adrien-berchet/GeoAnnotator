@@ -5,10 +5,12 @@
  */
 
 import { useState, useEffect } from 'react';
+import MDEditor from '@uiw/react-md-editor';
 import { deleteAnnotation, downloadAnnotation } from '../../api/annotations';
 import { getErrorMessage } from '../../api/client';
 import type { Annotation } from '../../types/annotation';
 import { AnnotationPreview } from './AnnotationPreview';
+import { TextAnnotationEditor } from './TextAnnotationEditor';
 import './AnnotationsList.css';
 
 interface AnnotationsListProps {
@@ -22,10 +24,12 @@ export function AnnotationsList({
   pointId,
   annotations,
   onAnnotationDeleted,
+  onAnnotationUpdated,
 }: AnnotationsListProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [previewAnnotation, setPreviewAnnotation] = useState<Annotation | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [imageBlobUrls, setImageBlobUrls] = useState<Record<string, string>>({});
 
@@ -149,13 +153,39 @@ export function AnnotationsList({
           <div className="annotation-content">
             {/* Text Annotation */}
             {annotation.type === 'text' && annotation.text_content && (
-              <div
-                className="text-annotation clickable"
-                onClick={() => setPreviewAnnotation(annotation)}
-                title="Click to preview"
-              >
-                <p>{annotation.text_content}</p>
-              </div>
+              <>
+                {editingId === annotation.id ? (
+                  <TextAnnotationEditor
+                    annotation={annotation}
+                    pointId={pointId}
+                    onSave={(updatedAnnotation) => {
+                      setEditingId(null);
+                      if (onAnnotationUpdated) {
+                        onAnnotationUpdated(updatedAnnotation);
+                      }
+                    }}
+                    onCancel={() => setEditingId(null)}
+                  />
+                ) : (
+                  <div className="text-annotation-display">
+                    <div
+                      className="text-preview clickable"
+                      onClick={() => setPreviewAnnotation(annotation)}
+                      title="Click to preview"
+                      data-color-mode="light"
+                    >
+                      <MDEditor.Markdown source={annotation.text_content} />
+                    </div>
+                    <button
+                      onClick={() => setEditingId(annotation.id)}
+                      className="edit-text-button"
+                      title="Edit text"
+                    >
+                      ✏️ Edit
+                    </button>
+                  </div>
+                )}
+              </>
             )}
 
             {/* Image Annotation */}

@@ -61,6 +61,10 @@ export function PointDetailPage() {
     setAnnotations(annotations.filter((a) => a.id !== annotationId));
   };
 
+  const handleAnnotationUpdated = (updatedAnnotation: Annotation) => {
+    setAnnotations(annotations.map((a) => a.id === updatedAnnotation.id ? updatedAnnotation : a));
+  };
+
   const handleDeletePoint = async () => {
     if (!id || !point) return;
 
@@ -194,6 +198,7 @@ export function PointDetailPage() {
               pointId={id}
               annotations={annotations}
               onAnnotationDeleted={handleAnnotationDeleted}
+              onAnnotationUpdated={handleAnnotationUpdated}
             />
           </div>
         </div>

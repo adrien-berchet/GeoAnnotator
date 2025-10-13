@@ -1,0 +1,249 @@
+/**
+ * Custom styles for @uiw/react-md-editor
+ * These styles provide a minimal working editor without the official CSS
+ */
+
+/* Editor container */
+.w-md-editor {
+  position: relative;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  overflow: hidden;
+}
+
+.w-md-editor:focus-within {
+  border-color: #3b82f6;
+  outline: 2px solid rgba(59, 130, 246, 0.1);
+  outline-offset: 0;
+}
+
+/* Toolbar */
+.w-md-editor-toolbar {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.5rem;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  flex-wrap: wrap;
+}
+
+.w-md-editor-toolbar button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.375rem 0.5rem;
+  background: transparent;
+  border: none;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  color: #374151;
+  font-size: 0.875rem;
+  transition: all 0.15s;
+}
+
+.w-md-editor-toolbar button:hover {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+.w-md-editor-toolbar button.active {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.w-md-editor-toolbar li {
+  list-style: none;
+  display: inline-flex;
+}
+
+.w-md-editor-toolbar ul {
+  display: flex;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  align-items: center;
+}
+
+/* Content area */
+.w-md-editor-content {
+  position: relative;
+  display: flex;
+}
+
+.w-md-editor-input,
+.w-md-editor-preview {
+  flex: 1;
+  padding: 1rem;
+  min-height: 200px;
+  overflow: auto;
+}
+
+/* Text area */
+.w-md-editor-text,
+.w-md-editor-text-input {
+  width: 100%;
+  min-height: 200px;
+  padding: 1rem;
+  border: none;
+  outline: none;
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  resize: vertical;
+  background: white;
+  color: #1f2937;
+}
+
+.w-md-editor-text::placeholder,
+.w-md-editor-text-input::placeholder {
+  color: #9ca3af;
+}
+
+/* Preview area */
+.w-md-editor-preview {
+  background: #f9fafb;
+  border-left: 1px solid #e5e7eb;
+}
+
+/* Markdown content styling */
+.wmde-markdown {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: #1f2937;
+}
+
+.wmde-markdown p {
+  margin: 0 0 1rem 0;
+}
+
+.wmde-markdown h1,
+.wmde-markdown h2,
+.wmde-markdown h3,
+.wmde-markdown h4,
+.wmde-markdown h5,
+.wmde-markdown h6 {
+  margin: 1.5rem 0 1rem 0;
+  font-weight: 600;
+  line-height: 1.25;
+  color: #111827;
+}
+
+.wmde-markdown h1 { font-size: 2rem; }
+.wmde-markdown h2 { font-size: 1.5rem; }
+.wmde-markdown h3 { font-size: 1.25rem; }
+.wmde-markdown h4 { font-size: 1.125rem; }
+.wmde-markdown h5 { font-size: 1rem; }
+.wmde-markdown h6 { font-size: 0.875rem; }
+
+.wmde-markdown ul,
+.wmde-markdown ol {
+  margin: 0 0 1rem 0;
+  padding-left: 2rem;
+}
+
+.wmde-markdown li {
+  margin: 0.25rem 0;
+}
+
+.wmde-markdown code {
+  background: #f3f4f6;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  font-size: 0.875em;
+  color: #ef4444;
+}
+
+.wmde-markdown pre {
+  background: #1f2937;
+  color: #f9fafb;
+  padding: 1rem;
+  border-radius: 0.375rem;
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+
+.wmde-markdown pre code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+}
+
+.wmde-markdown blockquote {
+  border-left: 0.25rem solid #d1d5db;
+  padding-left: 1rem;
+  margin: 1rem 0;
+  color: #6b7280;
+}
+
+.wmde-markdown a {
+  color: #3b82f6;
+  text-decoration: none;
+}
+
+.wmde-markdown a:hover {
+  text-decoration: underline;
+}
+
+.wmde-markdown img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.375rem;
+}
+
+.wmde-markdown table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+}
+
+.wmde-markdown th,
+.wmde-markdown td {
+  border: 1px solid #e5e7eb;
+  padding: 0.5rem;
+  text-align: left;
+}
+
+.wmde-markdown th {
+  background: #f9fafb;
+  font-weight: 600;
+}
+
+.wmde-markdown hr {
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  margin: 2rem 0;
+}
+
+/* Dark mode support */
+[data-color-mode="dark"] .w-md-editor {
+  background: #1f2937;
+  border-color: #374151;
+}
+
+[data-color-mode="dark"] .w-md-editor-toolbar {
+  background: #111827;
+  border-color: #374151;
+}
+
+[data-color-mode="dark"] .w-md-editor-text,
+[data-color-mode="dark"] .w-md-editor-text-input {
+  background: #1f2937;
+  color: #f9fafb;
+}
+
+[data-color-mode="dark"] .wmde-markdown {
+  color: #f9fafb;
+}
+
+[data-color-mode="dark"] .wmde-markdown h1,
+[data-color-mode="dark"] .wmde-markdown h2,
+[data-color-mode="dark"] .wmde-markdown h3,
+[data-color-mode="dark"] .wmde-markdown h4,
+[data-color-mode="dark"] .wmde-markdown h5,
+[data-color-mode="dark"] .wmde-markdown h6 {
+  color: #f9fafb;
+}

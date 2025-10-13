@@ -5,6 +5,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import MDEditor from '@uiw/react-md-editor';
 import { downloadAnnotation } from '../../api/annotations';
 import type { Annotation } from '../../types/annotation';
 import './AnnotationPreview.css';
@@ -78,8 +79,8 @@ export function AnnotationPreview({ annotation, pointId, onClose }: AnnotationPr
   const renderPreview = () => {
     if (annotation.type === 'text' && annotation.text_content) {
       return (
-        <div className="preview-text">
-          <pre>{annotation.text_content}</pre>
+        <div className="preview-text" data-color-mode="light">
+          <MDEditor.Markdown source={annotation.text_content} />
         </div>
       );
     }

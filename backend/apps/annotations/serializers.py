@@ -4,9 +4,32 @@ Serializers for annotations app.
 Handles text, image, document, and file annotations with quota validation.
 """
 
+import humanize
 from rest_framework import serializers
 
 from .models import Annotation
+
+
+MAX_FILE_SIZE = 1024 * 1024 * 1024  # 1GB
+
+
+def validate_file_size(file, max_size=MAX_FILE_SIZE):
+    """
+    Validate file size against maximum allowed.
+
+    Args:
+        file: Uploaded file object with size attribute
+        max_size: Maximum allowed size in bytes (default: 1GB)
+
+    Raises:
+        serializers.ValidationError: If file exceeds maximum size
+    """
+    if file.size > max_size:
+        file_size = humanize.naturalsize(file.size)
+        max_size_formatted = humanize.naturalsize(max_size)
+        raise serializers.ValidationError(
+            f'This file is too big ({file_size}). Maximum allowed size is {max_size_formatted}.'
+        )
 
 
 class AnnotationSerializer(serializers.ModelSerializer):
@@ -104,19 +127,17 @@ class AnnotationSerializer(serializers.ModelSerializer):
             user = self.context['request'].user
 
             # Check file size limit (1GB per file)
-            max_file_size = 1024 * 1024 * 1024  # 1GB
-            if value.size > max_file_size:
-                raise serializers.ValidationError(
-                    f'File size ({value.size} bytes) exceeds maximum allowed (1GB).'
-                )
+            validate_file_size(value, MAX_FILE_SIZE)
 
             # Check user storage quota
             if not user.has_storage_quota(value.size):
+                required = humanize.naturalsize(value.size)
+                available = humanize.naturalsize(user.storage_limit - user.storage_used)
                 raise serializers.ValidationError({
                     'error': 'QUOTA_EXCEEDED',
                     'message': f'Insufficient storage quota. '
-                               f'Required: {value.size} bytes, '
-                               f'Available: {user.storage_limit - user.storage_used} bytes',
+                               f'Required: {required}, '
+                               f'Available: {available}',
                 })
 
         return value
@@ -200,19 +221,17 @@ class CreateFileAnnotationSerializer(serializers.ModelSerializer):
         user = self.context['request'].user
 
         # Check file size limit (1GB per file)
-        max_file_size = 1024 * 1024 * 1024  # 1GB
-        if value.size > max_file_size:
-            raise serializers.ValidationError(
-                f'File size ({value.size} bytes) exceeds maximum allowed (1GB).'
-            )
+        validate_file_size(value, MAX_FILE_SIZE)
 
         # Check user storage quota
         if not user.has_storage_quota(value.size):
+            required = humanize.naturalsize(value.size)
+            available = humanize.naturalsize(user.storage_limit - user.storage_used)
             raise serializers.ValidationError({
                 'error': 'QUOTA_EXCEEDED',
                 'message': f'Insufficient storage quota. '
-                           f'Required: {value.size} bytes, '
-                           f'Available: {user.storage_limit - user.storage_used} bytes',
+                           f'Required: {required}, '
+                           f'Available: {available}',
             })
 
         return value

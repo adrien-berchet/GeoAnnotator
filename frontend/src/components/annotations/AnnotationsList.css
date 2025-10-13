@@ -64,6 +64,98 @@
 }
 
 /* Text Annotation */
+.text-annotation-display {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.text-preview {
+  padding: 1rem;
+  background: #f7fafc;
+  border-radius: 6px;
+  border-left: 3px solid #4299e1;
+  transition: background-color 0.2s, transform 0.2s;
+}
+
+.text-preview.clickable {
+  cursor: pointer;
+}
+
+.text-preview.clickable:hover {
+  background: #edf2f7;
+  transform: translateX(2px);
+}
+
+.text-preview .wmde-markdown {
+  background: transparent;
+  color: #2d3748;
+  font-size: 0.875rem;
+}
+
+.text-preview .wmde-markdown p {
+  margin: 0 0 0.5rem 0;
+  line-height: 1.6;
+}
+
+.text-preview .wmde-markdown p:last-child {
+  margin-bottom: 0;
+}
+
+.text-preview .wmde-markdown h1,
+.text-preview .wmde-markdown h2,
+.text-preview .wmde-markdown h3 {
+  margin: 0.5rem 0;
+  color: #2d3748;
+}
+
+.text-preview .wmde-markdown ul,
+.text-preview .wmde-markdown ol {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+
+.text-preview .wmde-markdown code {
+  background: #edf2f7;
+  padding: 0.125rem 0.25rem;
+  border-radius: 3px;
+  font-size: 0.875em;
+}
+
+.text-preview .wmde-markdown pre {
+  background: #edf2f7;
+  padding: 0.75rem;
+  border-radius: 4px;
+  overflow-x: auto;
+}
+
+.text-preview .wmde-markdown blockquote {
+  border-left: 3px solid #cbd5e0;
+  padding-left: 1rem;
+  margin: 0.5rem 0;
+  color: #718096;
+}
+
+.edit-text-button {
+  align-self: flex-start;
+  padding: 0.5rem 1rem;
+  background: #edf2f7;
+  color: #4a5568;
+  border: 1px solid #cbd5e0;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.edit-text-button:hover {
+  background: #e2e8f0;
+  color: #2d3748;
+  border-color: #a0aec0;
+}
+
+/* Legacy text annotation styles (kept for backward compatibility) */
 .text-annotation {
   padding: 1rem;
   background: #f7fafc;
