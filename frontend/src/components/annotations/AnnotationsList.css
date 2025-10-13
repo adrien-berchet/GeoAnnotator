@@ -8,6 +8,53 @@
   gap: 1rem;
 }
 
+/* Toolbar */
+.annotations-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 0;
+  margin-bottom: 0.75rem;
+}
+
+.reorder-toggle-button {
+  padding: 0.5rem 1rem;
+  background: #edf2f7;
+  border: 1px solid #cbd5e0;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #4a5568;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.reorder-toggle-button:hover {
+  background: #e2e8f0;
+  color: #2d3748;
+  border-color: #a0aec0;
+}
+
+.reorder-toggle-button.active {
+  background: #bee3f8;
+  color: #2c5282;
+  border-color: #90cdf4;
+}
+
+.reorder-toggle-button.active:hover {
+  background: #90cdf4;
+  color: #1a365d;
+  border-color: #63b3ed;
+}
+
+.reorder-hint {
+  font-size: 0.875rem;
+  color: #718096;
+}
+
 .annotations-empty {
   text-align: center;
   padding: 3rem 1rem;
@@ -34,12 +81,41 @@
   background: white;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
-  padding: 1rem;
+  display: flex;
+  gap: 0.5rem;
   transition: box-shadow 0.2s;
+  position: relative;
 }
 
 .annotation-item:hover {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Drag Handle */
+.drag-handle {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem;
+  cursor: grab;
+  color: #cbd5e0;
+  font-size: 1.2rem;
+  user-select: none;
+  transition: color 0.2s;
+}
+
+.drag-handle:hover {
+  color: #4a5568;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+/* Content wrapper */
+.annotation-content-wrapper {
+  flex: 1;
+  padding: 1rem;
+  padding-left: 0;
 }
 
 .annotation-header {

@@ -65,6 +65,10 @@ export function PointDetailPage() {
     setAnnotations(annotations.map((a) => a.id === updatedAnnotation.id ? updatedAnnotation : a));
   };
 
+  const handleAnnotationsReordered = (reorderedAnnotations: Annotation[]) => {
+    setAnnotations(reorderedAnnotations);
+  };
+
   const handleDeletePoint = async () => {
     if (!id || !point) return;
 
@@ -199,6 +203,7 @@ export function PointDetailPage() {
               annotations={annotations}
               onAnnotationDeleted={handleAnnotationDeleted}
               onAnnotationUpdated={handleAnnotationUpdated}
+              onAnnotationsReordered={handleAnnotationsReordered}
             />
           </div>
         </div>

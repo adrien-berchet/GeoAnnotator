@@ -129,6 +129,12 @@ class Annotation(models.Model):
         help_text="Preview supported (images and PDFs)"
     )
 
+    order = models.IntegerField(
+        default=0,
+        db_index=True,
+        help_text="Display order (lower values first)"
+    )
+
     created_at = models.DateTimeField(
         auto_now_add=True,
         help_text="Upload/creation timestamp"
@@ -141,8 +147,9 @@ class Annotation(models.Model):
         indexes = [
             models.Index(fields=['gps_point'], name='idx_annotation_point'),
             models.Index(fields=['type'], name='idx_annotation_type'),
+            models.Index(fields=['gps_point', 'order'], name='idx_annotation_point_order'),
         ]
-        ordering = ['-created_at']
+        ordering = ['order', '-created_at']
 
     def clean(self):
         """Validate annotation type constraints."""

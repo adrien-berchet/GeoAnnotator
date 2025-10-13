@@ -94,3 +94,15 @@ export async function downloadAnnotation(pointId: string, annotationId: string):
 export function getPreviewUrl(annotationId: string): string {
   return `${apiClient.defaults.baseURL}/annotations/${annotationId}/preview/`;
 }
+
+/**
+ * Reorder annotations for a point.
+ */
+export async function reorderAnnotations(
+  pointId: string,
+  annotations: Array<{ id: string; order: number }>
+): Promise<void> {
+  await apiClient.post(`/points/${pointId}/annotations/reorder/`, {
+    annotations,
+  });
+}

@@ -9,6 +9,7 @@ app_name = 'annotations'
 urlpatterns = [
     # Annotations for a specific point (requires point_id in URL)
     path('', views.AnnotationViewSet.as_view({'get': 'list', 'post': 'create'}), name='list'),
+    path('reorder/', views.AnnotationViewSet.as_view({'post': 'reorder'}), name='reorder'),
     path('<uuid:pk>/', views.AnnotationViewSet.as_view({
         'get': 'retrieve',
         'put': 'update',

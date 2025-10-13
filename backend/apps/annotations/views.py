@@ -267,3 +267,57 @@ class AnnotationViewSet(viewsets.ModelViewSet):
                 {'error': f'Failed to generate preview: {str(e)}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+    @action(detail=False, methods=['post'], url_path='reorder')
+    def reorder(self, request, point_id=None):
+        """
+        Reorder annotations for a point.
+
+        Expects: { "annotations": [{"id": "uuid", "order": 0}, ...] }
+        """
+        from apps.points.models import GPSPoint
+
+        # Get point and check permission
+        try:
+            point = GPSPoint.objects.get(id=point_id)
+        except GPSPoint.DoesNotExist:
+            raise Http404("Point not found")
+
+        if not PermissionService.can_edit(point, request.user):
+            return Response(
+                {'error': 'Permission denied'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Validate request data
+        annotation_orders = request.data.get('annotations', [])
+        if not isinstance(annotation_orders, list):
+            return Response(
+                {'error': 'annotations must be a list'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Update orders
+        updated_count = 0
+        for item in annotation_orders:
+            annotation_id = item.get('id')
+            order = item.get('order')
+
+            if annotation_id is None or order is None:
+                continue
+
+            try:
+                annotation = Annotation.objects.get(
+                    id=annotation_id,
+                    gps_point=point
+                )
+                annotation.order = order
+                annotation.save(update_fields=['order'])
+                updated_count += 1
+            except Annotation.DoesNotExist:
+                continue
+
+        return Response(
+            {'message': f'Updated {updated_count} annotations'},
+            status=status.HTTP_200_OK
+        )

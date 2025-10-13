@@ -5,12 +5,26 @@
  */
 
 import { useState, useEffect } from 'react';
-import MDEditor from '@uiw/react-md-editor';
-import { deleteAnnotation, downloadAnnotation } from '../../api/annotations';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import type { DragEndEvent } from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { deleteAnnotation, downloadAnnotation, reorderAnnotations } from '../../api/annotations';
 import { getErrorMessage } from '../../api/client';
 import type { Annotation } from '../../types/annotation';
 import { AnnotationPreview } from './AnnotationPreview';
-import { TextAnnotationEditor } from './TextAnnotationEditor';
+import { SortableAnnotationItem } from './SortableAnnotationItem';
 import './AnnotationsList.css';
 
 interface AnnotationsListProps {
@@ -18,6 +32,7 @@ interface AnnotationsListProps {
   annotations: Annotation[];
   onAnnotationDeleted: (annotationId: string) => void;
   onAnnotationUpdated?: (annotation: Annotation) => void;
+  onAnnotationsReordered?: (annotations: Annotation[]) => void;
 }
 
 export function AnnotationsList({
@@ -25,6 +40,7 @@ export function AnnotationsList({
   annotations,
   onAnnotationDeleted,
   onAnnotationUpdated,
+  onAnnotationsReordered,
 }: AnnotationsListProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
@@ -32,6 +48,21 @@ export function AnnotationsList({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [imageBlobUrls, setImageBlobUrls] = useState<Record<string, string>>({});
+  const [localAnnotations, setLocalAnnotations] = useState<Annotation[]>(annotations);
+  const [isReorderMode, setIsReorderMode] = useState(false);
+
+  // Sync local annotations with props
+  useEffect(() => {
+    setLocalAnnotations(annotations);
+  }, [annotations]);
+
+  // Configure drag sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   // Load images as blob URLs for authenticated preview
   useEffect(() => {
@@ -62,6 +93,51 @@ export function AnnotationsList({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [annotations, pointId]);
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id) {
+      return;
+    }
+
+    const oldIndex = localAnnotations.findIndex((a) => a.id === active.id);
+    const newIndex = localAnnotations.findIndex((a) => a.id === over.id);
+
+    if (oldIndex === -1 || newIndex === -1) {
+      return;
+    }
+
+    // Reorder locally first for immediate UI feedback
+    const reordered = arrayMove(localAnnotations, oldIndex, newIndex);
+    
+    // Update order property for each annotation
+    const reorderedWithOrder = reordered.map((annotation: Annotation, index: number) => ({
+      ...annotation,
+      order: index,
+    }));
+    
+    setLocalAnnotations(reorderedWithOrder);
+
+    // Update order numbers and save to server
+    const updates = reorderedWithOrder.map((annotation: Annotation, index: number) => ({
+      id: annotation.id,
+      order: index,
+    }));
+
+    try {
+      await reorderAnnotations(pointId, updates);
+      // Notify parent component of the new order
+      if (onAnnotationsReordered) {
+        onAnnotationsReordered(reorderedWithOrder);
+      }
+    } catch (err) {
+      console.error('Failed to save order:', err);
+      setError(getErrorMessage(err));
+      // Revert on error
+      setLocalAnnotations(annotations);
+    }
+  };
 
   const handleDelete = async (annotationId: string) => {
     if (!confirm('Are you sure you want to delete this annotation?')) {
@@ -124,7 +200,7 @@ export function AnnotationsList({
     return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
   };
 
-  if (annotations.length === 0) {
+  if (localAnnotations.length === 0) {
     return (
       <div className="annotations-empty">
         <div className="empty-icon">📝</div>
@@ -138,138 +214,56 @@ export function AnnotationsList({
     <div className="annotations-list">
       {error && <div className="error-message">{error}</div>}
 
-      {annotations.map((annotation) => (
-        <div key={annotation.id} className="annotation-item">
-          <div className="annotation-header">
-            <div className="annotation-type-badge">
-              {annotation.type === 'text' && '📝 Text'}
-              {annotation.type === 'image' && '🖼️ Image'}
-              {annotation.type === 'document' && '📄 Document'}
-              {annotation.type === 'file' && '📎 File'}
-            </div>
-            <div className="annotation-date">{formatDate(annotation.created_at)}</div>
-          </div>
+      {/* Reorder Mode Toggle */}
+      <div className="annotations-toolbar">
+        <button
+          onClick={() => setIsReorderMode(!isReorderMode)}
+          className={`reorder-toggle-button ${isReorderMode ? 'active' : ''}`}
+          title={isReorderMode ? 'Exit reorder mode' : 'Reorder annotations'}
+        >
+          {isReorderMode ? '✓ Done reordering' : '↕️ Reorder'}
+        </button>
+        {isReorderMode && (
+          <span className="reorder-hint">Drag and drop to reorder annotations</span>
+        )}
+      </div>
 
-          <div className="annotation-content">
-            {/* Text Annotation */}
-            {annotation.type === 'text' && annotation.text_content && (
-              <>
-                {editingId === annotation.id ? (
-                  <TextAnnotationEditor
-                    annotation={annotation}
-                    pointId={pointId}
-                    onSave={(updatedAnnotation) => {
-                      setEditingId(null);
-                      if (onAnnotationUpdated) {
-                        onAnnotationUpdated(updatedAnnotation);
-                      }
-                    }}
-                    onCancel={() => setEditingId(null)}
-                  />
-                ) : (
-                  <div className="text-annotation-display">
-                    <div
-                      className="text-preview clickable"
-                      onClick={() => setPreviewAnnotation(annotation)}
-                      title="Click to preview"
-                      data-color-mode="light"
-                    >
-                      <MDEditor.Markdown source={annotation.text_content} />
-                    </div>
-                    <button
-                      onClick={() => setEditingId(annotation.id)}
-                      className="edit-text-button"
-                      title="Edit text"
-                    >
-                      ✏️ Edit
-                    </button>
-                  </div>
-                )}
-              </>
-            )}
-
-            {/* Image Annotation */}
-            {annotation.type === 'image' && annotation.file && (
-              <div className="image-annotation">
-                {imageBlobUrls[annotation.id] ? (
-                  <img
-                    src={imageBlobUrls[annotation.id]}
-                    alt={annotation.file.file_name || 'Image'}
-                    className="annotation-image clickable"
-                    onClick={() => setPreviewAnnotation(annotation)}
-                    title="Click to preview full size"
-                  />
-                ) : (
-                  <div className="image-loading">⏳ Loading image...</div>
-                )}
-                <div className="image-info">
-                  {annotation.file.file_name && (
-                    <div className="file-info">
-                      <span className="file-name">{annotation.file.file_name}</span>
-                      {annotation.file.file_size && (
-                        <span className="file-size">
-                          {formatFileSize(annotation.file.file_size)}
-                        </span>
-                      )}
-                    </div>
-                  )}
-                  <button
-                    onClick={() => handleDownload(annotation)}
-                    className="download-button"
-                    disabled={downloadingId === annotation.id}
-                  >
-                    {downloadingId === annotation.id ? '⏳ Downloading...' : '⬇️ Download'}
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Document/File Annotation */}
-            {(annotation.type === 'document' || annotation.type === 'file') && annotation.file && (
-              <div className="file-annotation">
-                <div className="file-icon-large">
-                  {annotation.type === 'document' ? '📄' : '📎'}
-                </div>
-                <div className="file-details">
-                  <div className="file-name">{annotation.file.file_name || 'Unnamed file'}</div>
-                  {annotation.file.mime_type && (
-                    <div className="file-type">{annotation.file.mime_type}</div>
-                  )}
-                  {annotation.file.file_size && (
-                    <div className="file-size">{formatFileSize(annotation.file.file_size)}</div>
-                  )}
-                </div>
-                <div className="file-actions">
-                  <button
-                    onClick={() => setPreviewAnnotation(annotation)}
-                    className="preview-button"
-                    title="Preview"
-                  >
-                    👁️ Preview
-                  </button>
-                  <button
-                    onClick={() => handleDownload(annotation)}
-                    className="download-button"
-                    disabled={downloadingId === annotation.id}
-                  >
-                    {downloadingId === annotation.id ? '⏳ Downloading...' : '⬇️ Download'}
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="annotation-actions">
-            <button
-              onClick={() => handleDelete(annotation.id)}
-              className="delete-button"
-              disabled={deletingId === annotation.id}
-            >
-              {deletingId === annotation.id ? '🗑️ Deleting...' : '🗑️ Delete'}
-            </button>
-          </div>
-        </div>
-      ))}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext
+          items={localAnnotations.map((a) => a.id)}
+          strategy={verticalListSortingStrategy}
+        >
+          {localAnnotations.map((annotation) => (
+            <SortableAnnotationItem
+              key={annotation.id}
+              annotation={annotation}
+              pointId={pointId}
+              imageBlobUrl={imageBlobUrls[annotation.id]}
+              isDeleting={deletingId === annotation.id}
+              isDownloading={downloadingId === annotation.id}
+              isEditing={editingId === annotation.id}
+              isReorderMode={isReorderMode}
+              onDelete={handleDelete}
+              onDownload={handleDownload}
+              onPreview={setPreviewAnnotation}
+              onEditStart={() => setEditingId(annotation.id)}
+              onEditSave={(updatedAnnotation) => {
+                setEditingId(null);
+                if (onAnnotationUpdated) {
+                  onAnnotationUpdated(updatedAnnotation);
+                }
+              }}
+              onEditCancel={() => setEditingId(null)}
+              formatDate={formatDate}
+              formatFileSize={formatFileSize}
+            />
+          ))}
+        </SortableContext>
+      </DndContext>
 
       {/* Preview Modal */}
       {previewAnnotation && (

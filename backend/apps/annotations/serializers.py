@@ -50,6 +50,7 @@ class AnnotationSerializer(serializers.ModelSerializer):
             'type',
             'text_content',
             'file',
+            'order',
             'created_at',
         ]
         read_only_fields = [

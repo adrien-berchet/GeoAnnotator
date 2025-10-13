@@ -16,6 +16,7 @@ export interface Annotation {
   type: 'text' | 'image' | 'document' | 'file';
   text_content: string | null;
   file: FileMetadata | null;
+  order: number;
   created_at: string;
   updated_at?: string;
 }
