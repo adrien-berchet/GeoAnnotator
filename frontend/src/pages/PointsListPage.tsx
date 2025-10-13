@@ -6,7 +6,7 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { getPoints } from '../api/points';
+import { getPoints, searchPointsByTags } from '../api/points';
 import { getErrorMessage } from '../api/client';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import type { GPSPoint } from '../types/point';
@@ -16,28 +16,46 @@ export function PointsListPage() {
   const [points, setPoints] = useState<GPSPoint[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 
   const searchQuery = searchParams.get('search') || '';
+  const tagsFilter = searchParams.get('tags') || '';
 
   useEffect(() => {
     loadPoints();
-  }, [searchQuery]);
+  }, [searchQuery, tagsFilter]);
 
   const loadPoints = async () => {
     setIsLoading(true);
     setError('');
 
     try {
-      const filters = searchQuery ? { search: searchQuery } : undefined;
-      const data = await getPoints(filters);
+      let data: GPSPoint[];
+
+      if (tagsFilter) {
+        // Filter by tags using the dedicated endpoint
+        const tagNames = tagsFilter.split(',').map(t => t.trim());
+        data = await searchPointsByTags(tagNames);
+      } else if (searchQuery) {
+        // Search by text
+        const filters = { search: searchQuery };
+        data = await getPoints(filters);
+      } else {
+        // Get all points
+        data = await getPoints();
+      }
+
       setPoints(data);
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const clearFilters = () => {
+    setSearchParams({});
   };
 
   const formatDate = (dateString: string) => {
@@ -72,6 +90,16 @@ export function PointsListPage() {
           <p className="search-results-info">
             Search results for "{searchQuery}" ({points.length} {points.length === 1 ? 'result' : 'results'})
           </p>
+        )}
+        {tagsFilter && (
+          <div className="filter-info">
+            <p className="search-results-info">
+              Points with tag{tagsFilter.includes(',') ? 's' : ''}: <strong>{tagsFilter}</strong> ({points.length} {points.length === 1 ? 'result' : 'results'})
+            </p>
+            <button onClick={clearFilters} className="clear-filter-button">
+              Clear Filter
+            </button>
+          </div>
         )}
         <div className="points-list-stats">
           <span>{points.length} point{points.length !== 1 ? 's' : ''}</span>

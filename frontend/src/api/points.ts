@@ -125,3 +125,11 @@ export async function updateTag(id: string, name: string): Promise<Tag> {
 export async function deleteTag(id: string): Promise<void> {
   await apiClient.delete(`/tags/${id}/`);
 }
+
+/**
+ * Search points by tags.
+ */
+export async function searchPointsByTags(tagNames: string[]): Promise<GPSPoint[]> {
+  const response = await apiClient.post<GPSPoint[]>('/points/search/tags/', { tags: tagNames });
+  return response.data;
+}

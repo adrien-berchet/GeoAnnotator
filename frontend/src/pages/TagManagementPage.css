@@ -185,8 +185,10 @@
 .tag-actions {
   display: flex;
   gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
+.view-points-button,
 .edit-button,
 .delete-button {
   padding: 0.375rem 0.875rem;
@@ -196,6 +198,15 @@
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
+}
+
+.view-points-button {
+  background-color: #4299e1;
+  color: white;
+}
+
+.view-points-button:hover {
+  background-color: #3182ce;
 }
 
 .edit-button {
@@ -375,6 +386,14 @@
 
   .tag-name {
     color: #f7fafc;
+  }
+
+  .view-points-button {
+    background-color: #3182ce;
+  }
+
+  .view-points-button:hover {
+    background-color: #2c5282;
   }
 
   .edit-button {

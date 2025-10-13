@@ -25,6 +25,35 @@
   margin-bottom: 1rem;
 }
 
+.filter-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.filter-info .search-results-info {
+  margin-bottom: 0;
+}
+
+.clear-filter-button {
+  padding: 0.375rem 0.875rem;
+  background-color: #edf2f7;
+  color: #4a5568;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.clear-filter-button:hover {
+  background-color: #e2e8f0;
+  color: #2d3748;
+}
+
 .points-list-stats {
   color: #4a5568;
   font-size: 0.875rem;
@@ -188,6 +217,16 @@
   .search-results-info,
   .points-list-stats {
     color: #a0aec0;
+  }
+
+  .clear-filter-button {
+    background-color: #4a5568;
+    color: #e2e8f0;
+  }
+
+  .clear-filter-button:hover {
+    background-color: #718096;
+    color: #f7fafc;
   }
 
   .point-card {

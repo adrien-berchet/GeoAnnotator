@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getTags, createTag, updateTag, deleteTag } from '../api/points';
 import type { Tag } from '../types/point';
 import { getErrorMessage } from '../api/client';
 import './TagManagementPage.css';
 
 export default function TagManagementPage() {
+  const navigate = useNavigate();
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -104,6 +106,11 @@ export default function TagManagementPage() {
     }
   };
 
+  const handleViewPoints = (tagName: string) => {
+    // Navigate to points page with tag filter
+    navigate(`/points?tags=${encodeURIComponent(tagName)}`);
+  };
+
   if (loading) {
     return (
       <div className="tag-management-page">
@@ -192,6 +199,13 @@ export default function TagManagementPage() {
                   <div className="tag-view-mode">
                     <span className="tag-name">{tag.name}</span>
                     <div className="tag-actions">
+                      <button
+                        onClick={() => handleViewPoints(tag.name)}
+                        className="view-points-button"
+                        title="View points with this tag"
+                      >
+                        📍 View Points
+                      </button>
                       <button
                         onClick={() => handleStartEdit(tag)}
                         disabled={deleting === tag.id}
