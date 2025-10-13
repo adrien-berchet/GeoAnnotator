@@ -225,10 +225,17 @@ export function MapPage() {
         />
       )}
 
-      {/* Tags filter panel - Drawer style (no close button) */}
+      {/* Tags filter panel - Drawer style */}
       <div className={`tags-filter-panel ${isFilterOpen ? 'open' : ''}`}>
         <div className="filter-panel-header">
           <h3>Filter by Tags</h3>
+          <button
+            className="close-panel-button"
+            onClick={() => setIsFilterOpen(false)}
+            aria-label="Close filter panel"
+          >
+            ✕
+          </button>
         </div>
 
         {selectedTags.length > 0 && (
