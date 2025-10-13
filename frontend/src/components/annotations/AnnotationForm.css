@@ -317,32 +317,6 @@
   }
 }
 
-/* MDEditor overrides */
-.form-group .w-md-editor {
-  border-radius: 6px;
-  border: 1px solid #cbd5e0;
-  box-shadow: none;
-}
-
-.form-group .w-md-editor:focus-within {
-  border-color: #4299e1;
-  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
-}
-
-.form-group .w-md-editor-toolbar {
-  background: #f7fafc;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.form-group .w-md-editor-toolbar button {
-  color: #4a5568;
-}
-
-.form-group .w-md-editor-toolbar button:hover {
-  background: #edf2f7;
-  color: #2d3748;
-}
-
 /* Responsive */
 @media (max-width: 768px) {
   .annotation-type-selector {

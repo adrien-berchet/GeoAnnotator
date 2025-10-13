@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import MDEditor from '@uiw/react-md-editor';
 import { updateTextAnnotation } from '../../api/annotations';
 import { getErrorMessage } from '../../api/client';
 import type { Annotation } from '../../types/annotation';
+import { useColorMode } from '../../hooks/useColorMode';
 import './TextAnnotationEditor.css';
 
 interface TextAnnotationEditorProps {
@@ -21,6 +22,12 @@ export function TextAnnotationEditor({
   const [content, setContent] = useState(annotation.text_content || '');
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
+  const colorMode = useColorMode();
+
+  // Apply color mode to document root for MDEditor
+  useEffect(() => {
+    document.documentElement.setAttribute('data-color-mode', colorMode);
+  }, [colorMode]);
 
   const handleSave = async () => {
     if (!content.trim()) {
@@ -59,14 +66,16 @@ export function TextAnnotationEditor({
 
       {error && <div className="error-message">{error}</div>}
 
-      <div className="editor-content" data-color-mode="light">
-        <MDEditor
-          value={content}
-          onChange={(val) => setContent(val || '')}
-          preview="edit"
-          height={300}
-          visibleDragbar={false}
-        />
+      <div className="editor-content">
+        <div data-color-mode={colorMode}>
+          <MDEditor
+            value={content}
+            onChange={(val) => setContent(val || '')}
+            preview="edit"
+            height={300}
+            visibleDragbar={false}
+          />
+        </div>
         <div className="editor-hint">
           💡 Tip: Use Markdown for formatting (bold, italic, lists, links, etc.)
         </div>

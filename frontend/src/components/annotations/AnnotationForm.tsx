@@ -4,11 +4,12 @@
  * Allows adding different types of annotations: text, image, document, or file.
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import MDEditor from '@uiw/react-md-editor';
 import { createTextAnnotation, createFileAnnotation } from '../../api/annotations';
 import { getErrorMessage } from '../../api/client';
 import type { Annotation } from '../../types/annotation';
+import { useColorMode } from '../../hooks/useColorMode';
 import './AnnotationForm.css';
 
 interface AnnotationFormProps {
@@ -20,11 +21,17 @@ interface AnnotationFormProps {
 type AnnotationType = 'text' | 'image' | 'document' | 'file';
 
 export function AnnotationForm({ pointId, onAnnotationCreated, onCancel }: AnnotationFormProps) {
+  const colorMode = useColorMode();
   const [annotationType, setAnnotationType] = useState<AnnotationType>('text');
   const [textContent, setTextContent] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState('');  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const [error, setError] = useState('');
+
+  // Apply color mode to document root for MDEditor
+  useEffect(() => {
+    document.documentElement.setAttribute('data-color-mode', colorMode);
+  }, [colorMode]);  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setSelectedFile(e.target.files[0]);
     }
@@ -127,7 +134,7 @@ export function AnnotationForm({ pointId, onAnnotationCreated, onCancel }: Annot
         {annotationType === 'text' && (
           <div className="form-group">
             <label htmlFor="text-content">Text Content</label>
-            <div data-color-mode="light">
+            <div data-color-mode={colorMode}>
               <MDEditor
                 value={textContent}
                 onChange={(val) => setTextContent(val || '')}

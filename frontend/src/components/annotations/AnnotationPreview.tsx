@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import MDEditor from '@uiw/react-md-editor';
 import { downloadAnnotation } from '../../api/annotations';
 import type { Annotation } from '../../types/annotation';
+import { useColorMode } from '../../hooks/useColorMode';
 import './AnnotationPreview.css';
 
 interface AnnotationPreviewProps {
@@ -17,9 +18,15 @@ interface AnnotationPreviewProps {
 }
 
 export function AnnotationPreview({ annotation, pointId, onClose }: AnnotationPreviewProps) {
+  const colorMode = useColorMode();
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Apply color mode to document root for MDEditor
+  useEffect(() => {
+    document.documentElement.setAttribute('data-color-mode', colorMode);
+  }, [colorMode]);
 
   useEffect(() => {
     // Load file for preview (PDF, images, etc.)
@@ -79,8 +86,10 @@ export function AnnotationPreview({ annotation, pointId, onClose }: AnnotationPr
   const renderPreview = () => {
     if (annotation.type === 'text' && annotation.text_content) {
       return (
-        <div className="preview-text" data-color-mode="light">
-          <MDEditor.Markdown source={annotation.text_content} />
+        <div className="preview-text">
+          <div data-color-mode={colorMode}>
+            <MDEditor.Markdown source={annotation.text_content} />
+          </div>
         </div>
       );
     }

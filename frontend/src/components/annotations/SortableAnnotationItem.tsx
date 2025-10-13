@@ -2,11 +2,13 @@
  * Sortable annotation item with drag-and-drop support.
  */
 
+import { useEffect } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import MDEditor from '@uiw/react-md-editor';
 import type { Annotation } from '../../types/annotation';
 import { TextAnnotationEditor } from './TextAnnotationEditor';
+import { useColorMode } from '../../hooks/useColorMode';
 
 interface SortableAnnotationItemProps {
   annotation: Annotation;
@@ -43,6 +45,8 @@ export function SortableAnnotationItem({
   formatDate,
   formatFileSize,
 }: SortableAnnotationItemProps) {
+  const colorMode = useColorMode();
+
   const {
     attributes,
     listeners,
@@ -119,9 +123,10 @@ export function SortableAnnotationItem({
                     className="text-preview clickable"
                     onClick={() => onPreview(annotation)}
                     title="Click to preview"
-                    data-color-mode="light"
                   >
-                    <MDEditor.Markdown source={annotation.text_content} />
+                    <div data-color-mode={colorMode}>
+                      <MDEditor.Markdown source={annotation.text_content} />
+                    </div>
                   </div>
                   {/* Hide edit button if annotation is trashed */}
                   {!annotation.is_trashed && (

@@ -96,6 +96,24 @@
   color: #1f2937;
 }
 
+/* Dark mode text area - placed here for higher specificity */
+html[data-color-mode="dark"] .w-md-editor-text,
+html[data-color-mode="dark"] .w-md-editor-text-input,
+html[data-color-mode="dark"] .w-md-editor .w-md-editor-text,
+html[data-color-mode="dark"] .w-md-editor .w-md-editor-text-input,
+html[data-color-mode="dark"] .w-md-editor-content .w-md-editor-text-input,
+html[data-color-mode="dark"] .w-md-editor-input .w-md-editor-text-input,
+[data-color-mode="dark"] .w-md-editor-text,
+[data-color-mode="dark"] .w-md-editor-text-input,
+[data-color-mode="dark"] .w-md-editor .w-md-editor-text,
+[data-color-mode="dark"] .w-md-editor .w-md-editor-text-input,
+[data-color-mode="dark"] .w-md-editor-content .w-md-editor-text-input,
+[data-color-mode="dark"] .w-md-editor-input .w-md-editor-text-input {
+  background: #1f2937 !important;
+  background-color: #1f2937 !important;
+  color: #f9fafb !important;
+}
+
 .w-md-editor-text::placeholder,
 .w-md-editor-text-input::placeholder {
   color: #9ca3af;
@@ -229,10 +247,56 @@
   border-color: #374151;
 }
 
-[data-color-mode="dark"] .w-md-editor-text,
-[data-color-mode="dark"] .w-md-editor-text-input {
-  background: #1f2937;
+[data-color-mode="dark"] .w-md-editor-toolbar button {
+  color: #e5e7eb;
+}
+
+[data-color-mode="dark"] .w-md-editor-toolbar button:hover {
+  background: #374151;
   color: #f9fafb;
+}
+
+[data-color-mode="dark"] .w-md-editor-toolbar button.active {
+  background: #1e3a8a;
+  color: #93c5fd;
+}
+
+html[data-color-mode="dark"] .w-md-editor-text,
+html[data-color-mode="dark"] .w-md-editor-text-input,
+html[data-color-mode="dark"] .w-md-editor-input .w-md-editor-text-input,
+html[data-color-mode="dark"] textarea.w-md-editor-text-input,
+html[data-color-mode="dark"] .w-md-editor textarea,
+[data-color-mode="dark"] .w-md-editor-text,
+[data-color-mode="dark"] .w-md-editor-text-input,
+[data-color-mode="dark"] .w-md-editor-input .w-md-editor-text-input,
+[data-color-mode="dark"] textarea.w-md-editor-text-input,
+[data-color-mode="dark"] .w-md-editor textarea {
+  background-color: #1f2937 !important;
+  color: #f9fafb !important;
+}
+
+html[data-color-mode="dark"] .w-md-editor-text::placeholder,
+html[data-color-mode="dark"] .w-md-editor-text-input::placeholder,
+[data-color-mode="dark"] .w-md-editor-text::placeholder,
+[data-color-mode="dark"] .w-md-editor-text-input::placeholder {
+  color: #6b7280 !important;
+}
+
+html[data-color-mode="dark"] .w-md-editor-input,
+[data-color-mode="dark"] .w-md-editor-input {
+  background-color: #1f2937 !important;
+  color: #f9fafb !important;
+}
+
+html[data-color-mode="dark"] .w-md-editor-input textarea,
+[data-color-mode="dark"] .w-md-editor-input textarea {
+  background-color: #1f2937 !important;
+  color: #f9fafb !important;
+}
+
+[data-color-mode="dark"] .w-md-editor-preview {
+  background: #111827;
+  border-left-color: #374151;
 }
 
 [data-color-mode="dark"] .wmde-markdown {
@@ -246,4 +310,51 @@
 [data-color-mode="dark"] .wmde-markdown h5,
 [data-color-mode="dark"] .wmde-markdown h6 {
   color: #f9fafb;
+}
+
+[data-color-mode="dark"] .wmde-markdown code {
+  background: #374151;
+  color: #fca5a5;
+}
+
+[data-color-mode="dark"] .wmde-markdown pre {
+  background: #0f172a;
+  color: #f1f5f9;
+}
+
+[data-color-mode="dark"] .wmde-markdown blockquote {
+  border-left-color: #4b5563;
+  color: #9ca3af;
+}
+
+[data-color-mode="dark"] .wmde-markdown a {
+  color: #60a5fa;
+}
+
+[data-color-mode="dark"] .wmde-markdown th,
+[data-color-mode="dark"] .wmde-markdown td {
+  border-color: #374151;
+}
+
+[data-color-mode="dark"] .wmde-markdown th {
+  background: #1f2937;
+}
+
+[data-color-mode="dark"] .wmde-markdown hr {
+  border-top-color: #374151;
+}
+
+/* NUCLEAR OPTION: Force dark mode colors regardless of specificity */
+[data-color-mode="dark"] .w-md-editor .w-md-editor-content .w-md-editor-input .w-md-editor-text-input,
+[data-color-mode="dark"] .w-md-editor-content .w-md-editor-input .w-md-editor-text-input,
+[data-color-mode="dark"] .w-md-editor-input .w-md-editor-text-input,
+[data-color-mode="dark"] .w-md-editor-text-input,
+html[data-color-mode="dark"] .w-md-editor .w-md-editor-content .w-md-editor-input .w-md-editor-text-input,
+html[data-color-mode="dark"] .w-md-editor-content .w-md-editor-input .w-md-editor-text-input,
+html[data-color-mode="dark"] .w-md-editor-input .w-md-editor-text-input,
+html[data-color-mode="dark"] .w-md-editor-text-input {
+  background: #1f2937 !important;
+  background-color: #1f2937 !important;
+  color: #f9fafb !important;
+  -webkit-text-fill-color: #f9fafb !important;
 }
