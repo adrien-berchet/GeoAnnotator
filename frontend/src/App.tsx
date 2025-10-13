@@ -1,5 +1,6 @@
 import { Outlet } from 'react-router-dom'
 import { ErrorBoundary } from './components/common/ErrorBoundary'
+import { Navbar } from './components/layout/Navbar'
 import './App.css'
 
 /**
@@ -10,7 +11,7 @@ function App() {
   return (
     <ErrorBoundary>
       <div className="app">
-        {/* TODO: Add navigation header */}
+        <Navbar />
         <main>
           <Outlet />
         </main>

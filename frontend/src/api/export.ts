@@ -96,11 +96,21 @@ export async function importPoints(
 }
 
 /**
+ * Paginated response from API.
+ */
+interface PaginatedResponse<T> {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
+}
+
+/**
  * Get trash items.
  */
 export async function getTrash(): Promise<TrashItem[]> {
-  const response = await apiClient.get<TrashItem[]>('/trash/');
-  return response.data;
+  const response = await apiClient.get<PaginatedResponse<TrashItem>>('/trash/');
+  return response.data.results;
 }
 
 /**

@@ -46,7 +46,7 @@ class EditingLockSerializer(serializers.Serializer):
     Shows who is editing and when lock expires.
     Matches OpenAPI schema: EditingLock
     """
-    user = UserSummarySerializer(source='editing_lock_user', read_only=True)
+    locked_by = UserSummarySerializer(source='editing_lock_user', read_only=True)
     acquired_at = serializers.DateTimeField(source='editing_lock_acquired_at', read_only=True)
     expires_at = serializers.SerializerMethodField()
 

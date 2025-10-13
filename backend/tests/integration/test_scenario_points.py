@@ -230,15 +230,16 @@ class TestScenario2PointManagement:
             format="json",
         )
 
-        # When
-        response = self.client.get(
-            self.points_list_url, {"tags": "fishing"}, format="json"
+        # When - Use the correct endpoint for tag filtering
+        search_tags_url = reverse("points:search-tags")
+        response = self.client.post(
+            search_tags_url, {"tags": ["fishing"]}, format="json"
         )
 
         # Then
         assert response.status_code == status.HTTP_200_OK
-        assert response.data["count"] == 1
-        assert response.data["results"][0]["title"] == "Fishing Spot"
+        assert len(response.data) == 1
+        assert response.data[0]["title"] == "Fishing Spot"
 
     def test_step_6_full_text_search(self):
         """
@@ -272,15 +273,16 @@ class TestScenario2PointManagement:
             format="json",
         )
 
-        # When
+        # When - Use the correct endpoint for full-text search
+        search_text_url = reverse("points:search-text")
         response = self.client.get(
-            self.points_list_url, {"search": "garden"}, format="json"
+            search_text_url, {"q": "garden"}, format="json"
         )
 
         # Then
         assert response.status_code == status.HTTP_200_OK
-        assert response.data["count"] == 1
-        assert "Garden" in response.data["results"][0]["title"]
+        assert len(response.data) == 1
+        assert "Garden" in response.data[0]["title"]
 
     def test_step_7_update_gps_point(self):
         """
@@ -354,8 +356,8 @@ class TestScenario2PointManagement:
 
         # Verify point is in trash
         point = GPSPoint.objects.get(id=point_id)
-        assert hasattr(point, "trash")
-        assert point.trash is not None
+        assert hasattr(point, "trash_entry")
+        assert point.trash_entry is not None
 
     def test_complete_point_lifecycle(self):
         """

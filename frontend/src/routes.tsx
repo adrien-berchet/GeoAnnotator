@@ -10,10 +10,12 @@ import App from './App';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { MapPage } from './pages/MapPage';
+import { PointsListPage } from './pages/PointsListPage';
 
 // Placeholder components - to be implemented
 const PointDetailPage = () => <div>Point Detail Page</div>;
 const ProfilePage = () => <div>Profile Page</div>;
+const SettingsPage = () => <div>Settings Page</div>;
 const SharedPointsPage = () => <div>Shared Points Page</div>;
 const TrashPage = () => <div>Trash Page</div>;
 
@@ -95,6 +97,14 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: 'points',
+        element: (
+          <ProtectedRoute>
+            <PointsListPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: 'points/:id',
         element: (
           <ProtectedRoute>
@@ -107,6 +117,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <ProfilePage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'settings',
+        element: (
+          <ProtectedRoute>
+            <SettingsPage />
           </ProtectedRoute>
         ),
       },

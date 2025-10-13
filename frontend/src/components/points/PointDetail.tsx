@@ -38,6 +38,7 @@ export function PointDetail({ pointId: propPointId, onEdit, onDelete }: PointDet
     if (pointId) {
       loadPoint();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pointId]);
 
   /**

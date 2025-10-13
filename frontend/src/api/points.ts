@@ -6,6 +6,16 @@ import { apiClient } from './client';
 import type { GPSPoint, CreatePointData, UpdatePointData, PointsFilter, Tag } from '../types/point';
 
 /**
+ * Paginated response from API.
+ */
+interface PaginatedResponse<T> {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
+}
+
+/**
  * Get all points with optional filters.
  */
 export async function getPoints(filters?: PointsFilter): Promise<GPSPoint[]> {
@@ -27,8 +37,8 @@ export async function getPoints(filters?: PointsFilter): Promise<GPSPoint[]> {
     params.append('is_public', filters.is_public.toString());
   }
 
-  const response = await apiClient.get<GPSPoint[]>(`/points/?${params.toString()}`);
-  return response.data;
+  const response = await apiClient.get<PaginatedResponse<GPSPoint>>(`/points/?${params.toString()}`);
+  return response.data.results;
 }
 
 /**

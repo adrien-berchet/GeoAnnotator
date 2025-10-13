@@ -252,6 +252,12 @@ class PointService:
         """
         from apps.trash.models import Trash
 
+        # Release editing lock if present
+        if point.editing_lock_user:
+            point.editing_lock_user = None
+            point.editing_lock_acquired_at = None
+            point.save(update_fields=['editing_lock_user', 'editing_lock_acquired_at'])
+
         # Create trash entry
         Trash.objects.create(
             gps_point=point,
@@ -292,7 +298,7 @@ class PointService:
         query = GPSPoint.objects.filter(
             location__within=bbox
         ).exclude(
-            trash__isnull=False
+            trash_entry__isnull=False
         )
 
         if user and user.is_authenticated:
@@ -334,7 +340,7 @@ class PointService:
         query = GPSPoint.objects.filter(
             location__distance_lte=(location, D(m=radius_meters))
         ).exclude(
-            trash__isnull=False
+            trash_entry__isnull=False
         )
 
         if user and user.is_authenticated:
@@ -370,7 +376,7 @@ class PointService:
         query = GPSPoint.objects.filter(
             tags__name__in=[name.lower() for name in tag_names]
         ).exclude(
-            trash__isnull=False
+            trash_entry__isnull=False
         )
 
         if user and user.is_authenticated:
@@ -407,7 +413,7 @@ class PointService:
             Q(title__icontains=search_text) |
             Q(description__icontains=search_text)
         ).exclude(
-            trash__isnull=False
+            trash_entry__isnull=False
         )
 
         if user and user.is_authenticated:

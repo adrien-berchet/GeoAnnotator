@@ -333,7 +333,7 @@ class TestPointsContract:
 
         # Validate editing_lock was acquired
         assert response.data['editing_lock'] is not None
-        assert 'user' in response.data['editing_lock']
+        assert 'locked_by' in response.data['editing_lock']
         assert 'acquired_at' in response.data['editing_lock']
         assert 'expires_at' in response.data['editing_lock']
 
@@ -449,8 +449,8 @@ class TestPointsContract:
         response = api_client.post(lock_url)
 
         assert response.status_code == status.HTTP_200_OK
-        assert 'user' in response.data
-        assert response.data['user']['id'] == user['id']
+        assert 'locked_by' in response.data
+        assert response.data['locked_by']['id'] == user['id']
         assert 'acquired_at' in response.data
         assert 'expires_at' in response.data
 

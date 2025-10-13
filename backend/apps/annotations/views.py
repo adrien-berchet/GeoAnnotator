@@ -222,7 +222,7 @@ class AnnotationViewSet(viewsets.ModelViewSet):
         return response
 
     @action(detail=True, methods=['get'])
-    def preview(self, request, pk=None):
+    def preview(self, request, pk=None, point_id=None):
         """Preview image annotation (resized)."""
         annotation = self.get_object()
 

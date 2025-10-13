@@ -98,6 +98,18 @@ class GPSPointViewSet(viewsets.ModelViewSet):
         if not PermissionService.can_edit(point, request.user):
             raise PermissionDenied('You do not have permission to edit this point')
 
+        # Check if point is locked by another user
+        if EditingLockService.is_locked(point) and point.editing_lock_user != request.user:
+            lock_info = EditingLockService.get_lock_info(point)
+            return Response(
+                {
+                    'error': 'Point is currently locked by another user',
+                    'locked_by': lock_info['locked_by'].email if lock_info else None,
+                    'lock_expires_at': lock_info['lock_expires_at'].isoformat() if lock_info and lock_info.get('lock_expires_at') else None
+                },
+                status=status.HTTP_409_CONFLICT
+            )
+
         serializer = UpdateGPSPointSerializer(data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
 
@@ -224,7 +236,7 @@ class GPSPointViewSet(viewsets.ModelViewSet):
         serializer = GPSPointSerializer(points, many=True, context={'request': request})
         return Response(serializer.data)
 
-    @action(detail=True, methods=['post'], url_path='acquire-lock')
+    @action(detail=True, methods=['post'], url_path='lock')
     def acquire_lock(self, request, pk=None):
         """Acquire editing lock on point."""
         point = self.get_object()
@@ -254,7 +266,7 @@ class GPSPointViewSet(viewsets.ModelViewSet):
         lock_expires_at = point.editing_lock_acquired_at + timedelta(minutes=EditingLockService.LOCK_DURATION_MINUTES)
 
         return Response({
-            'user': {
+            'locked_by': {
                 'id': str(request.user.id),
                 'email': request.user.email
             },
@@ -262,13 +274,27 @@ class GPSPointViewSet(viewsets.ModelViewSet):
             'expires_at': lock_expires_at.isoformat()
         })
 
-    @action(detail=True, methods=['post'], url_path='release-lock')
+    @action(detail=True, methods=['delete'], url_path='lock')
     def release_lock(self, request, pk=None):
         """Release editing lock on point."""
         point = self.get_object()
 
-        # Release lock
-        EditingLockService.release_lock(point, request.user)
+        # Check if user can release lock
+        # Either the user holds the lock, or the user is the owner (force-release)
+        if point.editing_lock_user and point.editing_lock_user != request.user:
+            # Check if user is owner (can force-release)
+            if point.owner != request.user:
+                return Response(
+                    {'error': 'You cannot release a lock held by another user'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            # Owner can force-release
+            point.editing_lock_user = None
+            point.editing_lock_acquired_at = None
+            point.save()
+        else:
+            # User holds the lock or no lock exists
+            EditingLockService.release_lock(point, request.user)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 

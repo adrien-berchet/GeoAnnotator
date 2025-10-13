@@ -29,8 +29,46 @@ A comprehensive web application for geospatial annotation enabling field researc
 - **Axios** for API calls
 - **React Router** for navigation
 
+## Quick Start with Docker (Recommended)
+
+The fastest way to get started is using Docker:
+
+```bash
+# Start all services
+./start-local.sh
+
+# Or using make
+make start
+```
+
+This will:
+- Start PostgreSQL with PostGIS
+- Start Django backend
+- Start React frontend
+- Start MinIO for file storage
+- Run migrations
+- Create a default admin user
+
+**Access the application:**
+- Frontend: http://localhost:5173
+- Backend API: http://localhost:8000
+- Admin Panel: http://localhost:8000/admin
+- MinIO Console: http://localhost:9001
+
+**Default credentials:**
+- Email: `admin@geoannotator.local`
+- Password: `admin123`
+
+See [QUICKSTART.md](QUICKSTART.md) for detailed instructions.
+
 ## Prerequisites
 
+### Docker Setup (Recommended)
+- Docker Desktop 20.10+
+- Docker Compose 2.0+
+- 4GB+ RAM available
+
+### Manual Setup
 - Python 3.11+
 - Node.js 20.19+ or 22.12+
 - PostgreSQL 15+ with PostGIS extension
@@ -93,6 +131,22 @@ npm run dev
 Frontend will be available at `http://localhost:5173`
 
 ## Development
+
+### Using Make Commands (Recommended)
+
+```bash
+make help          # Show all available commands
+make start         # Start all services
+make stop          # Stop all services
+make logs          # View logs
+make health        # Check service health
+make test          # Run all tests
+make shell         # Open Django shell
+make migrate       # Run migrations
+make backup        # Backup database
+```
+
+See `make help` for all available commands.
 
 ### Backend Commands
 

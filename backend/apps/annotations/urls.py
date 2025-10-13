@@ -16,4 +16,5 @@ urlpatterns = [
         'delete': 'destroy'
     }), name='detail'),
     path('<uuid:pk>/download/', views.AnnotationViewSet.as_view({'get': 'download'}), name='download'),
+    path('<uuid:pk>/preview/', views.AnnotationViewSet.as_view({'get': 'preview'}), name='preview'),
 ]

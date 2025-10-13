@@ -11,6 +11,7 @@ Acceptance Criteria: FR-069 to FR-073
 
 import time
 import pytest
+from datetime import datetime
 from datetime import timedelta
 from django.utils import timezone
 from django.urls import reverse
@@ -104,7 +105,6 @@ class TestScenario8EditingLocks:
         assert response.data["locked_by"]["email"] == "alice@example.com"
 
         # Verify expiry is approximately 15 minutes from now
-        from datetime import datetime
         acquired = datetime.fromisoformat(response.data["acquired_at"].replace("Z", "+00:00"))
         expires = datetime.fromisoformat(response.data["expires_at"].replace("Z", "+00:00"))
         duration = (expires - acquired).total_seconds()

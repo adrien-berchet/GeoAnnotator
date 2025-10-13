@@ -1,9 +1,8 @@
-# Tasks: GeoAnnotator Web Application
-
-**Input**: Design documents from `/specs/001-build-a-web/`
-**Prerequisites**: plan.md ✅, research.md ✅, data-model.md ✅, contracts/ ✅, quickstart.md ✅
-
-## Exe### UI Components - Points
+### UI Components - Points
+- [x] **T080** [P] PointList component in `frontend/src/components/points/PointList.tsx` (display list, click to navigate)
+- [x] **T081** PointDetail component in `frontend/src/components/points/PointDetail.tsx` (display point, show annotations, edit button)
+- [x] **T082** [P] PointForm component in `frontend/src/components/points/PointForm.tsx` (title, description rich text, tags autocomplete)
+- [x] **T083** [P] SearchFilter component in `frontend/src/components/points/SearchFilter.tsx` (bounding box, tags, text search)### UI Components - Points
 - [x] **T080** [P] PointList component in `frontend/src/components/points/PointList.tsx` (display list, click to navigate)
 - [x] **T081** PointDetail component in `frontend/src/components/points/PointDetail.tsx` (display point, show annotations, edit button)
 - [x] **T082** [P] PointForm component in `frontend/src/components/points/PointForm.tsx` (title, description rich text, tags autocomplete)
@@ -19,7 +18,12 @@
 ### UI Components - Sharing
 - [x] **T089** [P] ShareModal component in `frontend/src/components/sharing/ShareModal.tsx` (email input, permission selector)
 - [x] **T090** [P] PermissionSelector component in `frontend/src/components/sharing/PermissionSelector.tsx` (view/edit/transfer radio buttons)
-- [x] **T091** [P] SharedPointsList component in `frontend/src/components/sharing/SharedPointsList.tsx` (sent/received tabs, revoke button)n Flow (main)
+- [x] **T091** [P] SharedPointsList component in `frontend/src/components/sharing/SharedPointsList.tsx` (sent/received tabs, revoke button)eoAnnotator Web Application
+
+**Input**: Design documents from `/specs/001-build-a-web/`
+**Prerequisites**: plan.md ✅, research.md ✅, data-model.md ✅, contracts/ ✅, quickstart.md ✅
+
+## Execution Flow (main)
 ```
 1. Load plan.md from feature directory
    → ✅ Found: Django + React + PostGIS tech stack
@@ -213,21 +217,21 @@
 
 ### UI Components - Points
 - [x] **T080** [P] PointList component in `frontend/src/components/points/PointList.tsx` (pagination, filters, search)
-- [ ] **T081** PointDetail component in `frontend/src/components/points/PointDetail.tsx` (display point, show annotations, edit button)
-- [ ] **T082** [P] PointForm component in `frontend/src/components/points/PointForm.tsx` (title, description rich text, tags autocomplete)
+- [x] **T081** PointDetail component in `frontend/src/components/points/PointDetail.tsx` (display point, show annotations, edit button)
+- [x] **T082** [P] PointForm component in `frontend/src/components/points/PointForm.tsx` (title, description rich text, tags autocomplete)
 - [x] **T083** [P] SearchFilter component in `frontend/src/components/points/SearchFilter.tsx` (bounding box, tags, text search)
 
 ### UI Components - Annotations
-- [ ] **T084** [P] AnnotationList component in `frontend/src/components/annotations/AnnotationList.tsx` (group by type, download buttons)
-- [ ] **T085** AnnotationUpload component in `frontend/src/components/annotations/AnnotationUpload.tsx` (file upload with progress, quota warning)
-- [ ] **T086** [P] TextAnnotationPreview component in `frontend/src/components/annotations/TextAnnotationPreview.tsx` (Quill editor, emoji support)
-- [ ] **T087** [P] ImagePreview component in `frontend/src/components/annotations/ImagePreview.tsx` (lightbox, zoom)
-- [ ] **T088** [P] DocumentPreview component in `frontend/src/components/annotations/DocumentPreview.tsx` (PDF viewer, download fallback)
+- [x] **T084** [P] AnnotationList component in `frontend/src/components/annotations/AnnotationList.tsx` (group by type, download buttons)
+- [x] **T085** AnnotationUpload component in `frontend/src/components/annotations/AnnotationUpload.tsx` (file upload with progress, quota warning)
+- [x] **T086** [P] TextAnnotationPreview component in `frontend/src/components/annotations/TextAnnotationPreview.tsx` (Quill editor, emoji support)
+- [x] **T087** [P] ImagePreview component in `frontend/src/components/annotations/ImagePreview.tsx` (lightbox, zoom)
+- [x] **T088** [P] DocumentPreview component in `frontend/src/components/annotations/DocumentPreview.tsx` (PDF viewer, download fallback)
 
 ### UI Components - Sharing
-- [ ] **T089** [P] ShareModal component in `frontend/src/components/sharing/ShareModal.tsx` (email input, permission selector)
-- [ ] **T090** [P] PermissionSelector component in `frontend/src/components/sharing/PermissionSelector.tsx` (view/edit/transfer radio buttons)
-- [ ] **T091** [P] SharedPointsList component in `frontend/src/components/sharing/SharedPointsList.tsx` (sent/received tabs, revoke button)
+- [x] **T089** [P] ShareModal component in `frontend/src/components/sharing/ShareModal.tsx` (email input, permission selector)
+- [x] **T090** [P] PermissionSelector component in `frontend/src/components/sharing/PermissionSelector.tsx` (view/edit/transfer radio buttons)
+- [x] **T091** [P] SharedPointsList component in `frontend/src/components/sharing/SharedPointsList.tsx` (sent/received tabs, revoke button)
 
 ### UI Components - Common
 - [x] **T092** [P] ErrorBoundary component in `frontend/src/components/common/ErrorBoundary.tsx` (catch errors, display user-friendly message)
@@ -255,7 +259,7 @@
 - [x] **T103** [P] Unit tests for storage quota calculations in `backend/apps/annotations/tests/test_unit_quota.py`
 - [x] **T104** [P] Unit tests for permission checking logic in `backend/apps/sharing/tests/test_unit_permissions.py`
 - [x] **T105** [P] Unit tests for coordinate validation in `backend/apps/points/tests/test_unit_validation.py`
-- [ ] **T106** [P] Unit tests for file MIME type validation in `backend/apps/annotations/tests/test_unit_file_validation.py`
+- [x] **T106** [P] Unit tests for file MIME type validation in `backend/apps/annotations/tests/test_unit_file_validation.py`
 
 ### Performance & Load Testing
 - [ ] **T107** Performance tests in `backend/tests/performance/test_load.py` (k6 or Locust: <200ms p95 reads, <500ms p95 writes, 1000 concurrent users)
@@ -266,12 +270,12 @@
 - [ ] **T110** [P] E2E test: Accessibility (WCAG 2.1 AA) in `frontend/tests/e2e/test_accessibility.spec.ts` (axe-core)
 
 ### Infrastructure
-- [ ] **T111** Scheduled task for trash cleanup in `backend/apps/trash/management/commands/cleanup_trash.py` (runs daily, deletes points >30 days)
-- [ ] **T112** [P] Docker configuration in `docker-compose.yml` (PostgreSQL+PostGIS, Django, React, MinIO for S3)
+- [x] **T111** Scheduled task for trash cleanup in `backend/apps/trash/management/commands/cleanup_trash.py` (runs daily, deletes points >30 days)
+- [x] **T112** [P] Docker configuration in `docker-compose.yml` (PostgreSQL+PostGIS, Django, React, MinIO for S3)
 
 ### Documentation
-- [ ] **T113** [P] API documentation in `docs/api.md` (OpenAPI spec, authentication guide, error codes)
-- [ ] **T114** [P] Deployment guide in `docs/deployment.md` (production settings, environment variables, migrations)
+- [x] **T113** [P] API documentation in `docs/api.md` (OpenAPI spec, authentication guide, error codes)
+- [x] **T114** [P] Deployment guide in `docs/deployment.md` (production settings, environment variables, migrations)
 
 ---
 

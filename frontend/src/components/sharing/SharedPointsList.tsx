@@ -110,6 +110,7 @@ export function SharedPointsList({ pointId }: SharedPointsListProps) {
   // Load shares on mount
   useEffect(() => {
     loadShares();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pointId]);
 
   if (isLoading) {

@@ -8,6 +8,10 @@ import { useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import type { Map as LeafletMap } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { initializeLeaflet } from '../../utils/leaflet-config';
+
+// Initialize Leaflet configuration
+initializeLeaflet();
 
 interface MapViewProps {
   center?: [number, number];

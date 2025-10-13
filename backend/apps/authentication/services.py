@@ -59,7 +59,7 @@ class AuthenticationService:
         }
 
     @staticmethod
-    def refresh_access_token(refresh_token: str) -> dict:
+    def refresh_access_token(refresh_token: str) -> str:
         """
         Generate new access token from refresh token.
 
@@ -67,16 +67,14 @@ class AuthenticationService:
             refresh_token: Refresh token string
 
         Returns:
-            dict: {'access': str (new access token)}
+            str: New access token
 
         Raises:
             TokenError: If refresh token is invalid or expired
         """
         try:
             refresh = RefreshToken(refresh_token)
-            return {
-                'access': str(refresh.access_token),
-            }
+            return str(refresh.access_token)
         except TokenError as e:
             raise TokenError(f"Invalid or expired refresh token: {str(e)}")
 

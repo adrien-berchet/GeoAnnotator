@@ -119,6 +119,7 @@ export function AnnotationList({ pointId, onAnnotationDeleted }: AnnotationListP
   // Load annotations on mount
   useEffect(() => {
     loadAnnotations();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pointId]);
 
   if (isLoading) {
