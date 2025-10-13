@@ -1,19 +1,8 @@
-/* Remove default Vite styles */
-#root {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  flex-direction: column;
-}
-
 /* App container */
 .app {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  min-height: 100vh;
   width: 100%;
 }
 
@@ -22,15 +11,15 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  height: calc(100vh - 64px); /* Subtract navbar height */
 }
 
-/* Map page container */
+/* Map page container needs fixed height and no scroll */
 .map-page {
-  position: relative;
-  width: 100%;
-  height: 100%;
+  position: fixed;
+  top: 64px; /* Below navbar */
+  left: 0;
+  right: 0;
+  bottom: 0;
   display: flex;
   flex-direction: column;
 }
@@ -102,4 +91,3 @@
 .btn-primary:hover {
   background-color: #3182ce;
 }
-

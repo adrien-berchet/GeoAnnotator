@@ -81,8 +81,8 @@ export async function deleteAnnotation(pointId: string, annotationId: string): P
 /**
  * Download annotation file.
  */
-export async function downloadAnnotation(annotationId: string): Promise<Blob> {
-  const response = await apiClient.get(`/annotations/${annotationId}/download/`, {
+export async function downloadAnnotation(pointId: string, annotationId: string): Promise<Blob> {
+  const response = await apiClient.get(`/points/${pointId}/annotations/${annotationId}/download/`, {
     responseType: 'blob',
   });
   return response.data;

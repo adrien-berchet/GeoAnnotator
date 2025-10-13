@@ -1,6 +1,6 @@
 /**
  * Navigation bar component.
- * 
+ *
  * Displays app navigation with user menu, search, and main actions.
  */
 

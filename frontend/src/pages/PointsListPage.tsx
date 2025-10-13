@@ -1,6 +1,6 @@
 /**
  * Points list page.
- * 
+ *
  * Displays all user's points in a list/grid view with search and filters.
  */
 

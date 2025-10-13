@@ -1,0 +1,344 @@
+/**
+ * Point Detail Page Styles
+ */
+
+.point-detail-page {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  min-height: calc(100vh - 64px);
+  overflow-y: auto;
+}
+
+/* Header */
+.point-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.back-button {
+  padding: 0.75rem 1.5rem;
+  background: transparent;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  color: #4a5568;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.back-button:hover {
+  background: #f7fafc;
+  border-color: #cbd5e0;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.btn-secondary,
+.btn-danger {
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.btn-secondary {
+  background: #4299e1;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: #3182ce;
+}
+
+.btn-danger {
+  background: #e53e3e;
+  color: white;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #c53030;
+}
+
+.btn-danger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Point Info Card */
+.point-info-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+.point-info-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+}
+
+.point-info-header h1 {
+  margin: 0;
+  font-size: 2rem;
+  color: #2d3748;
+  flex: 1;
+}
+
+.public-badge {
+  padding: 0.5rem 1rem;
+  background: #bee3f8;
+  color: #2c5282;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+/* Metadata */
+.point-metadata {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: #f7fafc;
+  border-radius: 6px;
+}
+
+.metadata-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.metadata-label {
+  font-size: 0.75rem;
+  color: #718096;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.metadata-value {
+  font-size: 0.875rem;
+  color: #2d3748;
+  font-weight: 500;
+}
+
+/* Description */
+.point-description {
+  margin-bottom: 1.5rem;
+}
+
+.point-description h3 {
+  font-size: 1rem;
+  color: #2d3748;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.point-description p {
+  color: #4a5568;
+  line-height: 1.6;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+/* Tags */
+.point-tags {
+  margin-bottom: 1.5rem;
+}
+
+.point-tags h3 {
+  font-size: 1rem;
+  color: #2d3748;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+}
+
+.tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tag {
+  padding: 0.375rem 0.875rem;
+  background: #edf2f7;
+  color: #4a5568;
+  border-radius: 16px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* Annotations Section */
+.annotations-section {
+  margin-top: 2rem;
+}
+
+.annotations-section h2 {
+  font-size: 1.5rem;
+  color: #2d3748;
+  margin-bottom: 1.5rem;
+}
+
+.annotations-container {
+  display: grid;
+  gap: 2rem;
+}
+
+.annotations-list-section {
+  min-height: 200px;
+}
+
+/* Error Container */
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 64px);
+  padding: 2rem;
+  text-align: center;
+}
+
+.error-container h2 {
+  color: #e53e3e;
+  margin-bottom: 1rem;
+}
+
+.error-container p {
+  color: #718096;
+  margin-bottom: 1.5rem;
+}
+
+.btn-primary {
+  padding: 0.75rem 1.5rem;
+  background: #4299e1;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-primary:hover {
+  background: #3182ce;
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  .point-detail-page {
+    background: #1a202c;
+  }
+
+  .back-button {
+    color: #e2e8f0;
+    border-color: #4a5568;
+  }
+
+  .back-button:hover {
+    background: #2d3748;
+    border-color: #718096;
+  }
+
+  .point-info-card {
+    background: #2d3748;
+    border-color: #4a5568;
+  }
+
+  .point-info-header h1 {
+    color: #f7fafc;
+  }
+
+  .point-metadata {
+    background: #1a202c;
+  }
+
+  .metadata-label {
+    color: #a0aec0;
+  }
+
+  .metadata-value {
+    color: #f7fafc;
+  }
+
+  .point-description h3,
+  .point-tags h3 {
+    color: #f7fafc;
+  }
+
+  .point-description p {
+    color: #cbd5e0;
+  }
+
+  .tag {
+    background: #4a5568;
+    color: #e2e8f0;
+  }
+
+  .annotations-section h2 {
+    color: #f7fafc;
+  }
+
+  .error-container h2 {
+    color: #fc8181;
+  }
+
+  .error-container p {
+    color: #a0aec0;
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .point-detail-page {
+    padding: 1rem;
+  }
+
+  .point-detail-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+
+  .header-actions {
+    width: 100%;
+  }
+
+  .btn-secondary,
+  .btn-danger {
+    flex: 1;
+  }
+
+  .point-info-card {
+    padding: 1.5rem;
+  }
+
+  .point-info-header {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .point-metadata {
+    grid-template-columns: 1fr;
+  }
+
+  .add-annotation-section {
+    position: static;
+  }
+}

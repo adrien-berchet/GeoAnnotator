@@ -2,17 +2,22 @@
  * Annotation types.
  */
 
-export interface Annotation {
-  id: string;
-  gps_point: string;
-  type: 'text' | 'image' | 'document' | 'file';
-  text_content: string | null;
-  file: string | null;
+export interface FileMetadata {
+  url: string;
   file_name: string | null;
   file_size: number | null;
   mime_type: string | null;
+  can_preview: boolean;
+}
+
+export interface Annotation {
+  id: string;
+  gps_point_id: string;
+  type: 'text' | 'image' | 'document' | 'file';
+  text_content: string | null;
+  file: FileMetadata | null;
   created_at: string;
-  updated_at: string;
+  updated_at?: string;
 }
 
 export interface CreateTextAnnotationData {

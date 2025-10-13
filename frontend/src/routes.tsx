@@ -11,9 +11,9 @@ import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { MapPage } from './pages/MapPage';
 import { PointsListPage } from './pages/PointsListPage';
+import { PointDetailPage } from './pages/PointDetailPage';
 
 // Placeholder components - to be implemented
-const PointDetailPage = () => <div>Point Detail Page</div>;
 const ProfilePage = () => <div>Profile Page</div>;
 const SettingsPage = () => <div>Settings Page</div>;
 const SharedPointsPage = () => <div>Shared Points Page</div>;
