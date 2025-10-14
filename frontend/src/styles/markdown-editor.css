@@ -358,3 +358,48 @@ html[data-color-mode="dark"] .w-md-editor-text-input {
   color: #f9fafb !important;
   -webkit-text-fill-color: #f9fafb !important;
 }
+
+/* NUCLEAR OPTION FOR PREVIEW: Force dark mode colors in markdown preview */
+[data-color-mode="dark"] .w-md-editor-preview .wmde-markdown,
+[data-color-mode="dark"] .w-md-editor-preview .wmde-markdown *,
+[data-color-mode="dark"] .wmde-markdown,
+[data-color-mode="dark"] .wmde-markdown *,
+html[data-color-mode="dark"] .w-md-editor-preview .wmde-markdown,
+html[data-color-mode="dark"] .w-md-editor-preview .wmde-markdown *,
+html[data-color-mode="dark"] .wmde-markdown,
+html[data-color-mode="dark"] .wmde-markdown * {
+  color: #f9fafb !important;
+  -webkit-text-fill-color: #f9fafb !important;
+}
+
+/* Keep specific elements with their intended colors in dark mode */
+[data-color-mode="dark"] .wmde-markdown code,
+html[data-color-mode="dark"] .wmde-markdown code {
+  background: #374151 !important;
+  color: #fca5a5 !important;
+  -webkit-text-fill-color: #fca5a5 !important;
+}
+
+[data-color-mode="dark"] .wmde-markdown pre,
+html[data-color-mode="dark"] .wmde-markdown pre {
+  background: #0f172a !important;
+  color: #f1f5f9 !important;
+}
+
+[data-color-mode="dark"] .wmde-markdown pre *,
+html[data-color-mode="dark"] .wmde-markdown pre * {
+  color: #f1f5f9 !important;
+  -webkit-text-fill-color: #f1f5f9 !important;
+}
+
+[data-color-mode="dark"] .wmde-markdown a,
+html[data-color-mode="dark"] .wmde-markdown a {
+  color: #60a5fa !important;
+  -webkit-text-fill-color: #60a5fa !important;
+}
+
+[data-color-mode="dark"] .wmde-markdown blockquote,
+html[data-color-mode="dark"] .wmde-markdown blockquote {
+  color: #9ca3af !important;
+  -webkit-text-fill-color: #9ca3af !important;
+}

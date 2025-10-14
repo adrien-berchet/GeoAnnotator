@@ -491,15 +491,19 @@
   }
 
   .file-name {
-    color: #f7fafc;
+    color: #f7fafc !important;
   }
 
   .file-type {
-    color: #cbd5e0;
+    color: #cbd5e0 !important;
   }
 
   .file-size {
-    color: #a0aec0;
+    color: #a0aec0 !important;
+  }
+
+  .file-details {
+    color: #f7fafc !important;
   }
 
   .annotation-actions {
@@ -638,7 +642,7 @@
 /* Nom de fichier plus lisible */
 .annotation-item.trashed .file-name,
 .annotation-item.trashed .file-details {
-  color: #2d3748 !important;
+  color: #2d3748;
 }
 
 .annotation-item.trashed .annotation-actions {

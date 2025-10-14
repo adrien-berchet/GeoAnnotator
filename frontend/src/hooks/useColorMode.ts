@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 
 /**
  * Custom hook to detect and track system color mode preference.
- * 
+ *
  * @returns 'light' | 'dark' based on system preference
  */
 export function useColorMode(): 'light' | 'dark' {
