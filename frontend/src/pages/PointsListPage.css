@@ -6,6 +6,7 @@
 .points-list-page {
   padding: var(--spacing-2xl);
   max-width: var(--max-width-container);
+  width: 100%;
   margin: 0 auto;
   min-height: calc(100vh - var(--navbar-height));
 }
@@ -61,20 +62,60 @@
   font-weight: var(--font-weight-medium);
 }
 
-/* Points Grid */
-.points-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: var(--spacing-xl);
+/* Error Container */
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-3xl);
+  text-align: center;
+  min-height: 400px;
 }
 
-/* Point Card - utilise .card et .card-hover */
+.error-container h2 {
+  color: var(--color-danger);
+  font-size: var(--font-size-xl);
+  margin-bottom: var(--spacing-md);
+}
+
+.error-container p {
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-xl);
+}
+
+/* Points Grid - auto-fit avec largeur explicite */
+.points-grid {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: var(--spacing-lg);
+}
+
+/* Point Card - hérite de .card et .card-hover */
+.point-card {
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-xl);
+  transition: all var(--transition-base);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.point-card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+}
 
 .point-card-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 1rem;
+  gap: var(--spacing-md);
 }
 
 .point-card-title {
@@ -91,7 +132,21 @@
   -webkit-box-orient: vertical;
 }
 
-/* Utilise .badge au lieu de .point-badge */
+/* Badge public - variante du badge commun */
+.point-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}
+
+.point-badge.public {
+  background: var(--color-success-light);
+  color: var(--color-success-dark);
+}
 
 .point-card-location {
   font-size: var(--font-size-sm);
@@ -112,7 +167,17 @@
   gap: var(--spacing-sm);
 }
 
-/* Utilise .tag commun */
+/* Tag - hérite du style commun .tag */
+.point-card-tags .tag {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--spacing-xs) var(--spacing-md);
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+}
 
 .tag-more {
   padding: var(--spacing-xs) var(--spacing-md);
@@ -127,6 +192,7 @@
   justify-content: space-between;
   align-items: center;
   padding-top: var(--spacing-md);
+  margin-top: auto;
   border-top: 1px solid var(--color-border-primary);
   font-size: var(--font-size-xs);
   color: var(--color-text-tertiary);
@@ -145,17 +211,41 @@
   color: var(--color-primary);
 }
 
-/* Utilise .empty-state commun */
+/* Empty State - hérite du style commun */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-3xl) var(--spacing-xl);
+  text-align: center;
+}
+
+.empty-state-icon {
+  font-size: 4rem;
+  margin-bottom: var(--spacing-lg);
+  opacity: 0.5;
+}
+
+.empty-state h2 {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-sm);
+}
+
+.empty-state p {
+  color: var(--color-text-tertiary);
+  margin-bottom: var(--spacing-xl);
+}
 
 /* Dark mode géré automatiquement par les variables CSS */
 
 /* Responsive */
-@media (max-width: 768px) {
+@media (max-width: 640px) {
   .points-list-page {
     padding: var(--spacing-lg);
   }
 
-  .points-grid {
-    grid-template-columns: 1fr;
-  }
+  /* La grille s'adapte automatiquement, pas besoin de forcer 1 colonne */
 }
