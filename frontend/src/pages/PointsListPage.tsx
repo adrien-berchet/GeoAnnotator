@@ -6,25 +6,59 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { getPoints, searchPointsByTags } from '../api/points';
+import { getPoints, searchPointsByTags, getTags } from '../api/points';
 import { getErrorMessage } from '../api/client';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
-import type { GPSPoint } from '../types/point';
+import type { GPSPoint, Tag } from '../types/point';
 import './PointsListPage.css';
 
 export function PointsListPage() {
   const [points, setPoints] = useState<GPSPoint[]>([]);
+  const [availableTags, setAvailableTags] = useState<Tag[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [error, setError] = useState('');
   const [searchParams, setSearchParams] = useSearchParams();
+  const [searchInput, setSearchInput] = useState('');
+  const [selectedTagNames, setSelectedTagNames] = useState<string[]>([]);
   const navigate = useNavigate();
 
   const searchQuery = searchParams.get('search') || '';
   const tagsFilter = searchParams.get('tags') || '';
+  const isFilterPanelOpen = searchParams.get('filterOpen') === 'true';
+
+  console.log('RENDER - isFilterPanelOpen:', isFilterPanelOpen, 'URL:', window.location.search);
+
+  useEffect(() => {
+    loadTags();
+  }, []);
 
   useEffect(() => {
     loadPoints();
   }, [searchQuery, tagsFilter]);
+
+  useEffect(() => {
+    // Sync selectedTagNames with URL params
+    if (tagsFilter) {
+      setSelectedTagNames(tagsFilter.split(',').map(t => t.trim()));
+    } else {
+      setSelectedTagNames([]);
+    }
+  }, [tagsFilter]);
+
+  useEffect(() => {
+    // Sync searchInput with URL params
+    setSearchInput(searchQuery);
+  }, [searchQuery]);
+
+  const loadTags = async () => {
+    try {
+      const tags = await getTags();
+      setAvailableTags(tags);
+    } catch (err) {
+      console.error('Error loading tags:', err);
+    }
+  };
 
   const loadPoints = async () => {
     setIsLoading(true);
@@ -36,6 +70,7 @@ export function PointsListPage() {
       if (tagsFilter) {
         // Filter by tags using the dedicated endpoint
         const tagNames = tagsFilter.split(',').map(t => t.trim());
+        console.log('Searching with tags:', tagNames); // Debug
         data = await searchPointsByTags(tagNames);
       } else if (searchQuery) {
         // Search by text
@@ -51,11 +86,60 @@ export function PointsListPage() {
       setError(getErrorMessage(err));
     } finally {
       setIsLoading(false);
+      setIsInitialLoad(false);
     }
   };
 
-  const clearFilters = () => {
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchInput.trim()) {
+      setSearchParams({ search: searchInput.trim() });
+    } else {
+      // Si la recherche est vide, enlever le paramètre
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete('search');
+      setSearchParams(newParams);
+    }
+  };
+
+  const handleOpenFilterPanel = () => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set('filterOpen', 'true');
+    setSearchParams(newParams);
+  };
+
+  const handleClearFilters = () => {
     setSearchParams({});
+  };
+
+  const handleCloseFilterPanel = () => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.delete('filterOpen');
+    setSearchParams(newParams);
+  };
+
+  const handleToggleTag = (tagName: string) => {
+    console.log('handleToggleTag called for:', tagName);
+    const newSelectedTags = selectedTagNames.includes(tagName)
+      ? selectedTagNames.filter(t => t !== tagName)
+      : [...selectedTagNames, tagName];
+    
+    const newParams = new URLSearchParams(searchParams);
+    
+    if (newSelectedTags.length > 0) {
+      newParams.set('tags', newSelectedTags.join(','));
+    } else {
+      newParams.delete('tags');
+    }
+    
+    // Garder le panneau ouvert
+    newParams.set('filterOpen', 'true');
+    console.log('Setting params:', newParams.toString());
+    
+    setSearchParams(newParams);
+  };  const clearFilters = () => {
+    setSearchParams({});
+    setSearchInput('');
   };
 
   const formatDate = (dateString: string) => {
@@ -66,7 +150,7 @@ export function PointsListPage() {
     });
   };
 
-  if (isLoading) {
+  if (isInitialLoad) {
     return <LoadingSpinner size="large" message="Loading points..." />;
   }
 
@@ -86,21 +170,108 @@ export function PointsListPage() {
     <div className="points-list-page">
       <div className="points-list-header">
         <h1>My Points</h1>
-        {searchQuery && (
-          <p className="search-results-info">
-            Search results for "{searchQuery}" ({points.length} {points.length === 1 ? 'result' : 'results'})
-          </p>
-        )}
-        {tagsFilter && (
-          <div className="filter-info">
-            <p className="search-results-info">
-              Points with tag{tagsFilter.includes(',') ? 's' : ''}: <strong>{tagsFilter}</strong> ({points.length} {points.length === 1 ? 'result' : 'results'})
-            </p>
-            <button onClick={clearFilters} className="clear-filter-button">
-              Clear Filter
+
+        {/* Search and Filters */}
+        <div className="filters-container">
+          {/* Search Bar */}
+          <form onSubmit={handleSearchSubmit} className="search-form">
+            <input
+              type="text"
+              className="search-input"
+              placeholder="Search points by title or description..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+            />
+            <button type="submit" className="search-button">
+              🔍 Search
+            </button>
+            {searchQuery && (
+              <button type="button" onClick={clearFilters} className="clear-button">
+                ✕
+              </button>
+            )}
+          </form>
+
+          {/* Tags Filter Button */}
+          {availableTags.length > 0 && (
+            <button
+              type="button"
+              className={`filter-toggle-button ${isFilterPanelOpen ? 'active' : ''}`}
+              onClick={handleOpenFilterPanel}
+              title="Filter by tags"
+            >
+              🏷️ Filter Tags {selectedTagNames.length > 0 && `(${selectedTagNames.length})`}
+              {isLoading && <span className="loading-indicator">⟳</span>}
+            </button>
+          )}
+        </div>
+
+        {/* Tags Filter Panel (Drawer) */}
+        <div
+          className={`filter-panel-backdrop ${isFilterPanelOpen ? 'open' : ''}`}
+          onClick={handleCloseFilterPanel}
+        />
+        <div className={`filter-panel ${isFilterPanelOpen ? 'open' : ''}`}>
+          <div className="filter-panel-header">
+            <h2>Filter by Tags</h2>
+            <button
+              className="filter-panel-close"
+              onClick={handleCloseFilterPanel}
+            >
+              ✕
+            </button>
+          </div>
+
+          <div className="filter-panel-content">
+            <div className="tags-selection">
+              {availableTags.map((tag) => (
+                <button
+                  key={tag.id}
+                  type="button"
+                  className={`tag-option ${selectedTagNames.includes(tag.name) ? 'selected' : ''}`}
+                  onClick={() => handleToggleTag(tag.name)}
+                >
+                  <span className="tag-checkbox">
+                    {selectedTagNames.includes(tag.name) ? '✓' : ''}
+                  </span>
+                  <span className="tag-name">{tag.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="filter-panel-footer">
+            <button
+              className="btn-secondary"
+              onClick={handleClearFilters}
+            >
+              Clear All
+            </button>
+          </div>
+        </div>
+
+        {/* Results Info */}
+        {(searchQuery || tagsFilter) && (
+          <div className="results-info">
+            {searchQuery && (
+              <span>
+                Search: <strong>"{searchQuery}"</strong>
+              </span>
+            )}
+            {tagsFilter && (
+              <span>
+                Tags: <strong>{tagsFilter}</strong>
+              </span>
+            )}
+            <span className="results-count">
+              {points.length} {points.length === 1 ? 'result' : 'results'}
+            </span>
+            <button onClick={clearFilters} className="clear-filters-link">
+              Clear all filters
             </button>
           </div>
         )}
+
         <div className="points-list-stats">
           <span>{points.length} point{points.length !== 1 ? 's' : ''}</span>
         </div>

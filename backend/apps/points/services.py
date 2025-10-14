@@ -375,7 +375,7 @@ class PointService:
         user: User = None,
     ) -> list[GPSPoint]:
         """
-        Search points by tag names.
+        Search points by tag names (case-insensitive).
 
         Args:
             tag_names: List of tag names
@@ -384,10 +384,13 @@ class PointService:
         Returns:
             QuerySet of GPSPoint objects
         """
+        # Build Q objects for case-insensitive tag matching
+        tag_queries = Q()
+        for tag_name in tag_names:
+            tag_queries |= Q(tags__name__iexact=tag_name)
+
         # Base query: points with any of the tags and not trashed
-        query = GPSPoint.objects.filter(
-            tags__name__in=[name.lower() for name in tag_names]
-        ).exclude(
+        query = GPSPoint.objects.filter(tag_queries).exclude(
             trash_entry__isnull=False
         )
 
