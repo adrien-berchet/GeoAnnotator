@@ -34,18 +34,22 @@ export function TagSelector({
    * Filter tags based on input value.
    */
   useEffect(() => {
-    if (inputValue.trim()) {
-      const query = inputValue.toLowerCase();
+    const query = inputValue.toLowerCase().trim();
+
+    if (query) {
+      // Filter tags that match the query and are not already selected
       const filtered = availableTags.filter(
         tag =>
           tag.name.toLowerCase().includes(query) &&
           !selectedTags.includes(tag.name)
       );
       setFilteredTags(filtered);
-      setShowSuggestions(filtered.length > 0 || inputValue.trim().length > 0);
     } else {
-      setFilteredTags([]);
-      setShowSuggestions(false);
+      // Show all available tags (not selected) when input is empty
+      const unselectedTags = availableTags.filter(
+        tag => !selectedTags.includes(tag.name)
+      );
+      setFilteredTags(unselectedTags);
     }
   }, [inputValue, availableTags, selectedTags]);
 
@@ -139,9 +143,8 @@ export function TagSelector({
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
           onFocus={() => {
-            if (inputValue.trim()) {
-              setShowSuggestions(true);
-            }
+            // Show suggestions on focus, even if input is empty
+            setShowSuggestions(true);
           }}
           placeholder={selectedTags.length === 0 ? 'Type to search or add tags...' : ''}
           disabled={disabled}

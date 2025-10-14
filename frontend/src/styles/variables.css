@@ -1,0 +1,175 @@
+/**
+ * Global CSS Variables
+ * Définit toutes les couleurs, espacements, rayons de bordure, etc. du projet
+ */
+
+:root {
+  /* === COLORS === */
+
+  /* Primary Colors */
+  --color-primary: #4299e1;
+  --color-primary-hover: #3182ce;
+  --color-primary-light: #bee3f8;
+  --color-primary-dark: #2c5282;
+
+  /* Neutral Colors (Light Mode) */
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f7fafc;
+  --color-bg-tertiary: #edf2f7;
+  --color-bg-hover: #e2e8f0;
+
+  --color-text-primary: #2d3748;
+  --color-text-secondary: #4a5568;
+  --color-text-tertiary: #718096;
+  --color-text-muted: #a0aec0;
+
+  --color-border-primary: #e2e8f0;
+  --color-border-secondary: #cbd5e0;
+  --color-border-tertiary: #a0aec0;
+
+  /* Success Colors */
+  --color-success: #48bb78;
+  --color-success-hover: #38a169;
+  --color-success-light: #c6f6d5;
+  --color-success-bg: #e8f5e9;
+  --color-success-dark: #2e7d32;
+
+  /* Danger Colors */
+  --color-danger: #e53e3e;
+  --color-danger-hover: #c53030;
+  --color-danger-light: #fc8181;
+  --color-danger-bg: #fff5f5;
+  --color-danger-border: #feb2b2;
+  --color-danger-dark: #c62828;
+
+  /* Warning Colors */
+  --color-warning: #ed8936;
+  --color-warning-hover: #dd6b20;
+  --color-warning-light: #fbd38d;
+  --color-warning-bg: #fff3e0;
+  --color-warning-dark: #e65100;
+
+  /* Info Colors */
+  --color-info: #4299e1;
+  --color-info-hover: #3182ce;
+  --color-info-light: #90cdf4;
+  --color-info-bg: #ebf8ff;
+
+  /* Link Colors */
+  --color-link: #646cff;
+  --color-link-hover: #535bf2;
+
+  /* === SPACING === */
+  --spacing-xs: 0.25rem;   /* 4px */
+  --spacing-sm: 0.5rem;    /* 8px */
+  --spacing-md: 0.75rem;   /* 12px */
+  --spacing-lg: 1rem;      /* 16px */
+  --spacing-xl: 1.5rem;    /* 24px */
+  --spacing-2xl: 2rem;     /* 32px */
+  --spacing-3xl: 3rem;     /* 48px */
+  --spacing-4xl: 4rem;     /* 64px */
+
+  /* === BORDER RADIUS === */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-full: 9999px;
+
+  /* === SHADOWS === */
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --shadow-xl: 0 10px 25px rgba(0, 0, 0, 0.1);
+
+  /* === TRANSITIONS === */
+  --transition-fast: 0.15s;
+  --transition-base: 0.2s;
+  --transition-slow: 0.3s;
+
+  /* === TYPOGRAPHY === */
+  --font-family-base: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  --font-family-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+
+  --font-size-xs: 0.75rem;   /* 12px */
+  --font-size-sm: 0.875rem;  /* 14px */
+  --font-size-base: 1rem;    /* 16px */
+  --font-size-lg: 1.125rem;  /* 18px */
+  --font-size-xl: 1.25rem;   /* 20px */
+  --font-size-2xl: 1.5rem;   /* 24px */
+  --font-size-3xl: 2rem;     /* 32px */
+
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.6;
+
+  /* === LAYOUT === */
+  --navbar-height: 64px;
+  --max-width-container: 1400px;
+  --max-width-content: 1200px;
+
+  /* === Z-INDEX === */
+  --z-index-dropdown: 10;
+  --z-index-modal: 1200;
+  --z-index-modal-backdrop: 1199;
+  --z-index-navbar: 1000;
+  --z-index-tooltip: 1100;
+
+  /* Aliases pour compatibilité */
+  --z-modal: 1200;
+  --z-modal-backdrop: 1199;
+  --z-dropdown: 10;
+}
+
+/* Dark Mode Variables */
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Background Colors */
+    --color-bg-primary: #2d3748;
+    --color-bg-secondary: #1a202c;
+    --color-bg-tertiary: #4a5568;
+    --color-bg-hover: #374151;
+
+    /* Text Colors */
+    --color-text-primary: #f7fafc;
+    --color-text-secondary: #e2e8f0;
+    --color-text-tertiary: #cbd5e0;
+    --color-text-muted: #a0aec0;
+
+    /* Border Colors */
+    --color-border-primary: #4a5568;
+    --color-border-secondary: #718096;
+    --color-border-tertiary: #a0aec0;
+
+    /* Primary Colors (adjusted for dark mode) */
+    --color-primary: #63b3ed;
+    --color-primary-hover: #4299e1;
+    --color-primary-dark: #1e3a8a;
+
+    /* Success Colors (adjusted) */
+    --color-success-bg: #1b5e20;
+
+    /* Danger Colors (adjusted) */
+    --color-danger: #fc8181;
+    --color-danger-hover: #f56565;
+    --color-danger-bg: #742a2a;
+
+    /* Warning Colors (adjusted) */
+    --color-warning-bg: #744210;
+
+    /* Link Colors */
+    --color-link: #60a5fa;
+    --color-link-hover: #93c5fd;
+
+    /* Shadows (adjusted for dark mode) */
+    --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --shadow-xl: 0 10px 25px rgba(0, 0, 0, 0.3);
+  }
+}

@@ -1,111 +1,113 @@
 /**
  * Annotations List Styles
+ * Utilise les classes communes (btn-secondary, empty-state, card, badge, etc.)
  */
 
 .annotations-list {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--spacing-lg);
 }
 
 /* Toolbar */
 .annotations-toolbar {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 0.5rem 0;
-  margin-bottom: 0.75rem;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-sm) 0;
+  margin-bottom: var(--spacing-md);
 }
 
 .reorder-toggle-button {
-  padding: 0.5rem 1rem;
-  background: #edf2f7;
-  border: 1px solid #cbd5e0;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #4a5568;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--transition-base);
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--spacing-sm);
 }
 
 .reorder-toggle-button:hover {
-  background: #e2e8f0;
-  color: #2d3748;
-  border-color: #a0aec0;
+  background: var(--color-bg-hover);
+  color: var(--color-text-primary);
+  border-color: var(--color-border-secondary);
 }
 
 .reorder-toggle-button.active {
-  background: #bee3f8;
-  color: #2c5282;
-  border-color: #90cdf4;
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
+  border-color: var(--color-primary);
 }
 
 .reorder-toggle-button.active:hover {
-  background: #90cdf4;
-  color: #1a365d;
-  border-color: #63b3ed;
+  background: var(--color-primary);
+  color: var(--color-primary-contrast);
+  border-color: var(--color-primary-dark);
 }
 
 .reorder-hint {
-  font-size: 0.875rem;
-  color: #718096;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-tertiary);
 }
 
+/* Utilise .empty-state commun */
 .annotations-empty {
   text-align: center;
-  padding: 3rem 1rem;
-  color: #718096;
+  padding: var(--spacing-3xl) var(--spacing-lg);
+  color: var(--color-text-tertiary);
 }
 
 .empty-icon {
   font-size: 3rem;
-  margin-bottom: 1rem;
+  margin-bottom: var(--spacing-lg);
   opacity: 0.5;
 }
 
 .annotations-empty p {
-  margin: 0.5rem 0;
+  margin: var(--spacing-sm) 0;
 }
 
 .empty-hint {
-  font-size: 0.875rem;
-  color: #a0aec0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
 }
 
-/* Annotation Item */
+/* Annotation Item - utilise .card */
 .annotation-item {
-  background: white; /* Même fond blanc que .point-info-card */
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-lg);
   display: flex;
-  gap: 0.5rem;
-  transition: box-shadow 0.2s;
+  gap: var(--spacing-sm);
+  transition: box-shadow var(--transition-base);
   position: relative;
-  padding: 1rem; /* Ajout de padding pour meilleur espacement */
+  padding: var(--spacing-lg);
 }
 
 .annotation-item:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
 }
 
 /* Drag Handle */
 .drag-handle {
   display: flex;
   align-items: center;
-  padding: 0.5rem;
+  padding: var(--spacing-sm);
   cursor: grab;
-  color: #cbd5e0;
+  color: var(--color-border-secondary);
   font-size: 1.2rem;
   user-select: none;
-  transition: color 0.2s;
+  transition: color var(--transition-base);
 }
 
 .drag-handle:hover {
-  color: #4a5568;
+  color: var(--color-text-secondary);
 }
 
 .drag-handle:active {
@@ -115,7 +117,7 @@
 /* Content wrapper */
 .annotation-content-wrapper {
   flex: 1;
-  padding: 1rem;
+  padding: var(--spacing-lg);
   padding-left: 0;
 }
 
@@ -123,36 +125,29 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.75rem;
+  margin-bottom: var(--spacing-md);
 }
 
-.annotation-type-badge {
-  padding: 0.25rem 0.75rem;
-  background: #edf2f7;
-  color: #4a5568;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
+/* Utilise .badge commun */
 
 .annotation-date {
-  font-size: 0.75rem;
-  color: #a0aec0;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
 }
 
 /* Text Annotation */
 .text-annotation-display {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: var(--spacing-md);
 }
 
 .text-preview {
-  padding: 1rem;
-  background: #f7fafc;
-  border-radius: 6px;
-  border-left: 3px solid #4299e1;
-  transition: background-color 0.2s, transform 0.2s;
+  padding: var(--spacing-lg);
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--color-primary);
+  transition: background-color var(--transition-base), transform var(--transition-base);
 }
 
 .text-preview.clickable {
@@ -160,19 +155,19 @@
 }
 
 .text-preview.clickable:hover {
-  background: #edf2f7;
+  background: var(--color-bg-tertiary);
   transform: translateX(2px);
 }
 
 .text-preview .wmde-markdown {
   background: transparent;
-  color: #2d3748;
-  font-size: 0.875rem;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
 }
 
 .text-preview .wmde-markdown p {
-  margin: 0 0 0.5rem 0;
-  line-height: 1.6;
+  margin: 0 0 var(--spacing-sm) 0;
+  line-height: var(--line-height-relaxed);
 }
 
 .text-preview .wmde-markdown p:last-child {
@@ -182,63 +177,46 @@
 .text-preview .wmde-markdown h1,
 .text-preview .wmde-markdown h2,
 .text-preview .wmde-markdown h3 {
-  margin: 0.5rem 0;
-  color: #2d3748;
+  margin: var(--spacing-sm) 0;
+  color: var(--color-text-primary);
 }
 
 .text-preview .wmde-markdown ul,
 .text-preview .wmde-markdown ol {
-  margin: 0.5rem 0;
-  padding-left: 1.5rem;
+  margin: var(--spacing-sm) 0;
+  padding-left: var(--spacing-xl);
 }
 
 .text-preview .wmde-markdown code {
-  background: #edf2f7;
+  background: var(--color-bg-tertiary);
   padding: 0.125rem 0.25rem;
-  border-radius: 3px;
+  border-radius: var(--radius-xs);
   font-size: 0.875em;
 }
 
 .text-preview .wmde-markdown pre {
-  background: #edf2f7;
-  padding: 0.75rem;
-  border-radius: 4px;
+  background: var(--color-bg-tertiary);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-sm);
   overflow-x: auto;
 }
 
 .text-preview .wmde-markdown blockquote {
-  border-left: 3px solid #cbd5e0;
-  padding-left: 1rem;
-  margin: 0.5rem 0;
-  color: #718096;
+  border-left: 3px solid var(--color-border-secondary);
+  padding-left: var(--spacing-lg);
+  margin: var(--spacing-sm) 0;
+  color: var(--color-text-tertiary);
 }
 
-.edit-text-button {
-  align-self: flex-start;
-  padding: 0.5rem 1rem;
-  background: #edf2f7;
-  color: #4a5568;
-  border: 1px solid #cbd5e0;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.edit-text-button:hover {
-  background: #e2e8f0;
-  color: #2d3748;
-  border-color: #a0aec0;
-}
+/* Utilise .btn-secondary commun */
 
 /* Legacy text annotation styles (kept for backward compatibility) */
 .text-annotation {
-  padding: 1rem;
-  background: #f7fafc;
-  border-radius: 6px;
-  border-left: 3px solid #4299e1;
-  transition: background-color 0.2s, transform 0.2s;
+  padding: var(--spacing-lg);
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--color-primary);
+  transition: background-color var(--transition-base), transform var(--transition-base);
 }
 
 .text-annotation.clickable {
@@ -246,14 +224,14 @@
 }
 
 .text-annotation.clickable:hover {
-  background: #edf2f7;
+  background: var(--color-bg-tertiary);
   transform: translateX(2px);
 }
 
 .text-annotation p {
   margin: 0;
-  color: #2d3748;
-  line-height: 1.6;
+  color: var(--color-text-primary);
+  line-height: var(--line-height-relaxed);
   white-space: pre-wrap;
   word-wrap: break-word;
 }
@@ -262,25 +240,25 @@
 .image-annotation {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: var(--spacing-md);
 }
 
 .image-loading {
-  padding: 2rem;
+  padding: var(--spacing-2xl);
   text-align: center;
-  color: #a0aec0;
-  background: #f7fafc;
-  border-radius: 6px;
-  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
 }
 
 .annotation-image {
   width: 100%;
   max-height: 400px;
   object-fit: contain;
-  border-radius: 6px;
-  background: #f7fafc;
-  transition: transform 0.2s, box-shadow 0.2s;
+  border-radius: var(--radius-md);
+  background: var(--color-bg-secondary);
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
 }
 
 .annotation-image.clickable {
@@ -303,9 +281,9 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.5rem;
-  background: #f7fafc;
-  border-radius: 6px;
+  padding: var(--spacing-sm);
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-md);
   flex: 1;
 }
 
@@ -313,39 +291,19 @@
 .file-annotation {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 1rem;
-  background: #f7fafc;
-  border-radius: 6px;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-lg);
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-md);
 }
 
 .file-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--spacing-sm);
   flex-shrink: 0;
 }
 
-.preview-button {
-  padding: 0.5rem 1rem;
-  background: #48bb78;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.preview-button:hover:not(:disabled) {
-  background: #38a169;
-}
-
-.preview-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
+/* Utilise .btn-success et .btn-primary communs */
 
 .file-icon-large {
   font-size: 2.5rem;
@@ -358,208 +316,40 @@
 }
 
 .file-name {
-  font-weight: 600;
-  color: #2d3748;
-  font-size: 0.875rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .file-type {
-  font-size: 0.75rem;
-  color: #718096;
-  margin-top: 0.25rem;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  margin-top: var(--spacing-xs);
 }
 
 .file-size {
-  font-size: 0.75rem;
-  color: #a0aec0;
-  margin-top: 0.25rem;
-}
-
-.download-button {
-  padding: 0.5rem 1rem;
-  background: #4299e1;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.download-button:hover:not(:disabled) {
-  background: #3182ce;
-}
-
-.download-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  margin-top: var(--spacing-xs);
 }
 
 /* Actions */
 .annotation-actions {
   display: flex;
-  justify-content: flex-end;
-  margin-top: 0.75rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid #e2e8f0;
+  gap: var(--spacing-sm);
+  padding-top: var(--spacing-md);
+  margin-top: var(--spacing-md);
+  border-top: 1px solid var(--color-border-primary);
 }
 
-.delete-button {
-  padding: 0.5rem 1rem;
-  background: transparent;
-  color: #e53e3e;
-  border: 1px solid #e53e3e;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
+/* Utilise .btn-danger commun */
 
-.delete-button:hover:not(:disabled) {
-  background: #fff5f5;
-}
+/* Utilise .alert-error commun */
 
-.delete-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* Error Message */
-.error-message {
-  background: #fff5f5;
-  border: 1px solid #feb2b2;
-  color: #c53030;
-  padding: 0.75rem;
-  border-radius: 6px;
-  margin-bottom: 1rem;
-  font-size: 0.875rem;
-}
-
-/* Dark mode */
-@media (prefers-color-scheme: dark) {
-  .annotations-empty {
-    color: #a0aec0;
-  }
-
-  .annotation-item {
-    background: #2d3748 !important; /* Force le fond sombre même avec les règles qui viennent après */
-    border-color: #4a5568 !important;
-  }
-
-  .annotation-type-badge {
-    background: #4a5568 !important;
-    color: #e2e8f0 !important;
-    font-weight: 600 !important;
-  }
-
-  .annotation-date {
-    color: #cbd5e0 !important;
-  }
-
-  .text-annotation {
-    background: #1a202c !important;
-    border-left-color: #63b3ed !important;
-  }
-
-  .text-annotation p {
-    color: #f7fafc !important;
-  }
-
-  .text-preview {
-    background: #1a202c !important;
-    border-left-color: #63b3ed !important;
-  }
-
-  .text-preview .wmde-markdown,
-  .text-preview .wmde-markdown * {
-    color: #f7fafc !important;
-  }
-
-  .annotation-image {
-    background: #1a202c !important;
-  }
-
-  .file-info,
-  .file-annotation {
-    background: #1a202c !important;
-  }
-
-  .file-name {
-    color: #f7fafc !important;
-  }
-
-  .file-type {
-    color: #cbd5e0 !important;
-  }
-
-  .file-size {
-    color: #a0aec0 !important;
-  }
-
-  .file-details {
-    color: #f7fafc !important;
-  }
-
-  .annotation-actions {
-    border-top-color: #4a5568;
-  }
-
-  .delete-button {
-    color: #fc8181;
-    border-color: #fc8181;
-  }
-
-  .delete-button:hover:not(:disabled) {
-    background: #742a2a;
-  }
-
-  .error-message {
-    background: #742a2a;
-    border-color: #fc8181;
-    color: #feb2b2;
-  }
-
-  /* Trashed annotations in dark mode - même style que .point-info-card */
-  .annotation-item.trashed {
-    background: #2d3748 !important; /* Même fond que .point-info-card en dark mode */
-    border-color: #fc8181 !important; /* Bordure rouge pour distinction */
-  }
-
-  .annotation-item.trashed .annotation-content {
-    color: #f7fafc !important; /* Même que .point-info-card h1 */
-  }
-
-  .annotation-item.trashed .annotation-meta {
-    color: #cbd5e0 !important; /* Même que .point-description p */
-  }
-
-  .annotation-item.trashed .text-preview,
-  .annotation-item.trashed .text-preview * {
-    color: #f7fafc !important;
-  }
-
-  .annotation-item.trashed .file-name,
-  .annotation-item.trashed .file-details {
-    color: #f7fafc !important;
-  }
-
-  /* Motif hachuré adapté pour dark mode */
-  .annotation-item.trashed::before {
-    background: repeating-linear-gradient(
-      45deg,
-      rgba(252, 129, 129, 0.05), /* Rouge plus visible sur fond sombre */
-      rgba(252, 129, 129, 0.05) 10px,
-      rgba(252, 129, 129, 0.1) 10px,
-      rgba(252, 129, 129, 0.1) 20px
-    );
-  }
-}
+/* Dark mode géré automatiquement par les variables CSS */
 
 /* Responsive */
 @media (max-width: 768px) {
@@ -577,9 +367,9 @@
 /* Trashed Annotation Styles - Improved Readability */
 .annotation-item.trashed {
   position: relative;
-  opacity: 1; /* Opacité complète pour meilleure lisibilité */
-  background: white; /* Même fond blanc que les annotations normales */
-  border: 2px solid #fc8181; /* Bordure rouge pour distinction */
+  opacity: 1;
+  background: var(--color-bg-primary);
+  border: 2px solid var(--color-danger);
 }
 
 .annotation-item.trashed::before {
@@ -591,14 +381,14 @@
   bottom: 0;
   background: repeating-linear-gradient(
     45deg,
-    rgba(252, 129, 129, 0.03), /* Rouge très subtil - ne gêne pas la lecture */
+    rgba(252, 129, 129, 0.03),
     rgba(252, 129, 129, 0.03) 10px,
     rgba(252, 129, 129, 0.06) 10px,
     rgba(252, 129, 129, 0.06) 20px
   );
   pointer-events: none;
   z-index: 1;
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
 }
 
 .annotation-item.trashed .annotation-content-wrapper {
@@ -607,54 +397,51 @@
 }
 
 .annotation-item.trashed .trashed-annotation-banner {
-  background: linear-gradient(135deg, #fc8181 0%, #f56565 100%); /* Plus clair */
+  background: linear-gradient(135deg, var(--color-danger) 0%, var(--color-danger-dark) 100%);
   color: white;
-  padding: 0.75rem 1rem;
-  border-radius: 6px 6px 0 0;
-  margin-bottom: 0.5rem;
-  font-size: 0.875rem;
-  font-weight: 600; /* Plus gras pour meilleure lisibilité */
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  margin-bottom: var(--spacing-sm);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
   z-index: 3;
   position: relative;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Ombre légère */
+  box-shadow: var(--shadow-sm);
 }
 
 .annotation-item.trashed .trashed-annotation-banner .banner-content {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--spacing-sm);
 }
 
 .annotation-item.trashed .annotation-content {
-  color: #2d3748 !important; /* Même couleur que les annotations normales */
+  color: var(--color-text-primary) !important;
 }
 
 .annotation-item.trashed .annotation-meta {
-  color: #4a5568 !important; /* Même couleur que les annotations normales */
+  color: var(--color-text-secondary) !important;
 }
 
-/* Assurer que le texte dans MDEditor est lisible */
 .annotation-item.trashed .text-preview,
 .annotation-item.trashed .text-preview * {
-  color: #2d3748 !important;
+  color: var(--color-text-primary) !important;
 }
 
-/* Nom de fichier plus lisible */
 .annotation-item.trashed .file-name,
 .annotation-item.trashed .file-details {
-  color: #2d3748;
+  color: var(--color-text-primary);
 }
 
 .annotation-item.trashed .annotation-actions {
   display: none;
 }
 
-/* Ajout d'un indicateur visuel supplémentaire */
 .annotation-item.trashed::after {
   content: '🗑️';
   position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
+  top: var(--spacing-sm);
+  right: var(--spacing-sm);
   font-size: 1.5rem;
   opacity: 0.3;
   z-index: 2;

@@ -146,11 +146,6 @@ export function TrashAnnotationCard({
           <span className="icon">📍</span>
           <span className="point-title">{item.gps_point.title}</span>
         </div>
-        <p className="point-note">
-          ℹ️ Le point reste actif. Seule cette annotation sera supprimée
-          définitivement après {item.days_remaining} jour
-          {item.days_remaining > 1 ? 's' : ''}.
-        </p>
       </div>
 
       <div className="trash-card-actions">

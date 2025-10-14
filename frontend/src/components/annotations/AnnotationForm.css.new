@@ -1,50 +1,14 @@
 /**
- * Annotation Form Styles
- * Utilise les classes communes (card, form-group, form-label, form-input, btn, alert-error)
+ * Annotation Form - Styles spécifiques
+ * Utilise les classes communes définies dans styles/components.css
+ * Ne contient que les styles vraiment spécifiques à ce composant
  */
 
 .annotation-form {
-  background: var(--color-bg-primary);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-xl);
-  box-shadow: var(--shadow-md);
+  /* Les styles card, form-group, btn, etc. sont maintenant dans components.css */
 }
 
-.annotation-form-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--spacing-xl);
-}
-
-.annotation-form-header h3 {
-  margin: 0;
-  font-size: var(--font-size-xl);
-  color: var(--color-text-primary);
-}
-
-.close-button {
-  background: transparent;
-  border: none;
-  font-size: var(--font-size-xl);
-  color: var(--color-text-muted);
-  cursor: pointer;
-  padding: 0;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-sm);
-  transition: all var(--transition-base);
-}
-
-.close-button:hover {
-  background: var(--color-bg-secondary);
-  color: var(--color-text-primary);
-}
-
-/* Annotation Type Selector - spécifique */
+/* Type Selector - spécifique à ce composant */
 .annotation-type-selector {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -78,9 +42,6 @@
   background: var(--color-primary);
   color: white;
 }
-
-/* form-group et form-label utilisent les classes communes
-   textarea-input peut utiliser form-textarea */
 
 /* File Input - spécifique */
 .file-input {
@@ -133,18 +94,30 @@
   color: var(--color-text-tertiary);
 }
 
-/* input-hint utilise form-hint */
+.close-button {
+  background: transparent;
+  border: none;
+  font-size: var(--font-size-xl);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-base);
+}
 
-/* error-message utilise alert-error
-   form-actions, btn-primary et btn-secondary utilisent les classes communes */
-
-/* Plus besoin de media queries dark mode ! Les variables CSS s'adaptent automatiquement */
+.close-button:hover {
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+}
 
 /* Responsive */
 @media (max-width: 768px) {
   .annotation-type-selector {
     grid-template-columns: repeat(2, 1fr);
   }
-
-  /* form-actions responsive est déjà géré dans components.css */
 }

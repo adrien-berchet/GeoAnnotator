@@ -1,18 +1,19 @@
 /**
  * Create Point Drawer Styles
+ * Utilise les classes communes (form-group, form-input, btn-primary, btn-secondary, alert-error)
  */
 
 /* Backdrop overlay */
 .create-point-backdrop {
   position: fixed;
-  top: 64px;
+  top: var(--navbar-height);
   left: 0;
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.4);
-  z-index: 1200;
+  z-index: var(--z-modal-backdrop);
   opacity: 0;
-  transition: opacity 0.3s ease-in-out;
+  transition: opacity var(--transition-slow);
   pointer-events: none;
 }
 
@@ -24,18 +25,18 @@
 /* Create point drawer */
 .create-point-drawer {
   position: fixed;
-  top: 64px;
+  top: var(--navbar-height);
   right: 0;
   bottom: 0;
-  z-index: 1201;
-  background: white;
-  box-shadow: -4px 0 12px rgba(0, 0, 0, 0.15);
+  z-index: var(--z-modal);
+  background: var(--color-bg-primary);
+  box-shadow: var(--shadow-xl);
   width: 420px;
   max-width: 90vw;
   display: flex;
   flex-direction: column;
   transform: translateX(100%);
-  transition: transform 0.3s ease-in-out;
+  transition: transform var(--transition-slow);
   overflow-y: auto;
 }
 
@@ -45,9 +46,9 @@
 
 /* Drawer header */
 .drawer-header {
-  padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid #e2e8f0;
-  background: white;
+  padding: var(--spacing-xl) var(--spacing-2xl);
+  border-bottom: 1px solid var(--color-border-primary);
+  background: var(--color-bg-primary);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -55,99 +56,70 @@
 
 .drawer-header h2 {
   margin: 0;
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #2d3748;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
 }
 
 /* Form */
 .create-point-form {
-  padding: 1.5rem;
+  padding: var(--spacing-2xl);
   flex: 1;
 }
 
-.error-message {
-  background-color: #fed7d7;
-  border: 1px solid #fc8181;
-  border-radius: 4px;
-  padding: 0.75rem;
-  margin-bottom: 1rem;
-  color: #c53030;
-  font-size: 0.875rem;
-}
+/* Utilise .alert-error commun */
 
 .coordinates-display {
   display: flex;
-  gap: 1rem;
-  padding: 0.75rem;
-  background-color: #f7fafc;
-  border-radius: 4px;
-  margin-bottom: 1.5rem;
-  font-family: 'Monaco', 'Courier New', monospace;
-  font-size: 0.875rem;
-  color: #4a5568;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-md);
+  background-color: var(--color-bg-secondary);
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--spacing-2xl);
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
 }
 
 .coordinates-display span {
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
-.form-group {
-  margin-bottom: 1.25rem;
+/* Utilise .form-group, .form-label, .form-input, .form-textarea communs */
+
+/* Tag selector form group: align label with input field */
+.create-point-form .form-group:has(.tag-selector) {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-md);
 }
 
-.form-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 500;
-  color: #2d3748;
-  font-size: 0.875rem;
+.create-point-form .form-group:has(.tag-selector) label {
+  margin-bottom: 0;
+  padding-top: var(--spacing-sm);
+  min-width: 60px;
+  flex-shrink: 0;
 }
 
-.form-group input[type="text"],
-.form-group textarea {
-  width: 100%;
-  padding: 0.625rem 0.75rem;
-  border: 1px solid #cbd5e0;
-  border-radius: 4px;
-  font-size: 0.875rem;
-  color: #2d3748;
-  transition: border-color 0.2s;
-}
-
-.form-group input[type="text"]:focus,
-.form-group textarea:focus {
-  outline: none;
-  border-color: #4299e1;
-  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
-}
-
-.form-group input[type="text"]:disabled,
-.form-group textarea:disabled {
-  background-color: #edf2f7;
-  cursor: not-allowed;
-}
-
-.form-group textarea {
-  resize: vertical;
-  min-height: 80px;
+.create-point-form .form-group:has(.tag-selector) .tag-selector {
+  flex: 1;
 }
 
 .checkbox-label {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--spacing-sm);
   cursor: pointer;
-  font-weight: 500;
-  color: #2d3748;
-  font-size: 0.875rem;
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
 }
 
 .checkbox-label input[type="checkbox"] {
   width: 16px;
   height: 16px;
   cursor: pointer;
-  accent-color: #4299e1;
+  accent-color: var(--color-primary);
 }
 
 .checkbox-label span {
@@ -156,136 +128,36 @@
 
 .form-text {
   display: block;
-  margin-top: 0.375rem;
-  font-size: 0.75rem;
-  color: #718096;
+  margin-top: var(--spacing-sm);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
 }
 
 /* Actions */
 .modal-actions {
   display: flex;
-  gap: 0.75rem;
-  padding-top: 1.5rem;
-  margin-top: 1.5rem;
-  border-top: 1px solid #e2e8f0;
+  gap: var(--spacing-md);
+  padding-top: var(--spacing-2xl);
+  margin-top: var(--spacing-2xl);
+  border-top: 1px solid var(--color-border-primary);
 }
 
-.btn-secondary,
-.btn-primary {
+/* Boutons avec style complet (overrides des classes communes pour ce modal) */
+.modal-actions .btn-secondary,
+.modal-actions .btn-primary {
   flex: 1;
   padding: 0.625rem 1rem;
-  border: none;
-  border-radius: 4px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
 }
 
-.btn-secondary {
-  background-color: #edf2f7;
-  color: #4a5568;
-}
+/* Dark mode géré automatiquement par les variables CSS */
 
-.btn-secondary:hover:not(:disabled) {
-  background-color: #e2e8f0;
-  color: #2d3748;
-}
-
-.btn-primary {
-  background-color: #4299e1;
-  color: white;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background-color: #3182ce;
-}
-
-.btn-secondary:disabled,
-.btn-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* Dark mode */
+/* Dark mode backdrop plus sombre */
 @media (prefers-color-scheme: dark) {
   .create-point-backdrop {
     background: rgba(0, 0, 0, 0.7);
-  }
-
-  .create-point-drawer {
-    background: #2d3748;
-  }
-
-  .drawer-header {
-    background: #2d3748;
-    border-bottom-color: #4a5568;
-  }
-
-  .drawer-header h2 {
-    color: #f7fafc;
-  }
-
-  .error-message {
-    background-color: #742a2a;
-    border-color: #c53030;
-    color: #feb2b2;
-  }
-
-  .coordinates-display {
-    background-color: #1a202c;
-    color: #a0aec0;
-  }
-
-  .form-group label {
-    color: #f7fafc;
-  }
-
-  .form-group input[type="text"],
-  .form-group textarea {
-    background: #374151;
-    border-color: #4a5568;
-    color: #f7fafc;
-  }
-
-  .form-group input[type="text"]:focus,
-  .form-group textarea:focus {
-    border-color: #63b3ed;
-  }
-
-  .form-group input[type="text"]:disabled,
-  .form-group textarea:disabled {
-    background-color: #1a202c;
-  }
-
-  .checkbox-label {
-    color: #f7fafc;
-  }
-
-  .form-text {
-    color: #a0aec0;
-  }
-
-  .modal-actions {
-    border-top-color: #4a5568;
-  }
-
-  .btn-secondary {
-    background-color: #4a5568;
-    color: #e2e8f0;
-  }
-
-  .btn-secondary:hover:not(:disabled) {
-    background-color: #718096;
-    color: #f7fafc;
-  }
-
-  .btn-primary {
-    background-color: #3182ce;
-  }
-
-  .btn-primary:hover:not(:disabled) {
-    background-color: #2c5282;
   }
 }
 

@@ -1,135 +1,94 @@
 /**
- * Edit point page styles.
+ * Edit point page styles
+ * Utilise les classes communes (form-group, form-label, form-input, btn, alert-warning)
  */
 
 .edit-point-page {
   max-width: 800px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: var(--spacing-2xl);
 }
 
 /* Header */
 .edit-point-header {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  margin-bottom: 2rem;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-2xl);
 }
 
 .edit-point-header h1 {
-  font-size: 1.75rem;
-  font-weight: 600;
-  color: #2d3748;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
   margin: 0;
 }
 
 .back-button {
   background: none;
   border: none;
-  color: #4299e1;
-  font-size: 1rem;
+  color: var(--color-primary);
+  font-size: var(--font-size-base);
   cursor: pointer;
-  padding: 0.5rem;
-  border-radius: 6px;
-  transition: all 0.2s;
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-base);
 }
 
 .back-button:hover {
-  background: #ebf8ff;
-  color: #2b6cb0;
+  background: var(--color-info-bg);
+  color: var(--color-primary-hover);
 }
 
-/* Warning message */
+/* Warning message - utilise maintenant alert-warning */
 .warning-message {
-  background: #fff3cd;
-  border: 1px solid #ffc107;
-  border-radius: 8px;
-  padding: 1rem;
-  margin-bottom: 1.5rem;
-  color: #856404;
-  font-size: 0.95rem;
+  background: var(--color-warning-bg);
+  border: 1px solid var(--color-warning);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
+  color: var(--color-warning-dark);
+  font-size: var(--font-size-sm);
 }
 
 .warning-message p {
-  margin: 0.5rem 0 0 0;
-  font-weight: 500;
+  margin: var(--spacing-sm) 0 0 0;
+  font-weight: var(--font-weight-medium);
 }
 
 /* Form container */
 .edit-point-form-container {
-  background: white;
-  border-radius: 12px;
-  padding: 2rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  background: var(--color-bg-primary);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-2xl);
+  box-shadow: var(--shadow-md);
 }
 
 /* Form */
 .edit-point-form {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: var(--spacing-xl);
 }
 
-/* Form group */
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.form-group label {
-  font-weight: 500;
-  color: #2d3748;
-  font-size: 0.95rem;
-}
-
-.form-group input[type="text"],
-.form-group input[type="number"],
-.form-group textarea {
-  padding: 0.75rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  font-size: 1rem;
-  font-family: inherit;
-  transition: all 0.2s;
-  background: white;
-  color: #2d3748;
-}
-
-.form-group input:focus,
-.form-group textarea:focus {
-  outline: none;
-  border-color: #4299e1;
-  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
-}
-
-.form-group input:disabled,
-.form-group textarea:disabled {
-  background: #f7fafc;
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-.form-group textarea {
-  resize: vertical;
-  min-height: 100px;
-}
+/* Les form-group utilisent maintenant les classes communes
+   Seulement les overrides spécifiques si nécessaire */
 
 /* Form row (for coordinates) */
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1rem;
+  gap: var(--spacing-lg);
 }
 
 /* Checkbox */
 .checkbox-label {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--spacing-sm);
   cursor: pointer;
-  font-weight: normal;
-  color: #2d3748;
+  font-weight: var(--font-weight-normal);
+  color: var(--color-text-primary);
 }
 
 .checkbox-label input[type="checkbox"] {
@@ -143,78 +102,18 @@
   opacity: 0.6;
 }
 
-/* Form text */
+/* Form text - utilise maintenant form-hint */
 .form-text {
-  color: #718096;
-  font-size: 0.875rem;
-  margin-top: 0.25rem;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-sm);
+  margin-top: var(--spacing-xs);
 }
 
-/* Error message */
-.error-message {
-  background: #fed7d7;
-  border: 1px solid #fc8181;
-  border-radius: 8px;
-  padding: 0.875rem;
-  color: #c53030;
-  font-size: 0.95rem;
-}
+/* error-message utilise maintenant la classe commune alert-error */
 
-/* Form actions */
-.form-actions {
-  display: flex;
-  gap: 1rem;
-  justify-content: flex-end;
-  margin-top: 1rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid #e2e8f0;
-}
+/* Les form-actions, btn-primary et btn-secondary utilisent maintenant les classes communes */
 
-.btn-primary,
-.btn-secondary {
-  padding: 0.75rem 1.5rem;
-  border-radius: 6px;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-  border: none;
-}
-
-.btn-primary {
-  background: #4299e1;
-  color: white;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: #3182ce;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(66, 153, 225, 0.3);
-}
-
-.btn-primary:disabled {
-  background: #cbd5e0;
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-.btn-secondary {
-  background: white;
-  color: #4a5568;
-  border: 1px solid #e2e8f0;
-}
-
-.btn-secondary:hover:not(:disabled) {
-  background: #f7fafc;
-  border-color: #cbd5e0;
-}
-
-.btn-secondary:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-/* Error container */
+/* Error container - utilise maintenant empty-state */
 .error-container {
   display: flex;
   flex-direction: column;
@@ -222,125 +121,25 @@
   justify-content: center;
   min-height: 400px;
   text-align: center;
-  padding: 2rem;
+  padding: var(--spacing-2xl);
 }
 
 .error-container h2 {
-  color: #2d3748;
-  margin-bottom: 1rem;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-lg);
 }
 
 .error-container p {
-  color: #718096;
-  margin-bottom: 1.5rem;
+  color: var(--color-text-tertiary);
+  margin-bottom: var(--spacing-xl);
 }
 
-/* Dark mode */
-@media (prefers-color-scheme: dark) {
-  .edit-point-page {
-    background: #1a202c;
-  }
-
-  .edit-point-header h1 {
-    color: #f7fafc;
-  }
-
-  .back-button {
-    color: #63b3ed;
-  }
-
-  .back-button:hover {
-    background: #2d3748;
-    color: #90cdf4;
-  }
-
-  .warning-message {
-    background: #5a4a1a;
-    border-color: #a67c00;
-    color: #ffd666;
-  }
-
-  .edit-point-form-container {
-    background: #2d3748;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  }
-
-  .form-group label {
-    color: #f7fafc;
-  }
-
-  .form-group input,
-  .form-group textarea {
-    background: #1a202c;
-    border-color: #4a5568;
-    color: #f7fafc;
-  }
-
-  .form-group input:focus,
-  .form-group textarea:focus {
-    border-color: #63b3ed;
-    box-shadow: 0 0 0 3px rgba(99, 179, 237, 0.1);
-  }
-
-  .form-group input:disabled,
-  .form-group textarea:disabled {
-    background: #2d3748;
-  }
-
-  .checkbox-label {
-    color: #f7fafc;
-  }
-
-  .form-text {
-    color: #a0aec0;
-  }
-
-  .error-message {
-    background: #742a2a;
-    border-color: #c53030;
-    color: #feb2b2;
-  }
-
-  .form-actions {
-    border-top-color: #4a5568;
-  }
-
-  .btn-primary {
-    background: #3182ce;
-  }
-
-  .btn-primary:hover:not(:disabled) {
-    background: #2c5282;
-  }
-
-  .btn-primary:disabled {
-    background: #4a5568;
-  }
-
-  .btn-secondary {
-    background: #2d3748;
-    color: #e2e8f0;
-    border-color: #4a5568;
-  }
-
-  .btn-secondary:hover:not(:disabled) {
-    background: #4a5568;
-    border-color: #718096;
-  }
-
-  .error-container h2 {
-    color: #f7fafc;
-  }
-
-  .error-container p {
-    color: #a0aec0;
-  }
-}
+/* Plus besoin de media queries dark mode ! Les variables CSS s'adaptent automatiquement */
 
 /* Responsive */
 @media (max-width: 768px) {
   .edit-point-page {
-    padding: 1rem;
+    padding: var(--spacing-lg);
   }
 
   .edit-point-header {
@@ -349,22 +148,16 @@
   }
 
   .edit-point-header h1 {
-    font-size: 1.5rem;
+    font-size: var(--font-size-xl);
   }
 
   .edit-point-form-container {
-    padding: 1.5rem;
+    padding: var(--spacing-xl);
   }
 
   .form-row {
     grid-template-columns: 1fr;
   }
 
-  .form-actions {
-    flex-direction: column-reverse;
-  }
-
-  .form-actions button {
-    width: 100%;
-  }
+  /* form-actions responsive est déjà géré dans components.css */
 }
