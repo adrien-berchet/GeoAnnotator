@@ -11,6 +11,7 @@ import { MapView } from '../components/map/MapView';
 import { PointMarker } from '../components/map/PointMarker';
 import { CreatePointModal } from '../components/map/CreatePointModal';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
+import { TagFilterPanel } from '../components/common/TagFilterPanel';
 import { getPoints, searchPointsByTags, getTags } from '../api/points';
 import { getErrorMessage } from '../api/client';
 import type { GPSPoint, Tag } from '../types/point';
@@ -217,58 +218,15 @@ export function MapPage() {
         </button>
       </div>
 
-      {/* Backdrop overlay */}
-      {isFilterOpen && (
-        <div
-          className={`filter-backdrop ${isFilterOpen ? 'open' : ''}`}
-          onClick={() => setIsFilterOpen(false)}
-        />
-      )}
-
-      {/* Tags filter panel - Drawer style */}
-      <div className={`tags-filter-panel ${isFilterOpen ? 'open' : ''}`}>
-        <div className="filter-panel-header">
-          <h3>Filter by Tags</h3>
-          <button
-            className="close-panel-button"
-            onClick={() => setIsFilterOpen(false)}
-            aria-label="Close filter panel"
-          >
-            ✕
-          </button>
-        </div>
-
-        {selectedTags.length > 0 && (
-          <div className="filter-panel-actions">
-            <button
-              className="clear-filters-button"
-              onClick={clearFilters}
-            >
-              Clear All Filters
-            </button>
-            <div className="selected-count">
-              {selectedTags.length} tag{selectedTags.length > 1 ? 's' : ''} selected
-            </div>
-          </div>
-        )}
-
-        <div className="tags-list">
-          {tags.length === 0 ? (
-            <p className="no-tags">No tags available</p>
-          ) : (
-            tags.map(tag => (
-              <label key={tag.id} className="tag-checkbox">
-                <input
-                  type="checkbox"
-                  checked={selectedTags.includes(tag.name)}
-                  onChange={() => toggleTag(tag.name)}
-                />
-                <span className="tag-label">{tag.name}</span>
-              </label>
-            ))
-          )}
-        </div>
-      </div>
+      {/* Tags Filter Panel */}
+      <TagFilterPanel
+        isOpen={isFilterOpen}
+        availableTags={tags}
+        selectedTags={selectedTags}
+        onClose={() => setIsFilterOpen(false)}
+        onToggleTag={toggleTag}
+        onClearAll={clearFilters}
+      />
     </div>
   );
 }

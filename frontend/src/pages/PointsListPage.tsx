@@ -9,6 +9,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { getPoints, searchPointsByTags, getTags } from '../api/points';
 import { getErrorMessage } from '../api/client';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
+import { TagFilterPanel } from '../components/common/TagFilterPanel';
 import type { GPSPoint, Tag } from '../types/point';
 import './PointsListPage.css';
 
@@ -26,8 +27,6 @@ export function PointsListPage() {
   const searchQuery = searchParams.get('search') || '';
   const tagsFilter = searchParams.get('tags') || '';
   const isFilterPanelOpen = searchParams.get('filterOpen') === 'true';
-
-  console.log('RENDER - isFilterPanelOpen:', isFilterPanelOpen, 'URL:', window.location.search);
 
   useEffect(() => {
     loadTags();
@@ -70,7 +69,6 @@ export function PointsListPage() {
       if (tagsFilter) {
         // Filter by tags using the dedicated endpoint
         const tagNames = tagsFilter.split(',').map(t => t.trim());
-        console.log('Searching with tags:', tagNames); // Debug
         data = await searchPointsByTags(tagNames);
       } else if (searchQuery) {
         // Search by text
@@ -119,23 +117,21 @@ export function PointsListPage() {
   };
 
   const handleToggleTag = (tagName: string) => {
-    console.log('handleToggleTag called for:', tagName);
     const newSelectedTags = selectedTagNames.includes(tagName)
       ? selectedTagNames.filter(t => t !== tagName)
       : [...selectedTagNames, tagName];
-    
+
     const newParams = new URLSearchParams(searchParams);
-    
+
     if (newSelectedTags.length > 0) {
       newParams.set('tags', newSelectedTags.join(','));
     } else {
       newParams.delete('tags');
     }
-    
+
     // Garder le panneau ouvert
     newParams.set('filterOpen', 'true');
-    console.log('Setting params:', newParams.toString());
-    
+
     setSearchParams(newParams);
   };  const clearFilters = () => {
     setSearchParams({});
@@ -207,48 +203,14 @@ export function PointsListPage() {
         </div>
 
         {/* Tags Filter Panel (Drawer) */}
-        <div
-          className={`filter-panel-backdrop ${isFilterPanelOpen ? 'open' : ''}`}
-          onClick={handleCloseFilterPanel}
+        <TagFilterPanel
+          isOpen={isFilterPanelOpen}
+          availableTags={availableTags}
+          selectedTags={selectedTagNames}
+          onClose={handleCloseFilterPanel}
+          onToggleTag={handleToggleTag}
+          onClearAll={handleClearFilters}
         />
-        <div className={`filter-panel ${isFilterPanelOpen ? 'open' : ''}`}>
-          <div className="filter-panel-header">
-            <h2>Filter by Tags</h2>
-            <button
-              className="filter-panel-close"
-              onClick={handleCloseFilterPanel}
-            >
-              ✕
-            </button>
-          </div>
-
-          <div className="filter-panel-content">
-            <div className="tags-selection">
-              {availableTags.map((tag) => (
-                <button
-                  key={tag.id}
-                  type="button"
-                  className={`tag-option ${selectedTagNames.includes(tag.name) ? 'selected' : ''}`}
-                  onClick={() => handleToggleTag(tag.name)}
-                >
-                  <span className="tag-checkbox">
-                    {selectedTagNames.includes(tag.name) ? '✓' : ''}
-                  </span>
-                  <span className="tag-name">{tag.name}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="filter-panel-footer">
-            <button
-              className="btn-secondary"
-              onClick={handleClearFilters}
-            >
-              Clear All
-            </button>
-          </div>
-        </div>
 
         {/* Results Info */}
         {(searchQuery || tagsFilter) && (
