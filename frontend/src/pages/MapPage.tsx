@@ -12,6 +12,7 @@ import { PointMarker } from '../components/map/PointMarker';
 import { CreatePointModal } from '../components/map/CreatePointModal';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import { TagFilterPanel } from '../components/common/TagFilterPanel';
+import { MapSearchBar } from '../components/map/MapSearchBar';
 import { getPoints, searchPointsByTags, getTags } from '../api/points';
 import { getErrorMessage } from '../api/client';
 import type { GPSPoint, Tag } from '../types/point';
@@ -26,6 +27,9 @@ export function MapPage() {
   const [allPoints, setAllPoints] = useState<GPSPoint[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+
+  // Search state
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Tags filter state
   const [tags, setTags] = useState<Tag[]>([]);
@@ -55,16 +59,51 @@ export function MapPage() {
    * Apply filter when selected tags change.
    */
   useEffect(() => {
+    applyFilters();
+  }, [selectedTags, searchQuery, allPoints]);
+
+  /**
+   * Apply both tag and search filters to points.
+   */
+  const applyFilters = async () => {
+    let filteredPoints = allPoints;
+
+    // Apply tag filter if tags are selected
     if (selectedTags.length > 0) {
-      filterPoints();
-      // Update URL
-      setSearchParams({ tags: selectedTags.join(',') });
-    } else {
-      setPoints(allPoints);
-      // Clear URL params
-      setSearchParams({});
+      try {
+        filteredPoints = await searchPointsByTags(selectedTags);
+      } catch (err) {
+        setError(getErrorMessage(err));
+        return;
+      }
     }
-  }, [selectedTags, allPoints]);
+
+    // Apply search filter if search query exists
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filteredPoints = filteredPoints.filter(point => {
+        // Search in title, description, and tags
+        const titleMatch = point.title?.toLowerCase().includes(query);
+        const descMatch = point.description?.toLowerCase().includes(query);
+        const tagsMatch = point.tags?.some(tag =>
+          tag.name.toLowerCase().includes(query)
+        );
+        return titleMatch || descMatch || tagsMatch;
+      });
+    }
+
+    setPoints(filteredPoints);
+
+    // Update URL with filters
+    const params: Record<string, string> = {};
+    if (selectedTags.length > 0) {
+      params.tags = selectedTags.join(',');
+    }
+    if (searchQuery) {
+      params.search = searchQuery;
+    }
+    setSearchParams(params);
+  };
 
   /**
    * Load tags from API.
@@ -97,20 +136,10 @@ export function MapPage() {
   };
 
   /**
-   * Filter points by selected tags.
+   * Handle search query changes.
    */
-  const filterPoints = async () => {
-    if (selectedTags.length === 0) {
-      setPoints(allPoints);
-      return;
-    }
-
-    try {
-      const filtered = await searchPointsByTags(selectedTags);
-      setPoints(filtered);
-    } catch (err) {
-      setError(getErrorMessage(err));
-    }
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
   };
 
   /**
@@ -203,9 +232,13 @@ export function MapPage() {
 
       {/* Map controls */}
       <div className="map-controls">
+        {/* Search bar */}
+        <MapSearchBar onSearch={handleSearch} />
+
         <div className="points-count">
           {points.length} point{points.length !== 1 ? 's' : ''}
           {selectedTags.length > 0 && ` (filtered by ${selectedTags.length} tag${selectedTags.length > 1 ? 's' : ''})`}
+          {searchQuery && ` (search: "${searchQuery}")`}
         </div>
 
         {/* Filter toggle button */}

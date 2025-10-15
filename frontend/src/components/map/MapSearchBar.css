@@ -1,0 +1,138 @@
+/**
+ * MapSearchBar Styles
+ *
+ * Responsive styles for the search bar on the map interface.
+ * Uses CSS custom properties for theming (light/dark mode support).
+ *
+ * Layout:
+ * - Desktop (≥768px): Horizontal, left of points counter
+ * - Mobile (<768px): Vertical, between points counter and filter button
+ */
+
+.map-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: var(--bg-primary, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 0.5rem;
+  padding: 0.25rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.2s ease;
+}
+
+.map-search-bar:focus-within {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  border-color: var(--primary-color, #3b82f6);
+}
+
+.map-search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 0.5rem;
+  font-size: 0.875rem;
+  background-color: transparent;
+  color: var(--text-primary, #1e293b);
+  min-width: 150px;
+}
+
+.map-search-input::placeholder {
+  color: var(--text-secondary, #64748b);
+}
+
+/* Remove default search input styling in WebKit browsers */
+.map-search-input::-webkit-search-cancel-button,
+.map-search-input::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.map-search-button {
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  border-radius: 0.375rem;
+  background-color: var(--primary-color, #3b82f6);
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  padding: 0;
+}
+
+.map-search-button:hover {
+  background-color: var(--primary-hover, #2563eb);
+  transform: translateY(-1px);
+}
+
+.map-search-button:active {
+  transform: translateY(0);
+}
+
+.map-search-button:focus-visible {
+  outline: 2px solid var(--primary-color, #3b82f6);
+  outline-offset: 2px;
+}
+
+/* Desktop layout (≥768px): Horizontal, fixed width */
+@media (min-width: 768px) {
+  .map-search-bar {
+    width: 300px;
+    max-width: 400px;
+  }
+}
+
+/* Mobile layout (<768px): Full width */
+@media (max-width: 767px) {
+  .map-search-bar {
+    width: 100%;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .map-search-bar {
+    background-color: var(--bg-primary, #1e293b);
+    border-color: var(--border-color, #334155);
+  }
+
+  .map-search-input {
+    color: var(--text-primary, #f1f5f9);
+  }
+
+  .map-search-input::placeholder {
+    color: var(--text-secondary, #94a3b8);
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .map-search-bar {
+    border-width: 2px;
+  }
+
+  .map-search-button:focus-visible {
+    outline-width: 3px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .map-search-bar,
+  .map-search-button {
+    transition: none;
+  }
+
+  .map-search-button:hover {
+    transform: none;
+  }
+
+  .map-search-button:active {
+    transform: none;
+  }
+}

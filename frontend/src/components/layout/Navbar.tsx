@@ -1,7 +1,7 @@
 /**
  * Navigation bar component.
  *
- * Displays app navigation with user menu, search, and main actions.
+ * Displays app navigation with user menu and main actions.
  */
 
 import { useState, useEffect, useRef } from 'react';
@@ -14,7 +14,6 @@ export function Navbar() {
   const navigate = useNavigate();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const userMenuRef = useRef<HTMLDivElement>(null);
 
   // Close user menu when clicking outside
@@ -39,13 +38,6 @@ export function Navbar() {
     navigate('/login');
   };
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/points?search=${encodeURIComponent(searchQuery)}`);
-    }
-  };
-
   return (
     <nav className="navbar">
       <div className="navbar-container">
@@ -67,39 +59,10 @@ export function Navbar() {
           </button>
         )}
 
-        {/* Search Bar - Desktop */}
-        {user && (
-          <form className="navbar-search navbar-search-desktop" onSubmit={handleSearch}>
-            <input
-              type="search"
-              placeholder="Search points..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="search-input"
-            />
-            <button type="submit" className="search-button">
-              🔍
-            </button>
-          </form>
-        )}
-
         {/* Navigation Links */}
         <div className={`navbar-links ${showMobileMenu ? 'mobile-open' : ''}`}>
           {user ? (
             <>
-              {/* Search Bar - Mobile */}
-              <form className="navbar-search navbar-search-mobile" onSubmit={handleSearch}>
-                <input
-                  type="search"
-                  placeholder="Search points..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="search-input"
-                />
-                <button type="submit" className="search-button">
-                  🔍
-                </button>
-              </form>
 
               <Link to="/" className="nav-link" onClick={() => setShowMobileMenu(false)}>
                 🗺️ <span>Map</span>

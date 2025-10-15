@@ -25,16 +25,32 @@
   right: 1rem;
   z-index: 1000;
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
+  align-items: center;
   gap: 0.5rem;
   pointer-events: none;
   width: auto;
-  max-width: 300px;
 }
 
 .map-controls > * {
   pointer-events: auto;
+}
+
+/* Desktop layout (≥768px): horizontal layout, search bar left of counter */
+@media (min-width: 768px) {
+  .map-controls {
+    flex-direction: row;
+  }
+}
+
+/* Mobile layout (<768px): vertical layout, search bar between counter and button */
+@media (max-width: 767px) {
+  .map-controls {
+    flex-direction: column;
+    align-items: stretch;
+    top: 0.5rem;
+    right: 0.5rem;
+    left: 0.5rem;
+  }
 }
 
 .points-count {
@@ -311,13 +327,6 @@
 
 /* Responsive */
 @media (max-width: 768px) {
-  .map-controls {
-    top: 0.5rem;
-    right: 0.5rem;
-    left: 0.5rem;
-    max-width: none;
-  }
-
   .points-count {
     text-align: center;
   }
