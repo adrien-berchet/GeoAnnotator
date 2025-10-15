@@ -10,12 +10,13 @@ import type { Annotation } from '../../types/annotation';
 
 interface DocumentPreviewProps {
   annotation: Annotation;
+  pointId: string;
 }
 
 /**
  * Document annotation preview component.
  */
-export function DocumentPreview({ annotation }: DocumentPreviewProps) {
+export function DocumentPreview({ annotation, pointId }: DocumentPreviewProps) {
   if ((annotation.type !== 'document' && annotation.type !== 'file') || !annotation.file) {
     return null;
   }
@@ -89,11 +90,11 @@ export function DocumentPreview({ annotation }: DocumentPreviewProps) {
    */
   const handleDownload = async () => {
     try {
-      const blob = await downloadAnnotation(annotation.id);
+      const blob = await downloadAnnotation(pointId, annotation.id);
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = annotation.file_name || 'download';
+      link.download = annotation.file?.file_name || 'download';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -107,10 +108,10 @@ export function DocumentPreview({ annotation }: DocumentPreviewProps) {
     <div className="document-preview">
       <div className="preview-header">
         <span className="preview-icon">
-          {getFileIcon(annotation.file_name)}
+          {getFileIcon(annotation.file?.file_name || null)}
         </span>
         <div className="preview-info">
-          <h4>{annotation.file_name || 'Untitled Document'}</h4>
+          <h4>{annotation.file?.file_name || 'Untitled Document'}</h4>
           <span className="preview-date">
             {formatDate(annotation.created_at)}
           </span>
@@ -120,19 +121,19 @@ export function DocumentPreview({ annotation }: DocumentPreviewProps) {
       <div className="document-info">
         <div className="file-badge">
           <span className="file-extension">
-            {getFileExtension(annotation.file_name)}
+            {getFileExtension(annotation.file?.file_name || null)}
           </span>
         </div>
 
         <div className="file-details">
           <div className="detail-item">
             <span className="label">Size:</span>
-            <span className="value">{formatFileSize(annotation.file_size)}</span>
+            <span className="value">{formatFileSize(annotation.file?.file_size || null)}</span>
           </div>
-          {annotation.mime_type && (
+          {annotation.file?.mime_type && (
             <div className="detail-item">
               <span className="label">Type:</span>
-              <span className="value">{annotation.mime_type}</span>
+              <span className="value">{annotation.file.mime_type}</span>
             </div>
           )}
         </div>
