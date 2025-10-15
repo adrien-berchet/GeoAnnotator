@@ -9,6 +9,7 @@ import mimetypes
 from pathlib import Path
 from django.conf import settings
 from django.core.files.uploadedfile import UploadedFile
+from django.db import models as db_models
 from PIL import Image
 from io import BytesIO
 
@@ -308,10 +309,16 @@ class AnnotationService:
         Returns:
             Annotation object
         """
+        # Get max order for this point and increment
+        max_order = Annotation.objects.filter(
+            gps_point_id=gps_point_id
+        ).aggregate(db_models.Max('order'))['order__max'] or -1
+        
         return Annotation.objects.create(
             gps_point_id=gps_point_id,
             type='text',
             text_content=text_content,
+            order=max_order + 1,
         )
 
     @staticmethod
@@ -349,6 +356,11 @@ class AnnotationService:
                 f"Available: {StorageQuotaService.get_available_quota(user)} bytes"
             )
 
+        # Get max order for this point and increment
+        max_order = Annotation.objects.filter(
+            gps_point_id=gps_point_id
+        ).aggregate(db_models.Max('order'))['order__max'] or -1
+
         # Create annotation
         annotation = Annotation.objects.create(
             gps_point_id=gps_point_id,
@@ -357,6 +369,7 @@ class AnnotationService:
             file_name=uploaded_file.name,
             file_size=validation['file_size'],
             mime_type=validation['mime_type'],
+            order=max_order + 1,
         )
 
         # Update quota

@@ -191,7 +191,7 @@ export function SortableAnnotationItem({
                 ✏️ Edit
               </button>
             )}
-            
+
             {/* Preview button for documents/files */}
             {(annotation.type === 'document' || annotation.type === 'file') && (
               <button
@@ -202,7 +202,7 @@ export function SortableAnnotationItem({
                 👁️ Preview
               </button>
             )}
-            
+
             {/* Download button for images, documents, and files */}
             {annotation.file && (
               <button
@@ -213,7 +213,7 @@ export function SortableAnnotationItem({
                 {isDownloading ? '⏳ Downloading...' : '⬇️ Download'}
               </button>
             )}
-            
+
             {/* Delete button - always present */}
             <button
               onClick={() => onDelete(annotation.id)}
