@@ -133,7 +133,21 @@
   color: var(--color-text-tertiary);
 }
 
-/* input-hint utilise form-hint */
+/* input-hint - hint text for inputs */
+.input-hint {
+  margin-top: var(--spacing-sm);
+  font-size: 0.7rem;
+  color: var(--color-text-tertiary);
+}
+
+/* MDEditor width override */
+.form-group > div {
+  width: 100%;
+}
+
+.form-group .w-md-editor {
+  width: 100%;
+}
 
 /* error-message utilise alert-error
    form-actions, btn-primary et btn-secondary utilisent les classes communes */

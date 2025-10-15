@@ -75,9 +75,9 @@ export function TextAnnotationEditor({
             height={300}
             visibleDragbar={false}
           />
-        </div>
-        <div className="editor-hint">
-          💡 Tip: Use Markdown for formatting (bold, italic, lists, links, etc.)
+          <div className="editor-hint">
+            💡 Use Markdown for formatting (bold, italic, lists, links, etc.)
+          </div>
         </div>
       </div>
 

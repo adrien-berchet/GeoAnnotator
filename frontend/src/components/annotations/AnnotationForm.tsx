@@ -133,7 +133,6 @@ export function AnnotationForm({ pointId, onAnnotationCreated, onCancel }: Annot
         {/* Text Input */}
         {annotationType === 'text' && (
           <div className="form-group">
-            <label htmlFor="text-content">Text Content</label>
             <div data-color-mode={colorMode}>
               <MDEditor
                 value={textContent}
@@ -142,9 +141,9 @@ export function AnnotationForm({ pointId, onAnnotationCreated, onCancel }: Annot
                 height={300}
                 visibleDragbar={false}
               />
-            </div>
-            <div className="input-hint">
-              💡 Use Markdown for formatting (bold, italic, lists, links, etc.)
+              <div className="input-hint">
+                💡 Use Markdown for formatting (bold, italic, lists, links, etc.)
+              </div>
             </div>
           </div>
         )}

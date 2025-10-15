@@ -251,7 +251,7 @@
 
 .form-hint {
   margin-top: var(--spacing-sm);
-  font-size: var(--font-size-xs);
+  font-size: 0.7rem;
   color: var(--color-text-tertiary);
 }
 
