@@ -17,13 +17,14 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: var(--spacing-2xl);
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
 }
-
-/* back-button, btn-secondary, btn-danger utilisent les classes communes */
 
 .header-actions {
   display: flex;
   gap: var(--spacing-md);
+  flex-wrap: wrap;
 }
 
 /* Point Info Card - utilise card */
@@ -110,7 +111,7 @@
   min-height: 200px;
 }
 
-/* Error Container - utilise empty-state */
+/* Error Container */
 .error-container {
   display: flex;
   flex-direction: column;
@@ -131,10 +132,6 @@
   margin-bottom: var(--spacing-xl);
 }
 
-/* btn-primary utilise la classe commune */
-
-/* Plus besoin de media queries dark mode ! Les variables CSS s'adaptent automatiquement */
-
 /* Responsive */
 @media (max-width: 768px) {
   .point-detail-page {
@@ -143,7 +140,6 @@
 
   .point-detail-header {
     flex-direction: column;
-    gap: var(--spacing-lg);
     align-items: stretch;
   }
 

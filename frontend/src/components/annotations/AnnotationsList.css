@@ -270,13 +270,6 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.image-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-}
-
 .file-info {
   display: flex;
   justify-content: space-between;
@@ -284,7 +277,7 @@
   padding: var(--spacing-sm);
   background: var(--color-bg-secondary);
   border-radius: var(--radius-md);
-  flex: 1;
+  margin-top: var(--spacing-md);
 }
 
 /* File Annotation */
@@ -296,14 +289,6 @@
   background: var(--color-bg-secondary);
   border-radius: var(--radius-md);
 }
-
-.file-actions {
-  display: flex;
-  gap: var(--spacing-sm);
-  flex-shrink: 0;
-}
-
-/* Utilise .btn-success et .btn-primary communs */
 
 .file-icon-large {
   font-size: 2.5rem;
@@ -343,6 +328,8 @@
   padding-top: var(--spacing-md);
   margin-top: var(--spacing-md);
   border-top: 1px solid var(--color-border-primary);
+  flex-wrap: wrap;
+  align-items: center;
 }
 
 /* Utilise .btn-danger commun */
@@ -358,9 +345,12 @@
     align-items: flex-start;
   }
 
-  .download-button {
+  .annotation-actions {
     width: 100%;
-    text-align: center;
+  }
+
+  .annotation-actions .btn {
+    flex: 1;
   }
 }
 

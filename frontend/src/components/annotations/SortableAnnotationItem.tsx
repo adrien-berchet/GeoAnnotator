@@ -2,7 +2,6 @@
  * Sortable annotation item with drag-and-drop support.
  */
 
-import { useEffect } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import MDEditor from '@uiw/react-md-editor';
@@ -128,16 +127,6 @@ export function SortableAnnotationItem({
                       <MDEditor.Markdown source={annotation.text_content} />
                     </div>
                   </div>
-                  {/* Hide edit button if annotation is trashed */}
-                  {!annotation.is_trashed && (
-                    <button
-                      onClick={onEditStart}
-                      className="edit-text-button"
-                      title="Edit text"
-                    >
-                      ✏️ Edit
-                    </button>
-                  )}
                 </div>
               )}
             </>
@@ -157,28 +146,16 @@ export function SortableAnnotationItem({
               ) : (
                 <div className="image-loading">⏳ Loading image...</div>
               )}
-              <div className="image-info">
-                {annotation.file.file_name && (
-                  <div className="file-info">
-                    <span className="file-name">{annotation.file.file_name}</span>
-                    {annotation.file.file_size && (
-                      <span className="file-size">
-                        {formatFileSize(annotation.file.file_size)}
-                      </span>
-                    )}
-                  </div>
-                )}
-                {/* Hide download button if annotation is trashed */}
-                {!annotation.is_trashed && (
-                  <button
-                    onClick={() => onDownload(annotation)}
-                    className="download-button"
-                    disabled={isDownloading}
-                  >
-                    {isDownloading ? '⏳ Downloading...' : '⬇️ Download'}
-                  </button>
-                )}
-              </div>
+              {annotation.file.file_name && (
+                <div className="file-info">
+                  <span className="file-name">{annotation.file.file_name}</span>
+                  {annotation.file.file_size && (
+                    <span className="file-size">
+                      {formatFileSize(annotation.file.file_size)}
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
@@ -197,35 +174,50 @@ export function SortableAnnotationItem({
                   <div className="file-size">{formatFileSize(annotation.file.file_size)}</div>
                 )}
               </div>
-              {/* Hide file actions if annotation is trashed */}
-              {!annotation.is_trashed && (
-                <div className="file-actions">
-                  <button
-                    onClick={() => onPreview(annotation)}
-                    className="preview-button"
-                    title="Preview"
-                  >
-                    👁️ Preview
-                  </button>
-                  <button
-                    onClick={() => onDownload(annotation)}
-                    className="download-button"
-                    disabled={isDownloading}
-                  >
-                    {isDownloading ? '⏳ Downloading...' : '⬇️ Download'}
-                  </button>
-                </div>
-              )}
             </div>
           )}
         </div>
 
-        {/* Hide actions if annotation is trashed */}
+        {/* Actions - all buttons on the same line */}
         {!annotation.is_trashed && (
           <div className="annotation-actions">
+            {/* Edit button for text annotations */}
+            {annotation.type === 'text' && !isEditing && (
+              <button
+                onClick={onEditStart}
+                className="btn btn-secondary btn-sm"
+                title="Edit text"
+              >
+                ✏️ Edit
+              </button>
+            )}
+            
+            {/* Preview button for documents/files */}
+            {(annotation.type === 'document' || annotation.type === 'file') && (
+              <button
+                onClick={() => onPreview(annotation)}
+                className="btn btn-secondary btn-sm"
+                title="Preview"
+              >
+                👁️ Preview
+              </button>
+            )}
+            
+            {/* Download button for images, documents, and files */}
+            {annotation.file && (
+              <button
+                onClick={() => onDownload(annotation)}
+                className="btn btn-primary btn-sm"
+                disabled={isDownloading}
+              >
+                {isDownloading ? '⏳ Downloading...' : '⬇️ Download'}
+              </button>
+            )}
+            
+            {/* Delete button - always present */}
             <button
               onClick={() => onDelete(annotation.id)}
-              className="delete-button"
+              className="btn btn-danger btn-sm"
               disabled={isDeleting}
             >
               {isDeleting ? '🗑️ Deleting...' : '🗑️ Delete'}

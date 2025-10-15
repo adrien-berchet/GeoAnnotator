@@ -149,7 +149,7 @@ export function AnnotationList({ pointId, onAnnotationDeleted }: AnnotationListP
     return (
       <div className="error-message" role="alert">
         Error loading annotations: {error}
-        <button onClick={loadAnnotations} className="btn-secondary">
+        <button onClick={loadAnnotations} className="btn btn-secondary">
           Retry
         </button>
       </div>
@@ -225,7 +225,7 @@ export function AnnotationList({ pointId, onAnnotationDeleted }: AnnotationListP
                 {annotation.file && (
                   <button
                     onClick={() => handleDownload(annotation)}
-                    className="btn-secondary btn-small"
+                    className="btn btn-secondary btn-sm"
                   >
                     Download
                   </button>
@@ -233,7 +233,7 @@ export function AnnotationList({ pointId, onAnnotationDeleted }: AnnotationListP
                 <button
                   onClick={() => handleDelete(annotation.id)}
                   disabled={deletingId === annotation.id}
-                  className="btn-danger btn-small"
+                  className="btn btn-danger btn-sm"
                 >
                   {deletingId === annotation.id ? 'Deleting...' : 'Delete'}
                 </button>

@@ -120,7 +120,7 @@ export function PointDetailPage() {
       <div className="error-container">
         <h2>Error loading point</h2>
         <p>{error || 'Point not found'}</p>
-        <button onClick={() => navigate('/points')} className="btn-primary">
+        <button onClick={() => navigate('/points')} className="btn btn-primary">
           Back to Points
         </button>
       </div>
@@ -131,16 +131,16 @@ export function PointDetailPage() {
     <div className="point-detail-page">
       {/* Header */}
       <div className="point-detail-header">
-        <button onClick={() => navigate('/points')} className="back-button">
+        <button onClick={() => navigate('/points')} className="btn btn-ghost">
           ← Back to Points
         </button>
         <div className="header-actions">
-          <button onClick={() => navigate(`/points/${id}/edit`)} className="btn-secondary">
+          <button onClick={() => navigate(`/points/${id}/edit`)} className="btn btn-secondary">
             ✏️ Edit
           </button>
           <button
             onClick={handleDeletePoint}
-            className="btn-danger"
+            className="btn btn-danger"
             disabled={isDeleting}
           >
             {isDeleting ? '🗑️ Deleting...' : '🗑️ Delete'}

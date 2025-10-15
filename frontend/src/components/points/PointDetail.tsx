@@ -68,19 +68,14 @@ export function PointDetail({ pointId: propPointId, onEdit, onDelete }: PointDet
 
     try {
       // Try to acquire lock
-      const response = await acquireLock(pointId);
+      await acquireLock(pointId);
+      setHasLock(true);
 
-      if (response.success) {
-        setHasLock(true);
-
-        if (onEdit) {
-          onEdit(point);
-        } else {
-          // Navigate to edit mode or show edit form
-          console.log('Edit mode:', point);
-        }
+      if (onEdit) {
+        onEdit(point);
       } else {
-        setError(response.message || 'Could not acquire editing lock');
+        // Navigate to edit mode or show edit form
+        console.log('Edit mode:', point);
       }
     } catch (err) {
       setError(getErrorMessage(err));
@@ -149,7 +144,7 @@ export function PointDetail({ pointId: propPointId, onEdit, onDelete }: PointDet
       <div className="error-container">
         <h2>Error loading point</h2>
         <p className="error-message">{error}</p>
-        <button onClick={loadPoint} className="btn-primary">
+        <button onClick={loadPoint} className="btn btn-primary">
           Retry
         </button>
       </div>
@@ -183,14 +178,14 @@ export function PointDetail({ pointId: propPointId, onEdit, onDelete }: PointDet
         <div className="point-detail-actions">
           <button
             onClick={handleEdit}
-            className="btn-secondary"
+            className="btn btn-secondary"
             disabled={!!point.editing_lock_user && !hasLock}
           >
             Edit
           </button>
           <button
             onClick={handleDelete}
-            className="btn-danger"
+            className="btn btn-danger"
             disabled={isDeleting}
           >
             {isDeleting ? 'Deleting...' : 'Delete'}

@@ -204,7 +204,7 @@ export function AnnotationUpload({ pointId, onSuccess }: AnnotationUploadProps) 
 
           <button
             type="submit"
-            className="btn-primary"
+            className="btn btn-primary"
             disabled={isUploading || !textContent.trim()}
           >
             {isUploading ? 'Adding...' : 'Add Text Note'}
@@ -247,7 +247,7 @@ export function AnnotationUpload({ pointId, onSuccess }: AnnotationUploadProps) 
 
           <button
             type="submit"
-            className="btn-primary"
+            className="btn btn-primary"
             disabled={isUploading || !selectedFile}
           >
             {isUploading ? 'Uploading...' : `Upload ${mode === 'image' ? 'Image' : mode === 'document' ? 'Document' : 'File'}`}

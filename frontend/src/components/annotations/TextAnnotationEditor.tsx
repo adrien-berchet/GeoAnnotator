@@ -85,7 +85,7 @@ export function TextAnnotationEditor({
         <button
           type="button"
           onClick={onCancel}
-          className="btn-secondary"
+          className="btn btn-secondary"
           disabled={isSaving}
         >
           Cancel
@@ -93,7 +93,7 @@ export function TextAnnotationEditor({
         <button
           type="button"
           onClick={handleSave}
-          className="btn-primary"
+          className="btn btn-primary"
           disabled={isSaving}
         >
           {isSaving ? 'Saving...' : 'Save'}

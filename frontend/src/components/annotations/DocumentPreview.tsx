@@ -141,7 +141,7 @@ export function DocumentPreview({ annotation }: DocumentPreviewProps) {
       <div className="document-actions">
         <button
           onClick={handleDownload}
-          className="btn-primary btn-small"
+          className="btn btn-primary btn-sm"
         >
           📥 Download
         </button>

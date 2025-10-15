@@ -198,7 +198,7 @@ export function AnnotationForm({ pointId, onAnnotationCreated, onCancel }: Annot
             <button
               type="button"
               onClick={onCancel}
-              className="btn-secondary"
+              className="btn btn-secondary"
               disabled={isSubmitting}
             >
               Cancel
@@ -206,7 +206,7 @@ export function AnnotationForm({ pointId, onAnnotationCreated, onCancel }: Annot
           )}
           <button
             type="submit"
-            className="btn-primary"
+            className="btn btn-primary"
             disabled={isSubmitting}
           >
             {isSubmitting ? 'Adding...' : 'Add Annotation'}
