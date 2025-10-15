@@ -6,7 +6,7 @@ A comprehensive web application for geospatial annotation enabling field researc
 
 - 🗺️ **Interactive Leaflet Map** with clustering and bounding box search
 - 📍 **GPS Point Management** with create, read, update, delete operations
-- 📝 **Rich Annotations** supporting text (with emoticons), images, documents, and files
+- 📝 **Rich Annotations** supporting text with **Markdown formatting**, images, documents, and files
 - 👥 **Collaborative Sharing** with view/edit/transfer permissions
 - 📤 **Import/Export** in multiple formats (GeoJSON, GPX, KML, CSV, ZIP)
 - 🗑️ **30-Day Trash** with restoration capability
@@ -292,6 +292,12 @@ npm test src/components/auth/LoginForm.test.tsx
 3. Ensure all tests pass and coverage meets requirements (≥80% general, ≥95% critical paths)
 4. Run pre-commit hooks before committing
 5. Submit a pull request
+
+## Documentation
+
+- **[Markdown Annotations Guide](docs/markdown-annotations.md)** - Learn how to use Markdown formatting in text annotations
+- **[API Documentation](docs/api.md)** - REST API reference
+- **[Deployment Guide](docs/deployment.md)** - Production deployment instructions
 
 ## License
 

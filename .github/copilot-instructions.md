@@ -6,6 +6,8 @@ Auto-generated from all feature plans. Last updated: 2025-10-06
 - (001-build-a-web)
 - TypeScript 5.x with React 19.1.1 + React, React Router DOM 7.9.3, Vite (build tool), Leaflet 1.9.4 (map library) (002-the-search-bar)
 - N/A (UI-only change, existing search API integration preserved) (002-the-search-bar)
+- TypeScript 5.9.3, React 19.1.1 + @uiw/react-md-editor 4.0.8 (already installed), react-router-dom 7.9.3, vite 7.1.7 (003-sur-la-page)
+- N/A (frontend-only change, backend already stores text content) (003-sur-la-page)
 
 ## Project Structure
 ```
@@ -20,6 +22,7 @@ tests/
 : Follow standard conventions
 
 ## Recent Changes
+- 003-sur-la-page: Added TypeScript 5.9.3, React 19.1.1 + @uiw/react-md-editor 4.0.8 (already installed), react-router-dom 7.9.3, vite 7.1.7
 - 002-the-search-bar: Added TypeScript 5.x with React 19.1.1 + React, React Router DOM 7.9.3, Vite (build tool), Leaflet 1.9.4 (map library)
 - 001-build-a-web: Added
 

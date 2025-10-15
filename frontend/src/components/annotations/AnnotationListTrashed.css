@@ -2,6 +2,95 @@
  * Additional styles for AnnotationList with trashed annotations.
  */
 
+/* Markdown rendering styles for annotation descriptions */
+.annotation-description {
+  max-height: 300px;
+  overflow-y: auto;
+  margin: var(--spacing-md) 0;
+}
+
+.annotation-description .wmde-markdown {
+  background: transparent;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+}
+
+.annotation-description .wmde-markdown p {
+  margin: 0 0 var(--spacing-sm) 0;
+  line-height: var(--line-height-relaxed);
+}
+
+.annotation-description .wmde-markdown p:last-child {
+  margin-bottom: 0;
+}
+
+.annotation-description .wmde-markdown h1,
+.annotation-description .wmde-markdown h2,
+.annotation-description .wmde-markdown h3,
+.annotation-description .wmde-markdown h4,
+.annotation-description .wmde-markdown h5,
+.annotation-description .wmde-markdown h6 {
+  margin: var(--spacing-sm) 0;
+  color: var(--color-text-primary);
+}
+
+.annotation-description .wmde-markdown ul,
+.annotation-description .wmde-markdown ol {
+  margin: var(--spacing-sm) 0;
+  padding-left: var(--spacing-xl);
+}
+
+.annotation-description .wmde-markdown li {
+  margin: var(--spacing-xs) 0;
+}
+
+.annotation-description .wmde-markdown code {
+  background: var(--color-bg-tertiary);
+  padding: 0.125rem 0.25rem;
+  border-radius: var(--radius-xs);
+  font-size: 0.875em;
+  color: var(--color-text-primary);
+}
+
+.annotation-description .wmde-markdown pre {
+  background: var(--color-bg-tertiary);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-sm);
+  overflow-x: auto;
+  margin: var(--spacing-sm) 0;
+}
+
+.annotation-description .wmde-markdown pre code {
+  background: transparent;
+  padding: 0;
+}
+
+.annotation-description .wmde-markdown blockquote {
+  border-left: 3px solid var(--color-border-secondary);
+  padding-left: var(--spacing-lg);
+  margin: var(--spacing-sm) 0;
+  color: var(--color-text-tertiary);
+}
+
+.annotation-description .wmde-markdown a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.annotation-description .wmde-markdown a:hover {
+  text-decoration: underline;
+}
+
+.annotation-description .wmde-markdown strong {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.annotation-description .wmde-markdown em {
+  font-style: italic;
+  color: var(--color-text-primary);
+}
+
 /* Trashed annotation card - grayed out */
 .annotation-card.trashed {
   opacity: 0.6;

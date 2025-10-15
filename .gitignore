@@ -1,6 +1,7 @@
 *.code-workspace
 *.md
 backend/media/
+.env.example
 
 # macOS users
 .DS_Store
