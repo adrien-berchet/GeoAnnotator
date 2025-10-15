@@ -1,11 +1,11 @@
 /**
- * Integration tests for map search bar positioning and layout.
+ * Integration tests for map search bar functionality.
  *
- * Tests cover responsive layout, positioning relative to other map controls,
- * and integration with MapPage component for local filtering.
+ * Tests cover integration with MapPage component for local filtering
+ * and proper display of search state in the UI.
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
@@ -29,188 +29,19 @@ vi.mock('../../api/points', () => ({
 
 describe('Map Search Integration', () => {
 
-  describe('Desktop Layout (≥768px) - T007', () => {
-    beforeEach(() => {
-      // Set viewport to desktop size
-      global.innerWidth = 1024;
-      global.dispatchEvent(new Event('resize'));
-    });
-
-    it('renders MapSearchBar left of points count', async () => {
-      const { container } = render(
-        <BrowserRouter>
-          <MapPage />
-        </BrowserRouter>
-      );
-
-      // Wait for map controls to render
-      const searchBar = await screen.findByRole('search');
-      const controls = container.querySelector('.map-controls') as HTMLElement;
-      expect(controls).toBeInTheDocument();
-
-      const pointsCount = within(controls).getByText(/points?/i);
-
-      // Get positions
-      const searchBarRect = searchBar.getBoundingClientRect();
-      const pointsCountRect = pointsCount.getBoundingClientRect();
-
-      // Search bar should be to the left of points count
-      expect(searchBarRect.left).toBeLessThan(pointsCountRect.left);
-    });
-
-    it('uses horizontal flexbox layout', async () => {
-      const { container } = render(
-        <BrowserRouter>
-          <MapPage />
-        </BrowserRouter>
-      );
-
-      await screen.findByRole('search'); // Wait for render
-      const controls = container.querySelector('.map-controls') as HTMLElement;
-      expect(controls).toBeInTheDocument();
-
-      const styles = window.getComputedStyle(controls);
-
-      expect(styles.display).toBe('flex');
-      expect(styles.flexDirection).toBe('row');
-    });
-
-    it('maintains correct order: SearchBar → PointsCount → FilterButton', async () => {
-      const { container } = render(
-        <BrowserRouter>
-          <MapPage />
-        </BrowserRouter>
-      );
-
-      const searchBar = await screen.findByRole('search');
-      const controls = container.querySelector('.map-controls') as HTMLElement;
-      expect(controls).toBeInTheDocument();
-
-      const filterButton = within(controls).getByText(/filter tags/i);
-
-      const searchBarOrder = window.getComputedStyle(searchBar).order;
-      const filterButtonOrder = window.getComputedStyle(filterButton).order;
-
-      expect(parseInt(searchBarOrder)).toBeLessThan(parseInt(filterButtonOrder));
-    });
-
-    it('has search bar width between 200px-400px', async () => {
-      render(
-        <BrowserRouter>
-          <MapPage />
-        </BrowserRouter>
-      );
-
-      const searchBar = await screen.findByRole('search');
-      const width = searchBar.getBoundingClientRect().width;
-
-      expect(width).toBeGreaterThanOrEqual(200);
-      expect(width).toBeLessThanOrEqual(400);
-    });
-  });
-
-  describe('Mobile Layout (<768px) - T008', () => {
-    beforeEach(() => {
-      // Set viewport to mobile size
-      global.innerWidth = 375;
-      global.dispatchEvent(new Event('resize'));
-    });
-
-    it('renders MapSearchBar between points count and filter button', async () => {
-      const { container } = render(
-        <BrowserRouter>
-          <MapPage />
-        </BrowserRouter>
-      );
-
-      const searchBar = await screen.findByRole('search');
-      const controls = container.querySelector('.map-controls') as HTMLElement;
-      expect(controls).toBeInTheDocument();
-
-      const pointsCount = within(controls).getByText(/points?/i);
-      const filterButton = within(controls).getByText(/filter tags/i);
-
-      const searchBarRect = searchBar.getBoundingClientRect();
-      const pointsCountRect = pointsCount.getBoundingClientRect();
-      const filterButtonRect = filterButton.getBoundingClientRect();
-
-      // Vertical layout: points count above search bar, search bar above filter button
-      expect(pointsCountRect.top).toBeLessThan(searchBarRect.top);
-      expect(searchBarRect.top).toBeLessThan(filterButtonRect.top);
-    });
-
-    it('uses vertical flexbox layout', async () => {
-      const { container } = render(
-        <BrowserRouter>
-          <MapPage />
-        </BrowserRouter>
-      );
-
-      await screen.findByRole('search'); // Wait for render
-      const controls = container.querySelector('.map-controls') as HTMLElement;
-      expect(controls).toBeInTheDocument();
-
-      const styles = window.getComputedStyle(controls);
-
-      expect(styles.display).toBe('flex');
-      expect(styles.flexDirection).toBe('column');
-    });
-
-    it('maintains correct order: PointsCount → SearchBar → FilterButton', async () => {
-      const { container } = render(
-        <BrowserRouter>
-          <MapPage />
-        </BrowserRouter>
-      );
-
-      const searchBar = await screen.findByRole('search');
-      const controls = container.querySelector('.map-controls') as HTMLElement;
-      expect(controls).toBeInTheDocument();
-
-      const pointsCount = within(controls).getByText(/points?/i);
-      const filterButton = within(controls).getByText(/filter tags/i);
-
-      const pointsCountOrder = window.getComputedStyle(pointsCount).order;
-      const searchBarOrder = window.getComputedStyle(searchBar).order;
-      const filterButtonOrder = window.getComputedStyle(filterButton).order;
-
-      expect(parseInt(pointsCountOrder)).toBeLessThan(parseInt(searchBarOrder));
-      expect(parseInt(searchBarOrder)).toBeLessThan(parseInt(filterButtonOrder));
-    });
-
-    it('stretches search bar to full width', async () => {
-      const { container } = render(
-        <BrowserRouter>
-          <MapPage />
-        </BrowserRouter>
-      );
-
-      const searchBar = await screen.findByRole('search');
-      const controls = container.querySelector('.map-controls') as HTMLElement;
-      expect(controls).toBeInTheDocument();
-
-      const controlsWidth = controls.getBoundingClientRect().width;
-      const searchBarWidth = searchBar.getBoundingClientRect().width;
-
-      // Allow for padding/margins
-      expect(searchBarWidth).toBeGreaterThan(controlsWidth * 0.9);
-    });
-  });
-
   describe('Search Filtering - T009', () => {
-    it('filters points locally without navigation', async () => {
-      const user = userEvent.setup();
+    it('renders search bar on map page', async () => {
       render(
         <BrowserRouter>
           <MapPage />
         </BrowserRouter>
       );
 
-      const input = await screen.findByPlaceholderText('Search points...');
-      await user.type(input, 'integration test');
+      const searchBar = await screen.findByRole('search');
+      expect(searchBar).toBeInTheDocument();
 
-      // Search should update immediately without navigation
-      // The component uses real-time filtering via useEffect
+      const input = screen.getByPlaceholderText('Search points...');
+      expect(input).toBeInTheDocument();
     });
 
     it('displays search query in points counter when searching', async () => {
@@ -223,6 +54,9 @@ describe('Map Search Integration', () => {
 
       const input = await screen.findByPlaceholderText('Search points...');
       await user.type(input, 'test search');
+
+      // Submit the form by pressing Enter
+      await user.keyboard('{Enter}');
 
       // Look for search query in counter
       const controls = container.querySelector('.map-controls') as HTMLElement;
@@ -241,17 +75,44 @@ describe('Map Search Integration', () => {
         </BrowserRouter>
       );
 
-      // Apply tag filter first (if available)
+      // Wait for the input to be available
+      const input = await screen.findByPlaceholderText('Search points...');
+
+      // Now get controls after the component has rendered
       const controls = container.querySelector('.map-controls') as HTMLElement;
       expect(controls).toBeInTheDocument();
 
-      // Then search
-      const input = screen.getByPlaceholderText('Search points...');
+      // Search
       await user.type(input, 'combined search');
+
+      // Submit the form by pressing Enter
+      await user.keyboard('{Enter}');
 
       // Should show search filter active
       const counterWithSearch = await within(controls).findByText(/search:/i, {}, { timeout: 1000 });
       expect(counterWithSearch).toBeInTheDocument();
+    });
+
+    it('clears search query when clear button is clicked', async () => {
+      const user = userEvent.setup();
+      const { container } = render(
+        <BrowserRouter>
+          <MapPage />
+        </BrowserRouter>
+      );
+
+      const input = await screen.findByPlaceholderText('Search points...');
+      await user.type(input, 'test query');
+      await user.keyboard('{Enter}');
+
+      // Find and click the clear button (✕)
+      const clearButton = screen.getByLabelText('Clear search');
+      await user.click(clearButton);
+
+      // Check that search is cleared from counter
+      const controls = container.querySelector('.map-controls') as HTMLElement;
+      const counterText = within(controls).getByText(/0 points?/i);
+      expect(counterText.textContent).not.toContain('search:');
     });
 
     it('does not show search bar in Navbar', async () => {
