@@ -8,6 +8,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { TrashPointCard } from '../components/trash/TrashPointCard';
 import { TrashAnnotationCard } from '../components/trash/TrashAnnotationCard';
 import { getAllTrashData, emptyPointTrash, emptyAnnotationTrash } from '../api/trash';
@@ -15,6 +16,7 @@ import type { TrashPoint, TrashAnnotation, TrashStats } from '../types/trash';
 import './TrashPage.css';
 
 export function TrashPage() {
+  const location = useLocation();
   const [pointsTrash, setPointsTrash] = useState<TrashPoint[]>([]);
   const [annotationsTrash, setAnnotationsTrash] = useState<TrashAnnotation[]>([]);
   const [pointsStats, setPointsStats] = useState<TrashStats>({
@@ -34,6 +36,29 @@ export function TrashPage() {
   useEffect(() => {
     loadTrashData();
   }, []);
+
+  // Handle hash navigation to specific annotation
+  useEffect(() => {
+    const hash = location.hash;
+    if (hash.startsWith('#annotation-')) {
+      // Switch to annotations tab
+      setActiveTab('annotations');
+
+      // Wait for the tab content to render, then scroll to the annotation
+      setTimeout(() => {
+        const annotationId = hash.substring(1); // Remove the '#'
+        const element = document.getElementById(annotationId);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // Add a highlight effect
+          element.classList.add('highlight-annotation');
+          setTimeout(() => {
+            element.classList.remove('highlight-annotation');
+          }, 2000);
+        }
+      }, 100);
+    }
+  }, [location.hash, annotationsTrash]);
 
   const loadTrashData = async () => {
     setIsLoading(true);

@@ -2,6 +2,7 @@
  * Sortable annotation item with drag-and-drop support.
  */
 
+import { Link } from 'react-router-dom';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import MDEditor from '@uiw/react-md-editor';
@@ -78,12 +79,12 @@ export function SortableAnnotationItem({
       {/* Trash Banner - only visible if annotation is trashed */}
       {annotation.is_trashed && (
         <div className="trashed-annotation-banner">
-          <div className="banner-content">
+          <Link to={`/trash#annotation-${annotation.id}`} className="trashed-banner-link">
             🗑️ Trashed
             {annotation.trash_days_remaining !== null && (
               <span> - {annotation.trash_days_remaining} day(s) left</span>
             )}
-          </div>
+          </Link>
         </div>
       )}
 

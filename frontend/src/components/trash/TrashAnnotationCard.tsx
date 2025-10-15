@@ -112,7 +112,7 @@ export function TrashAnnotationCard({
   };
 
   return (
-    <div className="trash-card trash-annotation-card">
+    <div className="trash-card trash-annotation-card" id={`annotation-${item.annotation.id}`}>
       <div className="trash-card-header">
         <div className="trash-card-info">
           <h3 className="trash-card-title">

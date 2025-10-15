@@ -313,7 +313,7 @@ class AnnotationService:
         max_order = Annotation.objects.filter(
             gps_point_id=gps_point_id
         ).aggregate(db_models.Max('order'))['order__max'] or -1
-        
+
         return Annotation.objects.create(
             gps_point_id=gps_point_id,
             type='text',

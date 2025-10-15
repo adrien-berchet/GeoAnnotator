@@ -358,3 +358,18 @@
     justify-content: center;
   }
 }
+
+/* Highlight effect for annotation navigation */
+.trash-card.highlight-annotation {
+  animation: highlightPulse 2s ease-in-out;
+}
+
+@keyframes highlightPulse {
+  0%, 100% {
+    box-shadow: var(--shadow-md);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(66, 153, 225, 0.3), var(--shadow-lg);
+    transform: scale(1.01);
+  }
+}

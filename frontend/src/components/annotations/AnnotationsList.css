@@ -389,20 +389,31 @@
 .annotation-item.trashed .trashed-annotation-banner {
   background: linear-gradient(135deg, var(--color-danger) 0%, var(--color-danger-dark) 100%);
   color: white;
-  padding: var(--spacing-md) var(--spacing-lg);
-  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  border-radius: var(--radius-md);
   margin-bottom: var(--spacing-sm);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
   z-index: 3;
   position: relative;
   box-shadow: var(--shadow-sm);
+  overflow: hidden;
 }
 
-.annotation-item.trashed .trashed-annotation-banner .banner-content {
+.annotation-item.trashed .trashed-annotation-banner .trashed-banner-link {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
+  padding: var(--spacing-md) var(--spacing-lg);
+  color: white;
+  text-decoration: none;
+  transition: all var(--transition-base);
+  width: 100%;
+  border-radius: var(--radius-md);
+}
+
+.annotation-item.trashed .trashed-annotation-banner .trashed-banner-link:hover {
+  background: rgba(0, 0, 0, 0.1);
+  padding-left: calc(var(--spacing-lg) + 4px);
 }
 
 .annotation-item.trashed .annotation-content {
