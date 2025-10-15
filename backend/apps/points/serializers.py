@@ -74,6 +74,7 @@ class GPSPointSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True, read_only=True)
     editing_lock = serializers.SerializerMethodField()
     permission = serializers.SerializerMethodField()
+    annotation_count = serializers.SerializerMethodField()
 
     # GeoJSON location (auto-generated from lat/lon)
     location = serializers.SerializerMethodField()
@@ -94,6 +95,7 @@ class GPSPointSerializer(serializers.ModelSerializer):
             'updated_at',
             'editing_lock',
             'permission',
+            'annotation_count',
         ]
         read_only_fields = [
             'id',
@@ -162,6 +164,11 @@ class GPSPointSerializer(serializers.ModelSerializer):
             return 'view'
 
         return None
+
+    def get_annotation_count(self, obj):
+        """Get the count of non-deleted annotations for this point."""
+        # Exclude annotations that have a trash_entry (soft-deleted)
+        return obj.annotations.exclude(trash_entry__isnull=False).count()
 
     def create(self, validated_data):
         """
@@ -293,6 +300,7 @@ class GPSPointListSerializer(serializers.ModelSerializer):
     owner = UserSummarySerializer(read_only=True)
     tags = TagSerializer(many=True, read_only=True)
     permission = serializers.SerializerMethodField()
+    annotation_count = serializers.SerializerMethodField()
 
     class Meta:
         model = GPSPoint
@@ -307,6 +315,7 @@ class GPSPointListSerializer(serializers.ModelSerializer):
             'created_at',
             'updated_at',
             'permission',
+            'annotation_count',
         ]
 
     def get_permission(self, obj):
@@ -329,3 +338,8 @@ class GPSPointListSerializer(serializers.ModelSerializer):
             return 'view'
 
         return None
+
+    def get_annotation_count(self, obj):
+        """Get the count of non-deleted annotations for this point."""
+        # Exclude annotations that have a trash_entry (soft-deleted)
+        return obj.annotations.exclude(trash_entry__isnull=False).count()

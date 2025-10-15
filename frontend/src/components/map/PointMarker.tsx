@@ -6,7 +6,9 @@
 
 import { Marker, Popup } from 'react-leaflet';
 import { Icon } from 'leaflet';
+import { Link } from 'react-router-dom';
 import type { GPSPoint } from '../../types/point';
+import './PointMarker.css';
 
 interface PointMarkerProps {
   point: GPSPoint;
@@ -53,25 +55,48 @@ export function PointMarker({ point, onClick }: PointMarkerProps) {
     >
       <Popup>
         <div className="point-popup">
-          <h3>{point.title}</h3>
+          {/* Header with title */}
+          <div className="point-popup-header">
+            <h3>{point.title}</h3>
+          </div>
+
+          {/* Description if present */}
           {point.description && (
             <div
-              className="point-description"
+              className="point-popup-description"
               dangerouslySetInnerHTML={{ __html: point.description }}
             />
           )}
-          <div className="point-meta">
-            <div className="point-tags">
-              {point.tags.map((tag) => (
-                <span key={tag.id} className="tag">
-                  {tag.name}
-                </span>
-              ))}
+
+          {/* Meta information */}
+          <div className="point-popup-meta">
+            {/* Tags */}
+            {point.tags.length > 0 && (
+              <div className="point-popup-tags">
+                {point.tags.map((tag) => (
+                  <span key={tag.id} className="tag">
+                    {tag.name}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* Stats */}
+            <div className="point-popup-stats">
+              <span className="point-popup-stats-item">
+                📝 {point.annotation_count} annotation{point.annotation_count !== 1 ? 's' : ''}
+              </span>
+              {point.is_public && (
+                <span className="point-popup-badge-public">Public</span>
+              )}
             </div>
-            <div className="point-stats">
-              <span>{point.annotation_count} annotations</span>
-              {point.is_public && <span className="badge-public">Public</span>}
-            </div>
+          </div>
+
+          {/* Action button */}
+          <div className="point-popup-actions">
+            <Link to={`/points/${point.id}`} className="point-popup-link">
+              View details →
+            </Link>
           </div>
         </div>
       </Popup>
