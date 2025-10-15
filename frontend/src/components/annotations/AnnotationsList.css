@@ -148,6 +148,8 @@
   border-radius: var(--radius-md);
   border-left: 3px solid var(--color-primary);
   transition: background-color var(--transition-base), transform var(--transition-base);
+  max-height: 400px;
+  overflow-y: auto;
 }
 
 .text-preview.clickable {

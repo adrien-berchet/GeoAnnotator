@@ -267,6 +267,8 @@
   color: var(--color-text-tertiary);
   line-height: var(--line-height-relaxed);
   font-size: var(--font-size-sm);
+  max-height: 200px;
+  overflow-y: auto;
 }
 
 .annotation-preview-content.file {
