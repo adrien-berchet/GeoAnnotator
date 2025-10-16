@@ -11,9 +11,11 @@ import { AuthProvider } from '@/hooks/useAuth';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { SettingsPage } from '@/pages/SettingsPage';
 import * as settingsApi from '@/api/settings';
+import * as useAuthModule from '@/hooks/useAuth';
 
 // Mock the settings API
 vi.mock('@/api/settings');
+vi.mock('@/hooks/useAuth');
 
 const mockGetSettings = settingsApi.getSettings as any;
 const mockUpdateSettings = settingsApi.updateSettings as any;
@@ -21,6 +23,15 @@ const mockUpdateSettings = settingsApi.updateSettings as any;
 describe('SettingsPage Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+
+    // Mock authenticated user for all tests
+    vi.mocked(useAuthModule.useAuth).mockReturnValue({
+      user: { id: '1', email: 'test@example.com' },
+      loading: false,
+      login: vi.fn(),
+      logout: vi.fn(),
+      register: vi.fn(),
+    });
   });
 
   const renderWithRouter = (component: React.ReactElement) => {
@@ -29,11 +40,9 @@ describe('SettingsPage Component', () => {
       { initialEntries: ['/'] }
     );
     return render(
-      <AuthProvider>
-        <ThemeProvider>
-          <RouterProvider router={router} />
-        </ThemeProvider>
-      </AuthProvider>
+      <ThemeProvider>
+        <RouterProvider router={router} />
+      </ThemeProvider>
     );
   };
 
@@ -147,6 +156,7 @@ describe('SettingsPage Component', () => {
       };
 
       mockGetSettings.mockResolvedValueOnce(mockPreferences);
+      mockUpdateSettings.mockResolvedValue(mockPreferences);
 
       const user = userEvent.setup();
       renderWithRouter(<SettingsPage />);
@@ -158,9 +168,9 @@ describe('SettingsPage Component', () => {
       const saveButton = screen.getByRole('button', { name: /save/i });
       expect(saveButton).toBeDisabled();
 
-      // Change theme to make form dirty
-      const darkThemeButton = screen.getByRole('radio', { name: /dark theme/i });
-      await user.click(darkThemeButton);
+      // Change export format to make form dirty (theme changes don't make it dirty)
+      const kmlButton = screen.getByRole('radio', { name: /kml/i });
+      await user.click(kmlButton);
 
       expect(saveButton).not.toBeDisabled();
     });
@@ -185,7 +195,7 @@ describe('SettingsPage Component', () => {
       });
     });
 
-    it('should call updateSettings when save button is clicked', async () => {
+    it('should save theme immediately and other settings on save button click', async () => {
       const mockPreferences = {
         id: '123',
         language: 'en',
@@ -195,14 +205,21 @@ describe('SettingsPage Component', () => {
         updated_at: '2025-10-15T00:00:00Z',
       };
 
-      const updatedPreferences = {
+      const updatedTheme = {
         ...mockPreferences,
         theme_mode: 'dark' as const,
+      };
+
+      const updatedOther = {
+        ...updatedTheme,
+        export_format: 'kml' as const,
         updated_at: '2025-10-15T12:00:00Z',
       };
 
       mockGetSettings.mockResolvedValueOnce(mockPreferences);
-      mockUpdateSettings.mockResolvedValueOnce(updatedPreferences);
+      mockUpdateSettings
+        .mockResolvedValueOnce(updatedTheme)  // Theme saved immediately
+        .mockResolvedValueOnce(updatedOther); // Other settings saved on button click
 
       const user = userEvent.setup();
       renderWithRouter(<SettingsPage />);
@@ -211,24 +228,33 @@ describe('SettingsPage Component', () => {
         expect(screen.getByTestId('settings-form')).toBeInTheDocument();
       });
 
-      // Change theme
+      // Change theme - saves immediately via ThemeContext
       const darkThemeButton = screen.getByRole('radio', { name: /dark theme/i });
       await user.click(darkThemeButton);
-
-      // Click save
-      const saveButton = screen.getByRole('button', { name: /save/i });
-      await user.click(saveButton);
 
       await waitFor(() => {
         expect(mockUpdateSettings).toHaveBeenCalledWith({
           theme_mode: 'dark',
+        });
+      });
+
+      // Change export format
+      const kmlButton = screen.getByRole('radio', { name: /kml/i });
+      await user.click(kmlButton);
+
+      // Click save - only saves language and export_format (theme already saved)
+      const saveButton = screen.getByRole('button', { name: /save/i });
+      await user.click(saveButton);
+
+      await waitFor(() => {
+        expect(mockUpdateSettings).toHaveBeenLastCalledWith({
           language: 'en',
-          export_format: 'geojson',
+          export_format: 'kml',
         });
       });
     });
 
-    it('should display success message after save', async () => {
+    it('should display success message after saving non-theme settings', async () => {
       const mockPreferences = {
         id: '123',
         language: 'en',
@@ -240,7 +266,7 @@ describe('SettingsPage Component', () => {
 
       const updatedPreferences = {
         ...mockPreferences,
-        theme_mode: 'dark' as const,
+        export_format: 'kml' as const,
         updated_at: '2025-10-15T12:00:00Z',
       };
 
@@ -254,10 +280,11 @@ describe('SettingsPage Component', () => {
         expect(screen.getByTestId('settings-form')).toBeInTheDocument();
       });
 
-      // Change and save
-      const darkThemeButton = screen.getByRole('radio', { name: /dark theme/i });
-      await user.click(darkThemeButton);
+      // Change export format
+      const kmlButton = screen.getByRole('radio', { name: /kml/i });
+      await user.click(kmlButton);
 
+      // Save
       const saveButton = screen.getByRole('button', { name: /save/i });
       await user.click(saveButton);
 
@@ -279,6 +306,7 @@ describe('SettingsPage Component', () => {
       };
 
       mockGetSettings.mockResolvedValueOnce(mockPreferences);
+      mockUpdateSettings.mockResolvedValue(mockPreferences); // For theme changes
 
       const user = userEvent.setup();
       renderWithRouter(<SettingsPage />);
@@ -287,9 +315,9 @@ describe('SettingsPage Component', () => {
         expect(screen.getByTestId('settings-form')).toBeInTheDocument();
       });
 
-      // Make form dirty
-      const darkThemeButton = screen.getByRole('radio', { name: /dark theme/i });
-      await user.click(darkThemeButton);
+      // Change export format to make form dirty (theme changes don't make it dirty)
+      const kmlButton = screen.getByRole('radio', { name: /kml/i });
+      await user.click(kmlButton);
 
       // Try to navigate (will be blocked by useBlocker)
       // This test verifies the blocker is set up, actual navigation blocking

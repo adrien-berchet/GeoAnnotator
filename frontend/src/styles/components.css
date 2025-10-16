@@ -47,21 +47,21 @@
 }
 
 .btn-success {
-  background: var(--color-success);
+  background: var(--color-success-hover);
   color: white;
 }
 
 .btn-success:hover:not(:disabled) {
-  background: var(--color-success-hover);
+  background: var(--color-success);
 }
 
 .btn-danger {
-  background: var(--color-danger);
+  background: var(--color-danger-hover);
   color: white;
 }
 
 .btn-danger:hover:not(:disabled) {
-  background: var(--color-danger-hover);
+  background: var(--color-danger);
 }
 
 .btn-outline-danger {

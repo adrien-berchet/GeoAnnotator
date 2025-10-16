@@ -187,7 +187,7 @@
 }
 
 /* Dark mode specific adjustments */
-@media (prefers-color-scheme: dark) {
+[data-theme='dark'] {
   .point-popup-badge-public {
     background: var(--color-success-bg);
     color: var(--color-success);

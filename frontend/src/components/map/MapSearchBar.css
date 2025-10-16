@@ -95,7 +95,7 @@
 }
 
 /* Dark mode support */
-@media (prefers-color-scheme: dark) {
+[data-theme='dark'] {
   .map-search-bar {
     background-color: var(--bg-primary, #1e293b);
     border-color: var(--border-color, #334155);

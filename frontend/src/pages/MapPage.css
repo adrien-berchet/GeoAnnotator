@@ -54,25 +54,25 @@
 }
 
 .points-count {
-  background: white;
+  background: var(--color-bg-primary);
   padding: 0.75rem 1rem;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-md);
   font-size: 0.875rem;
   font-weight: 500;
-  color: #2d3748;
-  border: 1px solid #e2e8f0;
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-primary);
 }
 
 .filter-toggle-button {
-  background: white;
+  background: var(--color-bg-primary);
   padding: 0.75rem 1rem;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  border: 1px solid #e2e8f0;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--color-border-primary);
   font-size: 0.875rem;
   font-weight: 500;
-  color: #4a5568;
+  color: var(--color-text-secondary);
   cursor: pointer;
   transition: all 0.2s;
   display: flex;
@@ -83,14 +83,14 @@
 }
 
 .filter-toggle-button:hover {
-  border-color: #4299e1;
-  color: #4299e1;
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 
 .filter-toggle-button.active {
-  background-color: #4299e1;
-  color: white;
-  border-color: #4299e1;
+  background-color: var(--color-primary);
+  color: var(--color-primary-contrast);
+  border-color: var(--color-primary);
 }
 
 /* Tags Filter Panel - Drawer style */
@@ -250,78 +250,78 @@
 }
 
 /* Dark mode */
-@media (prefers-color-scheme: dark) {
+[data-theme='dark'] {
   .points-count,
   .filter-toggle-button {
-    background: #2d3748;
-    border-color: #4a5568;
-    color: #f7fafc;
+    background: var(--color-bg-primary-dark);
+    border-color: var(--color-border-primary-dark);
+    color: var(--color-text-primary-dark);
   }
 
   .filter-toggle-button:hover {
-    border-color: #63b3ed;
-    color: #63b3ed;
+    border-color: var(--color-primary-dark);
+    color: var(--color-primary-dark);
   }
 
   .filter-toggle-button.active {
-    background-color: #3182ce;
-    border-color: #3182ce;
+    background-color: var(--color-primary-dark);
+    border-color: var(--color-primary-dark);
   }
 
   .filter-backdrop {
-    background: rgba(0, 0, 0, 0.7);
+    background: var(--color-backdrop-dark);
   }
 
   .tags-filter-panel {
-    background: #2d3748;
+    background: var(--color-bg-primary-dark);
   }
 
   .filter-panel-header {
-    border-bottom-color: #4a5568;
+    border-bottom-color: var(--color-border-primary-dark);
   }
 
   .filter-panel-header h3 {
-    color: #f7fafc;
+    color: var(--color-text-primary-dark);
   }
 
   .close-panel-button {
-    color: #a0aec0;
+    color: var(--color-text-secondary-dark);
   }
 
   .close-panel-button:hover {
-    color: #f7fafc;
-    background-color: #374151;
+    color: var(--color-text-primary-dark);
+    background-color: var(--color-bg-hover-dark);
   }
 
   .filter-panel-actions {
-    border-bottom-color: #4a5568;
-    background-color: #1a202c;
+    border-bottom-color: var(--color-border-primary-dark);
+    background-color: var(--color-bg-secondary-dark);
   }
 
   .clear-filters-button {
-    background-color: #4a5568;
-    color: #e2e8f0;
+    background-color: var(--color-bg-tertiary-dark);
+    color: var(--color-text-primary-dark);
   }
 
   .clear-filters-button:hover {
-    background-color: #718096;
-    color: #f7fafc;
+    background-color: var(--color-bg-hover-dark);
+    color: var(--color-text-primary-dark);
   }
 
   .selected-count {
-    color: #a0aec0;
+    color: var(--color-text-secondary-dark);
   }
 
   .no-tags {
-    color: #a0aec0;
+    color: var(--color-text-secondary-dark);
   }
 
   .tag-checkbox:hover {
-    background-color: #374151;
+    background-color: var(--color-bg-hover-dark);
   }
 
   .tag-label {
-    color: #f7fafc;
+    color: var(--color-text-primary-dark);
   }
 }
 

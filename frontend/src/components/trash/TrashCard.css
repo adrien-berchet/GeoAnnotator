@@ -47,7 +47,7 @@
   display: flex;
   gap: var(--spacing-sm);
   font-size: var(--font-size-sm);
-  color: var(--color-text-tertiary);
+  color: var(--color-text-secondary);
 }
 
 .trash-card-meta span {
@@ -98,7 +98,7 @@
   align-items: center;
   gap: var(--spacing-sm);
   font-size: var(--font-size-sm);
-  color: var(--color-text-tertiary);
+  color: var(--color-text-secondary);
 }
 
 .detail-item .icon {

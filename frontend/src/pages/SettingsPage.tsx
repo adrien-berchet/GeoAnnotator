@@ -7,11 +7,13 @@ import { useBlocker } from 'react-router-dom';
 import ThemeSelector from '@/components/settings/ThemeSelector';
 import LanguageSelector from '@/components/settings/LanguageSelector';
 import ExportSettings from '@/components/settings/ExportSettings';
+import { useTheme } from '@/contexts/ThemeContext';
 import { getSettings, updateSettings } from '@/api/settings';
 import type { UserPreferences, ThemeMode, ExportFormat } from '@/types/settings';
 import './SettingsPage.css';
 
 export function SettingsPage() {
+  const { themeMode: contextThemeMode, setThemeMode: setContextThemeMode } = useTheme();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [preferences, setPreferences] = useState<UserPreferences | null>(null);
@@ -20,7 +22,7 @@ export function SettingsPage() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Form state
-  const [themeMode, setThemeMode] = useState<ThemeMode>('auto');
+  const [themeMode, setThemeMode] = useState<ThemeMode>(contextThemeMode);
   const [language, setLanguage] = useState<string>('en');
   const [exportFormat, setExportFormat] = useState<ExportFormat>('geojson');
 
@@ -35,13 +37,19 @@ export function SettingsPage() {
     loadSettings();
   }, []);
 
+  // Sync local theme state with context when it changes
+  useEffect(() => {
+    setThemeMode(contextThemeMode);
+  }, [contextThemeMode]);
+
   const loadSettings = async () => {
     try {
       setLoading(true);
       setError(null);
       const data = await getSettings();
       setPreferences(data);
-      setThemeMode(data.theme_mode);
+      // Use theme from context (which is loaded from backend)
+      setThemeMode(contextThemeMode);
       setLanguage(data.language);
       setExportFormat(data.export_format);
       setIsDirty(false);
@@ -53,10 +61,19 @@ export function SettingsPage() {
     }
   };
 
-  const handleThemeChange = (mode: ThemeMode) => {
+  const handleThemeChange = async (mode: ThemeMode) => {
     setThemeMode(mode);
-    setIsDirty(true);
     setSuccessMessage(null);
+
+    // Apply theme immediately through context (which also persists to backend)
+    try {
+      await setContextThemeMode(mode);
+      // Theme is now persisted, so we don't mark as dirty for theme changes
+      // But we still update the local state to show the current selection
+    } catch (err) {
+      setError('Failed to update theme. Please try again.');
+      console.error('Error updating theme:', err);
+    }
   };
 
   const handleLanguageChange = (lang: string) => {
@@ -75,8 +92,8 @@ export function SettingsPage() {
     try {
       setSaving(true);
       setError(null);
+      // Theme is already persisted via context, only update other settings
       const updated = await updateSettings({
-        theme_mode: themeMode,
         language,
         export_format: exportFormat,
       });

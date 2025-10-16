@@ -135,9 +135,7 @@ pre {
   color: var(--color-primary-dark);
 }
 
-@media (prefers-color-scheme: dark) {
-  ::selection {
-    background: var(--color-primary-dark);
-    color: var(--color-primary-light);
-  }
+[data-theme='dark'] ::selection {
+  background: var(--color-primary-dark);
+  color: var(--color-primary-light);
 }

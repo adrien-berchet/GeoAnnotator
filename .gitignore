@@ -2,6 +2,7 @@
 *.md
 backend/media/
 .env.example
+.claude
 
 # macOS users
 .DS_Store

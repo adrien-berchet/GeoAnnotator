@@ -167,17 +167,17 @@ html[data-color-mode="dark"] .w-md-editor-input .w-md-editor-text-input,
 }
 
 .wmde-markdown code {
-  background: #f3f4f6;
+  background: var(--color-bg-hover);
   padding: 0.125rem 0.25rem;
   border-radius: 0.25rem;
   font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
   font-size: 0.875em;
-  color: #ef4444;
+  color: var(--color-danger-hover);
 }
 
 .wmde-markdown pre {
-  background: #1f2937;
-  color: #f9fafb;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
   padding: 1rem;
   border-radius: 0.375rem;
   overflow-x: auto;
@@ -191,14 +191,14 @@ html[data-color-mode="dark"] .w-md-editor-input .w-md-editor-text-input,
 }
 
 .wmde-markdown blockquote {
-  border-left: 0.25rem solid #d1d5db;
+  border-left: 0.25rem solid var(--color-border-secondary);
   padding-left: 1rem;
   margin: 1rem 0;
-  color: #6b7280;
+  color: var(--color-text-secondary);
 }
 
 .wmde-markdown a {
-  color: #3b82f6;
+  color: var(--color-primary);
   text-decoration: none;
 }
 
@@ -220,19 +220,19 @@ html[data-color-mode="dark"] .w-md-editor-input .w-md-editor-text-input,
 
 .wmde-markdown th,
 .wmde-markdown td {
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--color-border-primary);
   padding: 0.5rem;
   text-align: left;
 }
 
 .wmde-markdown th {
-  background: #f9fafb;
+  background: var(--color-bg-tertiary);
   font-weight: 600;
 }
 
 .wmde-markdown hr {
   border: none;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--color-border-primary);
   margin: 2rem 0;
 }
 

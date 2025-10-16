@@ -35,5 +35,6 @@ export interface UserPreferences {
 export interface ThemeContextValue {
   themeMode: ThemeMode;
   resolvedTheme: ResolvedTheme;
-  setThemeMode: (mode: ThemeMode) => void;
+  setThemeMode: (mode: ThemeMode) => Promise<void>;
+  isLoading: boolean;
 }
