@@ -15,10 +15,11 @@ import { PointDetailPage } from './pages/PointDetailPage';
 import { EditPointPage } from './pages/EditPointPage';
 import TagManagementPage from './pages/TagManagementPage';
 import { TrashPage } from './pages/TrashPage';
+import { SettingsPage } from './pages/SettingsPage';
+import { ThemeProvider } from './contexts/ThemeContext';
 
 // Placeholder components - to be implemented
 const ProfilePage = () => <div>Profile Page</div>;
-const SettingsPage = () => <div>Settings Page</div>;
 const SharedPointsPage = () => <div>Shared Points Page</div>;
 
 /**

@@ -1,0 +1,55 @@
+/**
+ * Theme selector styles
+ */
+
+.theme-selector {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.theme-option {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  border: 2px solid var(--border-color, #e5e7eb);
+  border-radius: 0.5rem;
+  background: var(--background-color, #ffffff);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.theme-option:hover {
+  border-color: var(--primary-color, #3b82f6);
+  background: var(--hover-background, #f9fafb);
+}
+
+.theme-option:focus {
+  outline: 2px solid var(--primary-color, #3b82f6);
+  outline-offset: 2px;
+}
+
+.theme-option.selected {
+  border-color: var(--primary-color, #3b82f6);
+  background: var(--selected-background, #eff6ff);
+  font-weight: 600;
+}
+
+.theme-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.theme-label {
+  font-size: 0.875rem;
+}
+
+/* Dark mode support */
+[data-theme='dark'] .theme-option {
+  --border-color: #374151;
+  --background-color: #1f2937;
+  --hover-background: #111827;
+  --selected-background: #1e3a8a;
+}

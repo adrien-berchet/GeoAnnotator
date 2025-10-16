@@ -13,6 +13,7 @@ ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
 
 # CORS settings for development
 CORS_ALLOW_ALL_ORIGINS = True  # Allow all origins in development
+CORS_ALLOW_CREDENTIALS = True  # Allow credentials (cookies, JWT) with CORS
 
 # Development email backend (prints to console)
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

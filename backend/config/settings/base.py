@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'apps.sharing',
     'apps.trash',
     'apps.export_import',
+    'apps.settings',
 ]
 
 MIDDLEWARE = [

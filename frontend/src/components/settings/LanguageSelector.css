@@ -1,0 +1,53 @@
+/**
+ * Language selector styles
+ */
+
+.language-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.language-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  border: 2px solid var(--border-color, #e5e7eb);
+  border-radius: 0.5rem;
+  background: var(--background-color, #ffffff);
+}
+
+.language-option.selected {
+  border-color: var(--primary-color, #3b82f6);
+  background: var(--selected-background, #eff6ff);
+  font-weight: 600;
+}
+
+.language-option.disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.language-label {
+  font-size: 1rem;
+}
+
+.info-icon {
+  font-size: 1.25rem;
+}
+
+.language-info {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #6b7280);
+  margin: 0;
+  padding-left: 0.5rem;
+}
+
+/* Dark mode support */
+[data-theme='dark'] .language-option {
+  --border-color: #374151;
+  --background-color: #1f2937;
+  --selected-background: #1e3a8a;
+  --text-secondary: #9ca3af;
+}
