@@ -49,7 +49,7 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-xl);
-  margin-left: auto;
+  flex: 1;
 }
 
 .nav-link {
@@ -84,6 +84,7 @@
 /* User Menu */
 .user-menu {
   position: relative;
+  margin-left: auto;
 }
 
 .user-menu-button {
