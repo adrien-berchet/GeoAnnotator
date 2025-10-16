@@ -235,12 +235,6 @@ export function MapPage() {
         {/* Search bar */}
         <MapSearchBar onSearch={handleSearch} />
 
-        <div className="points-count">
-          {points.length} point{points.length !== 1 ? 's' : ''}
-          {selectedTags.length > 0 && ` (filtered by ${selectedTags.length} tag${selectedTags.length > 1 ? 's' : ''})`}
-          {searchQuery && ` (search: "${searchQuery}")`}
-        </div>
-
         {/* Filter toggle button */}
         <button
           className={`filter-toggle-button ${isFilterOpen ? 'active' : ''}`}
@@ -249,6 +243,12 @@ export function MapPage() {
         >
           🏷️ Filter Tags {selectedTags.length > 0 && `(${selectedTags.length})`}
         </button>
+
+        <div className="points-count">
+          {points.length} point{points.length !== 1 ? 's' : ''}
+          {selectedTags.length > 0 && ` (filtered by ${selectedTags.length} tag${selectedTags.length > 1 ? 's' : ''})`}
+          {searchQuery && ` (search: "${searchQuery}")`}
+        </div>
       </div>
 
       {/* Tags Filter Panel */}
