@@ -13,6 +13,7 @@ import { CreatePointModal } from '../components/map/CreatePointModal';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import { TagFilterPanel } from '../components/common/TagFilterPanel';
 import { MapSearchBar } from '../components/map/MapSearchBar';
+import { MapLayerSelector, TILE_LAYERS, type TileLayer } from '../components/map/MapLayerSelector';
 import { getPoints, searchPointsByTags, getTags } from '../api/points';
 import { getErrorMessage } from '../api/client';
 import type { GPSPoint, Tag } from '../types/point';
@@ -39,6 +40,9 @@ export function MapPage() {
   // Create point modal state
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newPointLocation, setNewPointLocation] = useState<[number, number] | null>(null);
+
+  // Map layer state
+  const [currentTileLayer, setCurrentTileLayer] = useState<TileLayer>(TILE_LAYERS[0]);
 
   /**
    * Load tags and points on mount, and restore filter from URL.
@@ -205,7 +209,7 @@ export function MapPage() {
 
   return (
     <div className="map-page">
-      <MapView onMapReady={handleMapReady}>
+      <MapView onMapReady={handleMapReady} tileLayer={currentTileLayer}>
         {/* Render point markers */}
         {points.map((point) => (
           <PointMarker
@@ -234,6 +238,12 @@ export function MapPage() {
       <div className="map-controls">
         {/* Search bar */}
         <MapSearchBar onSearch={handleSearch} />
+
+        {/* Map layer selector */}
+        <MapLayerSelector
+          currentLayerId={currentTileLayer.id}
+          onLayerChange={setCurrentTileLayer}
+        />
 
         {/* Filter toggle button */}
         <button
