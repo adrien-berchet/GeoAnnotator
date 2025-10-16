@@ -135,10 +135,10 @@ export function Navbar() {
             </>
           ) : (
             <>
-              <Link to="/login" className="nav-link">
+              <Link to="/login" className="btn btn-secondary">
                 Login
               </Link>
-              <Link to="/register" className="nav-link nav-link-primary">
+              <Link to="/register" className="btn btn-primary">
                 Register
               </Link>
             </>

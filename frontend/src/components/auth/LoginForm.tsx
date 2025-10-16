@@ -4,7 +4,7 @@
  * Provides email/password authentication with validation and error display.
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
@@ -23,6 +23,23 @@ export function LoginForm() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  // Apply system theme for login page (no user is authenticated yet)
+  useEffect(() => {
+    const applySystemTheme = () => {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+    };
+
+    applySystemTheme();
+
+    // Listen for system theme changes
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handler = applySystemTheme;
+    mediaQuery.addEventListener('change', handler);
+
+    return () => mediaQuery.removeEventListener('change', handler);
+  }, []);
 
   /**
    * Validate email format.
@@ -87,17 +104,18 @@ export function LoginForm() {
         <form onSubmit={handleSubmit} className="login-form">
           {/* Error display */}
           {error && (
-            <div className="error-message" role="alert">
+            <div className="alert alert-error" role="alert">
               {error}
             </div>
           )}
 
           {/* Email field */}
           <div className="form-group">
-            <label htmlFor="email">Email</label>
+            <label htmlFor="email" className="form-label">Email</label>
             <input
               id="email"
               type="email"
+              className="form-input"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="your.email@example.com"
@@ -109,10 +127,11 @@ export function LoginForm() {
 
           {/* Password field */}
           <div className="form-group">
-            <label htmlFor="password">Password</label>
+            <label htmlFor="password" className="form-label">Password</label>
             <input
               id="password"
               type="password"
+              className="form-input"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your password"
@@ -125,7 +144,7 @@ export function LoginForm() {
           {/* Submit button */}
           <button
             type="submit"
-            className="btn-primary"
+            className="btn btn-primary"
             disabled={isLoading}
           >
             {isLoading ? 'Logging in...' : 'Login'}

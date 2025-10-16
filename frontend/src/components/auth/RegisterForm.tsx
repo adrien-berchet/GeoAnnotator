@@ -4,12 +4,13 @@
  * Provides user registration with password strength indicator.
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { register } from '../../api/auth';
 import { getErrorMessage } from '../../api/client';
+import './RegisterForm.css';
 
 /**
  * Password strength levels.
@@ -54,6 +55,23 @@ export function RegisterForm() {
   const [isLoading, setIsLoading] = useState(false);
 
   const passwordStrength = password ? getPasswordStrength(password) : null;
+
+  // Apply system theme for register page (no user is authenticated yet)
+  useEffect(() => {
+    const applySystemTheme = () => {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+    };
+
+    applySystemTheme();
+
+    // Listen for system theme changes
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handler = applySystemTheme;
+    mediaQuery.addEventListener('change', handler);
+
+    return () => mediaQuery.removeEventListener('change', handler);
+  }, []);
 
   /**
    * Validate email format.
@@ -155,17 +173,18 @@ export function RegisterForm() {
         <form onSubmit={handleSubmit} className="register-form">
           {/* Error display */}
           {error && (
-            <div className="error-message" role="alert">
+            <div className="alert alert-error" role="alert">
               {error}
             </div>
           )}
 
           {/* Email field */}
           <div className="form-group">
-            <label htmlFor="email">Email</label>
+            <label htmlFor="email" className="form-label">Email</label>
             <input
               id="email"
               type="email"
+              className="form-input"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="your.email@example.com"
@@ -177,10 +196,11 @@ export function RegisterForm() {
 
           {/* Password field */}
           <div className="form-group">
-            <label htmlFor="password">Password</label>
+            <label htmlFor="password" className="form-label">Password</label>
             <input
               id="password"
               type="password"
+              className="form-input"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Create a strong password"
@@ -190,37 +210,36 @@ export function RegisterForm() {
             />
 
             {/* Password strength indicator */}
-            {passwordStrength && (
-              <div className="password-strength">
-                <div className="strength-bar-container">
-                  <div
-                    className="strength-bar"
-                    style={{
-                      width: `${(['weak', 'medium', 'strong', 'very-strong'].indexOf(passwordStrength) + 1) * 25}%`,
-                      backgroundColor: getStrengthColor(passwordStrength),
-                    }}
-                  />
-                </div>
-                <span
-                  className="strength-label"
-                  style={{ color: getStrengthColor(passwordStrength) }}
-                >
-                  {getStrengthLabel(passwordStrength)}
-                </span>
+            <div className="password-strength">
+              <div className="strength-bar-container">
+                <div
+                  className="strength-bar"
+                  style={{
+                    width: passwordStrength ? `${(['weak', 'medium', 'strong', 'very-strong'].indexOf(passwordStrength) + 1) * 25}%` : '0%',
+                    backgroundColor: passwordStrength ? getStrengthColor(passwordStrength) : 'transparent',
+                  }}
+                />
               </div>
-            )}
+              <span
+                className="strength-label"
+                style={{ color: passwordStrength ? getStrengthColor(passwordStrength) : 'var(--color-text-muted)' }}
+              >
+                {passwordStrength ? getStrengthLabel(passwordStrength) : 'No password'}
+              </span>
+            </div>
 
-            <small className="form-text">
+            <div className="form-hint">
               Use at least 8 characters with a mix of uppercase, lowercase, numbers, and symbols
-            </small>
+            </div>
           </div>
 
           {/* Confirm password field */}
           <div className="form-group">
-            <label htmlFor="confirmPassword">Confirm Password</label>
+            <label htmlFor="confirmPassword" className="form-label">Confirm Password</label>
             <input
               id="confirmPassword"
               type="password"
+              className="form-input"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Confirm your password"
@@ -233,7 +252,7 @@ export function RegisterForm() {
           {/* Submit button */}
           <button
             type="submit"
-            className="btn-primary"
+            className="btn btn-primary"
             disabled={isLoading}
           >
             {isLoading ? 'Creating account...' : 'Create Account'}

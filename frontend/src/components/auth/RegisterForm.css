@@ -1,0 +1,92 @@
+/**
+ * Register form styles
+ * Utilise les classes communes (form-group, form-label, form-input, btn, alert-error)
+ * Seulement les styles spécifiques au register
+ */
+
+.register-form-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: var(--spacing-2xl);
+  background: var(--color-bg-secondary);
+}
+
+.register-form-card {
+  background: var(--color-bg-primary);
+  padding: var(--spacing-3xl);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  width: 100%;
+  max-width: 400px;
+}
+
+.register-form-card h1 {
+  text-align: center;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-2xl);
+  font-size: var(--font-size-3xl);
+}
+
+.register-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+}
+
+/* Bouton pleine largeur */
+.register-form .btn {
+  width: 100%;
+  margin-top: var(--spacing-sm);
+}
+
+.form-footer {
+  margin-top: var(--spacing-xl);
+  text-align: center;
+}
+
+.form-footer p {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-sm);
+}
+
+/* Forcer la form-group en colonne pour le champ password */
+.register-form .form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Password strength indicator */
+.password-strength {
+  margin-top: var(--spacing-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+/* Espacement pour le texte d'aide du password (après l'indicateur) */
+.register-form .form-group .form-hint {
+  margin-top: var(--spacing-sm);
+  margin-bottom: 0;
+}
+
+.strength-bar-container {
+  flex: 1;
+  height: 4px;
+  background: var(--color-bg-tertiary);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.strength-bar {
+  height: 100%;
+  transition: width var(--transition-base), background-color var(--transition-base);
+  border-radius: var(--radius-full);
+}
+
+.strength-label {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}

@@ -35,14 +35,8 @@
   gap: var(--spacing-xl);
 }
 
-/* Override spécifique pour centrer l'input */
-.login-form .form-input {
-  text-align: center;
-  padding: var(--spacing-lg) var(--spacing-xl);
-}
-
 /* Bouton pleine largeur */
-.login-form .btn-primary {
+.login-form .btn {
   width: 100%;
   margin-top: var(--spacing-sm);
 }
