@@ -3,6 +3,18 @@
  * Styles spécifiques à l'application (non disponibles dans les composants communs)
  */
 
+/* Reset any margin/padding that might be added by Leaflet or other libraries */
+html,
+body {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Force consistent scrollbar behavior across all pages */
+html {
+  overflow-y: scroll;
+}
+
 /* Leaflet map fixes */
 .leaflet-container {
   height: 100%;

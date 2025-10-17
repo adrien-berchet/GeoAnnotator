@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import './Navbar.css';
 
@@ -64,21 +64,21 @@ export function Navbar() {
           {user ? (
             <>
 
-              <Link to="/" className="nav-link" onClick={() => setShowMobileMenu(false)}>
+              <NavLink to="/" className="nav-link" onClick={() => setShowMobileMenu(false)} end>
                 🗺️ <span>Map</span>
-              </Link>
-              <Link to="/points" className="nav-link" onClick={() => setShowMobileMenu(false)}>
+              </NavLink>
+              <NavLink to="/points" className="nav-link" onClick={() => setShowMobileMenu(false)}>
                 📌 <span>Points</span>
-              </Link>
-              <Link to="/tags" className="nav-link" onClick={() => setShowMobileMenu(false)}>
+              </NavLink>
+              <NavLink to="/tags" className="nav-link" onClick={() => setShowMobileMenu(false)}>
                 🏷️ <span>Tags</span>
-              </Link>
-              <Link to="/types" className="nav-link" onClick={() => setShowMobileMenu(false)}>
+              </NavLink>
+              <NavLink to="/types" className="nav-link" onClick={() => setShowMobileMenu(false)}>
                 📋 <span>Types</span>
-              </Link>
-              <Link to="/trash" className="nav-link" onClick={() => setShowMobileMenu(false)}>
+              </NavLink>
+              <NavLink to="/trash" className="nav-link" onClick={() => setShowMobileMenu(false)}>
                 🗑️ <span>Trash</span>
-              </Link>
+              </NavLink>
 
               {/* User Menu */}
               <div className="user-menu" ref={userMenuRef}>
