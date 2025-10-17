@@ -11,12 +11,13 @@ import { MapView } from '../components/map/MapView';
 import { PointMarker } from '../components/map/PointMarker';
 import { CreatePointModal } from '../components/map/CreatePointModal';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
-import { TagFilterPanel } from '../components/common/TagFilterPanel';
+import { FilterPanel } from '../components/common/FilterPanel';
 import { MapSearchBar } from '../components/map/MapSearchBar';
 import { MapLayerSelector, TILE_LAYERS, type TileLayer } from '../components/map/MapLayerSelector';
 import { getPoints, searchPointsByTags, getTags } from '../api/points';
+import { getPointTypes } from '../api/types';
 import { getErrorMessage } from '../api/client';
-import type { GPSPoint, Tag } from '../types/point';
+import type { GPSPoint, Tag, PointType } from '../types/point';
 import './MapPage.css';
 
 /**
@@ -32,9 +33,11 @@ export function MapPage() {
   // Search state
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Tags filter state
+  // Filter state
   const [tags, setTags] = useState<Tag[]>([]);
+  const [types, setTypes] = useState<PointType[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   // Create point modal state
@@ -45,29 +48,39 @@ export function MapPage() {
   const [currentTileLayer, setCurrentTileLayer] = useState<TileLayer>(TILE_LAYERS[0]);
 
   /**
-   * Load tags and points on mount, and restore filter from URL.
+   * Load tags, types, and points on mount, and restore filter from URL.
    */
   useEffect(() => {
     loadTags();
+    loadTypes();
     loadPoints();
 
     // Restore filter from URL
     const tagsParam = searchParams.get('tags');
+    const typesParam = searchParams.get('types');
+
     if (tagsParam) {
       setSelectedTags(tagsParam.split(',').map(t => t.trim()));
+    }
+
+    if (typesParam) {
+      setSelectedTypes(typesParam.split(',').map(t => t.trim()));
+    }
+
+    if (tagsParam || typesParam) {
       setIsFilterOpen(true);
     }
   }, []);
 
   /**
-   * Apply filter when selected tags change.
+   * Apply filter when selected tags or types change.
    */
   useEffect(() => {
     applyFilters();
-  }, [selectedTags, searchQuery, allPoints]);
+  }, [selectedTags, selectedTypes, searchQuery, allPoints]);
 
   /**
-   * Apply both tag and search filters to points.
+   * Apply tag, type, and search filters to points.
    */
   const applyFilters = async () => {
     let filteredPoints = allPoints;
@@ -80,6 +93,13 @@ export function MapPage() {
         setError(getErrorMessage(err));
         return;
       }
+    }
+
+    // Apply type filter if types are selected
+    if (selectedTypes.length > 0) {
+      filteredPoints = filteredPoints.filter(point =>
+        point.type && selectedTypes.includes(point.type.id)
+      );
     }
 
     // Apply search filter if search query exists
@@ -103,6 +123,9 @@ export function MapPage() {
     if (selectedTags.length > 0) {
       params.tags = selectedTags.join(',');
     }
+    if (selectedTypes.length > 0) {
+      params.types = selectedTypes.join(',');
+    }
     if (searchQuery) {
       params.search = searchQuery;
     }
@@ -118,6 +141,18 @@ export function MapPage() {
       setTags(data);
     } catch (err) {
       console.error('Error loading tags:', err);
+    }
+  };
+
+  /**
+   * Load types from API.
+   */
+  const loadTypes = async () => {
+    try {
+      const data = await getPointTypes();
+      setTypes(data);
+    } catch (err) {
+      console.error('Error loading types:', err);
     }
   };
 
@@ -158,20 +193,46 @@ export function MapPage() {
   };
 
   /**
+   * Toggle type selection.
+   */
+  const toggleType = (typeId: string) => {
+    setSelectedTypes(prev =>
+      prev.includes(typeId)
+        ? prev.filter(t => t !== typeId)
+        : [...prev, typeId]
+    );
+  };
+
+  /**
    * Clear all filters.
    */
-  const clearFilters = () => {
+  const clearAllFilters = () => {
     setSelectedTags([]);
+    setSelectedTypes([]);
   };
 
   /**
    * Handle map ready.
    */
   const handleMapReady = (mapInstance: LeafletMap) => {
+    let popupJustClosed = false;
+
+    // Track when popups are closed
+    mapInstance.on('popupclose', () => {
+      popupJustClosed = true;
+      // Reset the flag after a short delay
+      setTimeout(() => {
+        popupJustClosed = false;
+      }, 100);
+    });
+
     // Add click handler to create points
     mapInstance.on('click', (e) => {
-      setNewPointLocation([e.latlng.lat, e.latlng.lng]);
-      setIsCreateModalOpen(true);
+      // Don't open create modal if a popup was just closed
+      if (!popupJustClosed) {
+        setNewPointLocation([e.latlng.lat, e.latlng.lng]);
+        setIsCreateModalOpen(true);
+      }
     });
   };
 
@@ -249,26 +310,30 @@ export function MapPage() {
         <button
           className={`filter-toggle-button ${isFilterOpen ? 'active' : ''}`}
           onClick={() => setIsFilterOpen(!isFilterOpen)}
-          title="Filter by tags"
+          title="Filter points"
         >
-          🏷️ Filter Tags {selectedTags.length > 0 && `(${selectedTags.length})`}
+          🔍 Filters {(selectedTags.length + selectedTypes.length) > 0 && `(${selectedTags.length + selectedTypes.length})`}
         </button>
 
         <div className="points-count">
           {points.length} point{points.length !== 1 ? 's' : ''}
           {selectedTags.length > 0 && ` (filtered by ${selectedTags.length} tag${selectedTags.length > 1 ? 's' : ''})`}
+          {selectedTypes.length > 0 && ` (filtered by ${selectedTypes.length} type${selectedTypes.length > 1 ? 's' : ''})`}
           {searchQuery && ` (search: "${searchQuery}")`}
         </div>
       </div>
 
-      {/* Tags Filter Panel */}
-      <TagFilterPanel
+      {/* Filter Panel */}
+      <FilterPanel
         isOpen={isFilterOpen}
         availableTags={tags}
+        availableTypes={types}
         selectedTags={selectedTags}
+        selectedTypes={selectedTypes}
         onClose={() => setIsFilterOpen(false)}
         onToggleTag={toggleTag}
-        onClearAll={clearFilters}
+        onToggleType={toggleType}
+        onClearAll={clearAllFilters}
       />
     </div>
   );

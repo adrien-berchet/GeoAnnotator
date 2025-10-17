@@ -36,8 +36,8 @@ const createMarkerIcon = (point: GPSPoint) => {
     `,
     className: 'custom-marker-wrapper',
     iconSize: [40, 40],
-    iconAnchor: [20, 20],
-    popupAnchor: [0, -20],
+    iconAnchor: [20, 40],
+    popupAnchor: [0, -40],
   });
 };
 
