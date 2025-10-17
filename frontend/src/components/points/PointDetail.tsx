@@ -216,6 +216,22 @@ export function PointDetail({ pointId: propPointId, onEdit, onDelete }: PointDet
             <span className="coordinate-label">Longitude:</span>
             <span className="coordinate-value">{point.longitude.toFixed(6)}</span>
           </div>
+          {point.type && (
+            <div className="coordinate-item">
+              <span className="coordinate-label">Type:</span>
+              <span className="coordinate-value">
+                {point.type.icon && (
+                  <img
+                    src={point.type.icon}
+                    alt=""
+                    style={{ width: '16px', height: '16px', marginRight: '4px', verticalAlign: 'middle' }}
+                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                  />
+                )}
+                {point.type.name}
+              </span>
+            </div>
+          )}
         </div>
       </div>
 

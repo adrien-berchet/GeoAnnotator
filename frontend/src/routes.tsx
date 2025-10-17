@@ -14,6 +14,7 @@ import { PointsListPage } from './pages/PointsListPage';
 import { PointDetailPage } from './pages/PointDetailPage';
 import { EditPointPage } from './pages/EditPointPage';
 import TagManagementPage from './pages/TagManagementPage';
+import PointTypeManagementPage from './pages/PointTypeManagementPage';
 import { TrashPage } from './pages/TrashPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -128,6 +129,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <TagManagementPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'types',
+        element: (
+          <ProtectedRoute>
+            <PointTypeManagementPage />
           </ProtectedRoute>
         ),
       },

@@ -11,6 +11,7 @@ import { getPoint, updatePoint, acquireLock, releaseLock, getTags } from '../api
 import { getErrorMessage } from '../api/client';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import { TagSelector } from '../components/common/TagSelector';
+import TypeSelector from '../components/points/TypeSelector';
 import type { GPSPoint, Tag } from '../types/point';
 import './EditPointPage.css';
 
@@ -32,6 +33,7 @@ export function EditPointPage() {
   const [description, setDescription] = useState('');
   const [latitude, setLatitude] = useState('');
   const [longitude, setLongitude] = useState('');
+  const [selectedTypeId, setSelectedTypeId] = useState<string | undefined>();
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [availableTags, setAvailableTags] = useState<Tag[]>([]);
   const [isPublic, setIsPublic] = useState(false);
@@ -84,6 +86,7 @@ export function EditPointPage() {
       setDescription(data.description || '');
       setLatitude(data.latitude.toString());
       setLongitude(data.longitude.toString());
+      setSelectedTypeId(data.type?.id);
       setSelectedTags(data.tags.map(t => t.name));
       setIsPublic(data.is_public);
 
@@ -163,6 +166,7 @@ export function EditPointPage() {
         latitude: lat,
         longitude: lng,
         is_public: isPublic,
+        type_id: selectedTypeId,
         tags: selectedTags.length > 0 ? selectedTags : undefined,
       });
 
@@ -308,6 +312,15 @@ export function EditPointPage() {
               disabled={!hasLock || isSaving}
             />
           </div>
+
+          {/* Type selector */}
+          <TypeSelector
+            value={selectedTypeId}
+            onChange={setSelectedTypeId}
+            disabled={!hasLock || isSaving}
+            label="Point Type"
+            helpText="Select the type of point"
+          />
 
           {/* Coordinates */}
           <div className="form-row">

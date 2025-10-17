@@ -3,6 +3,7 @@
 backend/media/
 .env.example
 .claude
+node_modules/
 
 # macOS users
 .DS_Store

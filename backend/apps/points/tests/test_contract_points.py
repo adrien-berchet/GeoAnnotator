@@ -526,3 +526,164 @@ class TestPointsContract:
         assert response.status_code == status.HTTP_200_OK
         assert len(response.data) >= 1
         assert any('hiking' in tag['name'].lower() for tag in response.data)
+
+
+@pytest.mark.django_db
+@pytest.mark.contract
+@pytest.mark.critical
+class TestPointsWithTypeContract:
+    """Contract tests for GPS Points API with PointType support."""
+
+    def test_create_point_with_type(self, authenticated_client_alice, alice):
+        """Test creating a point with a specific type."""
+        from apps.points.models import PointType
+
+        # Create point type
+        point_type = PointType.objects.create(
+            name='Restaurant',
+            user=alice,
+            order=1
+        )
+
+        url = reverse('points:list')
+        data = {
+            'title': 'Best Café',
+            'latitude': 48.8566,
+            'longitude': 2.3522,
+            'type_id': str(point_type.id)
+        }
+
+        response = authenticated_client_alice.post(url, data, format='json')
+
+        assert response.status_code == status.HTTP_201_CREATED
+        assert 'type' in response.data
+        assert response.data['type']['id'] == str(point_type.id)
+        assert response.data['type']['name'] == 'Restaurant'
+
+    def test_create_point_without_type_uses_default(self, authenticated_client_alice):
+        """Test that creating point without type assigns default type."""
+        from apps.points.models import PointType
+
+        # Create default type
+        default_type = PointType.objects.create(
+            name='Point',
+            user=None,
+            order=0
+        )
+
+        url = reverse('points:list')
+        data = {
+            'title': 'Generic Point',
+            'latitude': 48.8566,
+            'longitude': 2.3522
+        }
+
+        response = authenticated_client_alice.post(url, data, format='json')
+
+        assert response.status_code == status.HTTP_201_CREATED
+        assert 'type' in response.data
+        assert response.data['type']['name'] == 'Point'
+
+    def test_create_point_with_invalid_type(self, authenticated_client_alice):
+        """Test that creating point with invalid type_id fails."""
+        url = reverse('points:list')
+        data = {
+            'title': 'Test Point',
+            'latitude': 48.8566,
+            'longitude': 2.3522,
+            'type_id': '00000000-0000-0000-0000-000000000000'
+        }
+
+        response = authenticated_client_alice.post(url, data, format='json')
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert 'type_id' in str(response.data).lower() or 'type' in str(response.data).lower()
+
+    def test_create_point_with_another_users_type(self, authenticated_client_alice, bob):
+        """Test that user cannot use another user's type."""
+        from apps.points.models import PointType
+
+        bob_type = PointType.objects.create(
+            name='BobType',
+            user=bob,
+            order=1
+        )
+
+        url = reverse('points:list')
+        data = {
+            'title': 'Test Point',
+            'latitude': 48.8566,
+            'longitude': 2.3522,
+            'type_id': str(bob_type.id)
+        }
+
+        response = authenticated_client_alice.post(url, data, format='json')
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_update_point_type(self, authenticated_client_alice, alice):
+        """Test updating a point's type."""
+        from apps.points.models import PointType, GPSPoint
+        from django.contrib.gis.geos import Point
+
+        type1 = PointType.objects.create(name='Type1', user=alice, order=1)
+        type2 = PointType.objects.create(name='Type2', user=alice, order=2)
+
+        point = GPSPoint.objects.create(
+            title='Test Point',
+            location=Point(2.3522, 48.8566),
+            owner=alice,
+            type=type1
+        )
+
+        url = reverse('points:detail', args=[point.id])
+        data = {'type_id': str(type2.id)}
+
+        response = authenticated_client_alice.patch(url, data, format='json')
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data['type']['id'] == str(type2.id)
+
+    def test_list_points_includes_type(self, authenticated_client_alice, alice):
+        """Test that listing points includes type information."""
+        from apps.points.models import PointType, GPSPoint
+        from django.contrib.gis.geos import Point
+
+        point_type = PointType.objects.create(name='Museum', user=alice, order=1)
+
+        GPSPoint.objects.create(
+            title='Louvre',
+            location=Point(2.3364, 48.8606),
+            owner=alice,
+            type=point_type
+        )
+
+        url = reverse('points:list')
+        response = authenticated_client_alice.get(url)
+
+        assert response.status_code == status.HTTP_200_OK
+        assert len(response.data) > 0
+        assert 'type' in response.data[0]
+        assert response.data[0]['type']['name'] == 'Museum'
+
+    def test_get_point_detail_includes_type(self, authenticated_client_alice, alice):
+        """Test that point detail includes type information."""
+        from apps.points.models import PointType, GPSPoint
+        from django.contrib.gis.geos import Point
+
+        point_type = PointType.objects.create(name='Park', user=alice, order=1)
+
+        point = GPSPoint.objects.create(
+            title='Central Park',
+            location=Point(2.3522, 48.8566),
+            owner=alice,
+            type=point_type
+        )
+
+        url = reverse('points:detail', args=[point.id])
+        response = authenticated_client_alice.get(url)
+
+        assert response.status_code == status.HTTP_200_OK
+        assert 'type' in response.data
+        assert response.data['type']['id'] == str(point_type.id)
+        assert response.data['type']['name'] == 'Park'

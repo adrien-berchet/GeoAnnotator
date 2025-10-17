@@ -10,6 +10,7 @@ import { createPoint, getTags } from '../../api/points';
 import { getErrorMessage } from '../../api/client';
 import type { GPSPoint, Tag } from '../../types/point';
 import { TagSelector } from '../common/TagSelector';
+import TypeSelector from '../points/TypeSelector';
 import './CreatePointModal.css';
 
 interface CreatePointModalProps {
@@ -32,6 +33,7 @@ export function CreatePointModal({
 }: CreatePointModalProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [selectedTypeId, setSelectedTypeId] = useState<string | undefined>();
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [availableTags, setAvailableTags] = useState<Tag[]>([]);
   const [isPublic, setIsPublic] = useState(false);
@@ -85,12 +87,14 @@ export function CreatePointModal({
         latitude,
         longitude,
         is_public: isPublic,
+        type_id: selectedTypeId,
         tags: selectedTags.length > 0 ? selectedTags : undefined,
       });
 
       // Reset form
       setTitle('');
       setDescription('');
+      setSelectedTypeId(undefined);
       setSelectedTags([]);
       setIsPublic(false);
 
@@ -162,6 +166,15 @@ export function CreatePointModal({
               disabled={isLoading}
             />
           </div>
+
+          {/* Type selector */}
+          <TypeSelector
+            value={selectedTypeId}
+            onChange={setSelectedTypeId}
+            disabled={isLoading}
+            label="Point Type"
+            helpText="Select the type of point (defaults to 'Point' if not selected)"
+          />
 
           {/* Tags field */}
           <div className="form-group">

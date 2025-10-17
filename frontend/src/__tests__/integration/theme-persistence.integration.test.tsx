@@ -73,7 +73,12 @@ describe('Theme Persistence Integration', () => {
 
   describe('T005: Theme loading and persistence', () => {
     it('loads theme from backend for authenticated users', async () => {
-      const mockUser = { id: '1', email: 'test@example.com' };
+      const mockUser = {
+        id: '1',
+        email: 'test@example.com',
+        storage_used: 0,
+        storage_limit: 1000000,
+      };
       const mockPreferences: UserPreferences = {
         id: '1',
         theme_mode: 'dark',
@@ -84,14 +89,29 @@ describe('Theme Persistence Integration', () => {
       };
 
       vi.mocked(useAuthModule.useAuth).mockReturnValue({
-        user: mockUser,
-        loading: false,
-        login: vi.fn(),
-        logout: vi.fn(),
-        register: vi.fn(),
+  user: mockUser,
+  isLoading: false,
+  isAuthenticated: true,
+  login: vi.fn(),
+  logout: vi.fn(),
+  updateUser: vi.fn(),
+  getAccessToken: vi.fn(),
+  getRefreshToken: vi.fn(),
       });
 
       vi.mocked(settingsApi.getSettings).mockResolvedValue(mockPreferences);
+
+      // Force le mock matchMedia à retourner 'true' pour le mode sombre
+      window.matchMedia = vi.fn((query: string) => ({
+        matches: query === '(prefers-color-scheme: dark)',
+        media: query,
+        onchange: null,
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      }));
 
       render(
         <ThemeProvider>
@@ -115,10 +135,9 @@ describe('Theme Persistence Integration', () => {
     it('uses default theme for unauthenticated users', async () => {
       vi.mocked(useAuthModule.useAuth).mockReturnValue({
         user: null,
-        loading: false,
+        isLoading: false,
         login: vi.fn(),
         logout: vi.fn(),
-        register: vi.fn(),
       });
 
       render(
@@ -138,7 +157,12 @@ describe('Theme Persistence Integration', () => {
 
     it('persists theme change to backend for authenticated users', async () => {
       const user = userEvent.setup();
-      const mockUser = { id: '1', email: 'test@example.com' };
+      const mockUser = {
+        id: '1',
+        email: 'test@example.com',
+        storage_used: 0,
+        storage_limit: 1000000,
+      };
       const mockPreferences: UserPreferences = {
         id: '1',
         theme_mode: 'auto',
@@ -149,8 +173,8 @@ describe('Theme Persistence Integration', () => {
       };
 
       vi.mocked(useAuthModule.useAuth).mockReturnValue({
-        user: mockUser,
-        loading: false,
+  user: mockUser,
+  isLoading: false,
         login: vi.fn(),
         logout: vi.fn(),
         register: vi.fn(),

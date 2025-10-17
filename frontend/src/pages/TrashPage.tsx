@@ -218,9 +218,11 @@ export function TrashPage() {
           ) : (
             <>
               <div className="info-box">
-                <strong>⚠️ Important :</strong> Lorsqu'un point est supprimé, toutes ses
-                annotations et partages sont également supprimés avec lui. Après restauration,
-                les partages seront réactivés si possible.
+                <p>
+                  <strong>⚠️ Important :</strong> Lorsqu'un point est supprimé, toutes ses
+                  annotations et partages sont également supprimés avec lui. Après restauration,
+                  les partages seront réactivés si possible.
+                </p>
               </div>
 
               <div className="trash-list">
@@ -261,9 +263,11 @@ export function TrashPage() {
           ) : (
             <>
               <div className="info-box">
-                <strong>ℹ️ À noter :</strong> Ces annotations ont été supprimées individuellement.
-                Les points auxquels elles sont associées restent actifs. Seules les annotations
-                seront supprimées définitivement après 30 jours.
+                <p>
+                  <strong>ℹ️ À noter :</strong> Ces annotations ont été supprimées individuellement.
+                  Les points auxquels elles sont associées restent actifs. Seules les annotations
+                  seront supprimées définitivement après 30 jours.
+                </p>
               </div>
 
               <div className="trash-list">

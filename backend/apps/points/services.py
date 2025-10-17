@@ -10,7 +10,7 @@ from django.contrib.gis.geos import Point as GeoPoint
 from django.contrib.gis.measure import D
 from django.db.models import Q
 
-from .models import GPSPoint, Tag
+from .models import GPSPoint, Tag, PointType
 from apps.authentication.models import User
 
 
@@ -154,6 +154,7 @@ class PointService:
         description: str = None,
         tags: list[str] = None,
         is_public: bool = False,
+        point_type: PointType = None,
     ) -> GPSPoint:
         """
         Create a new GPS point.
@@ -166,6 +167,7 @@ class PointService:
             description: Optional HTML description
             tags: Optional list of tag names
             is_public: Public visibility flag
+            point_type: Optional PointType instance
 
         Returns:
             GPSPoint object
@@ -180,6 +182,7 @@ class PointService:
             location=location,
             owner=owner,
             is_public=is_public,
+            type=point_type,
         )
 
         # Add tags
@@ -206,6 +209,7 @@ class PointService:
         longitude: float = None,
         tags: list[str] = None,
         is_public: bool = None,
+        type_id: PointType = None,
     ) -> GPSPoint:
         """
         Update GPS point fields.
@@ -219,6 +223,7 @@ class PointService:
             longitude: New longitude (optional)
             tags: New tags list (replaces existing)
             is_public: New public flag (optional)
+            type_id: New type (optional, PointType instance)
 
         Returns:
             Updated GPSPoint object
@@ -235,6 +240,8 @@ class PointService:
             point.location = GeoPoint(longitude, latitude, srid=4326)
         if is_public is not None:
             point.is_public = is_public
+        if type_id is not None:
+            point.type = type_id
 
         point.save()
 

@@ -7,6 +7,20 @@ export interface Tag {
   name: string;
 }
 
+export interface PointType {
+  id: string;
+  name: string;
+  icon: string;
+  order: number;
+  user: {
+    id: string;
+    email: string;
+  } | null;
+  status: 'active' | 'deleted';
+  created_at: string;
+  updated_at: string;
+}
+
 export interface GPSPoint {
   id: string;
   title: string;
@@ -18,6 +32,7 @@ export interface GPSPoint {
     id: string;
     email: string;
   };
+  type?: PointType;
   tags: Tag[];
   annotation_count: number;
   created_at: string;
@@ -34,6 +49,7 @@ export interface CreatePointData {
   description?: string;
   latitude: number;
   longitude: number;
+  type_id?: string;
   is_public?: boolean;
   tags?: string[];
 }
@@ -43,8 +59,26 @@ export interface UpdatePointData {
   description?: string;
   latitude?: number;
   longitude?: number;
+  type_id?: string;
   is_public?: boolean;
   tags?: string[];
+}
+
+export interface CreatePointTypeData {
+  name: string;
+  icon?: string;
+  order?: number;
+}
+
+export interface UpdatePointTypeData {
+  name?: string;
+  icon?: string;
+  order?: number;
+}
+
+export interface ReorderTypeData {
+  id: string;
+  order: number;
 }
 
 export interface PointsFilter {

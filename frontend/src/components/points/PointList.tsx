@@ -107,7 +107,17 @@ export function PointList({ filter, onPointSelect }: PointListProps) {
           onClick={() => handlePointClick(point)}
         >
           <div className="point-list-header">
-            <h3 className="point-list-title">{point.title}</h3>
+            <h3 className="point-list-title">
+              {point.type && point.type.icon && (
+                <img
+                  src={point.type.icon}
+                  alt=""
+                  style={{ width: '16px', height: '16px', marginRight: '6px', verticalAlign: 'middle' }}
+                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                />
+              )}
+              {point.title}
+            </h3>
             {point.is_public && (
               <span className="badge badge-public">Public</span>
             )}

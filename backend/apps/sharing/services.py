@@ -124,6 +124,9 @@ class PermissionService:
         # Exclude trashed points (points with a Trash entry, check manually for expiration)
         query = query.filter(trash_entry__isnull=True)
 
+        # Optimize queries by selecting related objects
+        query = query.select_related('type', 'type__user', 'owner')
+
         return query
 
 

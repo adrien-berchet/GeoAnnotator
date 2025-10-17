@@ -73,6 +73,9 @@ export function Navbar() {
               <Link to="/tags" className="nav-link" onClick={() => setShowMobileMenu(false)}>
                 🏷️ <span>Tags</span>
               </Link>
+              <Link to="/types" className="nav-link" onClick={() => setShowMobileMenu(false)}>
+                📋 <span>Types</span>
+              </Link>
               <Link to="/trash" className="nav-link" onClick={() => setShowMobileMenu(false)}>
                 🗑️ <span>Trash</span>
               </Link>

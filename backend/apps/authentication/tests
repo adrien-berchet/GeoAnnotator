@@ -308,3 +308,78 @@ class TestAuthenticationContract:
         response = api_client.post(url)
 
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+
+@pytest.mark.django_db
+@pytest.mark.unit
+class TestUserPointTypeValidation:
+    """Unit tests for User model with PointType constraints."""
+
+    def test_user_can_create_types_up_to_limit(self, alice):
+        """Test that user can create types up to 1000."""
+        from apps.points.models import PointType
+
+        # Create 10 types as sample (creating 1000 would be slow)
+        for i in range(10):
+            PointType.objects.create(
+                name=f"Type_{i}",
+                user=alice,
+                order=i
+            )
+
+        types = PointType.objects.filter(user=alice, status="active")
+        assert types.count() == 10
+
+    def test_user_cannot_exceed_1000_types(self, alice):
+        """Test that user cannot create more than 1000 types."""
+        from apps.points.models import PointType
+        from django.core.exceptions import ValidationError
+
+        # Create 1000 types
+        for i in range(1000):
+            PointType.objects.create(
+                name=f"Type_{i}",
+                user=alice,
+                order=i
+            )
+
+        # Attempt to create 1001st type should fail validation
+        with pytest.raises(ValidationError) as exc_info:
+            point_type = PointType(
+                name="Type_1001",
+                user=alice,
+                order=1000
+            )
+            point_type.full_clean()
+
+        assert "1000" in str(exc_info.value) or "limit" in str(exc_info.value).lower()
+
+    def test_deleted_types_dont_count_toward_limit(self, alice):
+        """Test that deleted types don't count toward the 1000 type limit."""
+        from apps.points.models import PointType
+
+        # Create 10 types
+        for i in range(10):
+            PointType.objects.create(
+                name=f"Type_{i}",
+                user=alice,
+                order=i
+            )
+
+        # Delete 5 types
+        types_to_delete = PointType.objects.filter(user=alice)[:5]
+        for point_type in types_to_delete:
+            point_type.status = "deleted"
+            point_type.save()
+
+        # Should only count active types
+        active_types = PointType.objects.filter(user=alice, status="active")
+        assert active_types.count() == 5
+
+        # Should be able to create more types
+        new_type = PointType.objects.create(
+            name="New_Type",
+            user=alice,
+            order=11
+        )
+        assert new_type.id is not None

@@ -26,11 +26,19 @@ describe('SettingsPage Component', () => {
 
     // Mock authenticated user for all tests
     vi.mocked(useAuthModule.useAuth).mockReturnValue({
-      user: { id: '1', email: 'test@example.com' },
-      loading: false,
+      user: {
+        id: '1',
+        email: 'test@example.com',
+        storage_used: 0,
+        storage_limit: 1000000,
+      },
+      isLoading: false,
+      isAuthenticated: true,
       login: vi.fn(),
       logout: vi.fn(),
-      register: vi.fn(),
+      updateUser: vi.fn(),
+      getAccessToken: vi.fn(),
+      getRefreshToken: vi.fn(),
     });
   });
 

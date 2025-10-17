@@ -163,6 +163,23 @@ export function PointDetailPage() {
             </span>
           </div>
 
+          {point.type && (
+            <div className="metadata-item">
+              <span className="metadata-label">🏷️ Type</span>
+              <span className="metadata-value">
+                {point.type.icon && (
+                  <img
+                    src={point.type.icon}
+                    alt=""
+                    style={{ width: '16px', height: '16px', marginRight: '4px', verticalAlign: 'middle' }}
+                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                  />
+                )}
+                {point.type.name}
+              </span>
+            </div>
+          )}
+
           <div className="metadata-item">
             <span className="metadata-label">📅 Created</span>
             <span className="metadata-value">{formatDate(point.created_at)}</span>

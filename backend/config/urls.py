@@ -21,6 +21,7 @@ urlpatterns = [
     path('api/v1/', include('apps.export_import.urls')),
     path('api/v1/trash/', include('apps.trash.urls')),
     path('api/v1/tags/', include('apps.points.tags_urls')),
+    path('api/v1/types/', include('apps.points.types_urls')),
     path('api/v1/settings/', include('apps.settings.urls')),
 ]
 

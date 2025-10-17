@@ -9,8 +9,11 @@ from rest_framework.response import Response
 from rest_framework.exceptions import NotFound, PermissionDenied
 from django.db.models import Q
 
-from .models import GPSPoint
-from .serializers import GPSPointSerializer, CreateGPSPointSerializer, UpdateGPSPointSerializer
+from .models import GPSPoint, PointType
+from .serializers import (
+    GPSPointSerializer, CreateGPSPointSerializer, UpdateGPSPointSerializer,
+    PointTypeSerializer, CreatePointTypeSerializer, PointTypeReorderSerializer
+)
 from .services import PointService, EditingLockService
 from apps.sharing.services import PermissionService
 
@@ -60,7 +63,7 @@ class GPSPointViewSet(viewsets.ModelViewSet):
 
     def create(self, request):
         """Create new GPS point."""
-        serializer = CreateGPSPointSerializer(data=request.data)
+        serializer = CreateGPSPointSerializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
 
         # Create point via service
@@ -71,7 +74,8 @@ class GPSPointViewSet(viewsets.ModelViewSet):
             owner=request.user,
             description=serializer.validated_data.get('description', ''),
             is_public=serializer.validated_data.get('is_public', False),
-            tags=serializer.validated_data.get('tags', [])
+            tags=serializer.validated_data.get('tags', []),
+            point_type=serializer.validated_data.get('type_id')
         )
 
         # Return created point
@@ -121,7 +125,7 @@ class GPSPointViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_409_CONFLICT
             )
 
-        serializer = UpdateGPSPointSerializer(data=request.data, partial=partial)
+        serializer = UpdateGPSPointSerializer(data=request.data, partial=partial, context={'request': request})
         serializer.is_valid(raise_exception=True)
 
         # Update via service (handles locking)
@@ -365,3 +369,156 @@ class TagViewSet(viewsets.ModelViewSet):
         tag = self.get_object()
         tag.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class PointTypeViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for PointType CRUD operations and reordering.
+
+    Endpoints:
+    - GET /api/point-types/ - List user's point types (includes base types)
+    - POST /api/point-types/ - Create new point type
+    - GET /api/point-types/{id}/ - Retrieve point type detail
+    - PATCH /api/point-types/{id}/ - Update point type
+    - DELETE /api/point-types/{id}/ - Delete point type (soft delete, switches points to default)
+    - POST /api/point-types/reorder/ - Reorder point types
+    """
+    permission_classes = [IsAuthenticated]
+    serializer_class = PointTypeSerializer
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return CreatePointTypeSerializer
+        elif self.action == 'reorder':
+            return PointTypeReorderSerializer
+        return PointTypeSerializer
+
+    def get_queryset(self):
+        """
+        Return point types accessible to current user.
+
+        Includes:
+        - User's own types (active only)
+        - Base types (user=None)
+
+        Ordered by user's custom order if available, otherwise by default order.
+        """
+        from django.db.models import OuterRef, Subquery, IntegerField, F
+        from django.db.models.functions import Coalesce
+        from .models import UserTypeOrder
+
+        user = self.request.user
+
+        # Subquery to get user's custom order (avoids JOIN that creates duplicates)
+        user_order_subquery = UserTypeOrder.objects.filter(
+            user=user,
+            type=OuterRef('pk')
+        ).values('order')[:1]
+
+        # Get user's types and base types, exclude deleted
+        queryset = PointType.objects.filter(
+            Q(user=user) | Q(user__isnull=True),
+            status='active'
+        ).annotate(
+            # Get user's custom order if exists, otherwise use type's default order
+            custom_order=Coalesce(
+                Subquery(user_order_subquery, output_field=IntegerField()),
+                F('order'),
+                output_field=IntegerField()
+            )
+        ).order_by('custom_order', 'name')
+
+        return queryset
+
+    def create(self, request):
+        """Create new point type for the authenticated user."""
+        serializer = self.get_serializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        point_type = serializer.save()
+
+        # Return full serialization
+        response_serializer = PointTypeSerializer(point_type, context={'request': request})
+        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+
+    def retrieve(self, request, pk=None):
+        """Get point type detail."""
+        try:
+            point_type = PointType.objects.get(pk=pk, status='active')
+        except PointType.DoesNotExist:
+            raise NotFound('Point type not found')
+
+        # Check permission: user must own the type or it's a base type
+        if point_type.user is not None and point_type.user != request.user:
+            raise PermissionDenied('You do not have permission to view this type')
+
+        serializer = PointTypeSerializer(point_type, context={'request': request})
+        return Response(serializer.data)
+
+    def partial_update(self, request, pk=None):
+        """Update point type (partial update only)."""
+        try:
+            point_type = PointType.objects.get(pk=pk, status='active')
+        except PointType.DoesNotExist:
+            raise NotFound('Point type not found')
+
+        # Check permission: user must own the type
+        if point_type.user != request.user:
+            raise PermissionDenied('You can only update your own types')
+
+        serializer = PointTypeSerializer(
+            point_type,
+            data=request.data,
+            partial=True,
+            context={'request': request}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(serializer.data)
+
+    def destroy(self, request, pk=None):
+        """
+        Delete point type (soft delete).
+
+        Switches all associated points to the default 'Point' type.
+        """
+        try:
+            point_type = PointType.objects.get(pk=pk, status='active')
+        except PointType.DoesNotExist:
+            raise NotFound('Point type not found')
+
+        # Check permission: user must own the type
+        if point_type.user != request.user:
+            raise PermissionDenied('You can only delete your own types')
+
+        # Get or create default type
+        default_type, _ = PointType.objects.get_or_create(
+            name='Point',
+            user=None,
+            defaults={'icon': '/icons/default.svg', 'order': 0}
+        )
+
+        # Switch all points with this type to default
+        GPSPoint.objects.filter(type=point_type).update(type=default_type)
+
+        # Soft delete the type
+        point_type.status = 'deleted'
+        point_type.save()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=False, methods=['post'])
+    def reorder(self, request):
+        """
+        Reorder point types.
+
+        Expects: {"order": [{"id": "uuid", "order": 1}, ...]}
+        """
+        serializer = PointTypeReorderSerializer(
+            data=request.data,
+            context={'request': request}
+        )
+        serializer.is_valid(raise_exception=True)
+        result = serializer.save()
+
+        return Response(result, status=status.HTTP_200_OK)

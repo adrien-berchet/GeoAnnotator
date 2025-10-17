@@ -5,7 +5,7 @@
  */
 
 import { Marker, Popup } from 'react-leaflet';
-import { Icon } from 'leaflet';
+import { Icon, DivIcon } from 'leaflet';
 import { Link } from 'react-router-dom';
 import type { GPSPoint } from '../../types/point';
 import './PointMarker.css';
@@ -16,20 +16,28 @@ interface PointMarkerProps {
 }
 
 /**
- * Create custom marker icon.
+ * Create custom marker icon based on point type.
  */
-const createMarkerIcon = (isPublic: boolean) => {
-  const color = isPublic ? '#28a745' : '#007bff';
+const createMarkerIcon = (point: GPSPoint) => {
+  // Always use custom marker with either icon or emoji
+  const hasCustomIcon = point.type?.icon && point.type.icon !== '/icons/default.svg';
 
-  return new Icon({
-    iconUrl: `data:image/svg+xml;base64,${btoa(`
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32">
-        <path fill="${color}" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-      </svg>
-    `)}`,
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -32],
+  return new DivIcon({
+    html: `
+      <div class="custom-marker">
+        <div class="marker-icon-container">
+          ${hasCustomIcon
+            ? `<img src="${point.type.icon}" alt="${point.type.name}" class="marker-type-icon" />`
+            : '<span class="marker-type-emoji">📍</span>'
+          }
+        </div>
+        <div class="marker-crosshair"></div>
+      </div>
+    `,
+    className: 'custom-marker-wrapper',
+    iconSize: [40, 40],
+    iconAnchor: [20, 20],
+    popupAnchor: [0, -20],
   });
 };
 
@@ -37,7 +45,7 @@ const createMarkerIcon = (isPublic: boolean) => {
  * Point marker component.
  */
 export function PointMarker({ point, onClick }: PointMarkerProps) {
-  const icon = createMarkerIcon(point.is_public);
+  const icon = createMarkerIcon(point);
 
   const handleClick = () => {
     if (onClick) {
@@ -58,6 +66,14 @@ export function PointMarker({ point, onClick }: PointMarkerProps) {
           {/* Header with title */}
           <div className="point-popup-header">
             <h3>{point.title}</h3>
+            {point.type && (
+              <div className="point-popup-type">
+                {point.type.icon && point.type.icon !== '/icons/default.svg' && (
+                  <img src={point.type.icon} alt="" className="type-icon-small" />
+                )}
+                <span className="type-name">{point.type.name}</span>
+              </div>
+            )}
           </div>
 
           {/* Description if present */}

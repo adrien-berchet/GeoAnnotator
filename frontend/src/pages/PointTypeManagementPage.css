@@ -1,0 +1,341 @@
+.type-management-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 2rem;
+  color: var(--color-text-primary);
+}
+
+.error-banner {
+  background-color: var(--color-danger-bg, #fee);
+  color: var(--color-danger-text, #c00);
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.error-banner button {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0 0.5rem;
+  color: inherit;
+}
+
+.loading {
+  text-align: center;
+  padding: 3rem;
+  color: var(--color-text-secondary);
+}
+
+.type-management-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* Create Form */
+.create-type-section {
+  background: var(--color-bg-primary);
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--color-border-primary);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.create-type-form {
+  margin-top: 1rem;
+}
+
+.create-type-form h2 {
+  margin: 0 0 1rem;
+  font-size: 1.25rem;
+  color: var(--color-text-primary);
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.form-group .required {
+  color: var(--color-danger-text, #c00);
+}
+
+.form-group .optional {
+  color: var(--color-text-secondary);
+  font-weight: normal;
+  font-size: 0.9rem;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--color-border-primary);
+  border-radius: 4px;
+  font-size: 1rem;
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+}
+
+.form-group input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.form-help {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
+.error-message {
+  background-color: var(--color-danger-bg, #fee);
+  color: var(--color-danger-text, #c00);
+  padding: 0.75rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+/* Types List */
+.types-list {
+  background: var(--color-bg-primary);
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--color-border-primary);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.types-list h2 {
+  margin: 0 0 1rem;
+  font-size: 1.25rem;
+  color: var(--color-text-primary);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 2rem;
+  color: var(--color-text-secondary);
+}
+
+.types-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.types-table th {
+  text-align: left;
+  padding: 0.75rem;
+  border-bottom: 2px solid var(--color-border-secondary);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.types-table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--color-border-primary);
+  color: var(--color-text-primary);
+}
+
+.types-table tr:hover {
+  background-color: var(--color-bg-hover);
+}
+
+.types-table tr.base-type {
+  background-color: var(--color-bg-tertiary);
+}
+
+.order-controls {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.btn-icon {
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border-primary);
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  color: var(--color-text-primary);
+}
+
+.btn-icon:hover:not(:disabled) {
+  background-color: var(--color-bg-hover);
+}
+
+.btn-icon:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.type-icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.type-icon-placeholder {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  text-align: center;
+  line-height: 24px;
+  font-size: 16px;
+}
+
+.type-name {
+  font-weight: 500;
+}
+
+.edit-input {
+  width: 100%;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--color-primary);
+  border-radius: 4px;
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.badge-user {
+  background-color: rgba(49, 130, 206, 0.2);
+  color: var(--color-primary);
+}
+
+.badge-base {
+  background-color: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Buttons */
+.btn-primary, .btn-secondary, .btn-edit, .btn-delete, .btn-success {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.btn-primary {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--color-primary-hover);
+}
+
+.btn-secondary {
+  background-color: #757575;
+  color: white;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: #616161;
+}
+
+.btn-edit {
+  background-color: #0288d1;
+  color: white;
+}
+
+.btn-edit:hover:not(:disabled) {
+  background-color: #0277bd;
+}
+
+.btn-delete {
+  background-color: #d32f2f;
+  color: white;
+}
+
+.btn-delete:hover:not(:disabled) {
+  background-color: #c62828;
+}
+
+.btn-success {
+  background-color: #388e3c;
+  color: white;
+}
+
+.btn-success:hover:not(:disabled) {
+  background-color: #2e7d32;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .type-management-page {
+    padding: 1rem;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .types-table {
+    font-size: 0.875rem;
+  }
+
+  .types-table th,
+  .types-table td {
+    padding: 0.5rem;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+}
