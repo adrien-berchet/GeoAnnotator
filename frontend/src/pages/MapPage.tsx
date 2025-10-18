@@ -9,15 +9,19 @@ import { useSearchParams } from 'react-router-dom';
 import type { Map as LeafletMap } from 'leaflet';
 import { MapView } from '../components/map/MapView';
 import { PointMarker } from '../components/map/PointMarker';
+import { BlueDot } from '../components/map/BlueDot';
+import { RecenterButton } from '../components/map/RecenterButton';
 import { CreatePointModal } from '../components/map/CreatePointModal';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import { FilterPanel } from '../components/common/FilterPanel';
+import { Notification } from '../components/common/Notification';
 import { MapSearchBar } from '../components/map/MapSearchBar';
 import { MapLayerSelector, TILE_LAYERS, type TileLayer } from '../components/map/MapLayerSelector';
 import { getPoints, searchPointsByTags, getTags } from '../api/points';
 import { getPointTypes } from '../api/types';
 import { getErrorMessage } from '../api/client';
 import type { GPSPoint, Tag, PointType } from '../types/point';
+import { useDevicePosition, getGeolocationErrorMessage } from '../hooks/useDevicePosition';
 import './MapPage.css';
 
 /**
@@ -47,6 +51,11 @@ export function MapPage() {
   // Map layer state
   const [currentTileLayer, setCurrentTileLayer] = useState<TileLayer>(TILE_LAYERS[0]);
 
+  // Device position state
+  const { position: devicePosition, error: geolocationError } = useDevicePosition();
+  const [mapInstance, setMapInstance] = useState<LeafletMap | null>(null);
+  const [showGeolocationNotification, setShowGeolocationNotification] = useState(false);
+
   /**
    * Load tags, types, and points on mount, and restore filter from URL.
    */
@@ -74,6 +83,15 @@ export function MapPage() {
   useEffect(() => {
     applyFilters();
   }, [selectedTags, selectedTypes, searchQuery, allPoints]);
+
+  /**
+   * Show geolocation error notification.
+   */
+  useEffect(() => {
+    if (geolocationError) {
+      setShowGeolocationNotification(true);
+    }
+  }, [geolocationError]);
 
   /**
    * Apply tag, type, and search filters to points.
@@ -211,6 +229,7 @@ export function MapPage() {
    * Handle map ready.
    */
   const handleMapReady = (mapInstance: LeafletMap) => {
+    setMapInstance(mapInstance);
     let popupJustClosed = false;
 
     // Track when popups are closed
@@ -230,6 +249,27 @@ export function MapPage() {
         setIsCreateModalOpen(true);
       }
     });
+  };
+
+  /**
+   * Handle blue dot click - opens point creation panel with device position.
+   */
+  const handleBlueDotClick = () => {
+    if (devicePosition) {
+      setNewPointLocation([devicePosition.latitude, devicePosition.longitude]);
+      setIsCreateModalOpen(true);
+    }
+  };
+
+  /**
+   * Handle recenter button click - recenters map on device position.
+   */
+  const handleRecenter = () => {
+    if (devicePosition && mapInstance) {
+      mapInstance.flyTo([devicePosition.latitude, devicePosition.longitude], 16, {
+        duration: 0.5,
+      });
+    }
   };
 
   /**
@@ -275,6 +315,11 @@ export function MapPage() {
             onClick={handlePointClick}
           />
         ))}
+
+        {/* Render blue dot for device position */}
+        {devicePosition && (
+          <BlueDot position={devicePosition} onClick={handleBlueDotClick} />
+        )}
       </MapView>
 
       {/* Create point modal */}
@@ -319,6 +364,9 @@ export function MapPage() {
         </div>
       </div>
 
+      {/* Recenter button */}
+      <RecenterButton onClick={handleRecenter} disabled={!devicePosition} />
+
       {/* Filter Panel */}
       <FilterPanel
         isOpen={isFilterOpen}
@@ -331,6 +379,15 @@ export function MapPage() {
         onToggleType={toggleType}
         onClearAll={clearAllFilters}
       />
+
+      {/* Geolocation error notification */}
+      {showGeolocationNotification && geolocationError && (
+        <Notification
+          message={getGeolocationErrorMessage(geolocationError)}
+          type="warning"
+          onClose={() => setShowGeolocationNotification(false)}
+        />
+      )}
     </div>
   );
 }
