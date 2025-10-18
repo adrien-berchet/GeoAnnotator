@@ -66,3 +66,20 @@ export async function reorderPointTypes(order: ReorderTypeData[]): Promise<{ suc
   const response = await apiClient.post<{ success: boolean; updated: number }>('/types/reorder/', { order });
   return response.data;
 }
+
+/**
+ * Upload an icon file for a point type.
+ * Supports SVG, PNG, JPG, JPEG files (max 1MB).
+ */
+export async function uploadTypeIcon(file: File): Promise<{ icon_url: string }> {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await apiClient.post<{ icon_url: string }>('/types/upload-icon/', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+
+  return response.data;
+}

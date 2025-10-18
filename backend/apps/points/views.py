@@ -2,12 +2,16 @@
 GPS Point views for CRUD operations and spatial search.
 """
 from datetime import timedelta
+import os
+import uuid as uuid_lib
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.exceptions import NotFound, PermissionDenied
+from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 from django.db.models import Q
+from django.core.files.storage import default_storage
+from django.conf import settings
 
 from .models import GPSPoint, PointType
 from .serializers import (
@@ -495,7 +499,7 @@ class PointTypeViewSet(viewsets.ModelViewSet):
         default_type, _ = PointType.objects.get_or_create(
             name='Point',
             user=None,
-            defaults={'icon': '/icons/default.svg', 'order': 0}
+            defaults={'icon': '📍', 'order': 0}
         )
 
         # Switch all points with this type to default
@@ -522,3 +526,49 @@ class PointTypeViewSet(viewsets.ModelViewSet):
         result = serializer.save()
 
         return Response(result, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['post'], url_path='upload-icon')
+    def upload_icon(self, request):
+        """
+        Upload an icon file for a point type.
+
+        Expects multipart/form-data with 'file' field.
+        Returns: {"icon_url": "/media/point_type_icons/..."}
+        """
+        if 'file' not in request.FILES:
+            raise ValidationError({'file': 'No file provided'})
+
+        uploaded_file = request.FILES['file']
+
+        # Validate file type (SVG, PNG, JPG)
+        allowed_extensions = ['.svg', '.png', '.jpg', '.jpeg']
+        file_ext = os.path.splitext(uploaded_file.name)[1].lower()
+
+        if file_ext not in allowed_extensions:
+            raise ValidationError({
+                'file': f'Invalid file type. Allowed types: {", ".join(allowed_extensions)}'
+            })
+
+        # Validate file size (max 1MB)
+        max_size = 1 * 1024 * 1024  # 1MB
+        if uploaded_file.size > max_size:
+            raise ValidationError({
+                'file': f'File too large. Maximum size is {max_size / 1024 / 1024}MB'
+            })
+
+        # Generate unique filename
+        unique_filename = f"{uuid_lib.uuid4()}{file_ext}"
+        file_path = os.path.join('point_type_icons', unique_filename)
+
+        # Save file
+        saved_path = default_storage.save(file_path, uploaded_file)
+
+        # Build full URL with request host
+        # This ensures the frontend can access the media file from the backend server
+        request_host = request.build_absolute_uri('/').rstrip('/')
+        media_url = settings.MEDIA_URL.lstrip('/')
+        icon_url = f"{request_host}/{media_url}{saved_path}"
+
+        return Response({
+            'icon_url': icon_url
+        }, status=status.HTTP_201_CREATED)

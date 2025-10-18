@@ -17,4 +17,7 @@ urlpatterns = [
 
     # Reorder endpoint
     path('reorder/', views.PointTypeViewSet.as_view({'post': 'reorder'}), name='reorder'),
+
+    # Upload icon endpoint
+    path('upload-icon/', views.PointTypeViewSet.as_view({'post': 'upload_icon'}), name='upload-icon'),
 ]

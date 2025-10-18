@@ -15,8 +15,83 @@ class Command(BaseCommand):
         default_types = [
             {
                 'name': 'Point',
-                'icon': '/icons/default.svg',
+                'icon': '📍',
                 'order': 0,
+            },
+            {
+                'name': 'Restaurant',
+                'icon': '🍽️',
+                'order': 1,
+            },
+            {
+                'name': 'Hotel',
+                'icon': '🏨',
+                'order': 2,
+            },
+            {
+                'name': 'Food',
+                'icon': '🍔',
+                'order': 3,
+            },
+            {
+                'name': 'Water',
+                'icon': '💧',
+                'order': 4,
+            },
+            {
+                'name': 'Waterfall',
+                'icon': '💦',
+                'order': 5,
+            },
+            {
+                'name': 'Viewing Point',
+                'icon': '👁️',
+                'order': 6,
+            },
+            {
+                'name': 'Summit',
+                'icon': '⛰️',
+                'order': 7,
+            },
+            {
+                'name': 'Starting Point',
+                'icon': '🏁',
+                'order': 8,
+            },
+            {
+                'name': 'Point of Arrival',
+                'icon': '🎯',
+                'order': 9,
+            },
+            {
+                'name': 'Point of Entry',
+                'icon': '🚪',
+                'order': 10,
+            },
+            {
+                'name': 'Parking',
+                'icon': '🅿️',
+                'order': 11,
+            },
+            {
+                'name': 'Campsite',
+                'icon': '⛺',
+                'order': 12,
+            },
+            {
+                'name': 'Shelter',
+                'icon': '🏠',
+                'order': 13,
+            },
+            {
+                'name': 'Danger',
+                'icon': '⚠️',
+                'order': 14,
+            },
+            {
+                'name': 'Information',
+                'icon': 'ℹ️',
+                'order': 15,
             },
         ]
 

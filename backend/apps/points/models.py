@@ -40,8 +40,8 @@ class PointType(models.Model):
 
     icon = models.CharField(
         max_length=500,
-        default='/icons/default.svg',
-        help_text="Icon URL or asset reference"
+        default='📍',
+        help_text="Icon URL, emoji, or asset reference"
     )
 
     order = models.IntegerField(

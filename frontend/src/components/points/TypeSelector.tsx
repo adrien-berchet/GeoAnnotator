@@ -123,12 +123,16 @@ export default function TypeSelector({
           {selectedType ? (
             <span className="type-selector-selected">
               {selectedType.icon && selectedType.icon !== '/icons/default.svg' ? (
-                <img
-                  src={selectedType.icon}
-                  alt=""
-                  className="type-icon"
-                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                />
+                selectedType.icon.startsWith('http') || selectedType.icon.startsWith('/') ? (
+                  <img
+                    src={selectedType.icon}
+                    alt=""
+                    className="type-icon"
+                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                  />
+                ) : (
+                  <span className="type-icon-emoji">{selectedType.icon}</span>
+                )
               ) : (
                 <span className="type-icon-emoji">📍</span>
               )}
@@ -151,12 +155,16 @@ export default function TypeSelector({
                 aria-selected={value === type.id}
               >
                 {type.icon && type.icon !== '/icons/default.svg' ? (
-                  <img
-                    src={type.icon}
-                    alt=""
-                    className="type-icon"
-                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                  />
+                  type.icon.startsWith('http') || type.icon.startsWith('/') ? (
+                    <img
+                      src={type.icon}
+                      alt=""
+                      className="type-icon"
+                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                    />
+                  ) : (
+                    <span className="type-icon-emoji">{type.icon}</span>
+                  )
                 ) : (
                   <span className="type-icon-emoji">📍</span>
                 )}

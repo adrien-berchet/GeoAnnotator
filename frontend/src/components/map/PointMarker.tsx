@@ -21,13 +21,16 @@ interface PointMarkerProps {
 const createMarkerIcon = (point: GPSPoint) => {
   // Always use custom marker with either icon or emoji
   const hasCustomIcon = point.type?.icon && point.type.icon !== '/icons/default.svg';
+  const isUrlIcon = hasCustomIcon && (point.type.icon.startsWith('http') || point.type.icon.startsWith('/'));
 
   return new DivIcon({
     html: `
       <div class="custom-marker">
         <div class="marker-icon-container">
           ${hasCustomIcon
-            ? `<img src="${point.type.icon}" alt="${point.type.name}" class="marker-type-icon" />`
+            ? isUrlIcon
+              ? `<img src="${point.type.icon}" alt="${point.type.name}" class="marker-type-icon" />`
+              : `<span class="marker-type-emoji">${point.type.icon}</span>`
             : '<span class="marker-type-emoji">📍</span>'
           }
         </div>
@@ -69,7 +72,11 @@ export function PointMarker({ point, onClick }: PointMarkerProps) {
             {point.type && (
               <div className="point-popup-type">
                 {point.type.icon && point.type.icon !== '/icons/default.svg' && (
-                  <img src={point.type.icon} alt="" className="type-icon-small" />
+                  point.type.icon.startsWith('http') || point.type.icon.startsWith('/') ? (
+                    <img src={point.type.icon} alt="" className="type-icon-small" />
+                  ) : (
+                    <span className="type-icon-emoji">{point.type.icon}</span>
+                  )
                 )}
                 <span className="type-name">{point.type.name}</span>
               </div>

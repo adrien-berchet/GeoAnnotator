@@ -74,7 +74,11 @@ export function FilterPanel({
                       {selectedTypes.includes(type.id) ? '✓' : ''}
                     </span>
                     {type.icon && type.icon !== '/icons/default.svg' && (
-                      <img src={type.icon} alt="" className="filter-type-icon" />
+                      type.icon.startsWith('http') || type.icon.startsWith('/') ? (
+                        <img src={type.icon} alt="" className="filter-type-icon" />
+                      ) : (
+                        <span className="filter-type-icon-emoji">{type.icon}</span>
+                      )
                     )}
                     <span className="filter-name">{type.name}</span>
                   </button>

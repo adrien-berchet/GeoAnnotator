@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getPointTypes, createPointType, updatePointType, deletePointType, reorderPointTypes } from '../api/types';
+import { getPointTypes, createPointType, updatePointType, deletePointType, reorderPointTypes, uploadTypeIcon } from '../api/types';
 import type { PointType, CreatePointTypeData, UpdatePointTypeData } from '../types/point';
 import { getErrorMessage } from '../api/client';
 import './PointTypeManagementPage.css';
@@ -15,8 +15,11 @@ export default function PointTypeManagementPage() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newTypeName, setNewTypeName] = useState('');
   const [newTypeIcon, setNewTypeIcon] = useState('');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Edit state
   const [editingTypeId, setEditingTypeId] = useState<string | null>(null);
@@ -44,6 +47,48 @@ export default function PointTypeManagementPage() {
     }
   };
 
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ['image/svg+xml', 'image/png', 'image/jpeg', 'image/jpg'];
+    if (!allowedTypes.includes(file.type)) {
+      setCreateError('Invalid file type. Please upload SVG, PNG, or JPG files.');
+      return;
+    }
+
+    // Validate file size (1MB)
+    const maxSize = 1 * 1024 * 1024;
+    if (file.size > maxSize) {
+      setCreateError('File too large. Maximum size is 1MB.');
+      return;
+    }
+
+    setSelectedFile(file);
+
+    // Upload immediately
+    try {
+      setUploading(true);
+      setCreateError(null);
+      const result = await uploadTypeIcon(file);
+      setNewTypeIcon(result.icon_url);
+    } catch (err) {
+      setCreateError(getErrorMessage(err));
+      setSelectedFile(null);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleRemoveFile = () => {
+    setSelectedFile(null);
+    setNewTypeIcon('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -68,6 +113,10 @@ export default function PointTypeManagementPage() {
       setTypes([...types, newType]);
       setNewTypeName('');
       setNewTypeIcon('');
+      setSelectedFile(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
       setShowCreateForm(false);
     } catch (err) {
       setCreateError(getErrorMessage(err));
@@ -222,19 +271,81 @@ export default function PointTypeManagementPage() {
 
               <div className="form-group">
                 <label htmlFor="type-icon">
-                  Icon URL <span className="optional">(optional)</span>
+                  Icon <span className="optional">(optional)</span>
                 </label>
-                <input
-                  id="type-icon"
-                  type="text"
-                  value={newTypeIcon}
-                  onChange={(e) => setNewTypeIcon(e.target.value)}
-                  placeholder="/icons/restaurant.svg or leave empty for default"
-                  maxLength={500}
-                  disabled={creating}
-                />
+
+                {/* File upload section */}
+                <div className="icon-upload-section">
+                  <input
+                    ref={fileInputRef}
+                    id="icon-file"
+                    type="file"
+                    accept=".svg,.png,.jpg,.jpeg,image/svg+xml,image/png,image/jpeg"
+                    onChange={handleFileSelect}
+                    disabled={creating || uploading}
+                    style={{ display: 'none' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="btn-secondary"
+                    disabled={creating || uploading}
+                  >
+                    {uploading ? 'Uploading...' : 'Choose Icon File'}
+                  </button>
+
+                  {selectedFile && (
+                    <div className="file-preview">
+                      <span className="file-name">{selectedFile.name}</span>
+                      <button
+                        type="button"
+                        onClick={handleRemoveFile}
+                        className="btn-icon"
+                        disabled={creating || uploading}
+                        aria-label="Remove file"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <div className="form-divider">
+                  <span>OR</span>
+                </div>
+
+                {/* Manual URL input */}
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <input
+                    id="type-icon"
+                    type="text"
+                    value={newTypeIcon}
+                    onChange={(e) => setNewTypeIcon(e.target.value)}
+                    placeholder="Enter emoji (e.g., 🎨) or URL"
+                    maxLength={500}
+                    disabled={creating || uploading}
+                    style={{ flex: 1 }}
+                  />
+                  {/* Icon preview */}
+                  {newTypeIcon && (
+                    <div className="icon-preview">
+                      {newTypeIcon.startsWith('http') || newTypeIcon.startsWith('/') ? (
+                        <img
+                          src={newTypeIcon}
+                          alt="Icon preview"
+                          className="type-icon"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      ) : (
+                        <span className="type-icon-emoji">{newTypeIcon}</span>
+                      )}
+                    </div>
+                  )}
+                </div>
                 <small className="form-help">
-                  Leave empty to use the default icon. You can update this later.
+                  Upload an icon file (SVG, PNG, JPG - max 1MB) or enter an emoji/URL. Leave empty for default 📍
                 </small>
               </div>
 
@@ -307,14 +418,18 @@ export default function PointTypeManagementPage() {
                     </td>
                     <td>
                       {type.icon && type.icon !== '/icons/default.svg' ? (
-                        <img
-                          src={type.icon}
-                          alt=""
-                          className="type-icon"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                          }}
-                        />
+                        type.icon.startsWith('http') || type.icon.startsWith('/') ? (
+                          <img
+                            src={type.icon}
+                            alt=""
+                            className="type-icon"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        ) : (
+                          <span className="type-icon-emoji">{type.icon}</span>
+                        )
                       ) : (
                         <span className="type-icon-placeholder">📍</span>
                       )}

@@ -81,7 +81,7 @@ class PointTypeSerializer(serializers.ModelSerializer):
 
         # Set default icon if not provided
         if 'icon' not in validated_data or not validated_data['icon']:
-            validated_data['icon'] = '/icons/default.svg'
+            validated_data['icon'] = '📍'
 
         # Auto-assign order if not provided
         if 'order' not in validated_data:
@@ -388,7 +388,7 @@ class CreateGPSPointSerializer(serializers.ModelSerializer):
             point_type, _ = PointType.objects.get_or_create(
                 name='Point',
                 user=None,
-                defaults={'icon': '/icons/default.svg', 'order': 0}
+                defaults={'icon': '📍', 'order': 0}
             )
 
         validated_data['type'] = point_type
