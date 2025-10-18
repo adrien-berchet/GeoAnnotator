@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Fragment } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getPointTypes, createPointType, updatePointType, deletePointType, reorderPointTypes, uploadTypeIcon, downloadTypeIcon } from '../api/types';
 import type { PointType, CreatePointTypeData, UpdatePointTypeData } from '../types/point';
@@ -26,7 +26,10 @@ export default function PointTypeManagementPage() {
   const [editingTypeId, setEditingTypeId] = useState<string | null>(null);
   const [editingTypeName, setEditingTypeName] = useState('');
   const [editingTypeIcon, setEditingTypeIcon] = useState('');
+  const [editingIconFile, setEditingIconFile] = useState<File | null>(null);
+  const [editingIconLoadError, setEditingIconLoadError] = useState(false);
   const [updating, setUpdating] = useState(false);
+  const editFileInputRef = useRef<HTMLInputElement>(null);
 
   // Delete state
   const [deleting, setDeleting] = useState<string | null>(null);
@@ -90,6 +93,49 @@ export default function PointTypeManagementPage() {
     }
   };
 
+  const handleEditFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ['image/svg+xml', 'image/png', 'image/jpeg', 'image/jpg'];
+    if (!allowedTypes.includes(file.type)) {
+      setError('Invalid file type. Please upload SVG, PNG, or JPG files.');
+      return;
+    }
+
+    // Validate file size (1MB)
+    const maxSize = 1 * 1024 * 1024;
+    if (file.size > maxSize) {
+      setError('File too large. Maximum size is 1MB.');
+      return;
+    }
+
+    setEditingIconFile(file);
+
+    // Upload immediately
+    try {
+      setUploading(true);
+      setError(null);
+      const result = await uploadTypeIcon(file);
+      setEditingTypeIcon(result.icon_url);
+      setEditingIconLoadError(false);
+    } catch (err) {
+      setError(getErrorMessage(err));
+      setEditingIconFile(null);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleRemoveEditFile = () => {
+    setEditingIconFile(null);
+    setEditingTypeIcon('');
+    if (editFileInputRef.current) {
+      editFileInputRef.current.value = '';
+    }
+  };
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -140,6 +186,11 @@ export default function PointTypeManagementPage() {
     setEditingTypeId(null);
     setEditingTypeName('');
     setEditingTypeIcon('');
+    setEditingIconFile(null);
+    setEditingIconLoadError(false);
+    if (editFileInputRef.current) {
+      editFileInputRef.current.value = '';
+    }
   };
 
   const handleUpdate = async (typeId: string) => {
@@ -160,6 +211,11 @@ export default function PointTypeManagementPage() {
       setEditingTypeId(null);
       setEditingTypeName('');
       setEditingTypeIcon('');
+      setEditingIconFile(null);
+      setEditingIconLoadError(false);
+      if (editFileInputRef.current) {
+        editFileInputRef.current.value = '';
+      }
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
@@ -426,7 +482,8 @@ export default function PointTypeManagementPage() {
               </thead>
               <tbody>
                 {types.map((type, index) => (
-                  <tr key={type.id} className={!type.user ? 'base-type' : ''}>
+                  <Fragment key={type.id}>
+                  <tr className={!type.user ? 'base-type' : ''}>
                     <td>
                       <div className="order-controls">
                         <button
@@ -448,21 +505,45 @@ export default function PointTypeManagementPage() {
                       </div>
                     </td>
                     <td>
-                      {type.icon && type.icon !== '/icons/default.svg' ? (
-                        type.icon.startsWith('http') || type.icon.startsWith('/') ? (
-                          <img
-                            src={type.icon}
-                            alt=""
-                            className="type-icon"
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none';
-                            }}
-                          />
-                        ) : (
-                          <span className="type-icon-emoji">{type.icon}</span>
-                        )
+                      {editingTypeId === type.id ? (
+                        <div className="icon-edit-preview">
+                          {editingTypeIcon && editingTypeIcon !== '/icons/default.svg' ? (
+                            editingTypeIcon.startsWith('http') || editingTypeIcon.startsWith('/') ? (
+                              editingIconLoadError ? (
+                                <span className="icon-error" title="Icon load error">❌</span>
+                              ) : (
+                                <img
+                                  src={editingTypeIcon}
+                                  alt="Icon preview"
+                                  className="type-icon"
+                                  onLoad={() => setEditingIconLoadError(false)}
+                                  onError={() => setEditingIconLoadError(true)}
+                                />
+                              )
+                            ) : (
+                              <span className="type-icon-emoji">{editingTypeIcon}</span>
+                            )
+                          ) : (
+                            <span className="type-icon-placeholder">📍</span>
+                          )}
+                        </div>
                       ) : (
-                        <span className="type-icon-placeholder">📍</span>
+                        type.icon && type.icon !== '/icons/default.svg' ? (
+                          type.icon.startsWith('http') || type.icon.startsWith('/') ? (
+                            <img
+                              src={type.icon}
+                              alt=""
+                              className="type-icon"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                              }}
+                            />
+                          ) : (
+                            <span className="type-icon-emoji">{type.icon}</span>
+                          )
+                        ) : (
+                          <span className="type-icon-placeholder">📍</span>
+                        )
                       )}
                     </td>
                     <td>
@@ -528,6 +609,100 @@ export default function PointTypeManagementPage() {
                       )}
                     </td>
                   </tr>
+                  {editingTypeId === type.id && (
+                    <tr className="edit-icon-row">
+                      <td colSpan={5}>
+                        <div className="icon-edit-section">
+                          <label>Edit Icon:</label>
+
+                          {/* File upload section */}
+                          <div className="icon-upload-controls">
+                            <input
+                              ref={editFileInputRef}
+                              id={`edit-icon-file-${type.id}`}
+                              type="file"
+                              accept=".svg,.png,.jpg,.jpeg,image/svg+xml,image/png,image/jpeg"
+                              onChange={handleEditFileSelect}
+                              disabled={updating || uploading}
+                              style={{ display: 'none' }}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => editFileInputRef.current?.click()}
+                              className="btn-secondary btn-sm"
+                              disabled={updating || uploading}
+                            >
+                              {uploading ? 'Uploading...' : 'Choose File'}
+                            </button>
+
+                            {editingIconFile && (
+                              <div className="file-preview">
+                                <span className="file-name">{editingIconFile.name}</span>
+                                <button
+                                  type="button"
+                                  onClick={handleRemoveEditFile}
+                                  className="btn-icon"
+                                  disabled={updating || uploading}
+                                  aria-label="Remove file"
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="form-divider">
+                            <span>OR</span>
+                          </div>
+
+                          {/* Manual URL/emoji input */}
+                          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flex: 1 }}>
+                            <input
+                              type="text"
+                              value={editingTypeIcon}
+                              onChange={(e) => {
+                                setEditingTypeIcon(e.target.value);
+                                setEditingIconLoadError(false);
+                              }}
+                              placeholder="Enter emoji (e.g., 🎨) or URL"
+                              maxLength={500}
+                              disabled={updating || uploading}
+                              style={{ flex: 1 }}
+                            />
+                            {/* Download button for external URLs with CORS issues */}
+                            {editingTypeIcon && editingTypeIcon.startsWith('http') && editingIconLoadError && (
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  try {
+                                    setUploading(true);
+                                    setError(null);
+                                    const result = await downloadTypeIcon(editingTypeIcon);
+                                    setEditingTypeIcon(result.icon_url);
+                                    setEditingIconLoadError(false);
+                                  } catch (err) {
+                                    setError(getErrorMessage(err));
+                                  } finally {
+                                    setUploading(false);
+                                  }
+                                }}
+                                className="btn-secondary btn-sm"
+                                disabled={uploading}
+                                title="Download and save this icon locally"
+                              >
+                                {uploading ? 'Downloading...' : 'Download'}
+                              </button>
+                            )}
+                          </div>
+
+                          <small className="form-help">
+                            Upload a file (SVG, PNG, JPG - max 1MB) or enter an emoji/URL
+                          </small>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                  </Fragment>
                 ))}
               </tbody>
             </table>

@@ -327,6 +327,52 @@
   gap: 0.5rem;
 }
 
+/* Icon Editing Row */
+.edit-icon-row {
+  background-color: var(--color-bg-secondary) !important;
+  border-left: 3px solid var(--color-primary);
+}
+
+.edit-icon-row td {
+  padding: 1rem !important;
+}
+
+.icon-edit-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.5rem;
+}
+
+.icon-edit-section label {
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.icon-upload-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.icon-edit-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+}
+
+.icon-error {
+  font-size: 20px;
+}
+
+.btn-sm {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.8125rem;
+}
+
 /* Buttons */
 .btn-primary, .btn-secondary, .btn-edit, .btn-delete, .btn-success {
   padding: 0.5rem 1rem;
