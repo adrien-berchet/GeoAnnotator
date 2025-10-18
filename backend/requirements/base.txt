@@ -36,3 +36,4 @@ bleach>=6.1  # HTML sanitization for rich text
 humanize>=4.10  # Human-readable numbers
 python-dateutil>=2.8
 pytz>=2024.1
+requests>=2.31  # HTTP library for downloading external icons

@@ -84,8 +84,14 @@ class PointTypeSerializer(serializers.ModelSerializer):
             validated_data['icon'] = '📍'
 
         # Auto-assign order if not provided
+        # Need to consider BOTH user types AND base types to avoid conflicts
         if 'order' not in validated_data:
-            max_order = PointType.objects.filter(user=user).aggregate(
+            # Get max order from all types accessible to the user (user types + base types)
+            from django.db.models import Q
+            max_order = PointType.objects.filter(
+                Q(user=user) | Q(user__isnull=True),
+                status='active'
+            ).aggregate(
                 max_order=serializers.models.Max('order')
             )['max_order']
             validated_data['order'] = (max_order or 0) + 1

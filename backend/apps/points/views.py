@@ -4,6 +4,9 @@ GPS Point views for CRUD operations and spatial search.
 from datetime import timedelta
 import os
 import uuid as uuid_lib
+import requests
+from io import BytesIO
+from django.core.files.base import ContentFile
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -389,6 +392,7 @@ class PointTypeViewSet(viewsets.ModelViewSet):
     """
     permission_classes = [IsAuthenticated]
     serializer_class = PointTypeSerializer
+    pagination_class = None  # Disable pagination - users need to see all their types
 
     def get_serializer_class(self):
         if self.action == 'create':
@@ -530,41 +534,100 @@ class PointTypeViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['post'], url_path='upload-icon')
     def upload_icon(self, request):
         """
-        Upload an icon file for a point type.
+        Upload an icon file or fetch from URL.
 
-        Expects multipart/form-data with 'file' field.
-        Returns: {"icon_url": "/media/point_type_icons/..."}
+        Accepts either:
+        - multipart/form-data with 'file' field (file upload)
+        - JSON with 'url' field (download from URL)
+
+        Returns: {"icon_url": "http://localhost:8000/media/point_type_icons/..."}
         """
-        if 'file' not in request.FILES:
-            raise ValidationError({'file': 'No file provided'})
-
-        uploaded_file = request.FILES['file']
-
-        # Validate file type (SVG, PNG, JPG)
         allowed_extensions = ['.svg', '.png', '.jpg', '.jpeg']
-        file_ext = os.path.splitext(uploaded_file.name)[1].lower()
-
-        if file_ext not in allowed_extensions:
-            raise ValidationError({
-                'file': f'Invalid file type. Allowed types: {", ".join(allowed_extensions)}'
-            })
-
-        # Validate file size (max 1MB)
         max_size = 1 * 1024 * 1024  # 1MB
-        if uploaded_file.size > max_size:
-            raise ValidationError({
-                'file': f'File too large. Maximum size is {max_size / 1024 / 1024}MB'
-            })
 
-        # Generate unique filename
-        unique_filename = f"{uuid_lib.uuid4()}{file_ext}"
-        file_path = os.path.join('point_type_icons', unique_filename)
+        # Check if this is a URL download request
+        if 'url' in request.data and request.data['url']:
+            external_url = request.data['url']
 
-        # Save file
-        saved_path = default_storage.save(file_path, uploaded_file)
+            try:
+                # Download the file from the URL
+                response = requests.get(external_url, timeout=10, stream=True)
+                response.raise_for_status()
+
+                # Check content type
+                content_type = response.headers.get('content-type', '')
+                if not any(ct in content_type.lower() for ct in ['image/svg', 'image/png', 'image/jpeg', 'image/jpg']):
+                    raise ValidationError({
+                        'url': f'Invalid content type: {content_type}. Must be SVG, PNG, or JPEG.'
+                    })
+
+                # Get file extension from content-type or URL
+                if 'svg' in content_type:
+                    file_ext = '.svg'
+                elif 'png' in content_type:
+                    file_ext = '.png'
+                elif 'jpeg' in content_type or 'jpg' in content_type:
+                    file_ext = '.jpg'
+                else:
+                    # Try to get from URL
+                    file_ext = os.path.splitext(external_url)[1].lower()
+                    if file_ext not in allowed_extensions:
+                        file_ext = '.svg'  # Default to SVG
+
+                # Read content
+                content = BytesIO()
+                total_size = 0
+                for chunk in response.iter_content(chunk_size=8192):
+                    total_size += len(chunk)
+                    if total_size > max_size:
+                        raise ValidationError({
+                            'url': f'File too large. Maximum size is {max_size / 1024 / 1024}MB'
+                        })
+                    content.write(chunk)
+
+                content.seek(0)
+
+                # Generate unique filename
+                unique_filename = f"{uuid_lib.uuid4()}{file_ext}"
+                file_path = os.path.join('point_type_icons', unique_filename)
+
+                # Save file
+                saved_path = default_storage.save(file_path, ContentFile(content.read()))
+
+            except requests.RequestException as e:
+                raise ValidationError({
+                    'url': f'Failed to download icon: {str(e)}'
+                })
+
+        # Handle file upload
+        elif 'file' in request.FILES:
+            uploaded_file = request.FILES['file']
+
+            # Validate file type (SVG, PNG, JPG)
+            file_ext = os.path.splitext(uploaded_file.name)[1].lower()
+
+            if file_ext not in allowed_extensions:
+                raise ValidationError({
+                    'file': f'Invalid file type. Allowed types: {", ".join(allowed_extensions)}'
+                })
+
+            # Validate file size (max 1MB)
+            if uploaded_file.size > max_size:
+                raise ValidationError({
+                    'file': f'File too large. Maximum size is {max_size / 1024 / 1024}MB'
+                })
+
+            # Generate unique filename
+            unique_filename = f"{uuid_lib.uuid4()}{file_ext}"
+            file_path = os.path.join('point_type_icons', unique_filename)
+
+            # Save file
+            saved_path = default_storage.save(file_path, uploaded_file)
+
+        else:
+            raise ValidationError({'error': 'Either file or url must be provided'})
 
         # Build full URL with request host
-        # This ensures the frontend can access the media file from the backend server
         request_host = request.build_absolute_uri('/').rstrip('/')
         media_url = settings.MEDIA_URL.lstrip('/')
         icon_url = f"{request_host}/{media_url}{saved_path}"

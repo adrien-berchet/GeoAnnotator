@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getPointTypes, createPointType, updatePointType, deletePointType, reorderPointTypes, uploadTypeIcon } from '../api/types';
+import { getPointTypes, createPointType, updatePointType, deletePointType, reorderPointTypes, uploadTypeIcon, downloadTypeIcon } from '../api/types';
 import type { PointType, CreatePointTypeData, UpdatePointTypeData } from '../types/point';
 import { getErrorMessage } from '../api/client';
 import './PointTypeManagementPage.css';
@@ -19,6 +19,7 @@ export default function PointTypeManagementPage() {
   const [uploading, setUploading] = useState(false);
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
+  const [iconLoadError, setIconLoadError] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Edit state
@@ -320,24 +321,54 @@ export default function PointTypeManagementPage() {
                     id="type-icon"
                     type="text"
                     value={newTypeIcon}
-                    onChange={(e) => setNewTypeIcon(e.target.value)}
+                    onChange={(e) => {
+                      setNewTypeIcon(e.target.value);
+                      setIconLoadError(false);
+                    }}
                     placeholder="Enter emoji (e.g., 🎨) or URL"
                     maxLength={500}
                     disabled={creating || uploading}
                     style={{ flex: 1 }}
                   />
+                  {/* Download button for external URLs with CORS issues */}
+                  {newTypeIcon && newTypeIcon.startsWith('http') && iconLoadError && (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          setUploading(true);
+                          setCreateError(null);
+                          const result = await downloadTypeIcon(newTypeIcon);
+                          setNewTypeIcon(result.icon_url);
+                          setIconLoadError(false);
+                        } catch (err) {
+                          setCreateError(getErrorMessage(err));
+                        } finally {
+                          setUploading(false);
+                        }
+                      }}
+                      className="btn-secondary"
+                      disabled={uploading}
+                      title="Download and save this icon locally"
+                    >
+                      {uploading ? 'Downloading...' : 'Download Icon'}
+                    </button>
+                  )}
                   {/* Icon preview */}
                   {newTypeIcon && (
                     <div className="icon-preview">
                       {newTypeIcon.startsWith('http') || newTypeIcon.startsWith('/') ? (
-                        <img
-                          src={newTypeIcon}
-                          alt="Icon preview"
-                          className="type-icon"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                          }}
-                        />
+                        iconLoadError ? (
+                          <span className="icon-error" title="Click 'Download Icon' to fix CORS issue">❌</span>
+                        ) : (
+                          <img
+                            src={newTypeIcon}
+                            alt="Icon preview"
+                            className="type-icon"
+                            onLoad={() => setIconLoadError(false)}
+                            onError={() => setIconLoadError(true)}
+                          />
+                        )
                       ) : (
                         <span className="type-icon-emoji">{newTypeIcon}</span>
                       )}
@@ -345,7 +376,7 @@ export default function PointTypeManagementPage() {
                   )}
                 </div>
                 <small className="form-help">
-                  Upload an icon file (SVG, PNG, JPG - max 1MB) or enter an emoji/URL. Leave empty for default 📍
+                  Upload an icon file (SVG, PNG, JPG - max 1MB) or enter an emoji/URL. If an external URL doesn't load due to CORS, click "Download Icon" to save it locally.
                 </small>
               </div>
 

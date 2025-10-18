@@ -83,3 +83,15 @@ export async function uploadTypeIcon(file: File): Promise<{ icon_url: string }> 
 
   return response.data;
 }
+
+/**
+ * Download an icon from external URL and save it.
+ * The backend will fetch the URL and store it locally.
+ */
+export async function downloadTypeIcon(url: string): Promise<{ icon_url: string }> {
+  const response = await apiClient.post<{ icon_url: string }>('/types/upload-icon/', {
+    url: url,
+  });
+
+  return response.data;
+}
