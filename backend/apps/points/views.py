@@ -367,6 +367,25 @@ class TagViewSet(viewsets.ModelViewSet):
 
         return queryset
 
+    def create(self, request, *args, **kwargs):
+        """Create new tag with proper error handling for duplicates."""
+        from django.db import IntegrityError
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        except IntegrityError:
+            # Handle duplicate tag name
+            tag_name = request.data.get('name', '')
+            return Response(
+                {'name': [f'Tag with name "{tag_name}" already exists.']},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
     def destroy(self, request, *args, **kwargs):
         """
         Delete a tag.

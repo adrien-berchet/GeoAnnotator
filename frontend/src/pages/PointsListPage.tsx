@@ -7,34 +7,39 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { getPoints, searchPointsByTags, getTags } from '../api/points';
+import { getPointTypes } from '../api/types';
 import { getErrorMessage } from '../api/client';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
-import { TagFilterPanel } from '../components/common/TagFilterPanel';
-import type { GPSPoint, Tag } from '../types/point';
+import { FilterPanel } from '../components/common/FilterPanel';
+import type { GPSPoint, Tag, PointType } from '../types/point';
 import './PointsListPage.css';
 
 export function PointsListPage() {
   const [points, setPoints] = useState<GPSPoint[]>([]);
   const [availableTags, setAvailableTags] = useState<Tag[]>([]);
+  const [availableTypes, setAvailableTypes] = useState<PointType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [error, setError] = useState('');
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchInput, setSearchInput] = useState('');
   const [selectedTagNames, setSelectedTagNames] = useState<string[]>([]);
+  const [selectedTypeIds, setSelectedTypeIds] = useState<string[]>([]);
   const navigate = useNavigate();
 
   const searchQuery = searchParams.get('search') || '';
   const tagsFilter = searchParams.get('tags') || '';
+  const typesFilter = searchParams.get('types') || '';
   const isFilterPanelOpen = searchParams.get('filterOpen') === 'true';
 
   useEffect(() => {
     loadTags();
+    loadTypes();
   }, []);
 
   useEffect(() => {
     loadPoints();
-  }, [searchQuery, tagsFilter]);
+  }, [searchQuery, tagsFilter, typesFilter]);
 
   useEffect(() => {
     // Sync selectedTagNames with URL params
@@ -44,6 +49,15 @@ export function PointsListPage() {
       setSelectedTagNames([]);
     }
   }, [tagsFilter]);
+
+  useEffect(() => {
+    // Sync selectedTypeIds with URL params
+    if (typesFilter) {
+      setSelectedTypeIds(typesFilter.split(',').map(t => t.trim()));
+    } else {
+      setSelectedTypeIds([]);
+    }
+  }, [typesFilter]);
 
   useEffect(() => {
     // Sync searchInput with URL params
@@ -56,6 +70,15 @@ export function PointsListPage() {
       setAvailableTags(tags);
     } catch (err) {
       console.error('Error loading tags:', err);
+    }
+  };
+
+  const loadTypes = async () => {
+    try {
+      const types = await getPointTypes();
+      setAvailableTypes(types);
+    } catch (err) {
+      console.error('Error loading types:', err);
     }
   };
 
@@ -77,6 +100,14 @@ export function PointsListPage() {
       } else {
         // Get all points
         data = await getPoints();
+      }
+
+      // Apply type filter client-side
+      if (typesFilter) {
+        const typeIds = typesFilter.split(',').map(t => t.trim());
+        data = data.filter(point =>
+          point.type && typeIds.includes(point.type.id)
+        );
       }
 
       setPoints(data);
@@ -129,11 +160,42 @@ export function PointsListPage() {
       newParams.delete('tags');
     }
 
+    // Keep types filter if present
+    if (selectedTypeIds.length > 0) {
+      newParams.set('types', selectedTypeIds.join(','));
+    }
+
     // Garder le panneau ouvert
     newParams.set('filterOpen', 'true');
 
     setSearchParams(newParams);
-  };  const clearFilters = () => {
+  };
+
+  const handleToggleType = (typeId: string) => {
+    const newSelectedTypes = selectedTypeIds.includes(typeId)
+      ? selectedTypeIds.filter(t => t !== typeId)
+      : [...selectedTypeIds, typeId];
+
+    const newParams = new URLSearchParams(searchParams);
+
+    if (newSelectedTypes.length > 0) {
+      newParams.set('types', newSelectedTypes.join(','));
+    } else {
+      newParams.delete('types');
+    }
+
+    // Keep tags filter if present
+    if (selectedTagNames.length > 0) {
+      newParams.set('tags', selectedTagNames.join(','));
+    }
+
+    // Garder le panneau ouvert
+    newParams.set('filterOpen', 'true');
+
+    setSearchParams(newParams);
+  };
+
+  const clearFilters = () => {
     setSearchParams({});
     setSearchInput('');
   };
@@ -188,32 +250,35 @@ export function PointsListPage() {
             )}
           </form>
 
-          {/* Tags Filter Button */}
-          {availableTags.length > 0 && (
+          {/* Filter Button */}
+          {(availableTags.length > 0 || availableTypes.length > 0) && (
             <button
               type="button"
               className={`filter-toggle-button ${isFilterPanelOpen ? 'active' : ''}`}
               onClick={handleOpenFilterPanel}
-              title="Filter by tags"
+              title="Filter by tags and types"
             >
-              🏷️ Filter Tags {selectedTagNames.length > 0 && `(${selectedTagNames.length})`}
+              🔍 Filters {(selectedTagNames.length + selectedTypeIds.length) > 0 && `(${selectedTagNames.length + selectedTypeIds.length})`}
               {isLoading && <span className="loading-indicator">⟳</span>}
             </button>
           )}
         </div>
 
-        {/* Tags Filter Panel (Drawer) */}
-        <TagFilterPanel
+        {/* Filter Panel (Drawer) */}
+        <FilterPanel
           isOpen={isFilterPanelOpen}
           availableTags={availableTags}
+          availableTypes={availableTypes}
           selectedTags={selectedTagNames}
+          selectedTypes={selectedTypeIds}
           onClose={handleCloseFilterPanel}
           onToggleTag={handleToggleTag}
+          onToggleType={handleToggleType}
           onClearAll={handleClearFilters}
         />
 
         {/* Results Info */}
-        {(searchQuery || tagsFilter) && (
+        {(searchQuery || tagsFilter || typesFilter) && (
           <div className="results-info">
             {searchQuery && (
               <span>
@@ -223,6 +288,11 @@ export function PointsListPage() {
             {tagsFilter && (
               <span>
                 Tags: <strong>{tagsFilter}</strong>
+              </span>
+            )}
+            {typesFilter && (
+              <span>
+                Type Filter: <strong>Active</strong>
               </span>
             )}
             <span className="results-count">

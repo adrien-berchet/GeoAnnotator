@@ -106,11 +106,6 @@ export default function TagManagementPage() {
     }
   };
 
-  const handleViewPoints = (tagName: string) => {
-    // Navigate to points page with tag filter
-    navigate(`/points?tags=${encodeURIComponent(tagName)}`);
-  };
-
   if (loading) {
     return (
       <div className="tag-management-page">
@@ -134,24 +129,33 @@ export default function TagManagementPage() {
       )}
 
       {/* Create Form */}
-      <form onSubmit={handleCreate} className="create-tag-form">
-        <h2>Create New Tag</h2>
-        {createError && <div className="create-error">{createError}</div>}
-        <div className="form-group">
-          <input
-            type="text"
-            value={newTagName}
-            onChange={(e) => setNewTagName(e.target.value)}
-            placeholder="Enter tag name..."
-            disabled={creating}
-            maxLength={50}
-            className="tag-name-input"
-          />
-          <button type="submit" disabled={creating || !newTagName.trim()} className="create-button">
-            {creating ? 'Creating...' : 'Create Tag'}
-          </button>
-        </div>
-      </form>
+      <div className="create-tag-section">
+        <form onSubmit={handleCreate} className="create-tag-form">
+          <h2>Create New Tag</h2>
+          {createError && <div className="create-error">{createError}</div>}
+          <div className="form-group">
+            <input
+              id="tag-name"
+              type="text"
+              value={newTagName}
+              onChange={(e) => {
+                setNewTagName(e.target.value);
+                if (createError) setCreateError(null); // Clear error when user types
+              }}
+              placeholder="Enter tag name..."
+              disabled={creating}
+              maxLength={50}
+              className="tag-name-input"
+              required
+            />
+          </div>
+          <div className="form-actions">
+            <button type="submit" disabled={creating || !newTagName.trim()} className="create-button">
+              {creating ? 'Creating...' : 'Create Tag'}
+            </button>
+          </div>
+        </form>
+      </div>
 
       {/* Tags List */}
       <div className="tags-section">
@@ -200,11 +204,18 @@ export default function TagManagementPage() {
                     <span className="tag-name">{tag.name}</span>
                     <div className="tag-actions">
                       <button
-                        onClick={() => handleViewPoints(tag.name)}
-                        className="view-points-button"
-                        title="View points with this tag"
+                        onClick={() => navigate(`/map?tags=${encodeURIComponent(tag.name)}`)}
+                        className="btn-view"
+                        title="View on map"
                       >
-                        📍 View Points
+                        🗺️ Map
+                      </button>
+                      <button
+                        onClick={() => navigate(`/points?tags=${encodeURIComponent(tag.name)}`)}
+                        className="btn-view"
+                        title="View points list"
+                      >
+                        📋 List
                       </button>
                       <button
                         onClick={() => handleStartEdit(tag)}

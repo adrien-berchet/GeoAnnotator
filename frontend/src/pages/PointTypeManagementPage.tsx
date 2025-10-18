@@ -476,7 +476,6 @@ export default function PointTypeManagementPage() {
                   <th>Order</th>
                   <th>Icon</th>
                   <th>Name</th>
-                  <th>Type</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -560,58 +559,69 @@ export default function PointTypeManagementPage() {
                       )}
                     </td>
                     <td>
-                      {type.user ? (
-                        <span className="badge badge-user">Custom</span>
-                      ) : (
-                        <span className="badge badge-base">Base Type</span>
-                      )}
-                    </td>
-                    <td>
-                      {type.user && (
-                        <div className="action-buttons">
-                          {editingTypeId === type.id ? (
-                            <>
-                              <button
-                                onClick={() => handleUpdate(type.id)}
-                                disabled={updating}
-                                className="btn-success"
-                              >
-                                Save
-                              </button>
-                              <button
-                                onClick={handleCancelEdit}
-                                disabled={updating}
-                                className="btn-secondary"
-                              >
-                                Cancel
-                              </button>
-                            </>
-                          ) : (
-                            <>
-                              <button
-                                onClick={() => handleStartEdit(type)}
-                                className="btn-edit"
-                                aria-label={`Edit ${type.name}`}
-                              >
-                                Edit
-                              </button>
-                              <button
-                                onClick={() => handleDelete(type.id, type.name)}
-                                disabled={deleting === type.id}
-                                className="btn-delete"
-                                aria-label={`Delete ${type.name}`}
-                              >
-                                {deleting === type.id ? 'Deleting...' : 'Delete'}
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      )}
+                      <div className="action-buttons">
+                        {editingTypeId === type.id ? (
+                          <>
+                            <button
+                              onClick={() => handleUpdate(type.id)}
+                              disabled={updating}
+                              className="btn-success"
+                            >
+                              Save
+                            </button>
+                            <button
+                              onClick={handleCancelEdit}
+                              disabled={updating}
+                              className="btn-secondary"
+                            >
+                              Cancel
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => navigate(`/map?types=${type.id}`)}
+                              className="btn-view"
+                              aria-label={`View ${type.name} on map`}
+                              title="View on map"
+                            >
+                              🗺️ Map
+                            </button>
+                            <button
+                              onClick={() => navigate(`/points?types=${type.id}`)}
+                              className="btn-view"
+                              aria-label={`View ${type.name} list`}
+                              title="View points list"
+                            >
+                              📋 List
+                            </button>
+                            {type.user && (
+                              <>
+                                <button
+                                  onClick={() => handleStartEdit(type)}
+                                  className="btn-edit"
+                                  aria-label={`Edit ${type.name}`}
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  onClick={() => handleDelete(type.id, type.name)}
+                                  disabled={deleting === type.id}
+                                  className="btn-delete"
+                                  aria-label={`Delete ${type.name}`}
+                                >
+                                  {deleting === type.id ? 'Deleting...' : 'Delete'}
+                                </button>
+                              </>
+                            )}
+                          </>
+                        )}
+                      </div>
                     </td>
                   </tr>
                   {editingTypeId === type.id && (
                     <tr className="edit-icon-row">
-                      <td colSpan={5}>
+                      <td colSpan={4}>
                         <div className="icon-edit-section">
                           <label>Edit Icon:</label>
 

@@ -66,10 +66,6 @@ export function MapPage() {
     if (typesParam) {
       setSelectedTypes(typesParam.split(',').map(t => t.trim()));
     }
-
-    if (tagsParam || typesParam) {
-      setIsFilterOpen(true);
-    }
   }, []);
 
   /**
