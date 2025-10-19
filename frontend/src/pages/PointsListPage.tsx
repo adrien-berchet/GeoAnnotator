@@ -11,10 +11,12 @@ import { getPointTypes } from '../api/types';
 import { getErrorMessage } from '../api/client';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import { FilterPanel } from '../components/common/FilterPanel';
+import { useLanguage } from '../contexts/LanguageContext';
 import type { GPSPoint, Tag, PointType } from '../types/point';
 import './PointsListPage.css';
 
 export function PointsListPage() {
+  const { t } = useLanguage();
   const [points, setPoints] = useState<GPSPoint[]>([]);
   const [availableTags, setAvailableTags] = useState<Tag[]>([]);
   const [availableTypes, setAvailableTypes] = useState<PointType[]>([]);
@@ -201,7 +203,8 @@ export function PointsListPage() {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    const locale = t('common.locale', 'en-US');
+    return new Date(dateString).toLocaleDateString(locale, {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -209,16 +212,16 @@ export function PointsListPage() {
   };
 
   if (isInitialLoad) {
-    return <LoadingSpinner size="large" message="Loading points..." />;
+    return <LoadingSpinner size="large" message={t('points.loadingPoints', 'Loading points...')} />;
   }
 
   if (error) {
     return (
       <div className="error-container">
-        <h2>Error loading points</h2>
+        <h2>{t('points.errorLoading', 'Error loading points')}</h2>
         <p>{error}</p>
         <button onClick={loadPoints} className="btn-primary">
-          Retry
+          {t('common.retry', 'Retry')}
         </button>
       </div>
     );
@@ -227,7 +230,7 @@ export function PointsListPage() {
   return (
     <div className="points-list-page">
       <div className="points-list-header">
-        <h1>My Points</h1>
+        <h1>{t('nav.points', 'Points')}</h1>
 
         {/* Search and Filters */}
         <div className="filters-container">
@@ -236,12 +239,12 @@ export function PointsListPage() {
             <input
               type="text"
               className="search-input"
-              placeholder="Search points by title or description..."
+              placeholder={t('points.searchPlaceholder', 'Search points by title or description...')}
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
             />
             <button type="submit" className="search-button">
-              🔍 Search
+              🔍 {t('common.search', 'Search')}
             </button>
             {searchQuery && (
               <button type="button" onClick={clearFilters} className="clear-button">
@@ -256,9 +259,9 @@ export function PointsListPage() {
               type="button"
               className={`filter-toggle-button ${isFilterPanelOpen ? 'active' : ''}`}
               onClick={handleOpenFilterPanel}
-              title="Filter by tags and types"
+              title={t('points.filterByTagsTypes', 'Filter by tags and types')}
             >
-              🔍 Filters {(selectedTagNames.length + selectedTypeIds.length) > 0 && `(${selectedTagNames.length + selectedTypeIds.length})`}
+              🔍 {t('common.filter', 'Filters')} {(selectedTagNames.length + selectedTypeIds.length) > 0 && `(${selectedTagNames.length + selectedTypeIds.length})`}
               {isLoading && <span className="loading-indicator">⟳</span>}
             </button>
           )}
@@ -282,40 +285,40 @@ export function PointsListPage() {
           <div className="results-info">
             {searchQuery && (
               <span>
-                Search: <strong>"{searchQuery}"</strong>
+                {t('common.search', 'Search')}: <strong>"{searchQuery}"</strong>
               </span>
             )}
             {tagsFilter && (
               <span>
-                Tags: <strong>{tagsFilter}</strong>
+                {t('nav.tags', 'Tags')}: <strong>{tagsFilter}</strong>
               </span>
             )}
             {typesFilter && (
               <span>
-                Type Filter: <strong>Active</strong>
+                {t('points.typeFilter', 'Type Filter')}: <strong>{t('points.active', 'Active')}</strong>
               </span>
             )}
             <span className="results-count">
-              {points.length} {points.length === 1 ? 'result' : 'results'}
+              {points.length} {points.length === 1 ? t('points.result', 'result') : t('points.results', 'results')}
             </span>
             <button onClick={clearFilters} className="clear-filters-link">
-              Clear all filters
+              {t('points.clearAllFilters', 'Clear all filters')}
             </button>
           </div>
         )}
 
         <div className="points-list-stats">
-          <span>{points.length} point{points.length !== 1 ? 's' : ''}</span>
+          <span>{points.length} {points.length !== 1 ? t('map.points', 'points') : t('map.point', 'point')}</span>
         </div>
       </div>
 
       {points.length === 0 ? (
         <div className="empty-state">
           <div className="empty-state-icon">📍</div>
-          <h2>No points yet</h2>
-          <p>Click on the map to create your first GPS point</p>
+          <h2>{t('points.noPoints', 'No points yet')}</h2>
+          <p>{t('points.noPointsDesc', 'Click on the map to create your first GPS point')}</p>
           <button onClick={() => navigate('/')} className="btn-primary">
-            Go to Map
+            {t('points.goToMap', 'Go to Map')}
           </button>
         </div>
       ) : (

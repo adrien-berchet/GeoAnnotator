@@ -12,11 +12,13 @@ import { getErrorMessage } from '../api/client';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import { AnnotationForm } from '../components/annotations/AnnotationForm';
 import { AnnotationsList } from '../components/annotations/AnnotationsList';
+import { useLanguage } from '../contexts/LanguageContext';
 import type { GPSPoint } from '../types/point';
 import type { Annotation } from '../types/annotation';
 import './PointDetailPage.css';
 
 export function PointDetailPage() {
+  const { t } = useLanguage();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
@@ -86,7 +88,10 @@ export function PointDetailPage() {
   const handleDeletePoint = async () => {
     if (!id || !point) return;
 
-    if (!confirm(`Are you sure you want to delete "${point.title || 'this point'}"?`)) {
+    const message = t('pointDetail.confirmDelete', 'Are you sure you want to delete "{title}"?')
+      .replace('{title}', point.title || t('pointDetail.thisPoint', 'this point'));
+
+    if (!confirm(message)) {
       return;
     }
 
@@ -102,7 +107,8 @@ export function PointDetailPage() {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    const locale = t('common.locale', 'en-US');
+    return new Date(dateString).toLocaleDateString(locale, {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -112,16 +118,16 @@ export function PointDetailPage() {
   };
 
   if (isLoading) {
-    return <LoadingSpinner size="large" message="Loading point..." />;
+    return <LoadingSpinner size="large" message={t('pointDetail.loadingPoint', 'Loading point...')} />;
   }
 
   if (error || !point || !id) {
     return (
       <div className="error-container">
-        <h2>Error loading point</h2>
-        <p>{error || 'Point not found'}</p>
+        <h2>{t('pointDetail.errorLoading', 'Error loading point')}</h2>
+        <p>{error || t('pointDetail.notFound', 'Point not found')}</p>
         <button onClick={() => navigate('/points')} className="btn btn-primary">
-          Back to Points
+          {t('pointDetail.backToPoints', 'Back to Points')}
         </button>
       </div>
     );
@@ -132,18 +138,18 @@ export function PointDetailPage() {
       {/* Header */}
       <div className="point-detail-header">
         <button onClick={() => navigate('/points')} className="btn btn-ghost">
-          ← Back to Points
+          ← {t('pointDetail.backToPoints', 'Back to Points')}
         </button>
         <div className="header-actions">
           <button onClick={() => navigate(`/points/${id}/edit`)} className="btn btn-secondary">
-            ✏️ Edit
+            ✏️ {t('common.edit', 'Edit')}
           </button>
           <button
             onClick={handleDeletePoint}
             className="btn btn-danger"
             disabled={isDeleting}
           >
-            {isDeleting ? '🗑️ Deleting...' : '🗑️ Delete'}
+            {isDeleting ? `🗑️ ${t('pointDetail.deleting', 'Deleting...')}` : `🗑️ ${t('common.delete', 'Delete')}`}
           </button>
         </div>
       </div>
@@ -151,13 +157,13 @@ export function PointDetailPage() {
       {/* Point Info */}
       <div className="point-info-card">
         <div className="point-info-header">
-          <h1>{point.title || 'Untitled Point'}</h1>
-          {point.is_public && <span className="public-badge">🌐 Public</span>}
+          <h1>{point.title || t('pointDetail.untitledPoint', 'Untitled Point')}</h1>
+          {point.is_public && <span className="public-badge">🌐 {t('pointDetail.public', 'Public')}</span>}
         </div>
 
         <div className="point-metadata">
           <div className="metadata-item">
-            <span className="metadata-label">📍 Location</span>
+            <span className="metadata-label">📍 {t('pointDetail.location', 'Location')}</span>
             <span className="metadata-value">
               {point.latitude.toFixed(6)}, {point.longitude.toFixed(6)}
             </span>
@@ -165,7 +171,7 @@ export function PointDetailPage() {
 
           {point.type && (
             <div className="metadata-item">
-              <span className="metadata-label">🏷️ Type</span>
+              <span className="metadata-label">🏷️ {t('points.type', 'Type')}</span>
               <span className="metadata-value">
                 {point.type.icon && (
                   <img
@@ -181,13 +187,13 @@ export function PointDetailPage() {
           )}
 
           <div className="metadata-item">
-            <span className="metadata-label">📅 Created</span>
+            <span className="metadata-label">📅 {t('pointDetail.created', 'Created')}</span>
             <span className="metadata-value">{formatDate(point.created_at)}</span>
           </div>
 
           {point.updated_at !== point.created_at && (
             <div className="metadata-item">
-              <span className="metadata-label">🔄 Updated</span>
+              <span className="metadata-label">🔄 {t('pointDetail.updated', 'Updated')}</span>
               <span className="metadata-value">{formatDate(point.updated_at)}</span>
             </div>
           )}
@@ -195,14 +201,14 @@ export function PointDetailPage() {
 
         {point.description && (
           <div className="point-description">
-            <h3>Description</h3>
+            <h3>{t('points.description', 'Description')}</h3>
             <p>{point.description}</p>
           </div>
         )}
 
         {point.tags && point.tags.length > 0 && (
           <div className="point-tags">
-            <h3>Tags</h3>
+            <h3>{t('points.tags', 'Tags')}</h3>
             <div className="tags-list">
               {point.tags.map((tag) => (
                 <span key={tag.id} className="tag">
@@ -216,7 +222,7 @@ export function PointDetailPage() {
 
       {/* Annotations Section */}
       <div className="annotations-section">
-        <h2>Annotations ({annotations.length})</h2>
+        <h2>{t('pointDetail.annotations', 'Annotations')} ({annotations.length})</h2>
 
         <div className="annotations-container">
           {/* Add Annotation Form */}

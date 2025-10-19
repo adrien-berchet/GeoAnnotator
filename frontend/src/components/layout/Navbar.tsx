@@ -7,10 +7,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { useLanguage } from '../../contexts/LanguageContext';
 import './Navbar.css';
 
 export function Navbar() {
   const { user, logout } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
@@ -65,19 +67,19 @@ export function Navbar() {
             <>
 
               <NavLink to="/" className="nav-link" onClick={() => setShowMobileMenu(false)} end>
-                🗺️ <span>Map</span>
+                🗺️ <span>{t('nav.map', 'Map')}</span>
               </NavLink>
               <NavLink to="/points" className="nav-link" onClick={() => setShowMobileMenu(false)}>
-                📌 <span>Points</span>
+                📌 <span>{t('nav.points', 'Points')}</span>
               </NavLink>
               <NavLink to="/tags" className="nav-link" onClick={() => setShowMobileMenu(false)}>
-                🏷️ <span>Tags</span>
+                🏷️ <span>{t('nav.tags', 'Tags')}</span>
               </NavLink>
               <NavLink to="/types" className="nav-link" onClick={() => setShowMobileMenu(false)}>
-                📋 <span>Types</span>
+                📋 <span>{t('nav.types', 'Types')}</span>
               </NavLink>
               <NavLink to="/trash" className="nav-link" onClick={() => setShowMobileMenu(false)}>
-                🗑️ <span>Trash</span>
+                🗑️ <span>{t('nav.trash', 'Trash')}</span>
               </NavLink>
 
               {/* User Menu */}
@@ -119,7 +121,7 @@ export function Navbar() {
                         setShowMobileMenu(false);
                       }}
                     >
-                      ⚙️ Settings
+                      ⚙️ {t('nav.settings', 'Settings')}
                     </Link>
                     <div className="user-menu-divider"></div>
                     <button
@@ -130,7 +132,7 @@ export function Navbar() {
                         handleLogout();
                       }}
                     >
-                      🚪 Logout
+                      🚪 {t('nav.logout', 'Logout')}
                     </button>
                   </div>
                 )}
@@ -139,10 +141,10 @@ export function Navbar() {
           ) : (
             <>
               <Link to="/login" className="btn btn-secondary">
-                Login
+                {t('nav.login', 'Login')}
               </Link>
               <Link to="/register" className="btn btn-primary">
-                Register
+                {t('nav.register', 'Register')}
               </Link>
             </>
           )}

@@ -2,6 +2,7 @@
  * Language selector component
  */
 
+import { useLanguage } from '@/contexts/LanguageContext';
 import './LanguageSelector.css';
 
 interface LanguageSelectorProps {
@@ -9,28 +10,40 @@ interface LanguageSelectorProps {
   onChange: (language: string) => void;
 }
 
-function LanguageSelector({ value }: LanguageSelectorProps) {
-  const isDisabled = true; // Only English available for now
+function LanguageSelector({ value, onChange }: LanguageSelectorProps) {
+  const { t } = useLanguage();
+
+  const languages = [
+    { code: 'en', label: t('language.en', 'English') },
+    { code: 'fr', label: t('language.fr', 'French') },
+  ];
 
   return (
-    <div className="language-selector">
-      <div
-        className={`language-option ${value === 'en' ? 'selected' : ''} ${isDisabled ? 'disabled' : ''}`}
-        role="radio"
-        aria-checked={value === 'en'}
-        aria-label="English language"
-        aria-disabled={isDisabled}
-      >
-        <span className="language-label">English</span>
-        {isDisabled && (
-          <span className="info-icon" aria-label="Only language available">
-            ℹ️
-          </span>
-        )}
-      </div>
-      {isDisabled && (
-        <p className="language-info">More languages coming soon</p>
-      )}
+    <div className="language-selector" role="radiogroup" aria-label={t('settings.interfaceLanguage', 'Interface Language')}>
+      {languages.map((lang) => (
+        <div
+          key={lang.code}
+          className={`language-option ${value === lang.code ? 'selected' : ''}`}
+          role="radio"
+          aria-checked={value === lang.code}
+          aria-label={`${lang.label} language`}
+          tabIndex={0}
+          onClick={() => onChange(lang.code)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onChange(lang.code);
+            }
+          }}
+        >
+          <span className="language-label">{lang.label}</span>
+          {value === lang.code && (
+            <span className="check-icon" aria-hidden="true">
+              ✓
+            </span>
+          )}
+        </div>
+      ))}
     </div>
   );
 }

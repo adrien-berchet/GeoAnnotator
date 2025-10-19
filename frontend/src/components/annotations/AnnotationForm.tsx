@@ -10,6 +10,7 @@ import { createTextAnnotation, createFileAnnotation } from '../../api/annotation
 import { getErrorMessage } from '../../api/client';
 import type { Annotation } from '../../types/annotation';
 import { useColorMode } from '../../hooks/useColorMode';
+import { useLanguage } from '../../contexts/LanguageContext';
 import './AnnotationForm.css';
 
 interface AnnotationFormProps {
@@ -21,6 +22,7 @@ interface AnnotationFormProps {
 type AnnotationType = 'text' | 'image' | 'document' | 'file';
 
 export function AnnotationForm({ pointId, onAnnotationCreated, onCancel }: AnnotationFormProps) {
+  const { t } = useLanguage();
   const colorMode = useColorMode();
   const [annotationType, setAnnotationType] = useState<AnnotationType>('text');
   const [textContent, setTextContent] = useState('');
@@ -43,7 +45,7 @@ export function AnnotationForm({ pointId, onAnnotationCreated, onCancel }: Annot
     setIsSubmitting(true);
 
     if (!pointId) {
-      setError('Point ID is missing');
+      setError(t('annotations.pointIdMissing', 'Point ID is missing'));
       setIsSubmitting(false);
       return;
     }
@@ -53,7 +55,7 @@ export function AnnotationForm({ pointId, onAnnotationCreated, onCancel }: Annot
 
       if (annotationType === 'text') {
         if (!textContent.trim()) {
-          setError('Please enter some text');
+          setError(t('annotations.pleaseEnterText', 'Please enter some text'));
           setIsSubmitting(false);
           return;
         }
@@ -63,7 +65,7 @@ export function AnnotationForm({ pointId, onAnnotationCreated, onCancel }: Annot
         });
       } else {
         if (!selectedFile) {
-          setError('Please select a file');
+          setError(t('annotations.pleaseSelectFile', 'Please select a file'));
           setIsSubmitting(false);
           return;
         }
@@ -87,7 +89,7 @@ export function AnnotationForm({ pointId, onAnnotationCreated, onCancel }: Annot
   return (
     <div className="annotation-form">
       <div className="annotation-form-header">
-        <h3>Add Annotation</h3>
+        <h3>{t('annotations.addAnnotation', 'Add Annotation')}</h3>
         {onCancel && (
           <button type="button" onClick={onCancel} className="close-button">
             ✕
@@ -105,28 +107,28 @@ export function AnnotationForm({ pointId, onAnnotationCreated, onCancel }: Annot
             className={`type-button ${annotationType === 'text' ? 'active' : ''}`}
             onClick={() => setAnnotationType('text')}
           >
-            📝 Text
+            📝 {t('annotations.text', 'Text')}
           </button>
           <button
             type="button"
             className={`type-button ${annotationType === 'image' ? 'active' : ''}`}
             onClick={() => setAnnotationType('image')}
           >
-            🖼️ Image
+            🖼️ {t('annotations.image', 'Image')}
           </button>
           <button
             type="button"
             className={`type-button ${annotationType === 'document' ? 'active' : ''}`}
             onClick={() => setAnnotationType('document')}
           >
-            📄 Document
+            📄 {t('annotations.document', 'Document')}
           </button>
           <button
             type="button"
             className={`type-button ${annotationType === 'file' ? 'active' : ''}`}
             onClick={() => setAnnotationType('file')}
           >
-            📎 File
+            📎 {t('annotations.file', 'File')}
           </button>
         </div>
 
@@ -142,7 +144,7 @@ export function AnnotationForm({ pointId, onAnnotationCreated, onCancel }: Annot
                 visibleDragbar={false}
               />
               <div className="input-hint">
-                💡 Use Markdown for formatting (bold, italic, lists, links, etc.)
+                💡 {t('annotations.markdownHint', 'Use Markdown for formatting (bold, italic, lists, links, etc.)')}
               </div>
             </div>
           </div>
@@ -152,9 +154,9 @@ export function AnnotationForm({ pointId, onAnnotationCreated, onCancel }: Annot
         {annotationType !== 'text' && (
           <div className="form-group">
             <label htmlFor="file-input">
-              {annotationType === 'image' && 'Select Image'}
-              {annotationType === 'document' && 'Select Document'}
-              {annotationType === 'file' && 'Select File'}
+              {annotationType === 'image' && t('annotations.selectImage', 'Select Image')}
+              {annotationType === 'document' && t('annotations.selectDocument', 'Select Document')}
+              {annotationType === 'file' && t('annotations.selectFile', 'Select File')}
             </label>
             <input
               id="file-input"
@@ -184,9 +186,9 @@ export function AnnotationForm({ pointId, onAnnotationCreated, onCancel }: Annot
               </div>
             )}
             <div className="input-hint">
-              {annotationType === 'image' && 'Max size: 1GB (JPG, PNG, GIF, etc.)'}
-              {annotationType === 'document' && 'Max size: 1GB (PDF, DOC, TXT, etc.)'}
-              {annotationType === 'file' && 'Max size: 1GB (Any file type)'}
+              {annotationType === 'image' && t('annotations.maxSizeImage', 'Max size: 1GB (JPG, PNG, GIF, etc.)')}
+              {annotationType === 'document' && t('annotations.maxSizeDocument', 'Max size: 1GB (PDF, DOC, TXT, etc.)')}
+              {annotationType === 'file' && t('annotations.maxSizeFile', 'Max size: 1GB (Any file type)')}
             </div>
           </div>
         )}
@@ -200,7 +202,7 @@ export function AnnotationForm({ pointId, onAnnotationCreated, onCancel }: Annot
               className="btn btn-secondary"
               disabled={isSubmitting}
             >
-              Cancel
+              {t('common.cancel', 'Cancel')}
             </button>
           )}
           <button
@@ -208,7 +210,7 @@ export function AnnotationForm({ pointId, onAnnotationCreated, onCancel }: Annot
             className="btn btn-primary"
             disabled={isSubmitting}
           >
-            {isSubmitting ? 'Adding...' : 'Add Annotation'}
+            {isSubmitting ? t('annotations.adding', 'Adding...') : t('annotations.addAnnotation', 'Add Annotation')}
           </button>
         </div>
       </form>

@@ -21,6 +21,7 @@ class UserPreferences(models.Model):
 
     LANGUAGE_CHOICES = [
         ('en', 'English'),
+        ('fr', 'French'),
     ]
 
     THEME_CHOICES = [

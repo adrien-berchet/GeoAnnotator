@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { getTags, createTag, updateTag, deleteTag } from '../api/points';
 import type { Tag } from '../types/point';
 import { getErrorMessage } from '../api/client';
+import { useLanguage } from '../contexts/LanguageContext';
 import './TagManagementPage.css';
 
 export default function TagManagementPage() {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,7 +47,7 @@ export default function TagManagementPage() {
     e.preventDefault();
 
     if (!newTagName.trim()) {
-      setCreateError('Tag name cannot be empty');
+      setCreateError(t('tags.nameCannotBeEmpty', 'Tag name cannot be empty'));
       return;
     }
 
@@ -91,7 +93,7 @@ export default function TagManagementPage() {
   };
 
   const handleDelete = async (tagId: string) => {
-    if (!confirm('Are you sure you want to delete this tag? This action cannot be undone.')) {
+    if (!confirm(t('tags.confirmDelete', 'Are you sure you want to delete this tag? This action cannot be undone.'))) {
       return;
     }
 
@@ -109,7 +111,7 @@ export default function TagManagementPage() {
   if (loading) {
     return (
       <div className="tag-management-page">
-        <div className="loading">Loading tags...</div>
+        <div className="loading">{t('tags.loadingTags', 'Loading tags...')}</div>
       </div>
     );
   }
@@ -117,8 +119,8 @@ export default function TagManagementPage() {
   return (
     <div className="tag-management-page">
       <div className="tag-management-header">
-        <h1>Tag Management</h1>
-        <p className="description">Create, edit, and delete tags for organizing your GPS points.</p>
+        <h1>{t('tags.manageTags', 'Tag Management')}</h1>
+        <p className="description">{t('tags.description', 'Create, edit, and delete tags for organizing your GPS points.')}</p>
       </div>
 
       {error && (
@@ -131,7 +133,7 @@ export default function TagManagementPage() {
       {/* Create Form */}
       <div className="create-tag-section">
         <form onSubmit={handleCreate} className="create-tag-form">
-          <h2>Create New Tag</h2>
+          <h2>{t('tags.createTag', 'Create New Tag')}</h2>
           {createError && <div className="create-error">{createError}</div>}
           <div className="form-group">
             <input
@@ -142,7 +144,7 @@ export default function TagManagementPage() {
                 setNewTagName(e.target.value);
                 if (createError) setCreateError(null); // Clear error when user types
               }}
-              placeholder="Enter tag name..."
+              placeholder={t('tags.enterTagName', 'Enter tag name...')}
               disabled={creating}
               maxLength={50}
               className="tag-name-input"
@@ -151,7 +153,7 @@ export default function TagManagementPage() {
           </div>
           <div className="form-actions">
             <button type="submit" disabled={creating || !newTagName.trim()} className="create-button">
-              {creating ? 'Creating...' : 'Create Tag'}
+              {creating ? t('tags.creating', 'Creating...') : t('tags.createTag', 'Create Tag')}
             </button>
           </div>
         </form>
@@ -159,11 +161,11 @@ export default function TagManagementPage() {
 
       {/* Tags List */}
       <div className="tags-section">
-        <h2>Existing Tags ({tags.length})</h2>
+        <h2>{t('tags.existingTags', 'Existing Tags')} ({tags.length})</h2>
 
         {tags.length === 0 ? (
           <div className="empty-state">
-            <p>No tags yet. Create your first tag above!</p>
+            <p>{t('tags.noTagsYet', 'No tags yet. Create your first tag above!')}</p>
           </div>
         ) : (
           <div className="tags-list">
@@ -187,14 +189,14 @@ export default function TagManagementPage() {
                         disabled={updating || !editingTagName.trim()}
                         className="save-button"
                       >
-                        {updating ? 'Saving...' : 'Save'}
+                        {updating ? t('tags.saving', 'Saving...') : t('common.save', 'Save')}
                       </button>
                       <button
                         onClick={handleCancelEdit}
                         disabled={updating}
                         className="cancel-button"
                       >
-                        Cancel
+                        {t('common.cancel', 'Cancel')}
                       </button>
                     </div>
                   </div>
@@ -206,30 +208,30 @@ export default function TagManagementPage() {
                       <button
                         onClick={() => navigate(`/map?tags=${encodeURIComponent(tag.name)}`)}
                         className="btn-view"
-                        title="View on map"
+                        title={t('tags.viewOnMap', 'View on map')}
                       >
-                        🗺️ Map
+                        🗺️ {t('nav.map', 'Map')}
                       </button>
                       <button
                         onClick={() => navigate(`/points?tags=${encodeURIComponent(tag.name)}`)}
                         className="btn-view"
-                        title="View points list"
+                        title={t('tags.viewPointsList', 'View points list')}
                       >
-                        📋 List
+                        📋 {t('tags.list', 'List')}
                       </button>
                       <button
                         onClick={() => handleStartEdit(tag)}
                         disabled={deleting === tag.id}
                         className="edit-button"
                       >
-                        Edit
+                        {t('common.edit', 'Edit')}
                       </button>
                       <button
                         onClick={() => handleDelete(tag.id)}
                         disabled={deleting === tag.id}
                         className="delete-button"
                       >
-                        {deleting === tag.id ? 'Deleting...' : 'Delete'}
+                        {deleting === tag.id ? t('tags.deleting', 'Deleting...') : t('common.delete', 'Delete')}
                       </button>
                     </div>
                   </div>

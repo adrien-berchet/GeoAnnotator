@@ -22,12 +22,14 @@ import { getPointTypes } from '../api/types';
 import { getErrorMessage } from '../api/client';
 import type { GPSPoint, Tag, PointType } from '../types/point';
 import { useDevicePosition, getGeolocationErrorMessage } from '../hooks/useDevicePosition';
+import { useLanguage } from '../contexts/LanguageContext';
 import './MapPage.css';
 
 /**
  * Map page component.
  */
 export function MapPage() {
+  const { t } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
   const [points, setPoints] = useState<GPSPoint[]>([]);
   const [allPoints, setAllPoints] = useState<GPSPoint[]>([]);
@@ -289,16 +291,16 @@ export function MapPage() {
   };
 
   if (isLoading) {
-    return <LoadingSpinner size="large" message="Loading map..." />;
+    return <LoadingSpinner size="large" message={t('map.loading', 'Loading map...')} />;
   }
 
   if (error) {
     return (
       <div className="error-container">
-        <h2>Error loading map</h2>
+        <h2>{t('map.errorLoading', 'Error loading map')}</h2>
         <p>{error}</p>
         <button onClick={loadPoints} className="btn-primary">
-          Retry
+          {t('common.retry', 'Retry')}
         </button>
       </div>
     );
@@ -351,16 +353,16 @@ export function MapPage() {
         <button
           className={`filter-toggle-button ${isFilterOpen ? 'active' : ''}`}
           onClick={() => setIsFilterOpen(!isFilterOpen)}
-          title="Filter points"
+          title={t('map.filterPoints', 'Filter points')}
         >
-          🔍 Filters {(selectedTags.length + selectedTypes.length) > 0 && `(${selectedTags.length + selectedTypes.length})`}
+          🔍 {t('common.filter', 'Filters')} {(selectedTags.length + selectedTypes.length) > 0 && `(${selectedTags.length + selectedTypes.length})`}
         </button>
 
         <div className="points-count">
-          {points.length} point{points.length !== 1 ? 's' : ''}
-          {selectedTags.length > 0 && ` (filtered by ${selectedTags.length} tag${selectedTags.length > 1 ? 's' : ''})`}
-          {selectedTypes.length > 0 && ` (filtered by ${selectedTypes.length} type${selectedTypes.length > 1 ? 's' : ''})`}
-          {searchQuery && ` (search: "${searchQuery}")`}
+          {points.length} {points.length !== 1 ? t('map.points', 'points') : t('map.point', 'point')}
+          {selectedTags.length > 0 && ` (${t('map.filteredByTags', 'filtered by {count} tag(s)').replace('{count}', String(selectedTags.length))})`}
+          {selectedTypes.length > 0 && ` (${t('map.filteredByTypes', 'filtered by {count} type(s)').replace('{count}', String(selectedTypes.length))})`}
+          {searchQuery && ` (${t('map.searchQuery', 'search')}: "${searchQuery}")`}
         </div>
       </div>
 

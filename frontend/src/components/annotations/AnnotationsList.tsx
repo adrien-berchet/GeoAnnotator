@@ -25,6 +25,7 @@ import { getErrorMessage } from '../../api/client';
 import type { Annotation } from '../../types/annotation';
 import { AnnotationPreview } from './AnnotationPreview';
 import { SortableAnnotationItem } from './SortableAnnotationItem';
+import { useLanguage } from '../../contexts/LanguageContext';
 import './AnnotationsList.css';
 
 interface AnnotationsListProps {
@@ -42,6 +43,7 @@ export function AnnotationsList({
   onAnnotationUpdated,
   onAnnotationsReordered,
 }: AnnotationsListProps) {
+  const { t } = useLanguage();
   console.log('🚀 AnnotationsList component loaded for point:', pointId);
   console.log('📥 Received annotations:', annotations);
   console.log('📊 Trashed annotations:', annotations.filter(a => a.is_trashed));
@@ -144,7 +146,7 @@ export function AnnotationsList({
   };
 
   const handleDelete = async (annotationId: string) => {
-    if (!confirm('Are you sure you want to delete this annotation?')) {
+    if (!confirm(t('annotations.confirmDelete', 'Are you sure you want to delete this annotation?'))) {
       return;
     }
 
@@ -165,7 +167,7 @@ export function AnnotationsList({
 
       // Check if already in trash
       if (errorMsg.includes('ALREADY_IN_TRASH') || errorMsg.includes('already in trash')) {
-        setError('This annotation is already in the trash. Please use the restore button to recover it.');
+        setError(t('annotations.alreadyInTrash', 'This annotation is already in the trash. Please use the restore button to recover it.'));
       } else {
         setError(errorMsg);
       }
@@ -202,7 +204,8 @@ export function AnnotationsList({
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    const locale = t('common.locale', 'en-US');
+    return new Date(dateString).toLocaleDateString(locale, {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -221,8 +224,8 @@ export function AnnotationsList({
     return (
       <div className="annotations-empty">
         <div className="empty-icon">📝</div>
-        <p>No annotations yet</p>
-        <p className="empty-hint">Add your first annotation above</p>
+        <p>{t('annotations.noAnnotationsYet', 'No annotations yet')}</p>
+        <p className="empty-hint">{t('annotations.addFirstAnnotation', 'Add your first annotation above')}</p>
       </div>
     );
   }
@@ -236,12 +239,12 @@ export function AnnotationsList({
         <button
           onClick={() => setIsReorderMode(!isReorderMode)}
           className={`reorder-toggle-button ${isReorderMode ? 'active' : ''}`}
-          title={isReorderMode ? 'Exit reorder mode' : 'Reorder annotations'}
+          title={isReorderMode ? t('annotations.exitReorderMode', 'Exit reorder mode') : t('annotations.reorderAnnotations', 'Reorder annotations')}
         >
-          {isReorderMode ? '✓ Done reordering' : '↕️ Reorder'}
+          {isReorderMode ? `✓ ${t('annotations.doneReordering', 'Done reordering')}` : `↕️ ${t('annotations.reorder', 'Reorder')}`}
         </button>
         {isReorderMode && (
-          <span className="reorder-hint">Drag and drop to reorder annotations</span>
+          <span className="reorder-hint">{t('annotations.reorderHint', 'Drag and drop to reorder annotations')}</span>
         )}
       </div>
 

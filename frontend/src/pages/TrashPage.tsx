@@ -12,10 +12,12 @@ import { useLocation } from 'react-router-dom';
 import { TrashPointCard } from '../components/trash/TrashPointCard';
 import { TrashAnnotationCard } from '../components/trash/TrashAnnotationCard';
 import { getAllTrashData, emptyPointTrash, emptyAnnotationTrash } from '../api/trash';
+import { useLanguage } from '../contexts/LanguageContext';
 import type { TrashPoint, TrashAnnotation, TrashStats } from '../types/trash';
 import './TrashPage.css';
 
 export function TrashPage() {
+  const { t } = useLanguage();
   const location = useLocation();
   const [pointsTrash, setPointsTrash] = useState<TrashPoint[]>([]);
   const [annotationsTrash, setAnnotationsTrash] = useState<TrashAnnotation[]>([]);
@@ -82,7 +84,7 @@ export function TrashPage() {
       });
     } catch (err) {
       console.error('Failed to load trash data:', err);
-      setError('Échec du chargement des données de la corbeille');
+      setError(t('trash.loadError', 'Failed to load trash data'));
       // Set empty arrays to avoid map errors
       setPointsTrash([]);
       setAnnotationsTrash([]);
@@ -92,11 +94,10 @@ export function TrashPage() {
   };
 
   const handleEmptyPointsTrash = async () => {
-    if (
-      !confirm(
-        `Supprimer définitivement tous les ${pointsStats.total_items} points de la corbeille ? Cette action est irréversible.`
-      )
-    ) {
+    const message = t('trash.confirmEmptyPointsTrash', 'Permanently delete all {count} points in trash? This action is irreversible.')
+      .replace('{count}', String(pointsStats.total_items));
+
+    if (!confirm(message)) {
       return;
     }
 
@@ -105,16 +106,15 @@ export function TrashPage() {
       await loadTrashData();
     } catch (err) {
       console.error('Failed to empty points trash:', err);
-      alert('Échec de la suppression des points');
+      alert(t('trash.deleteError', 'Failed to delete items'));
     }
   };
 
   const handleEmptyAnnotationsTrash = async () => {
-    if (
-      !confirm(
-        `Supprimer définitivement toutes les ${annotationsStats.total_items} annotations de la corbeille ? Cette action est irréversible.`
-      )
-    ) {
+    const message = t('trash.confirmEmptyAnnotationsTrash', 'Permanently delete all {count} annotations in trash? This action is irreversible.')
+      .replace('{count}', String(annotationsStats.total_items));
+
+    if (!confirm(message)) {
       return;
     }
 
@@ -123,14 +123,14 @@ export function TrashPage() {
       await loadTrashData();
     } catch (err) {
       console.error('Failed to empty annotations trash:', err);
-      alert('Échec de la suppression des annotations');
+      alert(t('trash.deleteError', 'Failed to delete items'));
     }
   };
 
   if (isLoading) {
     return (
       <div className="trash-page">
-        <div className="loading">Chargement de la corbeille...</div>
+        <div className="loading">{t('trash.loading', 'Loading trash...')}</div>
       </div>
     );
   }
@@ -140,7 +140,7 @@ export function TrashPage() {
       <div className="trash-page">
         <div className="error">{error}</div>
         <button className="btn btn-retry" onClick={loadTrashData}>
-          Réessayer
+          {t('common.retry', 'Retry')}
         </button>
       </div>
     );
@@ -152,9 +152,9 @@ export function TrashPage() {
   return (
     <div className="trash-page">
       <header className="trash-header">
-        <h1>🗑️ Corbeille</h1>
+        <h1>🗑️ {t('trash.title', 'Trash')}</h1>
         <p className="trash-subtitle">
-          Les éléments supprimés sont conservés pendant 30 jours avant suppression définitive.
+          {t('trash.subtitle', 'Deleted items are kept for 30 days before permanent deletion.')}
         </p>
       </header>
 
@@ -163,7 +163,7 @@ export function TrashPage() {
           className={`tab-button ${activeTab === 'points' ? 'active' : ''}`}
           onClick={() => setActiveTab('points')}
         >
-          📍 Points supprimés
+          📍 {t('trash.deletedPoints', 'Deleted points')}
           {pointsTrash.length > 0 && (
             <span className="tab-badge">{pointsTrash.length}</span>
           )}
@@ -172,7 +172,7 @@ export function TrashPage() {
           className={`tab-button ${activeTab === 'annotations' ? 'active' : ''}`}
           onClick={() => setActiveTab('annotations')}
         >
-          📝 Annotations supprimées
+          📝 {t('trash.deletedAnnotations', 'Deleted annotations')}
           {annotationsTrash.length > 0 && (
             <span className="tab-badge">{annotationsTrash.length}</span>
           )}
@@ -183,15 +183,15 @@ export function TrashPage() {
         <div className="trash-stats">
           <div className="stat-item">
             <span className="stat-value">{currentStats.total_items}</span>
-            <span className="stat-label">Total</span>
+            <span className="stat-label">{t('trash.total', 'Total')}</span>
           </div>
           <div className="stat-item warning">
             <span className="stat-value">{currentStats.expiring_soon}</span>
-            <span className="stat-label">Expire bientôt (&lt; 7 jours)</span>
+            <span className="stat-label">{t('trash.expiringSoon', 'Expiring soon (< 7 days)')}</span>
           </div>
           <div className="stat-item">
             <span className="stat-value">{currentStats.oldest_item_age_days}</span>
-            <span className="stat-label">Âge du plus ancien (jours)</span>
+            <span className="stat-label">{t('trash.oldestItemAge', 'Age of oldest (days)')}</span>
           </div>
         </div>
       )}
@@ -199,10 +199,10 @@ export function TrashPage() {
       {activeTab === 'points' && (
         <div className="trash-section">
           <div className="section-header">
-            <h2>Points supprimés</h2>
+            <h2>{t('trash.deletedPoints', 'Deleted points')}</h2>
             {pointsTrash.length > 0 && (
               <button className="btn btn-empty" onClick={handleEmptyPointsTrash}>
-                Vider la corbeille des points
+                {t('trash.emptyPointsTrash', 'Empty points trash')}
               </button>
             )}
           </div>
@@ -210,18 +210,16 @@ export function TrashPage() {
           {pointsTrash.length === 0 ? (
             <div className="empty-state">
               <div className="empty-icon">📍</div>
-              <h3>Aucun point dans la corbeille</h3>
+              <h3>{t('trash.noPointsInTrash', 'No points in trash')}</h3>
               <p>
-                Les points supprimés apparaîtront ici et seront conservés pendant 30 jours.
+                {t('trash.noPointsInTrashDesc', 'Deleted points will appear here and be kept for 30 days.')}
               </p>
             </div>
           ) : (
             <>
               <div className="info-box">
                 <p>
-                  <strong>⚠️ Important :</strong> Lorsqu'un point est supprimé, toutes ses
-                  annotations et partages sont également supprimés avec lui. Après restauration,
-                  les partages seront réactivés si possible.
+                  <strong>⚠️ Important :</strong> {t('trash.pointsWarning', 'When a point is deleted, all its annotations and shares are also deleted with it. After restoration, shares will be reactivated if possible.')}
                 </p>
               </div>
 
@@ -243,10 +241,10 @@ export function TrashPage() {
       {activeTab === 'annotations' && (
         <div className="trash-section">
           <div className="section-header">
-            <h2>Annotations supprimées</h2>
+            <h2>{t('trash.deletedAnnotations', 'Deleted annotations')}</h2>
             {annotationsTrash.length > 0 && (
               <button className="btn btn-empty" onClick={handleEmptyAnnotationsTrash}>
-                Vider la corbeille des annotations
+                {t('trash.emptyAnnotationsTrash', 'Empty annotations trash')}
               </button>
             )}
           </div>
@@ -254,19 +252,16 @@ export function TrashPage() {
           {annotationsTrash.length === 0 ? (
             <div className="empty-state">
               <div className="empty-icon">📝</div>
-              <h3>Aucune annotation dans la corbeille</h3>
+              <h3>{t('trash.noAnnotationsInTrash', 'No annotations in trash')}</h3>
               <p>
-                Les annotations supprimées individuellement apparaîtront ici et seront
-                conservées pendant 30 jours.
+                {t('trash.noAnnotationsInTrashDesc', 'Individually deleted annotations will appear here and be kept for 30 days.')}
               </p>
             </div>
           ) : (
             <>
               <div className="info-box">
                 <p>
-                  <strong>ℹ️ À noter :</strong> Ces annotations ont été supprimées individuellement.
-                  Les points auxquels elles sont associées restent actifs. Seules les annotations
-                  seront supprimées définitivement après 30 jours.
+                  <strong>ℹ️ {t('common.note', 'Note')} :</strong> {t('trash.annotationsInfo', 'These annotations have been deleted individually. The points they are associated with remain active. Only the annotations will be permanently deleted after 30 days.')}
                 </p>
               </div>
 

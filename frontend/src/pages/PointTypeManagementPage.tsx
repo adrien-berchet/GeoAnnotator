@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { getPointTypes, createPointType, updatePointType, deletePointType, reorderPointTypes, uploadTypeIcon, downloadTypeIcon } from '../api/types';
 import type { PointType, CreatePointTypeData, UpdatePointTypeData } from '../types/point';
 import { getErrorMessage } from '../api/client';
+import { useLanguage } from '../contexts/LanguageContext';
 import './PointTypeManagementPage.css';
 
 export default function PointTypeManagementPage() {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [types, setTypes] = useState<PointType[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,14 +60,14 @@ export default function PointTypeManagementPage() {
     // Validate file type
     const allowedTypes = ['image/svg+xml', 'image/png', 'image/jpeg', 'image/jpg'];
     if (!allowedTypes.includes(file.type)) {
-      setCreateError('Invalid file type. Please upload SVG, PNG, or JPG files.');
+      setCreateError(t('types.invalidFileType', 'Invalid file type. Please upload SVG, PNG, or JPG files.'));
       return;
     }
 
     // Validate file size (1MB)
     const maxSize = 1 * 1024 * 1024;
     if (file.size > maxSize) {
-      setCreateError('File too large. Maximum size is 1MB.');
+      setCreateError(t('types.fileTooLarge', 'File too large. Maximum size is 1MB.'));
       return;
     }
 
@@ -100,14 +102,14 @@ export default function PointTypeManagementPage() {
     // Validate file type
     const allowedTypes = ['image/svg+xml', 'image/png', 'image/jpeg', 'image/jpg'];
     if (!allowedTypes.includes(file.type)) {
-      setError('Invalid file type. Please upload SVG, PNG, or JPG files.');
+      setError(t('types.invalidFileType', 'Invalid file type. Please upload SVG, PNG, or JPG files.'));
       return;
     }
 
     // Validate file size (1MB)
     const maxSize = 1 * 1024 * 1024;
     if (file.size > maxSize) {
-      setError('File too large. Maximum size is 1MB.');
+      setError(t('types.fileTooLarge', 'File too large. Maximum size is 1MB.'));
       return;
     }
 
@@ -140,7 +142,7 @@ export default function PointTypeManagementPage() {
     e.preventDefault();
 
     if (!newTypeName.trim()) {
-      setCreateError('Type name cannot be empty');
+      setCreateError(t('types.nameCannotBeEmpty', 'Type name cannot be empty'));
       return;
     }
 
@@ -268,7 +270,7 @@ export default function PointTypeManagementPage() {
   if (loading) {
     return (
       <div className="type-management-page">
-        <div className="loading">Loading point types...</div>
+        <div className="loading">{t('types.loadingTypes', 'Loading point types...')}</div>
       </div>
     );
   }
@@ -276,16 +278,16 @@ export default function PointTypeManagementPage() {
   return (
     <div className="type-management-page">
       <header className="page-header">
-        <h1>Point Type Management</h1>
+        <h1>{t('types.manageTypes', 'Point Type Management')}</h1>
         <button onClick={() => navigate(-1)} className="btn-secondary">
-          Back
+          {t('common.back', 'Back')}
         </button>
       </header>
 
       {error && (
         <div className="error-banner" role="alert">
           {error}
-          <button onClick={() => setError(null)} aria-label="Dismiss error">×</button>
+          <button onClick={() => setError(null)} aria-label={t('common.close', 'Dismiss error')}>×</button>
         </div>
       )}
 
@@ -295,13 +297,13 @@ export default function PointTypeManagementPage() {
             <button
               onClick={() => setShowCreateForm(true)}
               className="btn-primary"
-              aria-label="Add new point type"
+              aria-label={t('types.addNewType', 'Add new point type')}
             >
-              + Add New Type
+              + {t('types.addNewType', 'Add New Type')}
             </button>
           ) : (
             <form onSubmit={handleCreate} className="create-type-form">
-              <h2>Create New Point Type</h2>
+              <h2>{t('types.createNewType', 'Create New Point Type')}</h2>
 
               {createError && (
                 <div className="error-message" role="alert">
@@ -311,14 +313,14 @@ export default function PointTypeManagementPage() {
 
               <div className="form-group">
                 <label htmlFor="type-name">
-                  Type Name <span className="required">*</span>
+                  {t('types.typeName', 'Type Name')} <span className="required">*</span>
                 </label>
                 <input
                   id="type-name"
                   type="text"
                   value={newTypeName}
                   onChange={(e) => setNewTypeName(e.target.value)}
-                  placeholder="e.g., Restaurant, Museum, Park"
+                  placeholder={t('types.typeNamePlaceholder', 'e.g., Restaurant, Museum, Park')}
                   required
                   maxLength={100}
                   aria-required="true"
@@ -328,7 +330,7 @@ export default function PointTypeManagementPage() {
 
               <div className="form-group">
                 <label htmlFor="type-icon">
-                  Icon <span className="optional">(optional)</span>
+                  {t('types.icon', 'Icon')} <span className="optional">({t('types.optional', 'optional')})</span>
                 </label>
 
                 {/* File upload section */}
@@ -348,7 +350,7 @@ export default function PointTypeManagementPage() {
                     className="btn-secondary"
                     disabled={creating || uploading}
                   >
-                    {uploading ? 'Uploading...' : 'Choose Icon File'}
+                    {uploading ? t('types.uploading', 'Uploading...') : t('types.chooseIconFile', 'Choose Icon File')}
                   </button>
 
                   {selectedFile && (
@@ -359,7 +361,7 @@ export default function PointTypeManagementPage() {
                         onClick={handleRemoveFile}
                         className="btn-icon"
                         disabled={creating || uploading}
-                        aria-label="Remove file"
+                        aria-label={t('types.removeFile', 'Remove file')}
                       >
                         ✕
                       </button>
@@ -368,7 +370,7 @@ export default function PointTypeManagementPage() {
                 </div>
 
                 <div className="form-divider">
-                  <span>OR</span>
+                  <span>{t('types.or', 'OR')}</span>
                 </div>
 
                 {/* Manual URL input */}
@@ -381,7 +383,7 @@ export default function PointTypeManagementPage() {
                       setNewTypeIcon(e.target.value);
                       setIconLoadError(false);
                     }}
-                    placeholder="Enter emoji (e.g., 🎨) or URL"
+                    placeholder={t('types.iconPlaceholder', 'Enter emoji (e.g., 🎨) or URL')}
                     maxLength={500}
                     disabled={creating || uploading}
                     style={{ flex: 1 }}
@@ -405,9 +407,9 @@ export default function PointTypeManagementPage() {
                       }}
                       className="btn-secondary"
                       disabled={uploading}
-                      title="Download and save this icon locally"
+                      title={t('types.downloadIconTitle', 'Download and save this icon locally')}
                     >
-                      {uploading ? 'Downloading...' : 'Download Icon'}
+                      {uploading ? t('types.downloading', 'Downloading...') : t('types.downloadIcon', 'Download Icon')}
                     </button>
                   )}
                   {/* Icon preview */}
@@ -415,11 +417,11 @@ export default function PointTypeManagementPage() {
                     <div className="icon-preview">
                       {newTypeIcon.startsWith('http') || newTypeIcon.startsWith('/') ? (
                         iconLoadError ? (
-                          <span className="icon-error" title="Click 'Download Icon' to fix CORS issue">❌</span>
+                          <span className="icon-error" title={t('types.corsIssue', "Click 'Download Icon' to fix CORS issue")}>❌</span>
                         ) : (
                           <img
                             src={newTypeIcon}
-                            alt="Icon preview"
+                            alt={t('types.iconPreview', 'Icon preview')}
                             className="type-icon"
                             onLoad={() => setIconLoadError(false)}
                             onError={() => setIconLoadError(true)}
@@ -432,7 +434,7 @@ export default function PointTypeManagementPage() {
                   )}
                 </div>
                 <small className="form-help">
-                  Upload an icon file (SVG, PNG, JPG - max 1MB) or enter an emoji/URL. If an external URL doesn't load due to CORS, click "Download Icon" to save it locally.
+                  {t('types.uploadIconHelp', 'Upload an icon file (SVG, PNG, JPG - max 1MB) or enter an emoji/URL. If an external URL doesn\'t load due to CORS, click "Download Icon" to save it locally.')}
                 </small>
               </div>
 
@@ -442,7 +444,7 @@ export default function PointTypeManagementPage() {
                   className="btn-primary"
                   disabled={creating}
                 >
-                  {creating ? 'Creating...' : 'Create Type'}
+                  {creating ? t('types.creating', 'Creating...') : t('types.createType', 'Create Type')}
                 </button>
                 <button
                   type="button"
@@ -455,7 +457,7 @@ export default function PointTypeManagementPage() {
                   className="btn-secondary"
                   disabled={creating}
                 >
-                  Cancel
+                  {t('common.cancel', 'Cancel')}
                 </button>
               </div>
             </form>
@@ -463,11 +465,11 @@ export default function PointTypeManagementPage() {
         </div>
 
         <div className="types-list">
-          <h2>Your Point Types ({types.filter(t => t.user !== null).length})</h2>
+          <h2>{t('types.yourPointTypes', 'Your Point Types')} ({types.filter(t => t.user !== null).length})</h2>
 
           {types.length === 0 ? (
             <p className="empty-state">
-              No point types yet. Create your first type to get started!
+              {t('types.noTypesYet', 'No point types yet. Create your first type to get started!')}
             </p>
           ) : (
             <table className="types-table">
@@ -567,14 +569,14 @@ export default function PointTypeManagementPage() {
                               disabled={updating}
                               className="btn-success"
                             >
-                              Save
+                              {t('common.save', 'Save')}
                             </button>
                             <button
                               onClick={handleCancelEdit}
                               disabled={updating}
                               className="btn-secondary"
                             >
-                              Cancel
+                              {t('common.cancel', 'Cancel')}
                             </button>
                           </>
                         ) : (
@@ -582,35 +584,35 @@ export default function PointTypeManagementPage() {
                             <button
                               onClick={() => navigate(`/map?types=${type.id}`)}
                               className="btn-view"
-                              aria-label={`View ${type.name} on map`}
-                              title="View on map"
+                              aria-label={`${t('types.viewOnMap', 'View')} ${type.name} ${t('types.onMap', 'on map')}`}
+                              title={t('types.viewOnMap', 'View on map')}
                             >
-                              🗺️ Map
+                              🗺️ {t('nav.map', 'Map')}
                             </button>
                             <button
                               onClick={() => navigate(`/points?types=${type.id}`)}
                               className="btn-view"
-                              aria-label={`View ${type.name} list`}
-                              title="View points list"
+                              aria-label={`${t('types.view', 'View')} ${type.name} ${t('types.list', 'list')}`}
+                              title={t('types.viewPointsList', 'View points list')}
                             >
-                              📋 List
+                              📋 {t('tags.list', 'List')}
                             </button>
                             {type.user && (
                               <>
                                 <button
                                   onClick={() => handleStartEdit(type)}
                                   className="btn-edit"
-                                  aria-label={`Edit ${type.name}`}
+                                  aria-label={`${t('common.edit', 'Edit')} ${type.name}`}
                                 >
-                                  Edit
+                                  {t('common.edit', 'Edit')}
                                 </button>
                                 <button
                                   onClick={() => handleDelete(type.id, type.name)}
                                   disabled={deleting === type.id}
                                   className="btn-delete"
-                                  aria-label={`Delete ${type.name}`}
+                                  aria-label={`${t('common.delete', 'Delete')} ${type.name}`}
                                 >
-                                  {deleting === type.id ? 'Deleting...' : 'Delete'}
+                                  {deleting === type.id ? t('types.deleting', 'Deleting...') : t('common.delete', 'Delete')}
                                 </button>
                               </>
                             )}
@@ -720,13 +722,13 @@ export default function PointTypeManagementPage() {
         </div>
 
         <div className="info-box">
-          <h3>About Point Types</h3>
+          <h3>{t('types.aboutPointTypes', 'About Point Types')}</h3>
           <ul>
-            <li>Point types help you categorize your GPS points with custom icons</li>
-            <li>Base types (like "Point") are available to all users and cannot be edited</li>
-            <li>You can create up to 1,000 custom types</li>
-            <li>Deleting a type will switch all associated points to the default "Point" type</li>
-            <li>Reorder types using the ▲▼ buttons to customize how they appear in dropdowns</li>
+            <li>{t('types.helpCategorize', 'Point types help you categorize your GPS points with custom icons')}</li>
+            <li>{t('types.baseTypesInfo', 'Base types (like "Point") are available to all users and cannot be edited')}</li>
+            <li>{t('types.customTypesLimit', 'You can create up to 1,000 custom types')}</li>
+            <li>{t('types.deletingTypeInfo', 'Deleting a type will switch all associated points to the default "Point" type')}</li>
+            <li>{t('types.reorderInfo', 'Reorder types using the ▲▼ buttons to customize how they appear in dropdowns')}</li>
           </ul>
         </div>
       </div>
