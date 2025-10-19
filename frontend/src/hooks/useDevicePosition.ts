@@ -15,6 +15,7 @@ export interface DevicePosition {
   longitude: number;
   accuracy: number;
   timestamp: number;
+  heading: number | null; // Compass direction in degrees (0-360), null if not available
 }
 
 /**
@@ -66,6 +67,7 @@ export function useDevicePosition(): UseDevicePositionReturn {
       longitude: pos.coords.longitude,
       accuracy: pos.coords.accuracy,
       timestamp: pos.timestamp,
+      heading: pos.coords.heading, // Compass direction (0-360 degrees), null if not available
     };
 
     setPosition(newPosition);
