@@ -41,6 +41,9 @@
     "theme": "Theme",
     "dataExport": "Data Export",
     "defaultExportFormat": "Default Export Format",
+    "map": "Map",
+    "defaultMapType": "Default Map Type",
+    "defaultMapTypeDescription": "Choose the map type that will be used by default when opening the map page. You can still change it temporarily using the selector on the map page.",
     "saveChanges": "Save Changes",
     "saving": "Saving...",
     "settingsSaved": "Settings saved successfully!",
@@ -222,8 +225,17 @@
   },
   "exportFormat": {
     "geojson": "GeoJSON",
+    "geojsonDesc": "Standard geographic data format",
     "kml": "KML",
-    "csv": "CSV"
+    "kmlDesc": "Google Earth compatible format",
+    "csv": "CSV",
+    "csvDesc": "Spreadsheet compatible format"
+  },
+  "mapType": {
+    "osm": "Street Map",
+    "satellite": "Satellite",
+    "topo": "Topographic",
+    "cycle": "Cycle Map"
   },
   "types": {
     "manageTypes": "Point Type Management",

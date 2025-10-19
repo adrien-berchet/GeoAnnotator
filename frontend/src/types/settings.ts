@@ -13,6 +13,11 @@ export type ThemeMode = 'auto' | 'light' | 'dark';
 export type ExportFormat = 'geojson' | 'kml' | 'csv';
 
 /**
+ * Map type options
+ */
+export type MapType = 'osm' | 'satellite' | 'topo' | 'cycle';
+
+/**
  * Resolved theme mode (auto resolved to light or dark)
  */
 export type ResolvedTheme = 'light' | 'dark';
@@ -25,6 +30,7 @@ export interface UserPreferences {
   theme_mode: ThemeMode;
   language: string;
   export_format: ExportFormat;
+  default_map_type: MapType;
   created_at: string;
   updated_at: string;
 }

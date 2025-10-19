@@ -7,10 +7,11 @@ import { useBlocker } from 'react-router-dom';
 import ThemeSelector from '@/components/settings/ThemeSelector';
 import LanguageSelector from '@/components/settings/LanguageSelector';
 import ExportSettings from '@/components/settings/ExportSettings';
+import MapTypeSelector from '@/components/settings/MapTypeSelector';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getSettings, updateSettings } from '@/api/settings';
-import type { UserPreferences, ThemeMode, ExportFormat } from '@/types/settings';
+import type { UserPreferences, ThemeMode, ExportFormat, MapType } from '@/types/settings';
 import './SettingsPage.css';
 
 export function SettingsPage() {
@@ -27,6 +28,7 @@ export function SettingsPage() {
   const [themeMode, setThemeMode] = useState<ThemeMode>(contextThemeMode);
   const [language, setLanguage] = useState<string>(contextLanguage);
   const [exportFormat, setExportFormat] = useState<ExportFormat>('geojson');
+  const [defaultMapType, setDefaultMapType] = useState<MapType>('osm');
 
   // Block navigation when there are unsaved changes
   const blocker = useBlocker(
@@ -59,6 +61,7 @@ export function SettingsPage() {
       setThemeMode(contextThemeMode);
       setLanguage(data.language);
       setExportFormat(data.export_format);
+      setDefaultMapType(data.default_map_type);
       setIsDirty(false);
     } catch (err) {
       setError(t('settings.settingsError', 'Failed to load settings. Please try again.'));
@@ -103,6 +106,12 @@ export function SettingsPage() {
     setSuccessMessage(null);
   };
 
+  const handleMapTypeChange = (mapType: MapType) => {
+    setDefaultMapType(mapType);
+    setIsDirty(true);
+    setSuccessMessage(null);
+  };
+
   const handleSave = async () => {
     try {
       setSaving(true);
@@ -111,6 +120,7 @@ export function SettingsPage() {
       const updated = await updateSettings({
         language,
         export_format: exportFormat,
+        default_map_type: defaultMapType,
       });
       setPreferences(updated);
       setIsDirty(false);
@@ -196,6 +206,19 @@ export function SettingsPage() {
               {t('settings.defaultExportFormat', 'Default Export Format')}
             </label>
             <ExportSettings value={exportFormat} onChange={handleExportFormatChange} />
+          </div>
+        </section>
+
+        <section className="settings-section">
+          <h2>{t('settings.map', 'Map')}</h2>
+          <div className="setting-group">
+            <label htmlFor="map-type-selector" className="setting-label">
+              {t('settings.defaultMapType', 'Default Map Type')}
+            </label>
+            <p className="setting-description">
+              {t('settings.defaultMapTypeDescription', 'Choose the map type that will be used by default when opening the map page. You can still change it temporarily using the selector on the map page.')}
+            </p>
+            <MapTypeSelector value={defaultMapType} onChange={handleMapTypeChange} />
           </div>
         </section>
 

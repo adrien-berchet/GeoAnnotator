@@ -2,6 +2,7 @@
  * Export settings component for selecting data export format
  */
 
+import { useLanguage } from '@/contexts/LanguageContext';
 import type { ExportFormat } from '@/types/settings';
 import './ExportSettings.css';
 
@@ -12,35 +13,30 @@ interface ExportSettingsProps {
 
 const formatOptions: Array<{
   value: ExportFormat;
-  label: string;
-  description: string;
   icon: string;
 }> = [
   {
     value: 'geojson',
-    label: 'GeoJSON',
-    description: 'Standard geographic data format',
     icon: '🗺️',
   },
   {
     value: 'kml',
-    label: 'KML',
-    description: 'Google Earth compatible format',
     icon: '🌍',
   },
   {
     value: 'csv',
-    label: 'CSV',
-    description: 'Spreadsheet compatible format',
     icon: '📊',
   },
 ];
 
 function ExportSettings({ value, onChange }: ExportSettingsProps) {
+  const { t } = useLanguage();
   return (
-    <div className="export-settings" role="radiogroup" aria-label="Export format selection">
+    <div className="export-settings" role="radiogroup" aria-label={t('settings.defaultExportFormat', 'Export format selection')}>
       {formatOptions.map((option) => {
         const isSelected = value === option.value;
+        const label = t(`exportFormat.${option.value}`, option.value);
+        const description = t(`exportFormat.${option.value}Desc`, '');
         return (
           <label
             key={option.value}
@@ -53,15 +49,15 @@ function ExportSettings({ value, onChange }: ExportSettingsProps) {
               checked={isSelected}
               onChange={() => onChange(option.value)}
               aria-checked={isSelected}
-              aria-label={`${option.label}: ${option.description}`}
+              aria-label={`${label}: ${description}`}
             />
             <div className="export-content">
               <span className="export-icon" aria-hidden="true">
                 {option.icon}
               </span>
               <div className="export-text">
-                <span className="export-label">{option.label}</span>
-                <span className="export-description">{option.description}</span>
+                <span className="export-label">{label}</span>
+                <span className="export-description">{description}</span>
               </div>
             </div>
           </label>

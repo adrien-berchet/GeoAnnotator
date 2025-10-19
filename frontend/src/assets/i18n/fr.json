@@ -41,6 +41,9 @@
     "theme": "Thème",
     "dataExport": "Exportation de données",
     "defaultExportFormat": "Format d'exportation par défaut",
+    "map": "Carte",
+    "defaultMapType": "Type de carte par défaut",
+    "defaultMapTypeDescription": "Choisissez le type de carte qui sera utilisé par défaut lors de l'ouverture de la page carte. Vous pouvez toujours le modifier temporairement avec le sélecteur sur la page carte.",
     "saveChanges": "Enregistrer les modifications",
     "saving": "Enregistrement...",
     "settingsSaved": "Paramètres enregistrés avec succès !",
@@ -222,8 +225,17 @@
   },
   "exportFormat": {
     "geojson": "GeoJSON",
+    "geojsonDesc": "Format de données géographiques standard",
     "kml": "KML",
-    "csv": "CSV"
+    "kmlDesc": "Format compatible Google Earth",
+    "csv": "CSV",
+    "csvDesc": "Format compatible tableur"
+  },
+  "mapType": {
+    "osm": "Carte routière",
+    "satellite": "Satellite",
+    "topo": "Topographique",
+    "cycle": "Carte cyclable"
   },
   "types": {
     "manageTypes": "Gestion des types de points",

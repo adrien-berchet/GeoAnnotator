@@ -20,9 +20,11 @@ import { MapLayerSelector, TILE_LAYERS, type TileLayer } from '../components/map
 import { getPoints, searchPointsByTags, getTags } from '../api/points';
 import { getPointTypes } from '../api/types';
 import { getErrorMessage } from '../api/client';
+import { getSettings } from '../api/settings';
 import type { GPSPoint, Tag, PointType } from '../types/point';
 import { useDevicePosition, getGeolocationErrorMessage } from '../hooks/useDevicePosition';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useAuth } from '../hooks/useAuth';
 import './MapPage.css';
 
 /**
@@ -30,6 +32,7 @@ import './MapPage.css';
  */
 export function MapPage() {
   const { t } = useLanguage();
+  const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [points, setPoints] = useState<GPSPoint[]>([]);
   const [allPoints, setAllPoints] = useState<GPSPoint[]>([]);
@@ -60,11 +63,13 @@ export function MapPage() {
 
   /**
    * Load tags, types, and points on mount, and restore filter from URL.
+   * Also load user's default map type preference at the start of a new session.
    */
   useEffect(() => {
     loadTags();
     loadTypes();
     loadPoints();
+    loadDefaultMapType();
 
     // Restore filter from URL
     const tagsParam = searchParams.get('tags');
@@ -187,6 +192,44 @@ export function MapPage() {
       setError(getErrorMessage(err));
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  /**
+   * Load default map type from user preferences.
+   * Only applies when the user logs in (new session), not on every page reload.
+   */
+  const loadDefaultMapType = async () => {
+    if (!user) {
+      return;
+    }
+
+    // Check if we've already loaded the preference for this user's session
+    const lastUserKey = 'lastUserMapTypeLoaded';
+    const lastUserId = localStorage.getItem(lastUserKey);
+
+    // If we've already loaded the preference for this user (they're just reloading the page),
+    // don't override their current selection
+    if (lastUserId === user.id) {
+      return;
+    }
+
+    try {
+      const settings = await getSettings();
+      const preferredMapType = settings.default_map_type;
+
+      // Find the tile layer that matches the preference
+      const preferredLayer = TILE_LAYERS.find(layer => layer.id === preferredMapType);
+
+      if (preferredLayer) {
+        setCurrentTileLayer(preferredLayer);
+      }
+
+      // Mark that we've loaded the preference for this user
+      localStorage.setItem(lastUserKey, user.id);
+    } catch (err) {
+      console.error('Error loading default map type:', err);
+      // Don't show error to user, just use the default map type
     }
   };
 

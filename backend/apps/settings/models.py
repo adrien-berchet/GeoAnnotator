@@ -36,6 +36,13 @@ class UserPreferences(models.Model):
         ('csv', 'CSV'),
     ]
 
+    MAP_TYPE_CHOICES = [
+        ('osm', 'Street Map'),
+        ('satellite', 'Satellite'),
+        ('topo', 'Topographic'),
+        ('cycle', 'Cycle Map'),
+    ]
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.OneToOneField(
         User,
@@ -56,6 +63,11 @@ class UserPreferences(models.Model):
         max_length=10,
         choices=EXPORT_FORMAT_CHOICES,
         default='geojson'
+    )
+    default_map_type = models.CharField(
+        max_length=20,
+        choices=MAP_TYPE_CHOICES,
+        default='osm'
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -88,4 +100,10 @@ class UserPreferences(models.Model):
         if self.export_format not in dict(self.EXPORT_FORMAT_CHOICES):
             raise ValidationError({
                 'export_format': f'Invalid export format: {self.export_format}'
+            })
+
+        # Validate default_map_type
+        if self.default_map_type not in dict(self.MAP_TYPE_CHOICES):
+            raise ValidationError({
+                'default_map_type': f'Invalid map type: {self.default_map_type}'
             })

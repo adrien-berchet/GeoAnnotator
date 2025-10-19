@@ -26,6 +26,7 @@ class UserPreferencesSerializer(serializers.ModelSerializer):
             'language',
             'theme_mode',
             'export_format',
+            'default_map_type',
             'created_at',
             'updated_at'
         ]
@@ -55,5 +56,14 @@ class UserPreferencesSerializer(serializers.ModelSerializer):
         if value not in valid_languages:
             raise serializers.ValidationError(
                 f"Invalid language: {value}. Must be one of: {', '.join(valid_languages)}"
+            )
+        return value
+
+    def validate_default_map_type(self, value):
+        """Validate default_map_type field."""
+        valid_map_types = dict(UserPreferences.MAP_TYPE_CHOICES).keys()
+        if value not in valid_map_types:
+            raise serializers.ValidationError(
+                f"Invalid map type: {value}. Must be one of: {', '.join(valid_map_types)}"
             )
         return value

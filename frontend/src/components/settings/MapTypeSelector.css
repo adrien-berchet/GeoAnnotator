@@ -1,0 +1,72 @@
+/**
+ * Map type selector styles
+ */
+
+.map-type-selector {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+.map-type-option {
+  display: block;
+  position: relative;
+  cursor: pointer;
+}
+
+.map-type-option input[type='radio'] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.map-type-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  border: 2px solid var(--border-color, #e5e7eb);
+  border-radius: 0.5rem;
+  background: var(--background-color, #ffffff);
+  transition: all 0.2s ease;
+}
+
+.map-type-option:hover .map-type-content {
+  border-color: var(--primary-color, #3b82f6);
+  background: var(--hover-background, #f9fafb);
+}
+
+.map-type-option input[type='radio']:focus + .map-type-content {
+  outline: 2px solid var(--primary-color, #3b82f6);
+  outline-offset: 2px;
+}
+
+.map-type-option.selected .map-type-content {
+  border-color: var(--primary-color, #3b82f6);
+  background: var(--selected-background, #eff6ff);
+}
+
+.map-type-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.map-type-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.map-type-option.selected .map-type-label {
+  color: var(--primary-color, #3b82f6);
+}
+
+/* Dark mode support */
+[data-theme='dark'] .map-type-content {
+  --border-color: #374151;
+  --background-color: #1f2937;
+  --hover-background: #111827;
+  --selected-background: #1e3a8a;
+  --primary-color: #60a5fa;
+}

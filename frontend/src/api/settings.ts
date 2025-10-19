@@ -22,7 +22,7 @@ export async function getSettings(): Promise<UserPreferences> {
  * @throws Error if request fails
  */
 export async function updateSettings(
-  updates: Partial<Pick<UserPreferences, 'theme_mode' | 'language' | 'export_format'>>
+  updates: Partial<Pick<UserPreferences, 'theme_mode' | 'language' | 'export_format' | 'default_map_type'>>
 ): Promise<UserPreferences> {
   const response = await apiClient.patch<UserPreferences>(
     '/settings/',

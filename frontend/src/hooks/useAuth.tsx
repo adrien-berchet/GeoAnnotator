@@ -94,6 +94,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem(ACCESS_TOKEN_KEY);
     localStorage.removeItem(REFRESH_TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
+    // Clear map type session tracking so preference is restored on next login
+    localStorage.removeItem('lastUserMapTypeLoaded');
 
     setState({
       user: null,
