@@ -54,61 +54,65 @@ export function FilterPanel({
           </button>
         </div>
 
-        {/* Content */}
+        {/* Content - Split into two independently scrollable sections */}
         <div className="filter-content">
           {/* Types Section */}
-          <div className="filter-section">
+          <div className="filter-section-container">
             <h3 className="filter-section-title">Point Types</h3>
-            {availableTypes.length === 0 ? (
-              <div className="filter-empty">No types available</div>
-            ) : (
-              <div className="filter-list">
-                {availableTypes.map((type) => (
-                  <button
-                    key={type.id}
-                    type="button"
-                    className={`filter-option ${selectedTypes.includes(type.id) ? 'selected' : ''}`}
-                    onClick={() => onToggleType(type.id)}
-                  >
-                    <span className="filter-checkbox">
-                      {selectedTypes.includes(type.id) ? '✓' : ''}
-                    </span>
-                    {type.icon && type.icon !== '/icons/default.svg' && (
-                      type.icon.startsWith('http') || type.icon.startsWith('/') ? (
-                        <img src={type.icon} alt="" className="filter-type-icon" />
-                      ) : (
-                        <span className="filter-type-icon-emoji">{type.icon}</span>
-                      )
-                    )}
-                    <span className="filter-name">{type.name}</span>
-                  </button>
-                ))}
-              </div>
-            )}
+            <div className="filter-section-scroll">
+              {availableTypes.length === 0 ? (
+                <div className="filter-empty">No types available</div>
+              ) : (
+                <div className="filter-list">
+                  {availableTypes.map((type) => (
+                    <button
+                      key={type.id}
+                      type="button"
+                      className={`filter-option ${selectedTypes.includes(type.id) ? 'selected' : ''}`}
+                      onClick={() => onToggleType(type.id)}
+                    >
+                      <span className="filter-checkbox">
+                        {selectedTypes.includes(type.id) ? '✓' : ''}
+                      </span>
+                      {type.icon && type.icon !== '/icons/default.svg' && (
+                        type.icon.startsWith('http') || type.icon.startsWith('/') ? (
+                          <img src={type.icon} alt="" className="filter-type-icon" />
+                        ) : (
+                          <span className="filter-type-icon-emoji">{type.icon}</span>
+                        )
+                      )}
+                      <span className="filter-name">{type.name}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Tags Section */}
-          <div className="filter-section">
+          <div className="filter-section-container">
             <h3 className="filter-section-title">Tags</h3>
-            {availableTags.length === 0 ? (
-              <div className="filter-empty">No tags available</div>
-            ) : (
-              <div className="filter-list">
-                {availableTags.map((tag) => (
-                  <button
-                    key={tag.id}
-                    type="button"
-                    className={`filter-option ${selectedTags.includes(tag.name) ? 'selected' : ''}`}
-                    onClick={() => onToggleTag(tag.name)}
-                  >
-                    <span className="filter-checkbox">
-                      {selectedTags.includes(tag.name) ? '✓' : ''}
-                    </span>
-                    <span className="filter-name">{tag.name}</span>
-                  </button>
-                ))}
-              </div>
-            )}
+            <div className="filter-section-scroll">
+              {availableTags.length === 0 ? (
+                <div className="filter-empty">No tags available</div>
+              ) : (
+                <div className="filter-list">
+                  {availableTags.map((tag) => (
+                    <button
+                      key={tag.id}
+                      type="button"
+                      className={`filter-option ${selectedTags.includes(tag.name) ? 'selected' : ''}`}
+                      onClick={() => onToggleTag(tag.name)}
+                    >
+                      <span className="filter-checkbox">
+                        {selectedTags.includes(tag.name) ? '✓' : ''}
+                      </span>
+                      <span className="filter-name">{tag.name}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
