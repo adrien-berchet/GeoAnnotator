@@ -10,7 +10,7 @@ import { getPoint, deletePoint } from '../api/points';
 import { getAnnotations } from '../api/annotations';
 import { getErrorMessage } from '../api/client';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
-import { AnnotationForm } from '../components/annotations/AnnotationForm';
+import { AnnotationForm, type AnnotationType } from '../components/annotations/AnnotationForm';
 import { AnnotationsList } from '../components/annotations/AnnotationsList';
 import { useLanguage } from '../contexts/LanguageContext';
 import type { GPSPoint } from '../types/point';
@@ -27,6 +27,7 @@ export function PointDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
+  const [selectedAnnotationType, setSelectedAnnotationType] = useState<AnnotationType | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -57,6 +58,7 @@ export function PointDetailPage() {
 
   const handleAnnotationCreated = (annotation: Annotation) => {
     setAnnotations([...annotations, annotation]);
+    setSelectedAnnotationType(null);
   };
 
   const handleAnnotationDeleted = async (annotationId: string) => {
@@ -224,14 +226,50 @@ export function PointDetailPage() {
       <div className="annotations-section">
         <h2>{t('pointDetail.annotations', 'Annotations')} ({annotations.length})</h2>
 
+        {/* Add Annotation Buttons - Always Visible */}
+        <div className="add-annotation-buttons">
+          <button
+            type="button"
+            className={`annotation-type-button ${selectedAnnotationType === 'text' ? 'active' : ''}`}
+            onClick={() => setSelectedAnnotationType(selectedAnnotationType === 'text' ? null : 'text')}
+          >
+            📝 {t('annotations.text', 'Text')}
+          </button>
+          <button
+            type="button"
+            className={`annotation-type-button ${selectedAnnotationType === 'image' ? 'active' : ''}`}
+            onClick={() => setSelectedAnnotationType(selectedAnnotationType === 'image' ? null : 'image')}
+          >
+            🖼️ {t('annotations.image', 'Image')}
+          </button>
+          <button
+            type="button"
+            className={`annotation-type-button ${selectedAnnotationType === 'document' ? 'active' : ''}`}
+            onClick={() => setSelectedAnnotationType(selectedAnnotationType === 'document' ? null : 'document')}
+          >
+            📄 {t('annotations.document', 'Document')}
+          </button>
+          <button
+            type="button"
+            className={`annotation-type-button ${selectedAnnotationType === 'file' ? 'active' : ''}`}
+            onClick={() => setSelectedAnnotationType(selectedAnnotationType === 'file' ? null : 'file')}
+          >
+            📎 {t('annotations.file', 'File')}
+          </button>
+        </div>
+
         <div className="annotations-container">
           {/* Add Annotation Form */}
-          <div className="add-annotation-section">
-            <AnnotationForm
-              pointId={id}
-              onAnnotationCreated={handleAnnotationCreated}
-            />
-          </div>
+          {selectedAnnotationType && (
+            <div className="add-annotation-section">
+              <AnnotationForm
+                pointId={id}
+                onAnnotationCreated={handleAnnotationCreated}
+                onCancel={() => setSelectedAnnotationType(null)}
+                initialType={selectedAnnotationType}
+              />
+            </div>
+          )}
 
           {/* Annotations List */}
           <div className="annotations-list-section">

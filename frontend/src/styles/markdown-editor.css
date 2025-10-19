@@ -11,6 +11,9 @@
   border: 1px solid #d1d5db;
   border-radius: 0.375rem;
   overflow: hidden;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 .w-md-editor:focus-within {
@@ -27,6 +30,10 @@
   background: #f9fafb;
   border-bottom: 1px solid #e5e7eb;
   flex-wrap: wrap;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: auto;
 }
 
 .w-md-editor-toolbar button {
@@ -70,6 +77,10 @@
 .w-md-editor-content {
   position: relative;
   display: flex;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .w-md-editor-input,
@@ -78,6 +89,8 @@
   padding: 1rem;
   min-height: 200px;
   overflow: auto;
+  max-width: 50%;
+  box-sizing: border-box;
 }
 
 /* Text area */

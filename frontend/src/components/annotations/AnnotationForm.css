@@ -8,6 +8,26 @@
   border-radius: var(--radius-lg);
   padding: var(--spacing-xl);
   box-shadow: var(--shadow-md);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.annotation-form * {
+  box-sizing: border-box;
+}
+
+.annotation-form form {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.annotation-form .form-group {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .annotation-form-header {
@@ -143,10 +163,19 @@
 /* MDEditor width override */
 .form-group > div {
   width: 100%;
+  max-width: 100%;
 }
 
 .form-group .w-md-editor {
-  width: 100%;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box;
+}
+
+.form-group .w-md-editor-toolbar,
+.form-group .w-md-editor-content {
+  max-width: 100%;
+  overflow-x: auto;
 }
 
 /* error-message utilise alert-error

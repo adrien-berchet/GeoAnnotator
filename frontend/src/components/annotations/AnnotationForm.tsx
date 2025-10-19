@@ -13,18 +13,19 @@ import { useColorMode } from '../../hooks/useColorMode';
 import { useLanguage } from '../../contexts/LanguageContext';
 import './AnnotationForm.css';
 
+export type AnnotationType = 'text' | 'image' | 'document' | 'file';
+
 interface AnnotationFormProps {
   pointId: string | undefined;
   onAnnotationCreated: (annotation: Annotation) => void;
   onCancel?: () => void;
+  initialType?: AnnotationType;
 }
 
-type AnnotationType = 'text' | 'image' | 'document' | 'file';
-
-export function AnnotationForm({ pointId, onAnnotationCreated, onCancel }: AnnotationFormProps) {
+export function AnnotationForm({ pointId, onAnnotationCreated, onCancel, initialType = 'text' }: AnnotationFormProps) {
   const { t } = useLanguage();
   const colorMode = useColorMode();
-  const [annotationType, setAnnotationType] = useState<AnnotationType>('text');
+  const [annotationType, setAnnotationType] = useState<AnnotationType>(initialType);
   const [textContent, setTextContent] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -33,7 +34,16 @@ export function AnnotationForm({ pointId, onAnnotationCreated, onCancel }: Annot
   // Apply color mode to document root for MDEditor
   useEffect(() => {
     document.documentElement.setAttribute('data-color-mode', colorMode);
-  }, [colorMode]);  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  }, [colorMode]);
+
+  // Update annotation type when initialType prop changes
+  useEffect(() => {
+    setAnnotationType(initialType);
+    // Reset form fields when type changes
+    setTextContent('');
+    setSelectedFile(null);
+    setError('');
+  }, [initialType]);  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setSelectedFile(e.target.files[0]);
     }
@@ -100,38 +110,6 @@ export function AnnotationForm({ pointId, onAnnotationCreated, onCancel }: Annot
       {error && <div className="error-message">{error}</div>}
 
       <form onSubmit={handleSubmit}>
-        {/* Annotation Type Selector */}
-        <div className="annotation-type-selector">
-          <button
-            type="button"
-            className={`type-button ${annotationType === 'text' ? 'active' : ''}`}
-            onClick={() => setAnnotationType('text')}
-          >
-            📝 {t('annotations.text', 'Text')}
-          </button>
-          <button
-            type="button"
-            className={`type-button ${annotationType === 'image' ? 'active' : ''}`}
-            onClick={() => setAnnotationType('image')}
-          >
-            🖼️ {t('annotations.image', 'Image')}
-          </button>
-          <button
-            type="button"
-            className={`type-button ${annotationType === 'document' ? 'active' : ''}`}
-            onClick={() => setAnnotationType('document')}
-          >
-            📄 {t('annotations.document', 'Document')}
-          </button>
-          <button
-            type="button"
-            className={`type-button ${annotationType === 'file' ? 'active' : ''}`}
-            onClick={() => setAnnotationType('file')}
-          >
-            📎 {t('annotations.file', 'File')}
-          </button>
-        </div>
-
         {/* Text Input */}
         {annotationType === 'text' && (
           <div className="form-group">
