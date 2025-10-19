@@ -11,6 +11,7 @@ import { getErrorMessage } from '../../api/client';
 import type { GPSPoint, Tag } from '../../types/point';
 import { TagSelector } from '../common/TagSelector';
 import TypeSelector from '../points/TypeSelector';
+import { useLanguage } from '../../contexts/LanguageContext';
 import './CreatePointModal.css';
 
 interface CreatePointModalProps {
@@ -31,6 +32,7 @@ export function CreatePointModal({
   onClose,
   onPointCreated,
 }: CreatePointModalProps) {
+  const { t } = useLanguage();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [selectedTypeId, setSelectedTypeId] = useState<string | undefined>();
@@ -68,12 +70,12 @@ export function CreatePointModal({
 
     // Validate title
     if (!title.trim()) {
-      setError('Title is required');
+      setError(t('map.titleRequired', 'Title is required'));
       return;
     }
 
     if (title.length > 255) {
-      setError('Title must be 255 characters or less');
+      setError(t('map.titleTooLong', 'Title must be 255 characters or less'));
       return;
     }
 
@@ -121,7 +123,7 @@ export function CreatePointModal({
       {/* Create point drawer */}
       <div className={`create-point-drawer ${isOpen ? 'open' : ''}`} onClick={(e) => e.stopPropagation()}>
         <div className="drawer-header">
-          <h2>Create New Point</h2>
+          <h2>{t('map.createNewPoint', 'Create New Point')}</h2>
         </div>
 
         <form onSubmit={handleSubmit} className="create-point-form">
@@ -134,19 +136,19 @@ export function CreatePointModal({
 
           {/* Coordinates display */}
           <div className="coordinates-display">
-            <span>Lat: {latitude.toFixed(6)}</span>
-            <span>Lng: {longitude.toFixed(6)}</span>
+            <span>{t('map.latitude', 'Lat')}: {latitude.toFixed(6)}</span>
+            <span>{t('map.longitude', 'Lng')}: {longitude.toFixed(6)}</span>
           </div>
 
           {/* Title field */}
           <div className="form-group">
-            <label htmlFor="title">Title *</label>
+            <label htmlFor="title">{t('map.titleLabel', 'Title')} *</label>
             <input
               id="title"
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Enter point title"
+              placeholder={t('map.titlePlaceholder', 'Enter point title')}
               maxLength={255}
               disabled={isLoading}
               required
@@ -156,12 +158,12 @@ export function CreatePointModal({
 
           {/* Description field */}
           <div className="form-group">
-            <label htmlFor="description">Description</label>
+            <label htmlFor="description">{t('map.descriptionLabel', 'Description')}</label>
             <textarea
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Enter point description (optional)"
+              placeholder={t('map.descriptionPlaceholder', 'Enter point description (optional)')}
               rows={3}
               disabled={isLoading}
             />
@@ -172,20 +174,19 @@ export function CreatePointModal({
             value={selectedTypeId}
             onChange={setSelectedTypeId}
             disabled={isLoading}
-            label="Point Type"
-            helpText="Select the type of point (defaults to 'Point' if not selected)"
+            label={t('map.pointTypeLabel', 'Point Type')}
+            helpText={t('map.pointTypeHelp', "Select the type of point (defaults to 'Point' if not selected)")}
           />
 
-          {/* Tags field */}
-          <div className="form-group">
-            <label htmlFor="tags">Tags</label>
-            <TagSelector
-              selectedTags={selectedTags}
-              availableTags={availableTags}
-              onTagsChange={setSelectedTags}
-              disabled={isLoading}
-            />
-          </div>
+          {/* Tags selector */}
+          <TagSelector
+            selectedTags={selectedTags}
+            availableTags={availableTags}
+            onTagsChange={setSelectedTags}
+            disabled={isLoading}
+            label={t('map.tagsLabel', 'Tags')}
+            helpText={t('tags.selectorHelp', 'Type to search existing tags or create new ones. Press Enter to add.')}
+          />
 
           {/* Public checkbox */}
           <div className="form-group">
@@ -196,10 +197,10 @@ export function CreatePointModal({
                 onChange={(e) => setIsPublic(e.target.checked)}
                 disabled={isLoading}
               />
-              <span>Make this point public</span>
+              <span>{t('map.makePublic', 'Make this point public')}</span>
             </label>
             <small className="form-text">
-              Public points are visible to everyone
+              {t('map.publicHelp', 'Public points are visible to everyone')}
             </small>
           </div>
 
@@ -211,14 +212,14 @@ export function CreatePointModal({
               onClick={onClose}
               disabled={isLoading}
             >
-              Cancel
+              {t('common.cancel', 'Cancel')}
             </button>
             <button
               type="submit"
               className="btn-primary"
               disabled={isLoading}
             >
-              {isLoading ? 'Creating...' : 'Create Point'}
+              {isLoading ? t('map.creating', 'Creating...') : t('points.createPoint', 'Create Point')}
             </button>
           </div>
         </form>

@@ -113,7 +113,22 @@
     "points": "points",
     "filteredByTags": "filtered by {count} tag(s)",
     "filteredByTypes": "filtered by {count} type(s)",
-    "searchQuery": "search"
+    "searchQuery": "search",
+    "createNewPoint": "Create New Point",
+    "titleRequired": "Title is required",
+    "titleTooLong": "Title must be 255 characters or less",
+    "titleLabel": "Title",
+    "titlePlaceholder": "Enter point title",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Enter point description (optional)",
+    "pointTypeLabel": "Point Type",
+    "pointTypeHelp": "Select the type of point (defaults to 'Point' if not selected)",
+    "tagsLabel": "Tags",
+    "makePublic": "Make this point public",
+    "publicHelp": "Public points are visible to everyone",
+    "creating": "Creating...",
+    "latitude": "Lat",
+    "longitude": "Lng"
   },
   "annotations": {
     "title": "Annotations",
@@ -212,7 +227,12 @@
     "list": "List",
     "deleting": "Deleting...",
     "nameCannotBeEmpty": "Tag name cannot be empty",
-    "confirmDelete": "Are you sure you want to delete this tag? This action cannot be undone."
+    "confirmDelete": "Are you sure you want to delete this tag? This action cannot be undone.",
+    "selectorPlaceholder": "Type to search or add tags...",
+    "selectorExistingTags": "Existing tags:",
+    "selectorCreateNew": "Create new tag:",
+    "selectorHelp": "Type to search existing tags or create new ones. Press Enter to add.",
+    "removeTag": "Remove {tag}"
   },
   "theme": {
     "auto": "Auto",

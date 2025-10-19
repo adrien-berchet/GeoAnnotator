@@ -6,6 +6,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import type { Tag } from '../../types/point';
+import { useLanguage } from '../../contexts/LanguageContext';
 import './TagSelector.css';
 
 interface TagSelectorProps {
@@ -13,6 +14,8 @@ interface TagSelectorProps {
   availableTags: Tag[];
   onTagsChange: (tags: string[]) => void;
   disabled?: boolean;
+  label?: string;
+  helpText?: string;
 }
 
 /**
@@ -23,7 +26,10 @@ export function TagSelector({
   availableTags,
   onTagsChange,
   disabled = false,
+  label,
+  helpText,
 }: TagSelectorProps) {
+  const { t } = useLanguage();
   const [inputValue, setInputValue] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [filteredTags, setFilteredTags] = useState<Tag[]>([]);
@@ -116,6 +122,13 @@ export function TagSelector({
 
   return (
     <div className="tag-selector">
+      {/* Label */}
+      {label && (
+        <label className="tag-selector-label">
+          {label}
+        </label>
+      )}
+
       {/* Selected tags */}
       <div className="selected-tags">
         {selectedTags.map((tag) => (
@@ -126,7 +139,7 @@ export function TagSelector({
                 type="button"
                 className="tag-remove"
                 onClick={() => removeTag(tag)}
-                aria-label={`Remove ${tag}`}
+                aria-label={t('tags.removeTag', 'Remove {tag}').replace('{tag}', tag)}
               >
                 ×
               </button>
@@ -146,7 +159,7 @@ export function TagSelector({
             // Show suggestions on focus, even if input is empty
             setShowSuggestions(true);
           }}
-          placeholder={selectedTags.length === 0 ? 'Type to search or add tags...' : ''}
+          placeholder={selectedTags.length === 0 ? t('tags.selectorPlaceholder', 'Type to search or add tags...') : ''}
           disabled={disabled}
         />
       </div>
@@ -156,7 +169,7 @@ export function TagSelector({
         <div ref={suggestionsRef} className="tag-suggestions">
           {filteredTags.length > 0 ? (
             <>
-              <div className="suggestions-header">Existing tags:</div>
+              <div className="suggestions-header">{t('tags.selectorExistingTags', 'Existing tags:')}</div>
               {filteredTags.map((tag) => (
                 <button
                   key={tag.id}
@@ -180,7 +193,7 @@ export function TagSelector({
                   className="tag-suggestion create-new"
                   onClick={() => handleSuggestionClick(inputValue.trim())}
                 >
-                  ✨ Create new tag: <strong>{inputValue.trim()}</strong>
+                  ✨ {t('tags.selectorCreateNew', 'Create new tag:')} <strong>{inputValue.trim()}</strong>
                 </button>
               </>
             )}
@@ -188,9 +201,11 @@ export function TagSelector({
       )}
 
       {/* Help text */}
-      <small className="tag-help">
-        Type to search existing tags or create new ones. Press Enter to add.
-      </small>
+      {helpText && (
+        <small className="tag-selector-help">
+          {helpText}
+        </small>
+      )}
     </div>
   );
 }

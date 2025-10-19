@@ -113,7 +113,22 @@
     "points": "points",
     "filteredByTags": "filtré par {count} étiquette(s)",
     "filteredByTypes": "filtré par {count} type(s)",
-    "searchQuery": "recherche"
+    "searchQuery": "recherche",
+    "createNewPoint": "Créer un nouveau point",
+    "titleRequired": "Le titre est requis",
+    "titleTooLong": "Le titre doit contenir 255 caractères ou moins",
+    "titleLabel": "Titre",
+    "titlePlaceholder": "Entrez le titre du point",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Entrez la description du point (facultatif)",
+    "pointTypeLabel": "Type de point",
+    "pointTypeHelp": "Sélectionnez le type de point (par défaut 'Point' si non sélectionné)",
+    "tagsLabel": "Étiquettes",
+    "makePublic": "Rendre ce point public",
+    "publicHelp": "Les points publics sont visibles par tout le monde",
+    "creating": "Création...",
+    "latitude": "Lat",
+    "longitude": "Lon"
   },
   "annotations": {
     "title": "Annotations",
@@ -212,7 +227,12 @@
     "list": "Liste",
     "deleting": "Suppression...",
     "nameCannotBeEmpty": "Le nom de l'étiquette ne peut pas être vide",
-    "confirmDelete": "Êtes-vous sûr de vouloir supprimer cette étiquette ? Cette action ne peut pas être annulée."
+    "confirmDelete": "Êtes-vous sûr de vouloir supprimer cette étiquette ? Cette action ne peut pas être annulée.",
+    "selectorPlaceholder": "Tapez pour rechercher ou ajouter des étiquettes...",
+    "selectorExistingTags": "Étiquettes existantes :",
+    "selectorCreateNew": "Créer une nouvelle étiquette :",
+    "selectorHelp": "Tapez pour rechercher des étiquettes existantes ou en créer de nouvelles. Appuyez sur Entrée pour ajouter.",
+    "removeTag": "Supprimer {tag}"
   },
   "theme": {
     "auto": "Auto",

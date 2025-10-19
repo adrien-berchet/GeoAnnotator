@@ -6,6 +6,14 @@
 .tag-selector {
   position: relative;
   width: 100%;
+  margin-bottom: 1rem;
+}
+
+.tag-selector-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
 }
 
 /* Selected tags container */
@@ -149,11 +157,11 @@
 }
 
 /* Help text */
-.tag-help {
+.tag-selector-help {
   display: block;
-  margin-top: var(--spacing-sm);
-  color: var(--color-text-tertiary);
-  font-size: var(--font-size-sm);
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
 }
 
 /* Dark mode géré automatiquement par les variables CSS */
