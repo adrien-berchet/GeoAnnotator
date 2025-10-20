@@ -4,6 +4,7 @@ Point Types URL configuration.
 from django.urls import path
 from . import views
 
+# Use 'point-types' as app_name to avoid namespace conflict with main points urls
 app_name = 'point-types'
 
 urlpatterns = [

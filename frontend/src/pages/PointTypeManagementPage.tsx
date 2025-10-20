@@ -4,10 +4,12 @@ import { getPointTypes, createPointType, updatePointType, deletePointType, reord
 import type { PointType, CreatePointTypeData, UpdatePointTypeData } from '../types/point';
 import { getErrorMessage } from '../api/client';
 import { useLanguage } from '../contexts/LanguageContext';
+import { getPointTypeName } from '../utils/pointTypeUtils';
+import TranslationManager from '../components/points/TranslationManager';
 import './PointTypeManagementPage.css';
 
 export default function PointTypeManagementPage() {
-  const { t } = useLanguage();
+  const { t, currentLanguage } = useLanguage();
   const navigate = useNavigate();
   const [types, setTypes] = useState<PointType[]>([]);
   const [loading, setLoading] = useState(true);
@@ -15,7 +17,7 @@ export default function PointTypeManagementPage() {
 
   // Create form
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [newTypeName, setNewTypeName] = useState('');
+  const [newTypeNames, setNewTypeNames] = useState<Record<string, string>>({ [currentLanguage]: '' });
   const [newTypeIcon, setNewTypeIcon] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -26,7 +28,7 @@ export default function PointTypeManagementPage() {
 
   // Edit state
   const [editingTypeId, setEditingTypeId] = useState<string | null>(null);
-  const [editingTypeName, setEditingTypeName] = useState('');
+  const [editingTypeNames, setEditingTypeNames] = useState<Record<string, string>>({});
   const [editingTypeIcon, setEditingTypeIcon] = useState('');
   const [editingIconFile, setEditingIconFile] = useState<File | null>(null);
   const [editingIconLoadError, setEditingIconLoadError] = useState(false);
@@ -141,9 +143,18 @@ export default function PointTypeManagementPage() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!newTypeName.trim()) {
-      setCreateError(t('types.nameCannotBeEmpty', 'Type name cannot be empty'));
+    // Validate names
+    if (!newTypeNames || Object.keys(newTypeNames).length === 0) {
+      setCreateError(t('types.atLeastOneTranslation', 'At least one translation is required'));
       return;
+    }
+
+    // Check that all names are non-empty
+    for (const [lang, name] of Object.entries(newTypeNames)) {
+      if (!name.trim()) {
+        setCreateError(t('types.nameCannotBeEmpty', `Name for '${lang}' cannot be empty`));
+        return;
+      }
     }
 
     try {
@@ -151,7 +162,8 @@ export default function PointTypeManagementPage() {
       setCreateError(null);
 
       const data: CreatePointTypeData = {
-        name: newTypeName.trim(),
+        names: newTypeNames,
+        creation_language: currentLanguage,
       };
 
       if (newTypeIcon.trim()) {
@@ -160,7 +172,7 @@ export default function PointTypeManagementPage() {
 
       const newType = await createPointType(data);
       setTypes([...types, newType]);
-      setNewTypeName('');
+      setNewTypeNames({ [currentLanguage]: '' });
       setNewTypeIcon('');
       setSelectedFile(null);
       if (fileInputRef.current) {
@@ -176,17 +188,17 @@ export default function PointTypeManagementPage() {
 
   const handleStartEdit = (type: PointType) => {
     // Don't allow editing base types
-    if (!type.user) {
+    if (!type.owner) {
       return;
     }
     setEditingTypeId(type.id);
-    setEditingTypeName(type.name);
+    setEditingTypeNames(type.names);
     setEditingTypeIcon(type.icon);
   };
 
   const handleCancelEdit = () => {
     setEditingTypeId(null);
-    setEditingTypeName('');
+    setEditingTypeNames({});
     setEditingTypeIcon('');
     setEditingIconFile(null);
     setEditingIconLoadError(false);
@@ -196,7 +208,9 @@ export default function PointTypeManagementPage() {
   };
 
   const handleUpdate = async (typeId: string) => {
-    if (!editingTypeName.trim()) {
+    // Validate names
+    if (!editingTypeNames || Object.keys(editingTypeNames).length === 0) {
+      setError(t('types.atLeastOneTranslation', 'At least one translation is required'));
       return;
     }
 
@@ -204,14 +218,14 @@ export default function PointTypeManagementPage() {
       setUpdating(true);
 
       const data: UpdatePointTypeData = {
-        name: editingTypeName.trim(),
+        names: editingTypeNames,
         icon: editingTypeIcon.trim() || undefined,
       };
 
       const updatedType = await updatePointType(typeId, data);
       setTypes(types.map(t => t.id === typeId ? updatedType : t));
       setEditingTypeId(null);
-      setEditingTypeName('');
+      setEditingTypeNames({});
       setEditingTypeIcon('');
       setEditingIconFile(null);
       setEditingIconLoadError(false);
@@ -312,18 +326,9 @@ export default function PointTypeManagementPage() {
               )}
 
               <div className="form-group">
-                <label htmlFor="type-name">
-                  {t('types.typeName', 'Type Name')} <span className="required">*</span>
-                </label>
-                <input
-                  id="type-name"
-                  type="text"
-                  value={newTypeName}
-                  onChange={(e) => setNewTypeName(e.target.value)}
-                  placeholder={t('types.typeNamePlaceholder', 'e.g., Restaurant, Museum, Park')}
-                  required
-                  maxLength={100}
-                  aria-required="true"
+                <TranslationManager
+                  names={newTypeNames}
+                  onChange={setNewTypeNames}
                   disabled={creating}
                 />
               </div>
@@ -450,7 +455,7 @@ export default function PointTypeManagementPage() {
                   type="button"
                   onClick={() => {
                     setShowCreateForm(false);
-                    setNewTypeName('');
+                    setNewTypeNames({ [currentLanguage]: '' });
                     setNewTypeIcon('');
                     setCreateError(null);
                   }}
@@ -465,7 +470,7 @@ export default function PointTypeManagementPage() {
         </div>
 
         <div className="types-list">
-          <h2>{t('types.yourPointTypes', 'Your Point Types')} ({types.filter(t => t.user !== null).length})</h2>
+          <h2>{t('types.yourPointTypes', 'Your Point Types')} ({types.filter(t => t.owner !== null).length})</h2>
 
           {types.length === 0 ? (
             <p className="empty-state">
@@ -484,7 +489,7 @@ export default function PointTypeManagementPage() {
               <tbody>
                 {types.map((type, index) => (
                   <Fragment key={type.id}>
-                  <tr className={!type.user ? 'base-type' : ''}>
+                  <tr className={!type.owner ? 'base-type' : ''}>
                     <td>
                       <div className="order-controls">
                         <button
@@ -549,15 +554,11 @@ export default function PointTypeManagementPage() {
                     </td>
                     <td>
                       {editingTypeId === type.id ? (
-                        <input
-                          type="text"
-                          value={editingTypeName}
-                          onChange={(e) => setEditingTypeName(e.target.value)}
-                          className="edit-input"
-                          autoFocus
-                        />
+                        <span className="type-name-editing">
+                          {t('types.editingTranslations', 'Editing translations below')}
+                        </span>
                       ) : (
-                        <span className="type-name">{type.name}</span>
+                        <span className="type-name">{getPointTypeName(type, currentLanguage)}</span>
                       )}
                     </td>
                     <td>
@@ -584,7 +585,7 @@ export default function PointTypeManagementPage() {
                             <button
                               onClick={() => navigate(`/map?types=${type.id}`)}
                               className="btn-view"
-                              aria-label={`${t('types.viewOnMap', 'View')} ${type.name} ${t('types.onMap', 'on map')}`}
+                              aria-label={`${t('types.viewOnMap', 'View')} ${getPointTypeName(type, currentLanguage)} ${t('types.onMap', 'on map')}`}
                               title={t('types.viewOnMap', 'View on map')}
                             >
                               🗺️ {t('nav.map', 'Map')}
@@ -592,25 +593,25 @@ export default function PointTypeManagementPage() {
                             <button
                               onClick={() => navigate(`/points?types=${type.id}`)}
                               className="btn-view"
-                              aria-label={`${t('types.view', 'View')} ${type.name} ${t('types.list', 'list')}`}
+                              aria-label={`${t('types.view', 'View')} ${getPointTypeName(type, currentLanguage)} ${t('types.list', 'list')}`}
                               title={t('types.viewPointsList', 'View points list')}
                             >
                               📋 {t('tags.list', 'List')}
                             </button>
-                            {type.user && (
+                            {type.owner && (
                               <>
                                 <button
                                   onClick={() => handleStartEdit(type)}
                                   className="btn-edit"
-                                  aria-label={`${t('common.edit', 'Edit')} ${type.name}`}
+                                  aria-label={`${t('common.edit', 'Edit')} ${getPointTypeName(type, currentLanguage)}`}
                                 >
                                   {t('common.edit', 'Edit')}
                                 </button>
                                 <button
-                                  onClick={() => handleDelete(type.id, type.name)}
+                                  onClick={() => handleDelete(type.id, getPointTypeName(type, currentLanguage))}
                                   disabled={deleting === type.id}
                                   className="btn-delete"
-                                  aria-label={`${t('common.delete', 'Delete')} ${type.name}`}
+                                  aria-label={`${t('common.delete', 'Delete')} ${getPointTypeName(type, currentLanguage)}`}
                                 >
                                   {deleting === type.id ? t('types.deleting', 'Deleting...') : t('common.delete', 'Delete')}
                                 </button>
@@ -622,10 +623,17 @@ export default function PointTypeManagementPage() {
                     </td>
                   </tr>
                   {editingTypeId === type.id && (
-                    <tr className="edit-icon-row">
+                    <tr className="edit-translation-row">
                       <td colSpan={4}>
-                        <div className="icon-edit-section">
-                          <label>Edit Icon:</label>
+                        <div className="edit-section">
+                          <TranslationManager
+                            names={editingTypeNames}
+                            onChange={setEditingTypeNames}
+                            disabled={updating}
+                          />
+
+                          <div className="icon-edit-section">
+                            <label>Edit Icon:</label>
 
                           {/* File upload section */}
                           <div className="icon-upload-controls">
@@ -710,6 +718,7 @@ export default function PointTypeManagementPage() {
                           <small className="form-help">
                             Upload a file (SVG, PNG, JPG - max 1MB) or enter an emoji/URL
                           </small>
+                          </div>
                         </div>
                       </td>
                     </tr>

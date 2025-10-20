@@ -24,9 +24,9 @@ tests/
 : Follow standard conventions
 
 ## Recent Changes
+- 007-les-types-de: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
 - 004-this-web-application: Added TypeScript 5.9.3 (frontend), Python 3.11+ (backend) + React 19.1.1, Vite 7.1.7, Django REST Framework, PostgreSQL
 - 003-sur-la-page: Added TypeScript 5.9.3, React 19.1.1 + @uiw/react-md-editor 4.0.8 (already installed), react-router-dom 7.9.3, vite 7.1.7
-- 002-the-search-bar: Added TypeScript 5.x with React 19.1.1 + React, React Router DOM 7.9.3, Vite (build tool), Leaflet 1.9.4 (map library)
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->

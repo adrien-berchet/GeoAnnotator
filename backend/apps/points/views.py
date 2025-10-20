@@ -444,7 +444,7 @@ class PointTypeViewSet(viewsets.ModelViewSet):
 
         # Get user's types and base types, exclude deleted
         queryset = PointType.objects.filter(
-            Q(user=user) | Q(user__isnull=True),
+            Q(owner=user) | Q(owner__isnull=True),
             status='active'
         ).annotate(
             # Get user's custom order if exists, otherwise use type's default order
@@ -453,7 +453,7 @@ class PointTypeViewSet(viewsets.ModelViewSet):
                 F('order'),
                 output_field=IntegerField()
             )
-        ).order_by('custom_order', 'name')
+        ).order_by('custom_order', 'created_at')
 
         return queryset
 
@@ -475,7 +475,7 @@ class PointTypeViewSet(viewsets.ModelViewSet):
             raise NotFound('Point type not found')
 
         # Check permission: user must own the type or it's a base type
-        if point_type.user is not None and point_type.user != request.user:
+        if point_type.owner is not None and point_type.owner != request.user:
             raise PermissionDenied('You do not have permission to view this type')
 
         serializer = PointTypeSerializer(point_type, context={'request': request})
@@ -489,7 +489,7 @@ class PointTypeViewSet(viewsets.ModelViewSet):
             raise NotFound('Point type not found')
 
         # Check permission: user must own the type
-        if point_type.user != request.user:
+        if point_type.owner != request.user:
             raise PermissionDenied('You can only update your own types')
 
         serializer = PointTypeSerializer(
@@ -515,14 +515,15 @@ class PointTypeViewSet(viewsets.ModelViewSet):
             raise NotFound('Point type not found')
 
         # Check permission: user must own the type
-        if point_type.user != request.user:
+        if point_type.owner != request.user:
             raise PermissionDenied('You can only delete your own types')
 
         # Get or create default type
         default_type, _ = PointType.objects.get_or_create(
-            name='Point',
-            user=None,
-            defaults={'icon': '📍', 'order': 0}
+            names={'en': 'Point'},
+            owner=None,
+            type_choice='base',
+            defaults={'icon': '📍', 'order': 0, 'creation_language': 'en', 'visibility': 'public'}
         )
 
         # Switch all points with this type to default

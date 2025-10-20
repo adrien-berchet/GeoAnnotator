@@ -1,0 +1,168 @@
+/**
+ * TranslationManager component styles.
+ */
+
+.translation-manager {
+  padding: 1rem;
+  border: 1px solid var(--border-color, #ddd);
+  border-radius: 4px;
+  background-color: var(--background-light, #f9f9f9);
+}
+
+.translation-manager h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+  color: var(--text-primary, #333);
+}
+
+.translation-manager h4 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  font-size: 1rem;
+  color: var(--text-secondary, #666);
+}
+
+.existing-translations {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.translation-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background-color: var(--background-white, #fff);
+  border: 1px solid var(--border-color, #ddd);
+  border-radius: 4px;
+}
+
+.translation-lang {
+  min-width: 60px;
+  font-weight: 600;
+  color: var(--primary-color, #007bff);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.current-lang-badge {
+  color: var(--warning-color, #ffc107);
+  font-size: 0.9rem;
+}
+
+.translation-input {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid var(--border-color, #ddd);
+  border-radius: 4px;
+  font-size: 0.95rem;
+}
+
+.translation-input:focus {
+  outline: none;
+  border-color: var(--primary-color, #007bff);
+}
+
+.btn-delete-translation {
+  padding: 0.25rem 0.5rem;
+  font-size: 1.2rem;
+  color: var(--danger-color, #dc3545);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-delete-translation:hover:not(:disabled) {
+  color: var(--danger-hover, #c82333);
+}
+
+.btn-delete-translation:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.add-translation {
+  border-top: 1px solid var(--border-color, #ddd);
+  padding-top: 1rem;
+}
+
+.add-translation-form {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.lang-input {
+  width: 80px;
+  padding: 0.5rem;
+  border: 1px solid var(--border-color, #ddd);
+  border-radius: 4px;
+  font-size: 0.95rem;
+  text-transform: lowercase;
+}
+
+.name-input {
+  flex: 1;
+  min-width: 200px;
+  padding: 0.5rem;
+  border: 1px solid var(--border-color, #ddd);
+  border-radius: 4px;
+  font-size: 0.95rem;
+}
+
+.lang-input:focus,
+.name-input:focus {
+  outline: none;
+  border-color: var(--primary-color, #007bff);
+}
+
+.btn-add-translation {
+  padding: 0.5rem 1rem;
+  white-space: nowrap;
+}
+
+.form-help {
+  display: block;
+  margin-top: 0.5rem;
+  color: var(--text-muted, #6c757d);
+  font-size: 0.85rem;
+}
+
+.error-message {
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  background-color: var(--danger-light, #f8d7da);
+  color: var(--danger-color, #dc3545);
+  border: 1px solid var(--danger-border, #f5c6cb);
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .add-translation-form {
+    flex-direction: column;
+  }
+
+  .lang-input,
+  .name-input {
+    width: 100%;
+  }
+
+  .btn-add-translation {
+    width: 100%;
+  }
+
+  .translation-item {
+    flex-wrap: wrap;
+  }
+
+  .translation-lang {
+    width: 100%;
+  }
+}

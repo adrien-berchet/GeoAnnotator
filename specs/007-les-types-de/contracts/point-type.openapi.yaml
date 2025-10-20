@@ -1,0 +1,110 @@
+openapi: 3.0.3
+info:
+  title: Point Type API
+  version: 1.0.0
+paths:
+  /point-types/:
+    get:
+      summary: List all point types
+      responses:
+        '200':
+          description: List of point types
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PointType'
+    post:
+      summary: Create a custom point type
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PointTypeCreate'
+      responses:
+        '201':
+          description: Point type created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PointType'
+  /point-types/{id}/:
+    get:
+      summary: Get a point type by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Point type details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PointType'
+    patch:
+      summary: Update a custom point type (add/remove translations)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PointTypeUpdate'
+      responses:
+        '200':
+          description: Point type updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PointType'
+components:
+  schemas:
+    PointType:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [base, custom]
+        names:
+          type: object
+          additionalProperties:
+            type: string
+        creation_language:
+          type: string
+        owner:
+          type: string
+          nullable: true
+        visibility:
+          type: string
+          enum: [public, private]
+    PointTypeCreate:
+      type: object
+      properties:
+        names:
+          type: object
+          additionalProperties:
+            type: string
+        creation_language:
+          type: string
+        visibility:
+          type: string
+          enum: [public, private]
+    PointTypeUpdate:
+      type: object
+      properties:
+        names:
+          type: object
+          additionalProperties:
+            type: string

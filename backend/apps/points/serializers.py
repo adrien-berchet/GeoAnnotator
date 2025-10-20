@@ -41,60 +41,84 @@ class UserSummarySerializer(serializers.ModelSerializer):
 
 class PointTypeSerializer(serializers.ModelSerializer):
     """
-    PointType serializer with full details.
+    PointType serializer with multilingual support.
 
-    Includes user information and all type fields.
+    Includes full details with JSON names field for multilingual support.
     """
-    user = UserSummarySerializer(read_only=True)
+    owner = UserSummarySerializer(source='owner', read_only=True)
+    type = serializers.CharField(source='type_choice', read_only=True)
 
     class Meta:
         model = PointType
-        fields = ['id', 'name', 'icon', 'order', 'user', 'status', 'created_at', 'updated_at']
-        read_only_fields = ['id', 'user', 'status', 'created_at', 'updated_at']
+        fields = [
+            'id', 'type', 'names', 'creation_language', 'icon', 'order',
+            'owner', 'visibility', 'status', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'type', 'owner', 'status', 'created_at', 'updated_at']
 
-    def validate_name(self, value):
-        """Validate unique name per user (case-insensitive)."""
-        user = self.context['request'].user
+    def validate_names(self, value):
+        """Validate names field."""
+        if not isinstance(value, dict):
+            raise serializers.ValidationError("Names must be a dictionary mapping language codes to names.")
 
-        # Check for duplicate name
-        queryset = PointType.objects.filter(
-            user=user,
-            name__iexact=value,
-            status='active'
-        )
+        if len(value) == 0:
+            raise serializers.ValidationError("At least one translation must be provided.")
 
-        # Exclude current instance during update
-        if self.instance:
-            queryset = queryset.exclude(pk=self.instance.pk)
-
-        if queryset.exists():
-            raise serializers.ValidationError(
-                "You already have a type with this name. Type names must be unique."
-            )
+        # Validate language codes are lowercase
+        for lang_code in value.keys():
+            if not lang_code.islower():
+                raise serializers.ValidationError(
+                    f"Language code '{lang_code}' must be lowercase (ISO 639-1)."
+                )
 
         return value
+
+    def validate_creation_language(self, value):
+        """Validate creation language is lowercase."""
+        if not value.islower():
+            raise serializers.ValidationError("Creation language must be lowercase (ISO 639-1).")
+        return value
+
+    def validate(self, attrs):
+        """Cross-field validation."""
+        # Check that creation_language has a corresponding name
+        if 'names' in attrs and 'creation_language' in attrs:
+            if attrs['creation_language'] not in attrs['names']:
+                raise serializers.ValidationError({
+                    'creation_language': f"Creation language '{attrs['creation_language']}' must have a corresponding name."
+                })
+
+        return attrs
 
     def create(self, validated_data):
         """Create a new point type for the authenticated user."""
         user = self.context['request'].user
-        validated_data['user'] = user
+        validated_data['owner'] = user
+        validated_data['type_choice'] = 'custom'
 
         # Set default icon if not provided
         if 'icon' not in validated_data or not validated_data['icon']:
             validated_data['icon'] = '📍'
 
         # Auto-assign order if not provided
-        # Need to consider BOTH user types AND base types to avoid conflicts
         if 'order' not in validated_data:
-            # Get max order from all types accessible to the user (user types + base types)
             from django.db.models import Q
             max_order = PointType.objects.filter(
-                Q(user=user) | Q(user__isnull=True),
+                Q(owner=user) | Q(owner__isnull=True),
                 status='active'
             ).aggregate(
                 max_order=serializers.models.Max('order')
             )['max_order']
             validated_data['order'] = (max_order or 0) + 1
+
+        # Get creation language from user preferences
+        if 'creation_language' not in validated_data:
+            from apps.settings.models import UserPreferences
+            try:
+                prefs = UserPreferences.objects.get(user=user)
+                validated_data['creation_language'] = prefs.language
+            except UserPreferences.DoesNotExist:
+                validated_data['creation_language'] = 'en'
 
         return super().create(validated_data)
 
@@ -104,21 +128,45 @@ class CreatePointTypeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PointType
-        fields = ['name', 'icon', 'order']
+        fields = ['names', 'creation_language', 'icon', 'order', 'visibility']
+
+    def validate_names(self, value):
+        """Validate names field."""
+        if not isinstance(value, dict):
+            raise serializers.ValidationError("Names must be a dictionary.")
+
+        if len(value) == 0:
+            raise serializers.ValidationError("At least one translation is required.")
+
+        return value
 
     def create(self, validated_data):
         """Create with user from context and defaults."""
         user = self.context['request'].user
-        validated_data['user'] = user
+        validated_data['owner'] = user
+        validated_data['type_choice'] = 'custom'
 
         if 'icon' not in validated_data or not validated_data['icon']:
-            validated_data['icon'] = '/icons/default.svg'
+            validated_data['icon'] = '📍'
 
         if 'order' not in validated_data:
-            max_order = PointType.objects.filter(user=user).aggregate(
+            from django.db.models import Q
+            max_order = PointType.objects.filter(
+                Q(owner=user) | Q(owner__isnull=True),
+                status='active'
+            ).aggregate(
                 max_order=serializers.models.Max('order')
             )['max_order']
             validated_data['order'] = (max_order or 0) + 1
+
+        # Get creation language from user preferences if not provided
+        if 'creation_language' not in validated_data:
+            from apps.settings.models import UserPreferences
+            try:
+                prefs = UserPreferences.objects.get(user=user)
+                validated_data['creation_language'] = prefs.language
+            except UserPreferences.DoesNotExist:
+                validated_data['creation_language'] = 'en'
 
         return PointType.objects.create(**validated_data)
 
@@ -366,8 +414,8 @@ class CreateGPSPointSerializer(serializers.ModelSerializer):
         try:
             point_type = PointType.objects.get(id=value, status='active')
 
-            # Type must belong to user or be a base type (user=None)
-            if point_type.user is not None and point_type.user != user:
+            # Type must belong to user or be a base type (owner=None)
+            if point_type.owner is not None and point_type.owner != user:
                 raise serializers.ValidationError(
                     "You can only use your own types or base types."
                 )
@@ -392,9 +440,10 @@ class CreateGPSPointSerializer(serializers.ModelSerializer):
         # Set default type if not provided
         if not point_type:
             point_type, _ = PointType.objects.get_or_create(
-                name='Point',
-                user=None,
-                defaults={'icon': '📍', 'order': 0}
+                names={'en': 'Point'},
+                owner=None,
+                type_choice='base',
+                defaults={'icon': '📍', 'order': 0, 'creation_language': 'en', 'visibility': 'public'}
             )
 
         validated_data['type'] = point_type
@@ -440,7 +489,7 @@ class UpdateGPSPointSerializer(serializers.ModelSerializer):
         try:
             point_type = PointType.objects.get(id=value, status='active')
 
-            if point_type.user is not None and point_type.user != user:
+            if point_type.owner is not None and point_type.owner != user:
                 raise serializers.ValidationError(
                     "You can only use your own types or base types."
                 )

@@ -15,11 +15,22 @@ from datetime import timedelta
 
 class PointType(models.Model):
     """
-    Point type for categorizing GPS points with custom icons.
+    Point type for categorizing GPS points with multilingual names.
 
-    Types can be user-specific or base types (user=None for system defaults).
-    Each user can create up to 1000 types with unique names.
+    Types can be base (system defaults) or custom (user-created).
+    Each type has multilingual names stored as a JSON object.
+    Names follow fallback order: user language → English → creation language.
     """
+
+    TYPE_CHOICES = [
+        ('base', 'Base'),
+        ('custom', 'Custom'),
+    ]
+
+    VISIBILITY_CHOICES = [
+        ('public', 'Public'),
+        ('private', 'Private'),
+    ]
 
     STATUS_CHOICES = [
         ('active', 'Active'),
@@ -33,9 +44,23 @@ class PointType(models.Model):
         help_text="Unique point type identifier"
     )
 
-    name = models.CharField(
-        max_length=100,
-        help_text="Type name (must be unique per user)"
+    type_choice = models.CharField(
+        max_length=10,
+        choices=TYPE_CHOICES,
+        default='custom',
+        db_column='type',
+        help_text="Type classification (base or custom)"
+    )
+
+    names = models.JSONField(
+        default=dict,
+        help_text="Multilingual names (map of language_code: name)"
+    )
+
+    creation_language = models.CharField(
+        max_length=10,
+        default='en',
+        help_text="ISO 639-1 language code at creation"
     )
 
     icon = models.CharField(
@@ -49,13 +74,21 @@ class PointType(models.Model):
         help_text="Display order (lower values first)"
     )
 
-    user = models.ForeignKey(
+    owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         null=True,
         blank=True,
         related_name='point_types',
-        help_text="Type owner (null for base/system types)"
+        db_column='user',
+        help_text="Type owner (null for base types)"
+    )
+
+    visibility = models.CharField(
+        max_length=10,
+        choices=VISIBILITY_CHOICES,
+        default='private',
+        help_text="Visibility (public or private)"
     )
 
     status = models.CharField(
@@ -79,35 +112,58 @@ class PointType(models.Model):
         db_table = 'point_types'
         verbose_name = 'Point Type'
         verbose_name_plural = 'Point Types'
-        constraints = [
-            # Unique name per user (case-insensitive)
-            models.UniqueConstraint(
-                models.functions.Lower('name'),
-                'user',
-                name='unique_pointtype_name_per_user',
-                violation_error_message="Type name must be unique per user"
-            )
-        ]
         indexes = [
-            models.Index(fields=['user', 'order'], name='idx_pointtype_user_order'),
-            models.Index(fields=['user', 'status'], name='idx_pointtype_user_status'),
+            models.Index(fields=['owner', 'order'], name='idx_pointtype_owner_order'),
+            models.Index(fields=['owner', 'status'], name='idx_pointtype_owner_status'),
+            models.Index(fields=['type_choice'], name='idx_pointtype_type'),
         ]
-        ordering = ['order', 'name']
+        ordering = ['order', 'created_at']
 
     def clean(self):
         """Validate type constraints."""
         super().clean()
 
+        # Validate at least one name exists
+        if not self.names or len(self.names) == 0:
+            raise ValidationError({
+                'names': 'At least one translation must be provided.'
+            })
+
+        # Validate creation_language exists in names (for new objects)
+        if not self.pk and self.creation_language not in self.names:
+            raise ValidationError({
+                'creation_language': f'Creation language "{self.creation_language}" '
+                                   f'must have a corresponding name in the names field.'
+            })
+
+        # Validate base types have creation_language='en'
+        if self.type_choice == 'base' and self.creation_language != 'en':
+            raise ValidationError({
+                'creation_language': 'Base types must have English as creation language.'
+            })
+
+        # Validate base types have owner=None
+        if self.type_choice == 'base' and self.owner is not None:
+            raise ValidationError({
+                'owner': 'Base types cannot have an owner.'
+            })
+
+        # Validate custom types have owner
+        if self.type_choice == 'custom' and self.owner is None:
+            raise ValidationError({
+                'owner': 'Custom types must have an owner.'
+            })
+
         # Validate max 1000 types per user
-        if self.user and not self.pk:  # Only check on creation
+        if self.owner and not self.pk:  # Only check on creation
             active_types_count = PointType.objects.filter(
-                user=self.user,
+                owner=self.owner,
                 status='active'
             ).count()
 
             if active_types_count >= 1000:
                 raise ValidationError({
-                    'user': 'You have reached the maximum of 1000 point types. '
+                    'owner': 'You have reached the maximum of 1000 point types. '
                            'Please delete some types before creating new ones.'
                 })
 
@@ -116,10 +172,44 @@ class PointType(models.Model):
         self.full_clean()
         super().save(*args, **kwargs)
 
+    def get_name(self, language_code='en'):
+        """
+        Get name in specified language with fallback logic.
+
+        Fallback order:
+        1. Requested language
+        2. English ('en')
+        3. Creation language
+
+        Args:
+            language_code: ISO 639-1 language code (default: 'en')
+
+        Returns:
+            str: Name in best available language
+        """
+        # Try requested language
+        if language_code in self.names:
+            return self.names[language_code]
+
+        # Fallback to English
+        if 'en' in self.names:
+            return self.names['en']
+
+        # Fallback to creation language
+        if self.creation_language in self.names:
+            return self.names[self.creation_language]
+
+        # Fallback to any available name (should never happen due to validation)
+        if self.names:
+            return next(iter(self.names.values()))
+
+        return "Unnamed"
+
     def __str__(self):
-        if self.user:
-            return f"{self.name} ({self.user.email})"
-        return f"{self.name} (Base Type)"
+        name = self.get_name('en')
+        if self.owner:
+            return f"{name} ({self.owner.email})"
+        return f"{name} (Base Type)"
 
 
 class UserTypeOrder(models.Model):
@@ -175,7 +265,7 @@ class UserTypeOrder(models.Model):
         ordering = ['order']
 
     def __str__(self):
-        return f"{self.user.email}: {self.type.name} (order={self.order})"
+        return f"{self.user.email}: {self.type.get_name('en')} (order={self.order})"
 
 
 class Tag(models.Model):

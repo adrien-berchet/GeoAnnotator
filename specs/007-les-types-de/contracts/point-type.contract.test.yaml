@@ -1,0 +1,68 @@
+# Contract Test: Point Type API
+
+- name: List all point types
+  request:
+    method: GET
+    url: /point-types/
+  response:
+    status: 200
+    body:
+      - id: any
+        type: any
+        names: any
+        creation_language: any
+        owner: any
+        visibility: any
+
+- name: Create a custom point type
+  request:
+    method: POST
+    url: /point-types/
+    body:
+      names:
+        en: "Tree"
+      creation_language: "en"
+      visibility: "private"
+  response:
+    status: 201
+    body:
+      id: any
+      type: "custom"
+      names:
+        en: "Tree"
+      creation_language: "en"
+      owner: any
+      visibility: "private"
+
+- name: Get a point type by ID
+  request:
+    method: GET
+    url: /point-types/{id}/
+  response:
+    status: 200
+    body:
+      id: any
+      type: any
+      names: any
+      creation_language: any
+      owner: any
+      visibility: any
+
+- name: Update a custom point type (add translation)
+  request:
+    method: PATCH
+    url: /point-types/{id}/
+    body:
+      names:
+        fr: "Arbre"
+  response:
+    status: 200
+    body:
+      id: any
+      type: "custom"
+      names:
+        en: "Tree"
+        fr: "Arbre"
+      creation_language: "en"
+      owner: any
+      visibility: "private"

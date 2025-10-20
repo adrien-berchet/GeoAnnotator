@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { getPointTypes } from '../../api/types';
 import type { PointType } from '../../types/point';
 import { getErrorMessage } from '../../api/client';
+import { getPointTypeName } from '../../utils/pointTypeUtils';
+import { useLanguage } from '../../contexts/LanguageContext';
 import './TypeSelector.css';
 
 interface TypeSelectorProps {
@@ -21,6 +23,7 @@ export default function TypeSelector({
   label = 'Point Type',
   helpText,
 }: TypeSelectorProps) {
+  const { currentLanguage } = useLanguage();
   const [types, setTypes] = useState<PointType[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -136,7 +139,7 @@ export default function TypeSelector({
               ) : (
                 <span className="type-icon-emoji">📍</span>
               )}
-              <span>{selectedType.name}</span>
+              <span>{getPointTypeName(selectedType, currentLanguage)}</span>
             </span>
           ) : (
             <span className="type-selector-placeholder">Select a type...</span>
@@ -168,8 +171,8 @@ export default function TypeSelector({
                 ) : (
                   <span className="type-icon-emoji">📍</span>
                 )}
-                <span className="type-name">{type.name}</span>
-                {!type.user && <span className="type-badge">(Base)</span>}
+                <span className="type-name">{getPointTypeName(type, currentLanguage)}</span>
+                {!type.owner && <span className="type-badge">(Base)</span>}
               </li>
             ))}
           </ul>
