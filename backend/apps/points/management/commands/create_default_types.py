@@ -4,9 +4,13 @@ Management command to create default point types with multilingual names.
 Usage: python manage.py create_default_types
 """
 import os
-import base64
+import shutil
+import uuid as uuid_lib
 from pathlib import Path
 from django.core.management.base import BaseCommand
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+from django.conf import settings
 from apps.points.models import PointType
 
 
@@ -15,12 +19,13 @@ class Command(BaseCommand):
 
     def load_icon(self, icon_value):
         """
-        Load icon - either return emoji as-is or load image file and encode as base64.
+        Load icon - either return emoji as-is or copy image file to media storage.
 
         If icon_value ends with .png, .jpg, .jpeg, .gif, .svg, it's treated as a file path
-        relative to the base_types_icons directory.
+        relative to the base_types_icons directory. The file is copied to media/point_type_icons/
+        with a unique base-prefixed filename to avoid conflicts with user uploads.
 
-        Returns the icon value (emoji or data URI for images).
+        Returns the icon value (emoji or media URL for images).
         """
         image_extensions = ('.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp')
 
@@ -36,25 +41,37 @@ class Command(BaseCommand):
                 return '📍'  # Default placeholder
 
             try:
-                # Read the image file and encode as base64
+                # Generate unique filename with 'base_' prefix to distinguish from user uploads
+                # Keep original filename for readability
+                file_ext = icon_path.suffix
+                base_filename = icon_path.stem
+                unique_filename = f"base_{base_filename}_{uuid_lib.uuid4().hex[:8]}{file_ext}"
+                media_path = os.path.join('point_type_icons', unique_filename)
+
+                # Check if file already exists in media storage
+                if default_storage.exists(media_path):
+                    # File already exists, build and return absolute URL
+                    base_url = getattr(settings, 'BASE_URL', 'http://localhost:8000')
+                    media_url = settings.MEDIA_URL.lstrip('/')
+                    return f"{base_url}/{media_url}{media_path}"
+
+                # Read the image file
                 with open(icon_path, 'rb') as img_file:
-                    image_data = img_file.read()
-                    base64_data = base64.b64encode(image_data).decode('utf-8')
+                    file_content = img_file.read()
 
-                    # Determine MIME type
-                    ext = icon_path.suffix.lower()
-                    mime_types = {
-                        '.png': 'image/png',
-                        '.jpg': 'image/jpeg',
-                        '.jpeg': 'image/jpeg',
-                        '.gif': 'image/gif',
-                        '.svg': 'image/svg+xml',
-                        '.webp': 'image/webp'
-                    }
-                    mime_type = mime_types.get(ext, 'image/png')
+                # Save to media storage
+                saved_path = default_storage.save(media_path, ContentFile(file_content))
 
-                    # Return data URI
-                    return f'data:{mime_type};base64,{base64_data}'
+                # Build absolute URL (like the upload API does)
+                # Get base URL from settings or use default
+                base_url = getattr(settings, 'BASE_URL', 'http://localhost:8000')
+                media_url = settings.MEDIA_URL.lstrip('/')
+                icon_url = f"{base_url}/{media_url}{saved_path}"
+
+                self.stdout.write(
+                    self.style.SUCCESS(f'  → Copied icon: {icon_value} → {icon_url}')
+                )
+                return icon_url
 
             except Exception as e:
                 self.stdout.write(
@@ -93,7 +110,7 @@ class Command(BaseCommand):
             {'names': {'en': 'Hotel', 'fr': 'Hôtel'}, 'icon': '🏨', 'order': 17},
             {'names': {'en': 'Campsite', 'fr': 'Camping'}, 'icon': '⛺', 'order': 18},
             {'names': {'en': 'Shelter', 'fr': 'Refuge'}, 'icon': '🏠', 'order': 19},
-            {'names': {'en': 'Food', 'fr': 'Nourriture'}, 'icon': 'food', 'order': 20},
+            {'names': {'en': 'Food', 'fr': 'Nourriture'}, 'icon': 'food.png', 'order': 20},
             {'names': {'en': 'Burger', 'fr': 'Burger'}, 'icon': '🍔', 'order': 21},
             {'names': {'en': 'Salad', 'fr': 'Salade'}, 'icon': '🥗', 'order': 22},
             {'names': {'en': 'Drink', 'fr': 'Boisson'}, 'icon': '🥤', 'order': 23},
@@ -197,7 +214,7 @@ class Command(BaseCommand):
             {'names': {'en': 'Pharmacy', 'fr': 'Pharmacie'}, 'icon': 'pharmacy.png', 'order': 107},
             {'names': {'en': 'Bakery', 'fr': 'Boulangerie'}, 'icon': '🥖', 'order': 108},
             {'names': {'en': 'Butcher', 'fr': 'Boucherie'}, 'icon': '🥩', 'order': 109},
-            {'names': {'en': 'Accessible', 'fr': 'Handicapé'}, 'icon': '♿', 'order': 110},
+            {'names': {'en': 'Accessible', 'fr': 'Handicapé'}, 'icon': 'accessible.png', 'order': 110},
 
             # === ACTIVITIES & RECREATION (111-120) ===
             {'names': {'en': 'Picnic Area', 'fr': 'Zone de picnic'}, 'icon': '🧺', 'order': 111},

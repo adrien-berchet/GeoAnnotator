@@ -126,7 +126,7 @@ export default function TypeSelector({
           {selectedType ? (
             <span className="type-selector-selected">
               {selectedType.icon && selectedType.icon !== '/icons/default.svg' ? (
-                selectedType.icon.startsWith('http') || selectedType.icon.startsWith('/') ? (
+                selectedType.icon.startsWith('http') || selectedType.icon.startsWith('/') || selectedType.icon.startsWith('data:') ? (
                   <img
                     src={selectedType.icon}
                     alt=""
@@ -158,7 +158,7 @@ export default function TypeSelector({
                 aria-selected={value === type.id}
               >
                 {type.icon && type.icon !== '/icons/default.svg' ? (
-                  type.icon.startsWith('http') || type.icon.startsWith('/') ? (
+                  type.icon.startsWith('http') || type.icon.startsWith('/') || type.icon.startsWith('data:') ? (
                     <img
                       src={type.icon}
                       alt=""

@@ -45,7 +45,7 @@ class PointTypeSerializer(serializers.ModelSerializer):
 
     Includes full details with JSON names field for multilingual support.
     """
-    owner = UserSummarySerializer(source='owner', read_only=True)
+    owner = UserSummarySerializer(read_only=True)
     type = serializers.CharField(source='type_choice', read_only=True)
 
     class Meta:

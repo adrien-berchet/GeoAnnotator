@@ -18,9 +18,10 @@ Example:
 
 When the management command runs:
 - If the `icon` value ends with an image extension, it loads the file from this directory
-- The image is read and encoded as a base64 data URI
-- The data URI is stored in the database's `icon` field
-- The frontend can then display the image directly from the data URI
+- The file is copied to `media/point_type_icons/` with a unique `base_` prefixed filename
+- The media URL path is stored in the database's `icon` field (e.g., `/media/point_type_icons/base_hunting_area_abc12345.png`)
+- The frontend displays the image from the media URL
+- This is consistent with how user-uploaded custom type icons are handled
 
 ## Image Recommendations
 

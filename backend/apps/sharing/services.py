@@ -125,7 +125,7 @@ class PermissionService:
         query = query.filter(trash_entry__isnull=True)
 
         # Optimize queries by selecting related objects
-        query = query.select_related('type', 'type__user', 'owner')
+        query = query.select_related('type', 'type__owner', 'owner')
 
         return query
 

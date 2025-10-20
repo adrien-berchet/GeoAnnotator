@@ -5,6 +5,8 @@
  */
 
 import type { Tag, PointType } from '../../types/point';
+import { getPointTypeName } from '../../utils/pointTypeUtils';
+import { useLanguage } from '../../contexts/LanguageContext';
 import './FilterPanel.css';
 
 interface FilterPanelProps {
@@ -30,6 +32,7 @@ export function FilterPanel({
   onToggleType,
   onClearAll,
 }: FilterPanelProps) {
+  const { currentLanguage } = useLanguage();
   const hasActiveFilters = selectedTags.length > 0 || selectedTypes.length > 0;
 
   return (
@@ -75,13 +78,13 @@ export function FilterPanel({
                         {selectedTypes.includes(type.id) ? '✓' : ''}
                       </span>
                       {type.icon && type.icon !== '/icons/default.svg' && (
-                        type.icon.startsWith('http') || type.icon.startsWith('/') ? (
+                        type.icon.startsWith('http') || type.icon.startsWith('/') || type.icon.startsWith('data:') ? (
                           <img src={type.icon} alt="" className="filter-type-icon" />
                         ) : (
                           <span className="filter-type-icon-emoji">{type.icon}</span>
                         )
                       )}
-                      <span className="filter-name">{type.name}</span>
+                      <span className="filter-name">{getPointTypeName(type, currentLanguage)}</span>
                     </button>
                   ))}
                 </div>

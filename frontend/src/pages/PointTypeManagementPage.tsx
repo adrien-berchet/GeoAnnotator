@@ -17,7 +17,9 @@ export default function PointTypeManagementPage() {
 
   // Create form
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [newTypeNames, setNewTypeNames] = useState<Record<string, string>>({ [currentLanguage]: '' });
+  const [newTypeNames, setNewTypeNames] = useState<Record<string, string>>(() => ({
+    [currentLanguage || 'en']: ''
+  }));
   const [newTypeIcon, setNewTypeIcon] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -420,7 +422,7 @@ export default function PointTypeManagementPage() {
                   {/* Icon preview */}
                   {newTypeIcon && (
                     <div className="icon-preview">
-                      {newTypeIcon.startsWith('http') || newTypeIcon.startsWith('/') ? (
+                      {newTypeIcon.startsWith('http') || newTypeIcon.startsWith('/') || newTypeIcon.startsWith('data:') ? (
                         iconLoadError ? (
                           <span className="icon-error" title={t('types.corsIssue', "Click 'Download Icon' to fix CORS issue")}>❌</span>
                         ) : (
@@ -514,7 +516,7 @@ export default function PointTypeManagementPage() {
                       {editingTypeId === type.id ? (
                         <div className="icon-edit-preview">
                           {editingTypeIcon && editingTypeIcon !== '/icons/default.svg' ? (
-                            editingTypeIcon.startsWith('http') || editingTypeIcon.startsWith('/') ? (
+                            editingTypeIcon.startsWith('http') || editingTypeIcon.startsWith('/') || editingTypeIcon.startsWith('data:') ? (
                               editingIconLoadError ? (
                                 <span className="icon-error" title="Icon load error">❌</span>
                               ) : (
@@ -535,7 +537,7 @@ export default function PointTypeManagementPage() {
                         </div>
                       ) : (
                         type.icon && type.icon !== '/icons/default.svg' ? (
-                          type.icon.startsWith('http') || type.icon.startsWith('/') ? (
+                          type.icon.startsWith('http') || type.icon.startsWith('/') || type.icon.startsWith('data:') ? (
                             <img
                               src={type.icon}
                               alt=""

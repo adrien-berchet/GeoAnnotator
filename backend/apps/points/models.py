@@ -63,10 +63,9 @@ class PointType(models.Model):
         help_text="ISO 639-1 language code at creation"
     )
 
-    icon = models.CharField(
-        max_length=500,
+    icon = models.TextField(
         default='📍',
-        help_text="Icon URL, emoji, or asset reference"
+        help_text="Icon URL, emoji, data URI, or asset reference"
     )
 
     order = models.IntegerField(
