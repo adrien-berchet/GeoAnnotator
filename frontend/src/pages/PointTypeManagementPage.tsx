@@ -307,169 +307,173 @@ export default function PointTypeManagementPage() {
         </div>
       )}
 
-      <div className="type-management-content">
-        <div className="create-type-section">
-          {!showCreateForm ? (
-            <button
-              onClick={() => setShowCreateForm(true)}
-              className="btn-primary"
-              aria-label={t('types.addNewType', 'Add new point type')}
-            >
-              + {t('types.addNewType', 'Add New Type')}
-            </button>
-          ) : (
-            <form onSubmit={handleCreate} className="create-type-form">
-              <h2>{t('types.createNewType', 'Create New Point Type')}</h2>
+        <div className="type-management-content">
+          <div className="create-type-section">
+            {!showCreateForm ? (
+              <button
+                onClick={() => {
+                  setShowCreateForm(true);
+                  setNewTypeNames({ [currentLanguage]: '' });
+                  setNewTypeIcon('');
+                  setCreateError(null);
+                }}
+                className="btn-primary"
+                aria-label={t('types.addNewType', 'Add new point type')}
+              >
+                + {t('types.addNewType', 'Add New Type')}
+              </button>
+            ) : (
+              <form onSubmit={handleCreate} className="create-type-form">
+                <h2>{t('types.createNewType', 'Create New Point Type')}</h2>
 
-              {createError && (
-                <div className="error-message" role="alert">
-                  {createError}
-                </div>
-              )}
+                {createError && (
+                  <div className="error-message" role="alert">
+                    {createError}
+                  </div>
+                )}
 
-              <div className="form-group">
-                <TranslationManager
-                  names={newTypeNames}
-                  onChange={setNewTypeNames}
-                  disabled={creating}
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="type-icon">
-                  {t('types.icon', 'Icon')} <span className="optional">({t('types.optional', 'optional')})</span>
-                </label>
-
-                {/* File upload section */}
-                <div className="icon-upload-section">
-                  <input
-                    ref={fileInputRef}
-                    id="icon-file"
-                    type="file"
-                    accept=".svg,.png,.jpg,.jpeg,image/svg+xml,image/png,image/jpeg"
-                    onChange={handleFileSelect}
-                    disabled={creating || uploading}
-                    style={{ display: 'none' }}
+                <div className="form-group">
+                  <TranslationManager
+                    names={newTypeNames}
+                    onChange={setNewTypeNames}
+                    disabled={creating}
                   />
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="btn-secondary"
-                    disabled={creating || uploading}
-                  >
-                    {uploading ? t('types.uploading', 'Uploading...') : t('types.chooseIconFile', 'Choose Icon File')}
-                  </button>
+                </div>
 
-                  {selectedFile && (
-                    <div className="file-preview">
-                      <span className="file-name">{selectedFile.name}</span>
+                <div className="form-group">
+                  <label htmlFor="type-icon">
+                    {t('types.icon', 'Icon')} <span className="optional">({t('types.optional', 'optional')})</span>
+                  </label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    {/* Bouton de sélection de fichier */}
+                    <div className="icon-upload-section" style={{ flex: '0 0 auto' }}>
+                      <input
+                        ref={fileInputRef}
+                        id="icon-file"
+                        type="file"
+                        accept=".svg,.png,.jpg,.jpeg,image/svg+xml,image/png,image/jpeg"
+                        onChange={handleFileSelect}
+                        disabled={creating || uploading}
+                        style={{ display: 'none' }}
+                      />
                       <button
                         type="button"
-                        onClick={handleRemoveFile}
-                        className="btn-icon"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="btn-secondary"
                         disabled={creating || uploading}
-                        aria-label={t('types.removeFile', 'Remove file')}
                       >
-                        ✕
+                        {uploading ? t('types.uploading', 'Uploading...') : t('types.chooseIconFile', 'Choose Icon File')}
                       </button>
-                    </div>
-                  )}
-                </div>
-
-                <div className="form-divider">
-                  <span>{t('types.or', 'OR')}</span>
-                </div>
-
-                {/* Manual URL input */}
-                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                  <input
-                    id="type-icon"
-                    type="text"
-                    value={newTypeIcon}
-                    onChange={(e) => {
-                      setNewTypeIcon(e.target.value);
-                      setIconLoadError(false);
-                    }}
-                    placeholder={t('types.iconPlaceholder', 'Enter emoji (e.g., 🎨) or URL')}
-                    maxLength={500}
-                    disabled={creating || uploading}
-                    style={{ flex: 1 }}
-                  />
-                  {/* Download button for external URLs with CORS issues */}
-                  {newTypeIcon && newTypeIcon.startsWith('http') && iconLoadError && (
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        try {
-                          setUploading(true);
-                          setCreateError(null);
-                          const result = await downloadTypeIcon(newTypeIcon);
-                          setNewTypeIcon(result.icon_url);
-                          setIconLoadError(false);
-                        } catch (err) {
-                          setCreateError(getErrorMessage(err));
-                        } finally {
-                          setUploading(false);
-                        }
-                      }}
-                      className="btn-secondary"
-                      disabled={uploading}
-                      title={t('types.downloadIconTitle', 'Download and save this icon locally')}
-                    >
-                      {uploading ? t('types.downloading', 'Downloading...') : t('types.downloadIcon', 'Download Icon')}
-                    </button>
-                  )}
-                  {/* Icon preview */}
-                  {newTypeIcon && (
-                    <div className="icon-preview">
-                      {newTypeIcon.startsWith('http') || newTypeIcon.startsWith('/') || newTypeIcon.startsWith('data:') ? (
-                        iconLoadError ? (
-                          <span className="icon-error" title={t('types.corsIssue', "Click 'Download Icon' to fix CORS issue")}>❌</span>
-                        ) : (
-                          <img
-                            src={newTypeIcon}
-                            alt={t('types.iconPreview', 'Icon preview')}
-                            className="type-icon"
-                            onLoad={() => setIconLoadError(false)}
-                            onError={() => setIconLoadError(true)}
-                          />
-                        )
-                      ) : (
-                        <span className="type-icon-emoji">{newTypeIcon}</span>
+                      {selectedFile && (
+                        <div className="file-preview">
+                          <span className="file-name">{selectedFile.name}</span>
+                          <button
+                            type="button"
+                            onClick={handleRemoveFile}
+                            className="btn-icon"
+                            disabled={creating || uploading}
+                            aria-label={t('types.removeFile', 'Remove file')}
+                          >
+                            ✕
+                          </button>
+                        </div>
                       )}
                     </div>
-                  )}
+                    {/* Séparateur OU */}
+                    <div className="form-divider" style={{ flex: '0 0 auto', margin: 0 }}>
+                      <span>{t('types.or', 'OR')}</span>
+                    </div>
+                    {/* Champ input pour URL/emoji et preview */}
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <input
+                        id="type-icon"
+                        type="text"
+                        value={newTypeIcon}
+                        onChange={(e) => {
+                          setNewTypeIcon(e.target.value);
+                          setIconLoadError(false);
+                        }}
+                        placeholder={t('types.iconPlaceholder', 'Enter emoji (e.g., 🎨) or URL')}
+                        maxLength={500}
+                        disabled={creating || uploading}
+                        style={{ flex: 1 }}
+                      />
+                      {/* Download button for external URLs with CORS issues */}
+                      {newTypeIcon && newTypeIcon.startsWith('http') && iconLoadError && (
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            try {
+                              setUploading(true);
+                              setCreateError(null);
+                              const result = await downloadTypeIcon(newTypeIcon);
+                              setNewTypeIcon(result.icon_url);
+                              setIconLoadError(false);
+                            } catch (err) {
+                              setCreateError(getErrorMessage(err));
+                            } finally {
+                              setUploading(false);
+                            }
+                          }}
+                          className="btn-secondary"
+                          disabled={uploading}
+                          title={t('types.downloadIconTitle', 'Download and save this icon locally')}
+                        >
+                          {uploading ? t('types.downloading', 'Downloading...') : t('types.downloadIcon', 'Download Icon')}
+                        </button>
+                      )}
+                      {/* Icon preview */}
+                      {newTypeIcon && (
+                        <div className="icon-preview">
+                          {newTypeIcon.startsWith('http') || newTypeIcon.startsWith('/') || newTypeIcon.startsWith('data:') ? (
+                            iconLoadError ? (
+                              <span className="icon-error" title={t('types.corsIssue', "Click 'Download Icon' to fix CORS issue")}>❌</span>
+                            ) : (
+                              <img
+                                src={newTypeIcon}
+                                alt={t('types.iconPreview', 'Icon preview')}
+                                className="type-icon"
+                                onLoad={() => setIconLoadError(false)}
+                                onError={() => setIconLoadError(true)}
+                              />
+                            )
+                          ) : (
+                            <span className="type-icon-emoji">{newTypeIcon}</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <small className="form-help">
+                    {t('types.uploadIconHelp', 'Upload an icon file (SVG, PNG, JPG - max 1MB) or enter an emoji/URL. If an external URL doesn\'t load due to CORS, click "Download Icon" to save it locally.')}
+                  </small>
                 </div>
-                <small className="form-help">
-                  {t('types.uploadIconHelp', 'Upload an icon file (SVG, PNG, JPG - max 1MB) or enter an emoji/URL. If an external URL doesn\'t load due to CORS, click "Download Icon" to save it locally.')}
-                </small>
-              </div>
 
-              <div className="form-actions">
-                <button
-                  type="submit"
-                  className="btn-primary"
-                  disabled={creating}
-                >
-                  {creating ? t('types.creating', 'Creating...') : t('types.createType', 'Create Type')}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowCreateForm(false);
-                    setNewTypeNames({ [currentLanguage]: '' });
-                    setNewTypeIcon('');
-                    setCreateError(null);
-                  }}
-                  className="btn-secondary"
-                  disabled={creating}
-                >
-                  {t('common.cancel', 'Cancel')}
-                </button>
-              </div>
-            </form>
-          )}
-        </div>
+                <div className="form-actions">
+                  <button
+                    type="submit"
+                    className="btn-primary"
+                    disabled={creating}
+                  >
+                    {creating ? t('types.creating', 'Creating...') : t('types.createType', 'Create Type')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowCreateForm(false);
+                      setNewTypeNames({ [currentLanguage]: '' });
+                      setNewTypeIcon('');
+                      setCreateError(null);
+                    }}
+                    className="btn-secondary"
+                    disabled={creating}
+                  >
+                    {t('common.cancel', 'Cancel')}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
 
         <div className="types-list">
           <h2>{t('types.yourPointTypes', 'Your Point Types')} ({types.filter(t => t.owner !== null).length})</h2>
