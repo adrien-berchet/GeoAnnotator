@@ -18,7 +18,7 @@ import type { Annotation } from '../types/annotation';
 import './PointDetailPage.css';
 
 export function PointDetailPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
@@ -183,7 +183,7 @@ export function PointDetailPage() {
                     onError={(e) => { e.currentTarget.style.display = 'none'; }}
                   />
                 )}
-                {point.type.name}
+                {point.type.names[language] || point.type.names[point.type.creation_language]}
               </span>
             </div>
           )}

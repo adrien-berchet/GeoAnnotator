@@ -10,6 +10,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import type { Mock } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ThemeProvider, useTheme } from '@/contexts/ThemeContext';
@@ -38,7 +39,7 @@ function ThemeTestComponent() {
 }
 
 describe('Theme Persistence Integration', () => {
-  let mockMatchMedia: vi.Mock;
+  let mockMatchMedia: Mock;
   let mediaQueryListeners: ((e: MediaQueryListEvent) => void)[] = [];
 
   beforeEach(() => {
@@ -83,20 +84,21 @@ describe('Theme Persistence Integration', () => {
         id: '1',
         theme_mode: 'dark',
         language: 'en',
+        default_map_type: 'osm',
         export_format: 'geojson',
         created_at: '2024-01-01T00:00:00Z',
         updated_at: '2024-01-01T00:00:00Z',
       };
 
       vi.mocked(useAuthModule.useAuth).mockReturnValue({
-  user: mockUser,
-  isLoading: false,
-  isAuthenticated: true,
-  login: vi.fn(),
-  logout: vi.fn(),
-  updateUser: vi.fn(),
-  getAccessToken: vi.fn(),
-  getRefreshToken: vi.fn(),
+        user: mockUser,
+        isLoading: false,
+        isAuthenticated: true,
+        login: vi.fn(),
+        logout: vi.fn(),
+        updateUser: vi.fn(),
+        getAccessToken: vi.fn(),
+        getRefreshToken: vi.fn(),
       });
 
       vi.mocked(settingsApi.getSettings).mockResolvedValue(mockPreferences);
@@ -136,8 +138,12 @@ describe('Theme Persistence Integration', () => {
       vi.mocked(useAuthModule.useAuth).mockReturnValue({
         user: null,
         isLoading: false,
+        isAuthenticated: false,
         login: vi.fn(),
         logout: vi.fn(),
+        updateUser: vi.fn(),
+        getAccessToken: vi.fn(() => null),
+        getRefreshToken: vi.fn(() => null),
       });
 
       render(
@@ -167,17 +173,21 @@ describe('Theme Persistence Integration', () => {
         id: '1',
         theme_mode: 'auto',
         language: 'en',
+        default_map_type: 'osm',
         export_format: 'geojson',
         created_at: '2024-01-01T00:00:00Z',
         updated_at: '2024-01-01T00:00:00Z',
       };
 
       vi.mocked(useAuthModule.useAuth).mockReturnValue({
-  user: mockUser,
-  isLoading: false,
+        user: mockUser,
+        isLoading: false,
+        isAuthenticated: true,
         login: vi.fn(),
         logout: vi.fn(),
-        register: vi.fn(),
+        updateUser: vi.fn(),
+        getAccessToken: vi.fn(() => 'mockAccessToken'),
+        getRefreshToken: vi.fn(() => 'mockRefreshToken'),
       });
 
       vi.mocked(settingsApi.getSettings).mockResolvedValue(mockPreferences);
@@ -213,10 +223,13 @@ describe('Theme Persistence Integration', () => {
 
       vi.mocked(useAuthModule.useAuth).mockReturnValue({
         user: null,
-        loading: false,
+        isLoading: false,
+        isAuthenticated: false,
         login: vi.fn(),
         logout: vi.fn(),
-        register: vi.fn(),
+        updateUser: vi.fn(),
+        getAccessToken: vi.fn(() => 'mockAccessToken'),
+        getRefreshToken: vi.fn(() => 'mockRefreshToken'),
       });
 
       render(
@@ -242,14 +255,17 @@ describe('Theme Persistence Integration', () => {
 
   describe('T006: Fallback logic', () => {
     it('falls back to default theme when backend fails', async () => {
-      const mockUser = { id: '1', email: 'test@example.com' };
+      const mockUser = { id: '1', email: 'test@example.com', storage_used: 0, storage_limit: 1000000 };
 
       vi.mocked(useAuthModule.useAuth).mockReturnValue({
         user: mockUser,
-        loading: false,
+        isLoading: false,
+        isAuthenticated: true,
         login: vi.fn(),
         logout: vi.fn(),
-        register: vi.fn(),
+        updateUser: vi.fn(),
+        getAccessToken: vi.fn(() => 'mockAccessToken'),
+        getRefreshToken: vi.fn(() => 'mockRefreshToken'),
       });
 
       vi.mocked(settingsApi.getSettings).mockRejectedValue(new Error('Network error'));
@@ -279,11 +295,12 @@ describe('Theme Persistence Integration', () => {
 
     it('continues to work when theme persistence fails', async () => {
       const user = userEvent.setup();
-      const mockUser = { id: '1', email: 'test@example.com' };
+      const mockUser = { id: '1', email: 'test@example.com' , storage_used: 0, storage_limit: 1000000 };
       const mockPreferences: UserPreferences = {
         id: '1',
         theme_mode: 'auto',
         language: 'en',
+        default_map_type: 'osm',
         export_format: 'geojson',
         created_at: '2024-01-01T00:00:00Z',
         updated_at: '2024-01-01T00:00:00Z',
@@ -291,10 +308,13 @@ describe('Theme Persistence Integration', () => {
 
       vi.mocked(useAuthModule.useAuth).mockReturnValue({
         user: mockUser,
-        loading: false,
+        isLoading: false,
+        isAuthenticated: true,
         login: vi.fn(),
         logout: vi.fn(),
-        register: vi.fn(),
+        updateUser: vi.fn(),
+        getAccessToken: vi.fn(() => 'mockAccessToken'),
+        getRefreshToken: vi.fn(() => 'mockRefreshToken'),
       });
 
       vi.mocked(settingsApi.getSettings).mockResolvedValue(mockPreferences);
@@ -336,10 +356,13 @@ describe('Theme Persistence Integration', () => {
 
       vi.mocked(useAuthModule.useAuth).mockReturnValue({
         user: null,
-        loading: false,
+        isLoading: false,
+        isAuthenticated: false,
         login: vi.fn(),
         logout: vi.fn(),
-        register: vi.fn(),
+        updateUser: vi.fn(),
+        getAccessToken: vi.fn(() => 'mockAccessToken'),
+        getRefreshToken: vi.fn(() => 'mockRefreshToken'),
       });
 
       render(
@@ -375,10 +398,13 @@ describe('Theme Persistence Integration', () => {
     it('resolves auto theme based on system preference', async () => {
       vi.mocked(useAuthModule.useAuth).mockReturnValue({
         user: null,
-        loading: false,
+        isLoading: false,
+        isAuthenticated: false,
         login: vi.fn(),
         logout: vi.fn(),
-        register: vi.fn(),
+        updateUser: vi.fn(),
+        getAccessToken: vi.fn(() => 'mockAccessToken'),
+        getRefreshToken: vi.fn(() => 'mockRefreshToken'),
       });
 
       // Set system to prefer dark
@@ -409,14 +435,16 @@ describe('Theme Persistence Integration', () => {
     });
 
     it('updates resolved theme when system preference changes in auto mode', async () => {
-      const user = userEvent.setup();
 
       vi.mocked(useAuthModule.useAuth).mockReturnValue({
         user: null,
-        loading: false,
+        isLoading: false,
+        isAuthenticated: false,
         login: vi.fn(),
         logout: vi.fn(),
-        register: vi.fn(),
+        updateUser: vi.fn(),
+        getAccessToken: vi.fn(() => 'mockAccessToken'),
+        getRefreshToken: vi.fn(() => 'mockRefreshToken'),
       });
 
       render(

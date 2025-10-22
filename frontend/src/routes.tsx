@@ -17,7 +17,6 @@ import TagManagementPage from './pages/TagManagementPage';
 import PointTypeManagementPage from './pages/PointTypeManagementPage';
 import { TrashPage } from './pages/TrashPage';
 import { SettingsPage } from './pages/SettingsPage';
-import { ThemeProvider } from './contexts/ThemeContext';
 
 // Placeholder components - to be implemented
 const ProfilePage = () => <div>Profile Page</div>;

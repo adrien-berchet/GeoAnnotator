@@ -10,15 +10,15 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import MapPage from '../../pages/MapPage';
+import { MapPage } from '../../pages/MapPage';
 
 // Mock API client
 vi.mock('../../api/client', () => ({
-  default: {
+  apiClient: {
     get: vi.fn(),
     post: vi.fn(),
     patch: vi.fn(),
@@ -120,7 +120,7 @@ describe('Point Creation with Types Integration Tests', () => {
       const user = userEvent.setup();
       const apiClient = await import('../../api/client');
 
-      vi.mocked(apiClient.default.get).mockImplementation((url) => {
+      vi.mocked(apiClient.apiClient.get).mockImplementation((url: string) => {
         if (url.includes('/types/')) return Promise.resolve({ data: mockTypes });
         if (url.includes('/points/')) return Promise.resolve({ data: mockPoints });
         return Promise.reject(new Error('Unknown endpoint'));
@@ -157,7 +157,7 @@ describe('Point Creation with Types Integration Tests', () => {
       const user = userEvent.setup();
       const apiClient = await import('../../api/client');
 
-      vi.mocked(apiClient.default.get).mockImplementation((url) => {
+      vi.mocked(apiClient.apiClient.get).mockImplementation((url: string) => {
         if (url.includes('/types/')) return Promise.resolve({ data: mockTypes });
         if (url.includes('/points/')) return Promise.resolve({ data: mockPoints });
         return Promise.reject(new Error('Unknown endpoint'));
@@ -186,7 +186,7 @@ describe('Point Creation with Types Integration Tests', () => {
       const user = userEvent.setup();
       const apiClient = await import('../../api/client');
 
-      vi.mocked(apiClient.default.get).mockImplementation((url) => {
+      vi.mocked(apiClient.apiClient.get).mockImplementation((url: string) => {
         if (url.includes('/types/')) return Promise.resolve({ data: mockTypes });
         if (url.includes('/points/')) return Promise.resolve({ data: mockPoints });
         return Promise.reject(new Error('Unknown endpoint'));
@@ -220,13 +220,13 @@ describe('Point Creation with Types Integration Tests', () => {
       const user = userEvent.setup();
       const apiClient = await import('../../api/client');
 
-      vi.mocked(apiClient.default.get).mockImplementation((url) => {
+      vi.mocked(apiClient.apiClient.get).mockImplementation((url: string) => {
         if (url.includes('/types/')) return Promise.resolve({ data: mockTypes });
         if (url.includes('/points/')) return Promise.resolve({ data: mockPoints });
         return Promise.reject(new Error('Unknown endpoint'));
       });
 
-      vi.mocked(apiClient.default.post).mockResolvedValue({
+      vi.mocked(apiClient.apiClient.post).mockResolvedValue({
         data: {
           id: 'new-point-id',
           title: 'New Restaurant',
@@ -266,7 +266,7 @@ describe('Point Creation with Types Integration Tests', () => {
 
       // Verify API was called with correct type_id
       await waitFor(() => {
-        expect(apiClient.default.post).toHaveBeenCalledWith(
+        expect(apiClient.apiClient.post).toHaveBeenCalledWith(
           expect.stringContaining('/points/'),
           expect.objectContaining({
             title: 'New Restaurant',
@@ -280,13 +280,13 @@ describe('Point Creation with Types Integration Tests', () => {
       const user = userEvent.setup();
       const apiClient = await import('../../api/client');
 
-      vi.mocked(apiClient.default.get).mockImplementation((url) => {
+      vi.mocked(apiClient.apiClient.get).mockImplementation((url: string) => {
         if (url.includes('/types/')) return Promise.resolve({ data: mockTypes });
         if (url.includes('/points/')) return Promise.resolve({ data: mockPoints });
         return Promise.reject(new Error('Unknown endpoint'));
       });
 
-      vi.mocked(apiClient.default.post).mockResolvedValue({
+      vi.mocked(apiClient.apiClient.post).mockResolvedValue({
         data: {
           id: 'new-point-id',
           title: 'Generic Point',
@@ -319,11 +319,11 @@ describe('Point Creation with Types Integration Tests', () => {
       await user.click(saveButton);
 
       await waitFor(() => {
-        expect(apiClient.default.post).toHaveBeenCalled();
+        expect(apiClient.apiClient.post).toHaveBeenCalled();
       });
 
       // Verify response has default type
-      const createdPoint = (apiClient.default.post as any).mock.results[0].value;
+      const createdPoint = (apiClient.apiClient.post as any).mock.results[0].value;
       expect((await createdPoint).data.type.name).toBe('Point');
     });
 
@@ -331,7 +331,7 @@ describe('Point Creation with Types Integration Tests', () => {
       const user = userEvent.setup();
       const apiClient = await import('../../api/client');
 
-      vi.mocked(apiClient.default.get).mockImplementation((url) => {
+  vi.mocked(apiClient.apiClient.get).mockImplementation((url: string) => {
         if (url.includes('/types/')) return Promise.resolve({ data: mockTypes });
         if (url.includes('/points/')) return Promise.resolve({ data: mockPoints });
         return Promise.reject(new Error('Unknown endpoint'));
@@ -357,7 +357,7 @@ describe('Point Creation with Types Integration Tests', () => {
       const user = userEvent.setup();
       const apiClient = await import('../../api/client');
 
-      vi.mocked(apiClient.default.get).mockImplementation((url) => {
+  vi.mocked(apiClient.apiClient.get).mockImplementation((url: string) => {
         if (url.includes('/types/')) return Promise.resolve({ data: mockTypes });
         if (url.includes('/points/')) return Promise.resolve({ data: mockPoints });
         return Promise.reject(new Error('Unknown endpoint'));
@@ -391,7 +391,7 @@ describe('Point Creation with Types Integration Tests', () => {
     it('should have proper ARIA labels for type dropdown', async () => {
       const apiClient = await import('../../api/client');
 
-      vi.mocked(apiClient.default.get).mockImplementation((url) => {
+  vi.mocked(apiClient.apiClient.get).mockImplementation((url: string) => {
         if (url.includes('/types/')) return Promise.resolve({ data: mockTypes });
         if (url.includes('/points/')) return Promise.resolve({ data: mockPoints });
         return Promise.reject(new Error('Unknown endpoint'));
@@ -409,7 +409,7 @@ describe('Point Creation with Types Integration Tests', () => {
       const user = userEvent.setup();
       const apiClient = await import('../../api/client');
 
-      vi.mocked(apiClient.default.get).mockImplementation((url) => {
+  vi.mocked(apiClient.apiClient.get).mockImplementation((url: string) => {
         if (url.includes('/types/')) return Promise.resolve({ data: mockTypes });
         if (url.includes('/points/')) return Promise.resolve({ data: mockPoints });
         return Promise.reject(new Error('Unknown endpoint'));
@@ -446,7 +446,7 @@ describe('Point Creation with Types Integration Tests', () => {
     it('should show error when type API fails to load', async () => {
       const apiClient = await import('../../api/client');
 
-      vi.mocked(apiClient.default.get).mockImplementation((url) => {
+  vi.mocked(apiClient.apiClient.get).mockImplementation((url: string) => {
         if (url.includes('/types/')) return Promise.reject(new Error('Network error'));
         if (url.includes('/points/')) return Promise.resolve({ data: mockPoints });
         return Promise.reject(new Error('Unknown endpoint'));

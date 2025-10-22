@@ -23,7 +23,7 @@ export default function TypeSelector({
   label = 'Point Type',
   helpText,
 }: TypeSelectorProps) {
-  const { currentLanguage } = useLanguage();
+  const { language } = useLanguage();
   const [types, setTypes] = useState<PointType[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -139,7 +139,7 @@ export default function TypeSelector({
               ) : (
                 <span className="type-icon-emoji">📍</span>
               )}
-              <span>{getPointTypeName(selectedType, currentLanguage)}</span>
+              <span>{getPointTypeName(selectedType, language)}</span>
             </span>
           ) : (
             <span className="type-selector-placeholder">Select a type...</span>
@@ -171,7 +171,7 @@ export default function TypeSelector({
                 ) : (
                   <span className="type-icon-emoji">📍</span>
                 )}
-                <span className="type-name">{getPointTypeName(type, currentLanguage)}</span>
+                <span className="type-name">{getPointTypeName(type, language)}</span>
                 {!type.owner && <span className="type-badge">(Base)</span>}
               </li>
             ))}

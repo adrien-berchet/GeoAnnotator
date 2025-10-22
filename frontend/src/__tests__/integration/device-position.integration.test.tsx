@@ -10,7 +10,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
 import { MapPage } from '../../pages/MapPage';
@@ -114,7 +114,7 @@ describe('Device Position Integration Tests', () => {
 
     it('should not display blue dot when device position is unavailable', async () => {
       // Mock geolocation error
-      mockGeolocation.watchPosition.mockImplementation((successCallback, errorCallback) => {
+      mockGeolocation.watchPosition.mockImplementation((_successCallback, errorCallback) => {
         errorCallback?.({
           code: 1,
           message: 'User denied Geolocation',
@@ -203,11 +203,12 @@ describe('Device Position Integration Tests', () => {
         timestamp: Date.now(),
       };
 
-      mockGeolocation.watchPosition.mockImplementation((successCallback) => {
+      mockGeolocation.watchPosition.mockImplementation((successCallback: (position: any) => void) => {
         positionCallback = successCallback;
         successCallback(firstPosition);
         return 1;
       });
+      expect(positionCallback).not.toBeNull();
 
       render(
         <BrowserRouter>
@@ -224,9 +225,7 @@ describe('Device Position Integration Tests', () => {
       });
 
       // Simulate position update
-      if (positionCallback) {
-        positionCallback(secondPosition);
-      }
+      (positionCallback || ((_position: any) => { }))(secondPosition);
 
       // Wait for blue dot to update
       await waitFor(() => {
@@ -264,11 +263,12 @@ describe('Device Position Integration Tests', () => {
         timestamp: Date.now(),
       };
 
-      mockGeolocation.watchPosition.mockImplementation((successCallback) => {
+      mockGeolocation.watchPosition.mockImplementation((successCallback: (position: any) => void) => {
         positionCallback = successCallback;
         successCallback(firstPosition);
         return 1;
       });
+      expect(positionCallback).not.toBeNull();
 
       render(
         <BrowserRouter>
@@ -282,9 +282,7 @@ describe('Device Position Integration Tests', () => {
 
       // Measure update time
       const startTime = Date.now();
-      if (positionCallback) {
-        positionCallback(secondPosition);
-      }
+      (positionCallback || ((_position: any) => { }))(secondPosition);
 
       await waitFor(() => {
         const blueDot = screen.queryByTestId('blue-dot');
@@ -330,7 +328,7 @@ describe('Device Position Integration Tests', () => {
     });
 
     it('should disable recenter button when device position is unavailable', async () => {
-      mockGeolocation.watchPosition.mockImplementation((successCallback, errorCallback) => {
+      mockGeolocation.watchPosition.mockImplementation((_successCallback, errorCallback) => {
         errorCallback?.({
           code: 1,
           message: 'User denied Geolocation',
@@ -369,13 +367,6 @@ describe('Device Position Integration Tests', () => {
         },
         timestamp: Date.now(),
       };
-
-      const mockFlyTo = vi.fn();
-      const useMapMock = vi.fn().mockReturnValue({
-        setView: vi.fn(),
-        flyTo: mockFlyTo,
-        on: vi.fn(),
-      });
 
       mockGeolocation.watchPosition.mockImplementation((successCallback) => {
         successCallback(mockPosition);
@@ -493,7 +484,7 @@ describe('Device Position Integration Tests', () => {
 
   describe('T007: User is notified if position is unavailable or permission denied', () => {
     it('should show notification when permission is denied', async () => {
-      mockGeolocation.watchPosition.mockImplementation((successCallback, errorCallback) => {
+      mockGeolocation.watchPosition.mockImplementation((_successCallback, errorCallback) => {
         errorCallback?.({
           code: 1,
           message: 'User denied Geolocation',
@@ -518,7 +509,7 @@ describe('Device Position Integration Tests', () => {
     });
 
     it('should show notification when position is unavailable', async () => {
-      mockGeolocation.watchPosition.mockImplementation((successCallback, errorCallback) => {
+      mockGeolocation.watchPosition.mockImplementation((_successCallback, errorCallback) => {
         errorCallback?.({
           code: 2,
           message: 'Position unavailable',
@@ -542,7 +533,7 @@ describe('Device Position Integration Tests', () => {
     });
 
     it('should show notification when geolocation times out', async () => {
-      mockGeolocation.watchPosition.mockImplementation((successCallback, errorCallback) => {
+      mockGeolocation.watchPosition.mockImplementation((_successCallback, errorCallback) => {
         errorCallback?.({
           code: 3,
           message: 'Timeout',

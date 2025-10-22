@@ -5,7 +5,7 @@
  */
 
 import { Marker, Popup } from 'react-leaflet';
-import { Icon, DivIcon } from 'leaflet';
+import { DivIcon } from 'leaflet';
 import { Link } from 'react-router-dom';
 import type { GPSPoint } from '../../types/point';
 import { getPointTypeName } from '../../utils/pointTypeUtils';
@@ -23,16 +23,18 @@ interface PointMarkerProps {
 const createMarkerIcon = (point: GPSPoint, typeName: string) => {
   // Always use custom marker with either icon or emoji
   const hasCustomIcon = point.type?.icon && point.type.icon !== '/icons/default.svg';
-  const isUrlIcon = hasCustomIcon && (point.type.icon.startsWith('http') || point.type.icon.startsWith('/') || point.type.icon.startsWith('data:'));
+  const isUrlIcon = hasCustomIcon && point.type && (point.type.icon.startsWith('http') || point.type.icon.startsWith('/') || point.type.icon.startsWith('data:'));
 
   return new DivIcon({
     html: `
       <div class="custom-marker">
         <div class="marker-icon-container">
           ${hasCustomIcon
-            ? isUrlIcon
+            ? (isUrlIcon && point.type)
               ? `<img src="${point.type.icon}" alt="${typeName}" class="marker-type-icon" />`
-              : `<span class="marker-type-emoji">${point.type.icon}</span>`
+              : point.type
+                ? `<span class="marker-type-emoji">${point.type.icon}</span>`
+                : ''
             : '<span class="marker-type-emoji">📍</span>'
           }
         </div>
@@ -50,8 +52,8 @@ const createMarkerIcon = (point: GPSPoint, typeName: string) => {
  * Point marker component.
  */
 export function PointMarker({ point, onClick }: PointMarkerProps) {
-  const { currentLanguage } = useLanguage();
-  const typeName = point.type ? getPointTypeName(point.type, currentLanguage) : 'Point';
+  const { language } = useLanguage();
+  const typeName = point.type ? getPointTypeName(point.type, language) : 'Point';
   const icon = createMarkerIcon(point, typeName);
 
   const handleClick = () => {

@@ -9,8 +9,9 @@
   background-color: var(--color-bg-primary, #f9f9f9);
   transition: background 0.2s, color 0.2s;
  }
-  background-color: var(--color-bg-primary);
+ 
  .translation-manager h3 {
+  background-color: var(--color-bg-primary);
   margin-top: 0;
   margin-bottom: 1rem;
   font-size: 1.1rem;

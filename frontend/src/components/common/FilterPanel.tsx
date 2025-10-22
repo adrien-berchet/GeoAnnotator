@@ -32,7 +32,7 @@ export function FilterPanel({
   onToggleType,
   onClearAll,
 }: FilterPanelProps) {
-  const { currentLanguage } = useLanguage();
+  const { language } = useLanguage();
   const hasActiveFilters = selectedTags.length > 0 || selectedTypes.length > 0;
 
   return (
@@ -84,7 +84,7 @@ export function FilterPanel({
                           <span className="filter-type-icon-emoji">{type.icon}</span>
                         )
                       )}
-                      <span className="filter-name">{getPointTypeName(type, currentLanguage)}</span>
+                      <span className="filter-name">{getPointTypeName(type, language)}</span>
                     </button>
                   ))}
                 </div>

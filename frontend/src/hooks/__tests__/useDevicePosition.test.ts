@@ -102,7 +102,7 @@ describe('useDevicePosition', () => {
 
   describe('Error Handling', () => {
     it('should handle permission denied error', async () => {
-      mockGeolocation.watchPosition.mockImplementation((successCallback, errorCallback) => {
+      mockGeolocation.watchPosition.mockImplementation((_successCallback, errorCallback) => {
         errorCallback({
           code: 1,
           message: 'User denied Geolocation',
@@ -125,7 +125,7 @@ describe('useDevicePosition', () => {
     });
 
     it('should handle position unavailable error', async () => {
-      mockGeolocation.watchPosition.mockImplementation((successCallback, errorCallback) => {
+      mockGeolocation.watchPosition.mockImplementation((_successCallback, errorCallback) => {
         errorCallback({
           code: 2,
           message: 'Position unavailable',
@@ -146,7 +146,7 @@ describe('useDevicePosition', () => {
     });
 
     it('should handle timeout error', async () => {
-      mockGeolocation.watchPosition.mockImplementation((successCallback, errorCallback) => {
+      mockGeolocation.watchPosition.mockImplementation((_successCallback, errorCallback) => {
         errorCallback({
           code: 3,
           message: 'Timeout',

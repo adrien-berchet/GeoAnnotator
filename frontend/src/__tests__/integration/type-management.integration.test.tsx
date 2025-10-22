@@ -83,10 +83,10 @@ describe('Type Management Integration Tests', () => {
       const apiClient = await import('../../api/client');
 
       // Mock GET for listing types
-      vi.mocked(apiClient.default.get).mockResolvedValue({ data: mockTypes });
+  vi.mocked(apiClient.apiClient.get).mockResolvedValue({ data: mockTypes });
 
       // Mock POST for creating type
-      vi.mocked(apiClient.default.post).mockResolvedValue({
+      vi.mocked(apiClient.apiClient.post).mockResolvedValue({
         data: {
           id: '4',
           name: 'Café',
@@ -122,7 +122,7 @@ describe('Type Management Integration Tests', () => {
 
       // Verify API was called
       await waitFor(() => {
-        expect(apiClient.default.post).toHaveBeenCalledWith(
+        expect(apiClient.apiClient.post).toHaveBeenCalledWith(
           '/api/v1/types/',
           expect.objectContaining({
             name: 'Café',
@@ -139,8 +139,8 @@ describe('Type Management Integration Tests', () => {
       const user = userEvent.setup();
       const apiClient = await import('../../api/client');
 
-      vi.mocked(apiClient.default.get).mockResolvedValue({ data: mockTypes });
-      vi.mocked(apiClient.default.post).mockResolvedValue({
+      vi.mocked(apiClient.apiClient.get).mockResolvedValue({ data: mockTypes });
+      vi.mocked(apiClient.apiClient.post).mockResolvedValue({
         data: {
           id: '4',
           name: 'Generic',
@@ -169,7 +169,7 @@ describe('Type Management Integration Tests', () => {
       await user.click(saveButton);
 
       await waitFor(() => {
-        expect(apiClient.default.post).toHaveBeenCalledWith(
+        expect(apiClient.apiClient.post).toHaveBeenCalledWith(
           '/api/v1/types/',
           expect.objectContaining({
             name: 'Generic'
@@ -182,8 +182,8 @@ describe('Type Management Integration Tests', () => {
       const user = userEvent.setup();
       const apiClient = await import('../../api/client');
 
-      vi.mocked(apiClient.default.get).mockResolvedValue({ data: mockTypes });
-      vi.mocked(apiClient.default.post).mockRejectedValue({
+      vi.mocked(apiClient.apiClient.get).mockResolvedValue({ data: mockTypes });
+      vi.mocked(apiClient.apiClient.post).mockRejectedValue({
         response: {
           status: 400,
           data: {
@@ -217,8 +217,8 @@ describe('Type Management Integration Tests', () => {
       const user = userEvent.setup();
       const apiClient = await import('../../api/client');
 
-      vi.mocked(apiClient.default.get).mockResolvedValue({ data: mockTypes });
-      vi.mocked(apiClient.default.post).mockRejectedValue({
+     vi.mocked(apiClient.apiClient.get).mockResolvedValue({ data: mockTypes });
+     vi.mocked(apiClient.apiClient.post).mockRejectedValue({
         response: {
           status: 400,
           data: {
@@ -254,8 +254,8 @@ describe('Type Management Integration Tests', () => {
       const user = userEvent.setup();
       const apiClient = await import('../../api/client');
 
-      vi.mocked(apiClient.default.get).mockResolvedValue({ data: mockTypes });
-      vi.mocked(apiClient.default.patch).mockResolvedValue({
+      vi.mocked(apiClient.apiClient.get).mockResolvedValue({ data: mockTypes });
+      vi.mocked(apiClient.apiClient.patch).mockResolvedValue({
         data: {
           ...mockTypes[0],
           name: 'Fine Dining',
@@ -290,7 +290,7 @@ describe('Type Management Integration Tests', () => {
 
       // Verify API was called
       await waitFor(() => {
-        expect(apiClient.default.patch).toHaveBeenCalledWith(
+        expect(apiClient.apiClient.patch).toHaveBeenCalledWith(
           '/api/v1/types/1/',
           expect.objectContaining({
             name: 'Fine Dining',
@@ -309,8 +309,8 @@ describe('Type Management Integration Tests', () => {
       const user = userEvent.setup();
       const apiClient = await import('../../api/client');
 
-      vi.mocked(apiClient.default.get).mockResolvedValue({ data: mockTypes });
-      vi.mocked(apiClient.default.delete).mockResolvedValue({ data: null });
+      vi.mocked(apiClient.apiClient.get).mockResolvedValue({ data: mockTypes });
+      vi.mocked(apiClient.apiClient.delete).mockResolvedValue({ data: null });
 
       renderWithProviders(<TagManagementPage />);
 
@@ -329,7 +329,7 @@ describe('Type Management Integration Tests', () => {
 
       // Verify API was called
       await waitFor(() => {
-        expect(apiClient.default.delete).toHaveBeenCalledWith('/api/v1/types/1/');
+        expect(apiClient.apiClient.delete).toHaveBeenCalledWith('/api/v1/types/1/');
       });
 
       // Verify success message
@@ -340,7 +340,7 @@ describe('Type Management Integration Tests', () => {
       const user = userEvent.setup();
       const apiClient = await import('../../api/client');
 
-      vi.mocked(apiClient.default.get).mockResolvedValue({ data: mockTypes });
+      vi.mocked(apiClient.apiClient.get).mockResolvedValue({ data: mockTypes });
 
       renderWithProviders(<TagManagementPage />);
 
@@ -359,11 +359,10 @@ describe('Type Management Integration Tests', () => {
 
   describe('Reordering Types', () => {
     it('should reorder types successfully using drag and drop', async () => {
-      const user = userEvent.setup();
       const apiClient = await import('../../api/client');
 
-      vi.mocked(apiClient.default.get).mockResolvedValue({ data: mockTypes });
-      vi.mocked(apiClient.default.patch).mockResolvedValue({ data: { success: true } });
+      vi.mocked(apiClient.apiClient.get).mockResolvedValue({ data: mockTypes });
+      vi.mocked(apiClient.apiClient.patch).mockResolvedValue({ data: { success: true } });
 
       renderWithProviders(<TagManagementPage />);
 
@@ -389,7 +388,7 @@ describe('Type Management Integration Tests', () => {
     it('should display types in order', async () => {
       const apiClient = await import('../../api/client');
 
-      vi.mocked(apiClient.default.get).mockResolvedValue({ data: mockTypes });
+      vi.mocked(apiClient.apiClient.get).mockResolvedValue({ data: mockTypes });
 
       renderWithProviders(<TagManagementPage />);
 
@@ -407,7 +406,7 @@ describe('Type Management Integration Tests', () => {
     it('should display icons for each type', async () => {
       const apiClient = await import('../../api/client');
 
-      vi.mocked(apiClient.default.get).mockResolvedValue({ data: mockTypes });
+      vi.mocked(apiClient.apiClient.get).mockResolvedValue({ data: mockTypes });
 
       renderWithProviders(<TagManagementPage />);
 
@@ -426,7 +425,7 @@ describe('Type Management Integration Tests', () => {
       const user = userEvent.setup();
       const apiClient = await import('../../api/client');
 
-      vi.mocked(apiClient.default.get).mockResolvedValue({ data: mockTypes });
+      vi.mocked(apiClient.apiClient.get).mockResolvedValue({ data: mockTypes });
 
       renderWithProviders(<TagManagementPage />);
 
@@ -445,7 +444,7 @@ describe('Type Management Integration Tests', () => {
     it('should have proper ARIA labels', async () => {
       const apiClient = await import('../../api/client');
 
-      vi.mocked(apiClient.default.get).mockResolvedValue({ data: mockTypes });
+      vi.mocked(apiClient.apiClient.get).mockResolvedValue({ data: mockTypes });
 
       renderWithProviders(<TagManagementPage />);
 

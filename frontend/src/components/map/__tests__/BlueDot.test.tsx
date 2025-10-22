@@ -35,6 +35,7 @@ describe('BlueDot', () => {
     longitude: 2.3522,
     accuracy: 10,
     timestamp: Date.now(),
+    heading: null,
   };
 
   const mockOnClick = vi.fn();
@@ -122,6 +123,7 @@ describe('BlueDot', () => {
         longitude: 2.2945,
         accuracy: 15,
         timestamp: Date.now(),
+        heading: null,
       };
 
       rerender(<BlueDot position={newPosition} onClick={mockOnClick} />);
@@ -158,6 +160,7 @@ describe('BlueDot', () => {
         longitude: 2.3522,
         accuracy: 1000,
         timestamp: Date.now(),
+        heading: null,
       };
 
       const { getByTestId } = render(
@@ -175,6 +178,7 @@ describe('BlueDot', () => {
         longitude: 2.3522,
         accuracy: 1,
         timestamp: Date.now(),
+        heading: null,
       };
 
       const { getByTestId } = render(
@@ -192,6 +196,7 @@ describe('BlueDot', () => {
         longitude: 179.999,
         accuracy: 10,
         timestamp: Date.now(),
+        heading: null,
       };
 
       const { getByTestId } = render(

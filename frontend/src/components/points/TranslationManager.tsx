@@ -3,7 +3,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { isValidLanguageCode, validateNames } from '../../utils/pointTypeUtils';
+import { validateNames } from '../../utils/pointTypeUtils';
 import { useLanguage } from '../../contexts/LanguageContext';
 import './TranslationManager.css';
 

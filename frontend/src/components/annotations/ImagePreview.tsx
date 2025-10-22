@@ -56,7 +56,7 @@ export function ImagePreview({ annotation }: ImagePreviewProps) {
         <div className="preview-header">
           <span className="preview-icon">🖼️</span>
           <div className="preview-info">
-            <h4>{annotation.file_name || 'Untitled Image'}</h4>
+            <h4>{annotation.file.file_name || 'Untitled Image'}</h4>
             <span className="preview-date">
               {formatDate(annotation.created_at)}
             </span>
@@ -70,7 +70,7 @@ export function ImagePreview({ annotation }: ImagePreviewProps) {
           {!imageError ? (
             <img
               src={previewUrl}
-              alt={annotation.file_name || 'Image preview'}
+              alt={annotation.file.file_name || 'Image preview'}
               onError={() => setImageError(true)}
               loading="lazy"
             />
@@ -84,11 +84,11 @@ export function ImagePreview({ annotation }: ImagePreviewProps) {
 
         <div className="preview-meta">
           <span className="file-size">
-            {formatFileSize(annotation.file_size)}
+            {formatFileSize(annotation.file.file_size)}
           </span>
-          {annotation.mime_type && (
+          {annotation.file.mime_type && (
             <span className="mime-type">
-              {annotation.mime_type}
+              {annotation.file.mime_type}
             </span>
           )}
         </div>
@@ -110,13 +110,13 @@ export function ImagePreview({ annotation }: ImagePreviewProps) {
               ✕
             </button>
             <img
-              src={annotation.file}
-              alt={annotation.file_name || 'Image'}
+              src={annotation.file.url}
+              alt={annotation.file.file_name || 'Image'}
               className="modal-image"
             />
             <div className="modal-caption">
-              <h3>{annotation.file_name}</h3>
-              <p>{formatFileSize(annotation.file_size)} • {formatDate(annotation.created_at)}</p>
+              <h3>{annotation.file.file_name}</h3>
+              <p>{formatFileSize(annotation.file.file_size)} • {formatDate(annotation.created_at)}</p>
             </div>
           </div>
         </div>
