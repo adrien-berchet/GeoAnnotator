@@ -1,6 +1,6 @@
 *.code-workspace
 backend/media/
-.env.example
+.env*
 .claude
 node_modules/
 

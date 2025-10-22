@@ -8,6 +8,8 @@ For production, see settings/production.py
 
 import os
 from pathlib import Path
+from datetime import timedelta
+
 import environ
 
 # Build paths inside the project
@@ -15,9 +17,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 # Load environment variables from .env file
 env = environ.Env()
-env_file = BASE_DIR / '.env'
+env_file = BASE_DIR / env.str('ENV_PATH', '.env')
 if env_file.exists():
-    environ.Env.read_env(env_file)
+    environ.Env.read_env(env_file, parse_comments=True)
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get(
@@ -172,8 +174,6 @@ REST_FRAMEWORK = {
 }
 
 # JWT Settings
-from datetime import timedelta
-
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
