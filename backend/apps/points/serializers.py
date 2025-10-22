@@ -188,7 +188,7 @@ class PointTypeReorderSerializer(serializers.Serializer):
         # Check all types exist and are accessible (user's types OR base types)
         accessible_types = PointType.objects.filter(
             Q(id__in=type_ids),
-            Q(user=user) | Q(user__isnull=True),
+            Q(owner=user) | Q(owner__isnull=True),
             status='active'
         ).values_list('id', flat=True)
 

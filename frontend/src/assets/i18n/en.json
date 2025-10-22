@@ -19,7 +19,8 @@
     "previous": "Previous",
     "submit": "Submit",
     "note": "Note",
-    "locale": "en-US"
+    "locale": "en-US",
+    "name": "Name"
   },
   "nav": {
     "map": "Map",
@@ -261,6 +262,9 @@
     "manageTypes": "Point Type Management",
     "loadingTypes": "Loading point types...",
     "addNewType": "Add New Type",
+    "addTranslation": "Add Translation",
+    "chooseLanguage": "Choose Language",
+    "selectLanguage": "Select language",
     "createNewType": "Create New Point Type",
     "typeName": "Type Name",
     "typeNamePlaceholder": "e.g., Restaurant, Museum, Park",

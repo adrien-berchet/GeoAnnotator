@@ -19,7 +19,8 @@
     "previous": "Précédent",
     "submit": "Soumettre",
     "note": "À noter",
-    "locale": "fr-FR"
+    "locale": "fr-FR",
+    "name": "Nom"
   },
   "nav": {
     "map": "Carte",
@@ -261,6 +262,9 @@
     "manageTypes": "Gestion des types de points",
     "loadingTypes": "Chargement des types de points...",
     "addNewType": "Ajouter un nouveau type",
+    "addTranslation": "Ajouter une traduction",
+    "chooseLanguage": "Choisir la langue",
+    "selectLanguage": "Sélectionner la langue",
     "createNewType": "Créer un nouveau type de point",
     "typeName": "Nom du type",
     "typeNamePlaceholder": "p. ex., Restaurant, Musée, Parc",

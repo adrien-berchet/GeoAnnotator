@@ -2,7 +2,7 @@
  * TranslationManager component for managing multilingual point type names.
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { isValidLanguageCode, validateNames } from '../../utils/pointTypeUtils';
 import { useLanguage } from '../../contexts/LanguageContext';
 import './TranslationManager.css';
@@ -30,45 +30,46 @@ const COMMON_LANGUAGES = [
 ];
 
 export default function TranslationManager({ names, onChange, disabled = false }: TranslationManagerProps) {
-  const { t, currentLanguage } = useLanguage();
+  // Hooks React et contexte
+  const { t, language } = useLanguage();
   const [showAddForm, setShowAddForm] = useState(false);
   const [selectedLang, setSelectedLang] = useState('');
   const [newName, setNewName] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [currentInputValue, setCurrentInputValue] = useState(names[language] ?? '');
 
-  // Get available languages (not already added)
-  const availableLanguages = COMMON_LANGUAGES.filter(
-    lang => !names[lang.code]
-  );
+  // Variables calculées et handlers
+  const availableLanguages = COMMON_LANGUAGES.filter(lang => !names[lang.code]);
+  const cleanNames = Object.fromEntries(Object.entries(names).filter(([key]) => key && key !== 'undefined'));
+  const validationError = validateNames(cleanNames);
+
+  const handleUpdateTranslation = (langCode: string, value: string) => {
+    if (langCode && langCode !== 'undefined') {
+      onChange({ ...names, [langCode]: value });
+    }
+  };
+
+  const handleRemoveTranslation = (langCode: string) => {
+    if (Object.keys(names).length <= 1) return;
+    const { [langCode]: removed, ...rest } = names;
+    onChange(rest);
+  };
 
   const handleAddTranslation = () => {
     setError(null);
-
-    // Validate language code
     if (!selectedLang) {
       setError(t('types.languageCodeRequired', 'Please select a language'));
       return;
     }
-
-    // Check if translation already exists
     if (names[selectedLang]) {
       setError(t('types.translationExists', `Translation for '${selectedLang}' already exists`));
       return;
     }
-
-    // Validate name
     if (!newName.trim()) {
       setError(t('types.nameRequired', 'Name is required'));
       return;
     }
-
-    // Add translation
-    onChange({
-      ...names,
-      [selectedLang]: newName.trim()
-    });
-
-    // Reset form
+    onChange({ ...names, [selectedLang]: newName.trim() });
     setSelectedLang('');
     setNewName('');
     setShowAddForm(false);
@@ -81,115 +82,92 @@ export default function TranslationManager({ names, onChange, disabled = false }
     setShowAddForm(false);
   };
 
-  const handleRemoveTranslation = (langCode: string) => {
-    // Prevent removing the last translation
-    if (Object.keys(names).length <= 1) {
-      setError(t('types.cannotRemoveLastTranslation', 'Cannot remove the last translation'));
-      return;
-    }
-
-    const { [langCode]: removed, ...rest } = names;
-    onChange(rest);
-    setError(null);
-  };
-
-  const handleUpdateTranslation = (langCode: string, value: string) => {
-    // Filter out undefined keys and empty values during update
-    if (langCode && langCode !== 'undefined') {
-      onChange({
-        ...names,
-        [langCode]: value
-      });
-    }
-  };
-
-  // Clean up any undefined keys in names object
-  const cleanNames = Object.fromEntries(
-    Object.entries(names).filter(([key, value]) => key && key !== 'undefined')
-  );
-
-  const validationError = validateNames(cleanNames);
+  // Effet pour garder l'input contrôlé sur la langue courante
+  useEffect(() => {
+    setCurrentInputValue(names[language] ?? '');
+  }, [names, language]);
 
   return (
     <div className="translation-manager">
       <div className="translation-manager-header">
-        <h3>{t('types.translations', 'Translations')}</h3>
-        {availableLanguages.length > 0 && !showAddForm && (
+        <h3>{t('common.name', 'Name')}</h3>
+      </div>
+
+      {(error || validationError) ? (
+        <div className="translation-error" role="alert">
+          {error || validationError}
+        </div>
+      ) : null}
+
+      {/* Champ obligatoire pour la langue courante */}
+      <div className="existing-translations">
+        <div className="translation-item">
+          <select
+            value={language || ''}
+            onChange={e => {
+              const newLang = e.target.value;
+              if (newLang && newLang !== language) {
+                const updatedNames = { ...names };
+                updatedNames[newLang] = updatedNames[language] || '';
+                delete updatedNames[language];
+                onChange(updatedNames);
+              }
+            }}
+            className="language-select"
+            style={{ marginRight: '0.75rem', minWidth: '90px' }}
+          >
+            {COMMON_LANGUAGES.map(lang => (
+              <option key={lang.code} value={lang.code}>
+                {lang.code.toUpperCase()} - {lang.name}
+              </option>
+            ))}
+          </select>
+          <input
+            type="text"
+            value={currentInputValue}
+            onChange={e => {
+              setCurrentInputValue(e.target.value);
+              handleUpdateTranslation(language || '', e.target.value);
+            }}
+            placeholder={t('types.typeName', 'Type name')}
+            disabled={disabled}
+            className="translation-input"
+            required
+            style={{ flex: 1 }}
+          />
+        </div>
+      </div>
+
+      {/* Bouton pour ajouter une langue supplémentaire */}
+      {(availableLanguages.length > 0 && !showAddForm) ? (
+        <div style={{ marginTop: '1rem' }}>
           <button
             type="button"
             onClick={() => setShowAddForm(true)}
             disabled={disabled}
             className="btn-add-language"
           >
-            + {t('types.addLanguage', 'Add Language')}
+            + {t('types.addTranslation', 'Add Translation')}
           </button>
-        )}
-      </div>
-
-      {(error || validationError) && (
-        <div className="translation-error" role="alert">
-          {error || validationError}
         </div>
-      )}
+      ) : null}
 
-      {/* Existing translations */}
-      <div className="existing-translations">
-        {Object.entries(cleanNames).map(([lang, name]) => {
-          const languageInfo = COMMON_LANGUAGES.find(l => l.code === lang);
-          return (
-            <div key={lang} className="translation-item">
-              <div className="translation-lang-label">
-                <strong className="lang-code">{lang.toUpperCase()}</strong>
-                {languageInfo && (
-                  <span className="lang-name">{languageInfo.name}</span>
-                )}
-                {lang === currentLanguage && (
-                  <span className="current-badge" title={t('types.currentLanguage', 'Current language')}>
-                    ★
-                  </span>
-                )}
-              </div>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => handleUpdateTranslation(lang, e.target.value)}
-                placeholder={t('types.typeName', 'Type name')}
-                disabled={disabled}
-                className="translation-input"
-              />
-              <button
-                type="button"
-                onClick={() => handleRemoveTranslation(lang)}
-                disabled={disabled || Object.keys(cleanNames).length <= 1}
-                className="btn-remove"
-                aria-label={t('types.removeTranslation', `Remove ${lang} translation`)}
-                title={Object.keys(cleanNames).length <= 1 ? t('types.cannotRemoveLastTranslation', 'Cannot remove last translation') : ''}
-              >
-                ✕
-              </button>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Add new translation form */}
-      {showAddForm && availableLanguages.length > 0 && (
+      {/* Ajout d'une nouvelle traduction */}
+      {(showAddForm && availableLanguages.length > 0) ? (
         <div className="add-translation-panel">
           <div className="panel-header">
             <h4>{t('types.addTranslation', 'Add Translation')}</h4>
-            <button
-              type="button"
-              onClick={handleCancelAdd}
-              className="btn-close"
-              aria-label={t('common.cancel', 'Cancel')}
-            >
-              ✕
-            </button>
           </div>
-
           <div className="add-translation-form">
-            <div className="form-group">
-              <label htmlFor="language-select">{t('types.selectLanguage', 'Select Language')}</label>
+            <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <button
+                type="button"
+                onClick={handleCancelAdd}
+                className="btn-close"
+                aria-label={t('common.cancel', 'Cancel')}
+              >
+                ✕
+              </button>
               <select
                 id="language-select"
                 value={selectedLang}
@@ -199,6 +177,8 @@ export default function TranslationManager({ names, onChange, disabled = false }
                 }}
                 disabled={disabled}
                 className="language-select"
+                style={{ minWidth: '90px' }}
+                aria-label={t('types.selectLanguage', 'Select Language')}
               >
                 <option value="">{t('types.chooseLanguage', '-- Choose a language --')}</option>
                 {availableLanguages.map(lang => (
@@ -207,10 +187,6 @@ export default function TranslationManager({ names, onChange, disabled = false }
                   </option>
                 ))}
               </select>
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="translation-name">{t('types.typeName', 'Type Name')}</label>
               <input
                 id="translation-name"
                 type="text"
@@ -221,38 +197,71 @@ export default function TranslationManager({ names, onChange, disabled = false }
                 }}
                 placeholder={t('types.enterTypeName', 'Enter type name')}
                 disabled={disabled || !selectedLang}
-                maxLength={100}
                 className="name-input"
+                style={{ flex: 1 }}
+                aria-label={t('types.typeName', 'Type Name')}
               />
-            </div>
-
-            <div className="form-actions">
-              <button
-                type="button"
-                onClick={handleCancelAdd}
-                disabled={disabled}
-                className="btn-secondary"
-              >
-                {t('common.cancel', 'Cancel')}
-              </button>
               <button
                 type="button"
                 onClick={handleAddTranslation}
                 disabled={disabled || !selectedLang || !newName.trim()}
                 className="btn-primary"
               >
-                {t('common.add', 'Add')}
+                {t('types.add', 'Add')}
+              </button>
+              <button
+                type="button"
+                onClick={handleCancelAdd}
+                className="btn-secondary"
+              >
+                {t('common.cancel', 'Cancel')}
               </button>
             </div>
           </div>
         </div>
-      )}
+      ) : null}
 
-      {availableLanguages.length === 0 && !showAddForm && (
+      {/* Affichage des autres traductions (hors langue courante) */}
+      <div className="existing-translations">
+        {Object.entries(cleanNames)
+          .filter(([lang]) => lang !== language)
+          .map(([lang, name]) => {
+            const languageInfo = COMMON_LANGUAGES.find(l => l.code === lang);
+            return (
+              <div key={lang} className="translation-item">
+                <div className="translation-lang-label">
+                  {languageInfo ? (
+                    <span className="lang-name">{languageInfo.name}</span>
+                  ) : null}
+                </div>
+                <input
+                  type="text"
+                  value={typeof name === 'string' ? name : ''}
+                  onChange={(e) => handleUpdateTranslation(lang, e.target.value)}
+                  placeholder={t('types.typeName', 'Type name')}
+                  disabled={disabled}
+                  className="translation-input"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleRemoveTranslation(lang)}
+                  disabled={disabled || Object.keys(cleanNames).length <= 1}
+                  className="btn-remove"
+                  aria-label={t('types.removeTranslation', `Remove ${lang} translation`)}
+                  title={Object.keys(cleanNames).length <= 1 ? t('types.cannotRemoveLastTranslation', 'Cannot remove last translation') : ''}
+                >
+                  ✕
+                </button>
+              </div>
+            );
+          })}
+      </div>
+
+      {(availableLanguages.length === 0 && !showAddForm) ? (
         <p className="all-languages-added">
           {t('types.allLanguagesAdded', 'All common languages have been added')}
         </p>
-      )}
+      ) : null}
     </div>
   );
 }

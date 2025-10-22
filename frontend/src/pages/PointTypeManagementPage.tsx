@@ -9,7 +9,7 @@ import TranslationManager from '../components/points/TranslationManager';
 import './PointTypeManagementPage.css';
 
 export default function PointTypeManagementPage() {
-  const { t, currentLanguage } = useLanguage();
+  const { t, language } = useLanguage();
   const navigate = useNavigate();
   const [types, setTypes] = useState<PointType[]>([]);
   const [loading, setLoading] = useState(true);
@@ -18,7 +18,7 @@ export default function PointTypeManagementPage() {
   // Create form
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newTypeNames, setNewTypeNames] = useState<Record<string, string>>(() => ({
-    [currentLanguage || 'en']: ''
+  [language || 'en']: ''
   }));
   const [newTypeIcon, setNewTypeIcon] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -165,7 +165,7 @@ export default function PointTypeManagementPage() {
 
       const data: CreatePointTypeData = {
         names: newTypeNames,
-        creation_language: currentLanguage,
+        creation_language: language,
       };
 
       if (newTypeIcon.trim()) {
@@ -174,7 +174,7 @@ export default function PointTypeManagementPage() {
 
       const newType = await createPointType(data);
       setTypes([...types, newType]);
-      setNewTypeNames({ [currentLanguage]: '' });
+  setNewTypeNames({ [language]: '' });
       setNewTypeIcon('');
       setSelectedFile(null);
       if (fileInputRef.current) {
@@ -268,19 +268,20 @@ export default function PointTypeManagementPage() {
     }
 
     [newTypes[index], newTypes[targetIndex]] = [newTypes[targetIndex], newTypes[index]];
-    setTypes(newTypes);
+    // Met à jour le champ order localement
+    const updatedTypes = newTypes.map((type, idx) => ({ ...type, order: idx }));
+    setTypes(updatedTypes);
 
     // Update order on server - send ALL types (including base types)
-    // Backend will store user-specific custom order
-    const reorderData = newTypes.map((type, idx) => ({
+    const reorderData = updatedTypes.map((type) => ({
       id: type.id,
-      order: idx,
+      order: type.order,
     }));
 
-    reorderPointTypes(reorderData).catch(err => {
-      setError(getErrorMessage(err));
-      loadTypes(); // Reload on error
-    });
+    reorderPointTypes(reorderData)
+      .catch(err => {
+        setError(getErrorMessage(err));
+      });
   };
 
   if (loading) {
@@ -295,9 +296,6 @@ export default function PointTypeManagementPage() {
     <div className="type-management-page">
       <header className="page-header">
         <h1>{t('types.manageTypes', 'Point Type Management')}</h1>
-        <button onClick={() => navigate(-1)} className="btn-secondary">
-          {t('common.back', 'Back')}
-        </button>
       </header>
 
       {error && (
@@ -313,7 +311,7 @@ export default function PointTypeManagementPage() {
               <button
                 onClick={() => {
                   setShowCreateForm(true);
-                  setNewTypeNames({ [currentLanguage]: '' });
+                  setNewTypeNames({ [language]: '' });
                   setNewTypeIcon('');
                   setCreateError(null);
                 }}
@@ -461,7 +459,7 @@ export default function PointTypeManagementPage() {
                     type="button"
                     onClick={() => {
                       setShowCreateForm(false);
-                      setNewTypeNames({ [currentLanguage]: '' });
+                      setNewTypeNames({ [language]: '' });
                       setNewTypeIcon('');
                       setCreateError(null);
                     }}
@@ -564,7 +562,7 @@ export default function PointTypeManagementPage() {
                           {t('types.editingTranslations', 'Editing translations below')}
                         </span>
                       ) : (
-                        <span className="type-name">{getPointTypeName(type, currentLanguage)}</span>
+                        <span className="type-name">{getPointTypeName(type, language)}</span>
                       )}
                     </td>
                     <td>
@@ -591,7 +589,7 @@ export default function PointTypeManagementPage() {
                             <button
                               onClick={() => navigate(`/map?types=${type.id}`)}
                               className="btn-view"
-                              aria-label={`${t('types.viewOnMap', 'View')} ${getPointTypeName(type, currentLanguage)} ${t('types.onMap', 'on map')}`}
+                              aria-label={`${t('types.viewOnMap', 'View')} ${getPointTypeName(type, language)} ${t('types.onMap', 'on map')}`}
                               title={t('types.viewOnMap', 'View on map')}
                             >
                               🗺️ {t('nav.map', 'Map')}
@@ -599,7 +597,7 @@ export default function PointTypeManagementPage() {
                             <button
                               onClick={() => navigate(`/points?types=${type.id}`)}
                               className="btn-view"
-                              aria-label={`${t('types.view', 'View')} ${getPointTypeName(type, currentLanguage)} ${t('types.list', 'list')}`}
+                              aria-label={`${t('types.view', 'View')} ${getPointTypeName(type, language)} ${t('types.list', 'list')}`}
                               title={t('types.viewPointsList', 'View points list')}
                             >
                               📋 {t('tags.list', 'List')}
@@ -609,15 +607,15 @@ export default function PointTypeManagementPage() {
                                 <button
                                   onClick={() => handleStartEdit(type)}
                                   className="btn-edit"
-                                  aria-label={`${t('common.edit', 'Edit')} ${getPointTypeName(type, currentLanguage)}`}
+                                  aria-label={`${t('common.edit', 'Edit')} ${getPointTypeName(type, language)}`}
                                 >
                                   {t('common.edit', 'Edit')}
                                 </button>
                                 <button
-                                  onClick={() => handleDelete(type.id, getPointTypeName(type, currentLanguage))}
+                                  onClick={() => handleDelete(type.id, getPointTypeName(type, language))}
                                   disabled={deleting === type.id}
                                   className="btn-delete"
-                                  aria-label={`${t('common.delete', 'Delete')} ${getPointTypeName(type, currentLanguage)}`}
+                                  aria-label={`${t('common.delete', 'Delete')} ${getPointTypeName(type, language)}`}
                                 >
                                   {deleting === type.id ? t('types.deleting', 'Deleting...') : t('common.delete', 'Delete')}
                                 </button>

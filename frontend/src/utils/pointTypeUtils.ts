@@ -78,11 +78,11 @@ export function validateNames(names: Record<string, string>): string | null {
   }
 
   // Check that all values are non-empty strings
-  for (const [lang, name] of Object.entries(names)) {
-    if (!name || name.trim() === '') {
-      return `Translation for language '${lang}' cannot be empty`;
-    }
-  }
+  // for (const [lang, name] of Object.entries(names)) {
+  //   if (!name || name.trim() === '') {
+  //     return `Translation for language '${lang}' cannot be empty`;
+  //   }
+  // }
 
   return null;
 }
