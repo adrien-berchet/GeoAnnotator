@@ -5,12 +5,18 @@ The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/4.2/topics/http/urls/
 """
 from django.contrib import admin
-from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.shortcuts import redirect
+from django.urls import path, include
+
+
+def admin_redirect(request):  # noqa: ARG001
+    return redirect("/admin/")
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path("admin_redirect/", admin_redirect, name="admin_redirect"),
 
     # API v1 endpoints
     path('api/v1/auth/', include('apps.authentication.urls')),
