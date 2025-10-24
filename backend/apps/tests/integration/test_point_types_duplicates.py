@@ -37,7 +37,7 @@ class TestPointTypesDuplicatePrevention:
 
         # Try to update with what could be interpreted as duplicate
         # (This test verifies the system handles names as a proper dict)
-        url = reverse("points:point-types-detail", args=[point_type.id])
+        url = reverse("point-types:detail", args=[point_type.id])
         update_payload = {
             "names": {
                 "en": "Hill",
@@ -70,7 +70,7 @@ class TestPointTypesDuplicatePrevention:
         )
 
         # Get the point type
-        url = reverse("points:point-types-detail", args=[point_type.id])
+        url = reverse("point-types:detail", args=[point_type.id])
         response = authenticated_client_alice.get(url)
 
         assert response.status_code == status.HTTP_200_OK
@@ -102,7 +102,7 @@ class TestPointTypesDuplicatePrevention:
         )
 
         # Update English translation
-        url = reverse("points:point-types-detail", args=[point_type.id])
+        url = reverse("point-types:detail", args=[point_type.id])
         update_payload = {
             "names": {
                 "en": "Highway",  # Changed from "Road"
@@ -138,7 +138,7 @@ class TestPointTypesDuplicatePrevention:
         )
 
         # Get the point type
-        url = reverse("points:point-types-detail", args=[point_type.id])
+        url = reverse("point-types:detail", args=[point_type.id])
         response = authenticated_client_alice.get(url)
 
         assert response.status_code == status.HTTP_200_OK
@@ -169,7 +169,7 @@ class TestPointTypesDuplicatePrevention:
         )
 
         # Add French
-        url = reverse("points:point-types-detail", args=[point_type.id])
+        url = reverse("point-types:detail", args=[point_type.id])
         response1 = authenticated_client_alice.patch(
             url,
             {"names": {"en": "Park", "fr": "Parc"}},

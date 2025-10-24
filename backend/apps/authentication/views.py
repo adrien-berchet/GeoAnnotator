@@ -6,7 +6,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework_simplejwt.tokens import RefreshToken, TokenError
+from rest_framework_simplejwt.exceptions import TokenError
 
 from .models import User
 from .serializers import (
@@ -31,10 +31,14 @@ class RegisterView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
+        validated_data = serializer.validated_data
+        email = validated_data['email']
+        password = validated_data['password']
+
         # Create user via service
         user = AuthenticationService.create_user(
-            email=serializer.validated_data['email'],
-            password=serializer.validated_data['password']
+            email=email,
+            password=password
         )
 
         # Generate tokens
@@ -154,3 +158,28 @@ def logout_view(request):
     # JWT is stateless, so logout is client-side token deletion
     # Return 204 No Content (no response body)
     return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class VerifyCodeView(APIView):
+    """
+    POST /api/auth/verify
+    Validate the user's verification code.
+    """
+    permission_classes = [AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        email = request.data.get('email')
+        code = request.data.get('code')
+
+        if not email or not code:
+            return Response({'detail': 'Email and code are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response({'detail': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        if AuthenticationService.verify_user_code(user, code):
+            return Response({'detail': 'Account verified successfully.'}, status=status.HTTP_200_OK)
+        else:
+            return Response({'detail': 'Invalid verification code.'}, status=status.HTTP_400_BAD_REQUEST)

@@ -44,7 +44,7 @@ class TestPointTypesLanguagePreference:
         )
 
         # Get list of point types
-        url = reverse("points:point-types-list")
+        url = reverse("point-types:list")
         response = authenticated_client_alice.get(url)
 
         assert response.status_code == status.HTTP_200_OK
@@ -85,7 +85,7 @@ class TestPointTypesLanguagePreference:
         )
 
         # Get the point type
-        url = reverse("points:point-types-detail", args=[point_type.id])
+        url = reverse("point-types:detail", args=[point_type.id])
         response = authenticated_client_alice.get(url)
 
         assert response.status_code == status.HTTP_200_OK
@@ -119,7 +119,7 @@ class TestPointTypesLanguagePreference:
         )
 
         # Get the point type
-        url = reverse("points:point-types-detail", args=[point_type.id])
+        url = reverse("point-types:detail", args=[point_type.id])
         response = authenticated_client_alice.get(url)
 
         assert response.status_code == status.HTTP_200_OK
@@ -147,7 +147,7 @@ class TestPointTypesLanguagePreference:
         )
 
         # Get the point type
-        url = reverse("points:point-types-detail", args=[base_type.id])
+        url = reverse("point-types:detail", args=[base_type.id])
         response = authenticated_client_alice.get(url)
 
         assert response.status_code == status.HTTP_200_OK

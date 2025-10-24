@@ -48,7 +48,7 @@ class TestPointTypesFallbackLogic:
         )
 
         # Get point type - should fall back to Spanish
-        url = reverse("points:point-types-detail", args=[point_type.id])
+        url = reverse("point-types:detail", args=[point_type.id])
         response = authenticated_client_alice.get(url)
 
         assert response.status_code == status.HTTP_200_OK
@@ -88,7 +88,7 @@ class TestPointTypesFallbackLogic:
         )
 
         # Get point type - should fall back to English, not creation language (Spanish)
-        url = reverse("points:point-types-detail", args=[point_type.id])
+        url = reverse("point-types:detail", args=[point_type.id])
         response = authenticated_client_alice.get(url)
 
         assert response.status_code == status.HTTP_200_OK
@@ -123,7 +123,7 @@ class TestPointTypesFallbackLogic:
         )
 
         # Get point type - should use French
-        url = reverse("points:point-types-detail", args=[point_type.id])
+        url = reverse("point-types:detail", args=[point_type.id])
         response = authenticated_client_alice.get(url)
 
         assert response.status_code == status.HTTP_200_OK
@@ -154,7 +154,7 @@ class TestPointTypesFallbackLogic:
         # By default, UserPreferences has language='en'
 
         # Get point type
-        url = reverse("points:point-types-detail", args=[point_type.id])
+        url = reverse("point-types:detail", args=[point_type.id])
         response = authenticated_client_alice.get(url)
 
         assert response.status_code == status.HTTP_200_OK

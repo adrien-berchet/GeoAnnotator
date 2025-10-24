@@ -36,7 +36,7 @@ class TestPointTypesTranslationRemoval:
         )
 
         # Try to remove all translations
-        url = reverse("points:point-types-detail", args=[point_type.id])
+        url = reverse("point-types:detail", args=[point_type.id])
         update_payload = {
             "names": {}
         }
@@ -68,7 +68,7 @@ class TestPointTypesTranslationRemoval:
         )
 
         # Remove French (keep English)
-        url = reverse("points:point-types-detail", args=[point_type.id])
+        url = reverse("point-types:detail", args=[point_type.id])
         update_payload = {
             "names": {"en": "Beach"}
         }
@@ -103,7 +103,7 @@ class TestPointTypesTranslationRemoval:
         )
 
         # Replace with French only
-        url = reverse("points:point-types-detail", args=[point_type.id])
+        url = reverse("point-types:detail", args=[point_type.id])
         update_payload = {
             "names": {"fr": "Canyon"}
         }
@@ -142,7 +142,7 @@ class TestPointTypesTranslationRemoval:
         )
 
         # Remove French and Spanish, keep English and German
-        url = reverse("points:point-types-detail", args=[point_type.id])
+        url = reverse("point-types:detail", args=[point_type.id])
         update_payload = {
             "names": {
                 "en": "Island",
@@ -182,7 +182,7 @@ class TestPointTypesTranslationRemoval:
         )
 
         # Try to remove all translations
-        url = reverse("points:point-types-detail", args=[point_type.id])
+        url = reverse("point-types:detail", args=[point_type.id])
         update_payload = {
             "names": {}
         }
@@ -204,7 +204,7 @@ class TestPointTypesTranslationRemoval:
         1. Try to create a point type with empty names
         2. Verify validation error
         """
-        url = reverse("points:point-types-list")
+        url = reverse("point-types:list")
         payload = {
             "names": {},
             "creation_language": "en",

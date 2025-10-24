@@ -1,7 +1,7 @@
 """
-Pytest configuration and shared fixtures for integration tests.
+Pytest configuration and shared fixtures for tests.
 
-This module provides common fixtures and configuration for all integration tests.
+This module provides common fixtures and configuration for all tests.
 """
 
 import pytest

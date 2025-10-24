@@ -22,77 +22,79 @@ class TestPointTypeModel:
     def test_create_point_type_success(self, alice):
         """Test creating a point type successfully."""
         point_type = PointType.objects.create(
-            name="Restaurant",
+            names={"en": "Restaurant"},
             icon="/icons/restaurant.svg",
             order=1,
-            user=alice,
+            owner=alice,
             status="active"
         )
 
         assert point_type.id is not None
-        assert point_type.name == "Restaurant"
+        assert point_type.names == {"en": "Restaurant"}
         assert point_type.icon == "/icons/restaurant.svg"
         assert point_type.order == 1
-        assert point_type.user == alice
+        assert point_type.owner == alice
         assert point_type.status == "active"
 
     def test_create_point_type_with_default_icon(self, alice):
         """Test creating a point type without specifying icon uses default."""
         point_type = PointType.objects.create(
-            name="Generic",
-            user=alice,
+            names={"en": "Generic"},
+            owner=alice,
             order=1
         )
 
+        default_type = PointType.get_default_type()
+
         # Should use default icon
         assert point_type.icon is not None
-        assert "default" in point_type.icon.lower() or "point" in point_type.icon.lower()
+        assert point_type.icon == default_type.icon
 
     def test_create_base_type_without_user(self):
         """Test creating a base type without user_id (system default)."""
         base_type = PointType.objects.create(
-            name="Point",
+            names={"en": "Point"},
             icon="/icons/point.svg",
             order=0,
-            user=None,
+            owner=None,
             status="active"
         )
 
-        assert base_type.user is None
-        assert base_type.name == "Point"
+        assert base_type.owner is None
+        assert base_type.names == {"en": "Point"}
 
     def test_unique_name_per_user(self, alice):
         """Test that type names must be unique per user."""
         PointType.objects.create(
-            name="Café",
-            user=alice,
+            names={"en": "Café"},
+            owner=alice,
             order=1
         )
 
         # Attempting to create another type with same name for same user should fail
         with pytest.raises((IntegrityError, ValidationError)):
             PointType.objects.create(
-                name="Café",
-                user=alice,
+                names={"en": "Café"},
+                owner=alice,
                 order=2
             )
 
     def test_same_name_different_users_allowed(self, alice, bob):
         """Test that different users can have types with the same name."""
         type_alice = PointType.objects.create(
-            name="Favorite",
-            user=alice,
+            names={"en": "Favorite"},
+            owner=alice,
             order=1
         )
 
         type_bob = PointType.objects.create(
-            name="Favorite",
-            user=bob,
+            names={"en": "Favorite"},
+            owner=bob,
             order=1
         )
 
-        assert type_alice.name == type_bob.name
-        assert type_alice.user != type_bob.user
+        assert type_alice.names == type_bob.names
+        assert type_alice.owner != type_bob.owner
 
     @pytest.mark.skip(reason="Max types validation is tested in API contract tests")
     def test_max_types_per_user(self, alice):
@@ -104,18 +106,18 @@ class TestPointTypeModel:
 
     def test_order_field(self, alice):
         """Test order field for sorting types."""
-        type1 = PointType.objects.create(name="First", user=alice, order=1)
-        type2 = PointType.objects.create(name="Second", user=alice, order=2)
-        type3 = PointType.objects.create(name="Third", user=alice, order=0)
+        type1 = PointType.objects.create(names={"en": "First"}, owner=alice, order=1)
+        type2 = PointType.objects.create(names={"en": "Second"}, owner=alice, order=2)
+        type3 = PointType.objects.create(names={"en": "Third"}, owner=alice, order=0)
 
-        types = PointType.objects.filter(user=alice).order_by('order')
+        types = PointType.objects.filter(owner=alice).order_by('order')
         assert list(types) == [type3, type1, type2]
 
     def test_status_field(self, alice):
         """Test status field for soft delete."""
         point_type = PointType.objects.create(
-            name="Test",
-            user=alice,
+            names={"en": "Test"},
+            owner=alice,
             order=1,
             status="active"
         )
@@ -130,17 +132,17 @@ class TestPointTypeModel:
         """Test that multiple types can use the same icon."""
         icon_path = "/icons/generic.svg"
 
-        type1 = PointType.objects.create(name="Type1", user=alice, order=1, icon=icon_path)
-        type2 = PointType.objects.create(name="Type2", user=alice, order=2, icon=icon_path)
+        type1 = PointType.objects.create(names={"en": "Type1"}, owner=alice, order=1, icon=icon_path)
+        type2 = PointType.objects.create(names={"en": "Type2"}, owner=alice, order=2, icon=icon_path)
 
         assert type1.icon == type2.icon
-        assert type1.name != type2.name
+        assert type1.names != type2.names
 
     def test_str_representation(self, alice):
         """Test string representation of PointType."""
         point_type = PointType.objects.create(
-            name="Restaurant",
-            user=alice,
+            names={"en": "Restaurant"},
+            owner=alice,
             order=1
         )
 
@@ -150,8 +152,8 @@ class TestPointTypeModel:
     def test_cascade_delete_user(self, alice):
         """Test that deleting a user cascades to their types."""
         point_type = PointType.objects.create(
-            name="Test",
-            user=alice,
+            names={"en": "Test"},
+            owner=alice,
             order=1
         )
 

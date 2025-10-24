@@ -439,12 +439,7 @@ class CreateGPSPointSerializer(serializers.ModelSerializer):
 
         # Set default type if not provided
         if not point_type:
-            point_type, _ = PointType.objects.get_or_create(
-                names={'en': 'Point'},
-                owner=None,
-                type_choice='base',
-                defaults={'icon': '📍', 'order': 0, 'creation_language': 'en', 'visibility': 'public'}
-            )
+            point_type = PointType.get_default_type()
 
         validated_data['type'] = point_type
 

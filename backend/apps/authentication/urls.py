@@ -12,4 +12,5 @@ urlpatterns = [
     path('refresh/', views.RefreshTokenView.as_view(), name='refresh'),
     path('logout/', views.logout_view, name='logout'),
     path('profile/', views.UserProfileView.as_view(), name='profile'),
+    path('verify/', views.VerifyCodeView.as_view(), name='verify'),
 ]

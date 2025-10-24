@@ -55,7 +55,7 @@ class TestScenario6TrashRestoration:
         )
         self.point_id = point_response.data["id"]
 
-        self.trash_list_url = reverse("trash:list")
+        self.trash_list_url = reverse("trash:points-list")
 
     def test_step_1_delete_point_move_to_trash(self):
         """
@@ -125,7 +125,7 @@ class TestScenario6TrashRestoration:
         self.client.delete(point_url)
 
         # When - Restore the point
-        restore_url = reverse("trash:restore", kwargs={"pk": self.point_id})
+        restore_url = reverse("trash:points-restore", kwargs={"pk": self.point_id})
         response = self.client.post(restore_url)
 
         # Then
@@ -156,7 +156,7 @@ class TestScenario6TrashRestoration:
         self.client.delete(point_url)
 
         # When - Permanently delete
-        permanent_delete_url = reverse("trash:permanent", kwargs={"pk": self.point_id})
+        permanent_delete_url = reverse("trash:points-permanent", kwargs={"pk": self.point_id})
         response = self.client.delete(permanent_delete_url)
 
         # Then
@@ -201,7 +201,7 @@ class TestScenario6TrashRestoration:
             self.client.delete(point_url)
 
         # When - Empty trash
-        empty_url = reverse("trash:empty")
+        empty_url = reverse("trash:points-empty")
         response = self.client.delete(empty_url)
 
         # Then
@@ -231,7 +231,7 @@ class TestScenario6TrashRestoration:
         trash_entry.save()
 
         # When - Attempt to restore
-        restore_url = reverse("trash:restore", kwargs={"pk": self.point_id})
+        restore_url = reverse("trash:points-restore", kwargs={"pk": self.point_id})
         response = self.client.post(restore_url)
 
         # Then
@@ -255,7 +255,7 @@ class TestScenario6TrashRestoration:
         assert list_response.data["count"] >= 1
 
         # Step 3: Restore point
-        restore_url = reverse("trash:restore", kwargs={"pk": self.point_id})
+        restore_url = reverse("trash:points-restore", kwargs={"pk": self.point_id})
         restore_response = self.client.post(restore_url)
         assert restore_response.status_code == status.HTTP_200_OK
 
@@ -268,7 +268,7 @@ class TestScenario6TrashRestoration:
         assert delete_response_2.status_code == status.HTTP_204_NO_CONTENT
 
         # Step 6: Permanently delete
-        permanent_url = reverse("trash:permanent", kwargs={"pk": self.point_id})
+        permanent_url = reverse("trash:points-permanent", kwargs={"pk": self.point_id})
         permanent_response = self.client.delete(permanent_url)
         assert permanent_response.status_code == status.HTTP_204_NO_CONTENT
 
@@ -309,7 +309,7 @@ class TestScenario6TrashRestoration:
         assert share.is_active is False
 
         # When - Restore the point
-        restore_url = reverse("trash:restore", kwargs={"pk": self.point_id})
+        restore_url = reverse("trash:points-restore", kwargs={"pk": self.point_id})
         self.client.post(restore_url)
 
         # Then - Share should be reactivated

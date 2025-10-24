@@ -9,6 +9,7 @@ from django.conf import settings
 from django.contrib.gis.db import models as gis_models
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models import functions
 from django.utils import timezone
 from datetime import timedelta
 
@@ -117,6 +118,12 @@ class PointType(models.Model):
             models.Index(fields=['type_choice'], name='idx_pointtype_type'),
         ]
         ordering = ['order', 'created_at']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['owner', 'names'],
+                name='unique_pointtype_name_per_user'
+            )
+        ]
 
     def clean(self):
         """Validate type constraints."""
@@ -167,9 +174,31 @@ class PointType(models.Model):
                 })
 
     def save(self, *args, **kwargs):
-        """Override save to run validation."""
-        self.full_clean()
+        """Override save to handle type deletion logic."""
+        if self.pk and self.status == 'deleted':
+            # Get default type
+            default_type = self.get_default_type()
+
+            # Reassign points to default type
+            GPSPoint.objects.filter(type=self).update(type=default_type)
+
         super().save(*args, **kwargs)
+
+    @classmethod
+    def get_default_type(cls):
+        """Get or create the default base 'Point' type."""
+        default_type, _ = cls.objects.get_or_create(
+            names={"en": "Point"},
+            owner=None,
+            defaults={
+                "type_choice": "base",
+                "icon": "📍",
+                "order": 0,
+                "creation_language": "en",
+                "visibility": "public",
+            }
+        )
+        return default_type
 
     def get_name(self, language_code='en'):
         """
@@ -299,7 +328,7 @@ class Tag(models.Model):
         # Case-insensitive unique constraint on name
         constraints = [
             models.UniqueConstraint(
-                models.functions.Lower('name'),
+                functions.Lower('name'),
                 name='unique_tag_name_case_insensitive'
             )
         ]

@@ -429,15 +429,15 @@ class TestTrashContract:
         """
         api_client, user, point_id = authenticated_user_with_trashed_point
 
-        url = reverse('trash:list')
+        url = reverse('trash:points-list')
         response = api_client.get(url)
 
         assert response.status_code == status.HTTP_200_OK
 
-        results = response.data["results"]
+        results = response.data
 
         assert isinstance(results, list)
-        assert len(results) >= 1
+        assert len(results) == 1
 
         # Validate trash item structure
         item = results[0]
@@ -463,7 +463,7 @@ class TestTrashContract:
         """
         api_client, user, point_id = authenticated_user_with_trashed_point
 
-        url = reverse('trash:restore', kwargs={'pk': point_id})
+        url = reverse('trash:points-restore', kwargs={'pk': point_id})
         response = api_client.post(url)
 
         assert response.status_code == status.HTTP_200_OK
@@ -485,7 +485,7 @@ class TestTrashContract:
         """
         api_client, user, _ = authenticated_user_with_trashed_point
 
-        url = reverse('trash:restore', kwargs={'pk': '00000000-0000-0000-0000-000000000000'})
+        url = reverse('trash:points-restore', kwargs={'pk': '00000000-0000-0000-0000-000000000000'})
         response = api_client.post(url)
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -501,13 +501,13 @@ class TestTrashContract:
         """
         api_client, user, point_id = authenticated_user_with_trashed_point
 
-        url = reverse('trash:permanent', kwargs={'pk': point_id})
+        url = reverse('trash:points-permanent', kwargs={'pk': point_id})
         response = api_client.delete(url)
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
         # Verify point cannot be restored
-        restore_url = reverse('trash:restore', kwargs={'pk': point_id})
+        restore_url = reverse('trash:points-restore', kwargs={'pk': point_id})
         restore_response = api_client.post(restore_url)
         assert restore_response.status_code == status.HTTP_404_NOT_FOUND
 
@@ -528,7 +528,7 @@ class TestTrashContract:
         client2.credentials(HTTP_AUTHORIZATION=f'Bearer {register_response.data["access"]}')
 
         # Try to permanently delete as user2
-        url = reverse('trash:permanent', kwargs={'pk': point_id})
+        url = reverse('trash:points-permanent', kwargs={'pk': point_id})
         response = client2.delete(url)
 
         assert response.status_code in [status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND]

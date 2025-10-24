@@ -9,6 +9,7 @@ from django.conf import settings
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
+from typing import Optional
 
 from .models import User
 
@@ -17,7 +18,7 @@ class AuthenticationService:
     """Service for user authentication and JWT token management."""
 
     @staticmethod
-    def authenticate_user(email: str, password: str) -> User | None:
+    def authenticate_user(email: str, password: str) -> Optional[User]:
         """
         Authenticate user with email and password.
 
@@ -30,7 +31,7 @@ class AuthenticationService:
         """
         user = authenticate(username=email, password=password)
 
-        if user and user.is_active:
+        if user and isinstance(user, User) and user.is_active:
             return user
 
         return None
@@ -73,10 +74,10 @@ class AuthenticationService:
             TokenError: If refresh token is invalid or expired
         """
         try:
-            refresh = RefreshToken(refresh_token)
+            refresh = RefreshToken(token=refresh_token)
             return str(refresh.access_token)
         except TokenError as e:
-            raise TokenError(f"Invalid or expired refresh token: {str(e)}")
+            raise ValueError(f"Invalid or expired refresh token: {str(e)}")
 
     @staticmethod
     def validate_token(token: str) -> bool:
@@ -147,3 +148,22 @@ class AuthenticationService:
             return User.objects.get(email=email)
         except User.DoesNotExist:
             return None
+
+    @staticmethod
+    def verify_user_code(user: User, code: str) -> bool:
+        """
+        Verify the user's verification code.
+
+        Args:
+            user: User object
+            code: Verification code to validate
+
+        Returns:
+            bool: True if the code is valid, False otherwise
+        """
+        if user.verification_code == code:
+            user.is_verified = True
+            user.verification_code = ''  # Clear the code after verification
+            user.save()
+            return True
+        return False

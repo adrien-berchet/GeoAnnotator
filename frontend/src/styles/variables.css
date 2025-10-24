@@ -125,7 +125,7 @@
   --z-modal: 1200;
   --z-modal-backdrop: 1199;
   --z-dropdown: 10;
-  --z-navbar: 1000;
+  --z-navbar: 10000;
 }
 
 /* Dark Mode Variables - Controlled by data-theme attribute */

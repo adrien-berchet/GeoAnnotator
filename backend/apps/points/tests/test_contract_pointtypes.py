@@ -26,7 +26,7 @@ class TestPointTypeContract:
     # POST /api/v1/types/ - Create point type
     def test_create_type_success(self, authenticated_client_alice):
         """Test successful point type creation."""
-        url = reverse('pointtype-list')
+        url = reverse('point-types:list')
         data = {
             'name': 'Restaurant',
             'icon': '/icons/restaurant.svg',
@@ -45,7 +45,7 @@ class TestPointTypeContract:
 
     def test_create_type_without_icon_uses_default(self, authenticated_client_alice):
         """Test creating type without icon uses default."""
-        url = reverse('pointtype-list')
+        url = reverse('point-types:list')
         data = {
             'name': 'Generic',
             'order': 1
@@ -59,7 +59,7 @@ class TestPointTypeContract:
 
     def test_create_type_duplicate_name_same_user(self, authenticated_client_alice):
         """Test creating type with duplicate name for same user fails."""
-        url = reverse('pointtype-list')
+        url = reverse('point-types:list')
         data = {'name': 'Café', 'order': 1}
 
         # First creation
@@ -77,7 +77,7 @@ class TestPointTypeContract:
         # Note: In real tests, we'd need to create 1000 types first
         # For now, we'll test the validation logic exists
 
-        url = reverse('pointtype-list')
+        url = reverse('point-types:list')
 
         # Create 1000 types
         for i in range(1000):
@@ -93,7 +93,7 @@ class TestPointTypeContract:
 
     def test_create_type_unauthenticated(self, api_client):
         """Test that unauthenticated users cannot create types."""
-        url = reverse('pointtype-list')
+        url = reverse('point-types:list')
         data = {'name': 'Test', 'order': 1}
 
         response = api_client.post(url, data, format='json')
@@ -106,10 +106,10 @@ class TestPointTypeContract:
         from apps.points.models import PointType
 
         # Create some types for Alice
-        PointType.objects.create(name='Type1', user=alice, order=1)
-        PointType.objects.create(name='Type2', user=alice, order=2)
+        PointType.objects.create(names={'en': 'Type1'}, owner=alice, order=1)
+        PointType.objects.create(names={'en': 'Type2'}, owner=alice, order=2)
 
-        url = reverse('pointtype-list')
+        url = reverse('point-types:list')
         response = authenticated_client_alice.get(url)
 
         assert response.status_code == status.HTTP_200_OK
@@ -123,10 +123,10 @@ class TestPointTypeContract:
         """Test that users only see their own types."""
         from apps.points.models import PointType
 
-        PointType.objects.create(name='AliceType', user=alice, order=1)
-        PointType.objects.create(name='BobType', user=bob, order=1)
+        PointType.objects.create(names={'en': 'AliceType'}, owner=alice, order=1)
+        PointType.objects.create(names={'en': 'BobType'}, owner=bob, order=1)
 
-        url = reverse('pointtype-list')
+        url = reverse('point-types:list')
 
         # Alice should only see her types
         response_alice = authenticated_client_alice.get(url)
@@ -146,9 +146,9 @@ class TestPointTypeContract:
         from apps.points.models import PointType
 
         # Create base type
-        PointType.objects.create(name='Point', user=None, order=0)
+        PointType.objects.create(names={'en': 'Point'}, user=None, order=0)
 
-        url = reverse('pointtype-list')
+        url = reverse('point-types:list')
         response = authenticated_client_alice.get(url)
 
         assert response.status_code == status.HTTP_200_OK
@@ -159,10 +159,10 @@ class TestPointTypeContract:
         """Test that listing excludes deleted types."""
         from apps.points.models import PointType
 
-        active_type = PointType.objects.create(name='Active', user=alice, order=1)
-        deleted_type = PointType.objects.create(name='Deleted', user=alice, order=2, status='deleted')
+        active_type = PointType.objects.create(names={'en': 'Active'}, owner=alice, order=1)
+        deleted_type = PointType.objects.create(names={'en': 'Deleted'}, owner=alice, order=2, status='deleted')
 
-        url = reverse('pointtype-list')
+        url = reverse('point-types:list')
         response = authenticated_client_alice.get(url)
 
         assert response.status_code == status.HTTP_200_OK
@@ -176,13 +176,13 @@ class TestPointTypeContract:
         from apps.points.models import PointType
 
         point_type = PointType.objects.create(
-            name='Museum',
+            names={'en': 'Museum'},
             icon='/icons/museum.svg',
-            user=alice,
+            owner=alice,
             order=1
         )
 
-        url = reverse('pointtype-detail', args=[point_type.id])
+        url = reverse('point-types:detail', args=[point_type.id])
         response = authenticated_client_alice.get(url)
 
         assert response.status_code == status.HTTP_200_OK
@@ -194,9 +194,9 @@ class TestPointTypeContract:
         """Test that user cannot get detail of another user's type."""
         from apps.points.models import PointType
 
-        bob_type = PointType.objects.create(name='BobType', user=bob, order=1)
+        bob_type = PointType.objects.create(names={'en': 'BobType'}, owner=bob, order=1)
 
-        url = reverse('pointtype-detail', args=[bob_type.id])
+        url = reverse('point-types:detail', args=[bob_type.id])
         response = authenticated_client_alice.get(url)
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -207,13 +207,13 @@ class TestPointTypeContract:
         from apps.points.models import PointType
 
         point_type = PointType.objects.create(
-            name='Restaurant',
+            names={'en': 'Restaurant'},
             icon='/icons/restaurant.svg',
-            user=alice,
+            owner=alice,
             order=1
         )
 
-        url = reverse('pointtype-detail', args=[point_type.id])
+        url = reverse('point-types:detail', args=[point_type.id])
         data = {
             'name': 'Café',
             'icon': '/icons/cafe.svg'
@@ -229,10 +229,10 @@ class TestPointTypeContract:
         """Test that updating to duplicate name fails."""
         from apps.points.models import PointType
 
-        type1 = PointType.objects.create(name='Type1', user=alice, order=1)
-        type2 = PointType.objects.create(name='Type2', user=alice, order=2)
+        type1 = PointType.objects.create(names={'en': 'Type1'}, owner=alice, order=1)
+        type2 = PointType.objects.create(names={'en': 'Type2'}, owner=alice, order=2)
 
-        url = reverse('pointtype-detail', args=[type2.id])
+        url = reverse('point-types:detail', args=[type2.id])
         data = {'name': 'Type1'}
 
         response = authenticated_client_alice.patch(url, data, format='json')
@@ -243,9 +243,9 @@ class TestPointTypeContract:
         """Test that user cannot update another user's type."""
         from apps.points.models import PointType
 
-        bob_type = PointType.objects.create(name='BobType', user=bob, order=1)
+        bob_type = PointType.objects.create(names={'en': 'BobType'}, owner=bob, order=1)
 
-        url = reverse('pointtype-detail', args=[bob_type.id])
+        url = reverse('point-types:detail', args=[bob_type.id])
         data = {'name': 'NewName'}
 
         response = authenticated_client_alice.patch(url, data, format='json')
@@ -257,9 +257,9 @@ class TestPointTypeContract:
         """Test successful point type deletion (soft delete)."""
         from apps.points.models import PointType
 
-        point_type = PointType.objects.create(name='ToDelete', user=alice, order=1)
+        point_type = PointType.objects.create(names={'en': 'ToDelete'}, owner=alice, order=1)
 
-        url = reverse('pointtype-detail', args=[point_type.id])
+        url = reverse('point-types:detail', args=[point_type.id])
         response = authenticated_client_alice.delete(url)
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
@@ -274,10 +274,10 @@ class TestPointTypeContract:
         from django.contrib.gis.geos import Point
 
         # Create default type
-        default_type = PointType.objects.create(name='Point', user=None, order=0)
+        default_type = PointType.objects.create(names={'en': 'Point'}, user=None, order=0)
 
         # Create custom type
-        custom_type = PointType.objects.create(name='Custom', user=alice, order=1)
+        custom_type = PointType.objects.create(names={'en': 'Custom'}, owner=alice, order=1)
 
         # Create point with custom type
         point = GPSPoint.objects.create(
@@ -288,7 +288,7 @@ class TestPointTypeContract:
         )
 
         # Delete custom type
-        url = reverse('pointtype-detail', args=[custom_type.id])
+        url = reverse('point-types:detail', args=[custom_type.id])
         response = authenticated_client_alice.delete(url)
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
@@ -301,9 +301,9 @@ class TestPointTypeContract:
         """Test that user cannot delete another user's type."""
         from apps.points.models import PointType
 
-        bob_type = PointType.objects.create(name='BobType', user=bob, order=1)
+        bob_type = PointType.objects.create(names={'en': 'BobType'}, owner=bob, order=1)
 
-        url = reverse('pointtype-detail', args=[bob_type.id])
+        url = reverse('point-types:detail', args=[bob_type.id])
         response = authenticated_client_alice.delete(url)
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -313,9 +313,9 @@ class TestPointTypeContract:
         """Test successful type reordering."""
         from apps.points.models import PointType
 
-        type1 = PointType.objects.create(name='Type1', user=alice, order=1)
-        type2 = PointType.objects.create(name='Type2', user=alice, order=2)
-        type3 = PointType.objects.create(name='Type3', user=alice, order=3)
+        type1 = PointType.objects.create(names={'en': 'Type1'}, owner=alice, order=1)
+        type2 = PointType.objects.create(names={'en': 'Type2'}, owner=alice, order=2)
+        type3 = PointType.objects.create(names={'en': 'Type3'}, owner=alice, order=3)
 
         url = reverse('pointtype-reorder')
         data = {

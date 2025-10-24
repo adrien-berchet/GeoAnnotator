@@ -11,7 +11,10 @@ from django.core.management.base import BaseCommand
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from django.conf import settings
+from yaml import serialize
 from apps.points.models import PointType
+
+from ...serializers import PointTypeSerializer
 
 
 class Command(BaseCommand):
@@ -84,10 +87,10 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """Create default point types with English and French translations."""
-        default_types = [
-            # === DEFAULT GENERIC POINT ===
-            {'names': {'en': 'Point', 'fr': 'Point'}, 'icon': '📍', 'order': 0},
+        # === DEFAULT GENERIC POINT ===
+        PointType.get_default_type()  # Create default 'Point' type
 
+        default_types = [
             # === NATURE & LANDSCAPE (1-15) ===
             {'names': {'en': 'Viewing Point', 'fr': 'Point de vue'}, 'icon': 'viewpoint.png', 'order': 1},
             {'names': {'en': 'Summit', 'fr': 'Sommet'}, 'icon': '⛰️', 'order': 2},

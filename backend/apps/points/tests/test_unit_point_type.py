@@ -9,8 +9,10 @@ Tests the Point model functionality with type_id including:
 """
 import pytest
 from django.contrib.gis.geos import Point as GeoPoint
-from apps.points.models import GPSPoint, PointType
+from django.test import RequestFactory
 from apps.authentication.models import User
+from apps.points.models import GPSPoint, PointType
+from apps.points.serializers import GPSPointSerializer, CreateGPSPointSerializer
 
 
 @pytest.mark.unit
@@ -20,8 +22,8 @@ class TestPointWithType:
     def test_create_point_with_type(self, alice):
         """Test creating a point with a specific type."""
         point_type = PointType.objects.create(
-            name="Restaurant",
-            user=alice,
+            names={"en": "Restaurant"},
+            owner=alice,
             order=1
         )
 
@@ -33,33 +35,46 @@ class TestPointWithType:
         )
 
         assert point.type == point_type
-        assert point.type.name == "Restaurant"
+        assert point.type.names == {"en": "Restaurant"}
 
     def test_create_point_without_type_uses_default(self, alice):
         """Test that creating a point without type assigns default type."""
         # Create default type
         default_type = PointType.objects.create(
-            name="Point",
-            user=None,  # Base/system type
+            names={"en": "Point"},
+            owner=None,  # Base/system type
             order=0,
-            icon="/icons/default.svg"
+            icon="/icons/default.svg",
+            visibility='public',
+            type_choice='base',
         )
 
-        point = GPSPoint.objects.create(
-            title="Generic Point",
-            location=GeoPoint(2.3522, 48.8566),
-            owner=alice
-        )
+        # Use the CreateGPSPointSerializer to create the point with raw data
+        data = {
+            "title": "Generic Point",
+            "latitude": 48.8566,
+            "longitude": 2.3522,
+            "is_public": True
+        }
+
+        # Simulate a request with RequestFactory
+        factory = RequestFactory()
+        request = factory.post('/api/points/', data)
+        request.user = alice
+
+        serializer = CreateGPSPointSerializer(data=data, context={'request': request})
+        assert serializer.is_valid(), serializer.errors
+        point = serializer.save()
 
         # Should have default type assigned
         assert point.type is not None
-        assert point.type.name == "Point"
+        assert point.type.names["en"] == "Point"
 
     def test_point_type_relationship(self, alice):
         """Test the foreign key relationship between Point and PointType."""
         point_type = PointType.objects.create(
-            name="Museum",
-            user=alice,
+            names={"en": "Museum"},
+            owner=alice,
             order=1
         )
 
@@ -87,15 +102,17 @@ class TestPointWithType:
         """Test that deleting a type switches all its points to default type."""
         # Create default type
         default_type = PointType.objects.create(
-            name="Point",
-            user=None,
-            order=0
+            names={"en": "Point"},
+            owner=None,
+            order=0,
+            visibility='public',
+            type_choice='base',
         )
 
         # Create custom type
         custom_type = PointType.objects.create(
-            name="Custom",
-            user=alice,
+            names={"en": "Custom"},
+            owner=alice,
             order=1
         )
 
@@ -128,8 +145,8 @@ class TestPointWithType:
     def test_user_can_only_assign_own_types(self, alice, bob):
         """Test that a user can only assign their own types to points."""
         bob_type = PointType.objects.create(
-            name="Bob's Type",
-            user=bob,
+            names={"en": "Bob's Type"},
+            owner=bob,
             order=1
         )
 
@@ -149,8 +166,8 @@ class TestPointWithType:
 
     def test_change_point_type(self, alice):
         """Test changing a point's type."""
-        type1 = PointType.objects.create(name="Type1", user=alice, order=1)
-        type2 = PointType.objects.create(name="Type2", user=alice, order=2)
+        type1 = PointType.objects.create(names={"en": "Type1"}, owner=alice, order=1)
+        type2 = PointType.objects.create(names={"en": "Type2"}, owner=alice, order=2)
 
         point = GPSPoint.objects.create(
             title="Test Point",
@@ -171,8 +188,8 @@ class TestPointWithType:
     def test_multiple_points_same_type(self, alice):
         """Test that multiple points can share the same type."""
         point_type = PointType.objects.create(
-            name="Restaurant",
-            user=alice,
+            names={"en": "Restaurant"},
+            owner=alice,
             order=1
         )
 
@@ -196,8 +213,8 @@ class TestPointWithType:
     def test_type_deleted_status_not_cascade(self, alice):
         """Test that deleting type doesn't cascade delete points."""
         point_type = PointType.objects.create(
-            name="ToDelete",
-            user=alice,
+            names={"en": "ToDelete"},
+            owner=alice,
             order=1
         )
 
@@ -216,11 +233,13 @@ class TestPointWithType:
         assert GPSPoint.objects.filter(id=point.id).exists()
 
     def test_base_type_can_be_used_by_all_users(self, alice, bob):
-        """Test that base types (user=None) can be used by all users."""
+        """Test that base types (owner=None) can be used by all users."""
         base_type = PointType.objects.create(
-            name="Point",
-            user=None,
-            order=0
+            names={"en": "Point"},
+            owner=None,
+            order=0,
+            visibility='public',
+            type_choice='base',
         )
 
         point_alice = GPSPoint.objects.create(

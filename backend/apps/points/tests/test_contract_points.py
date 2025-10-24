@@ -540,8 +540,8 @@ class TestPointsWithTypeContract:
 
         # Create point type
         point_type = PointType.objects.create(
-            name='Restaurant',
-            user=alice,
+            names={'en': 'Restaurant'},
+            owner=alice,
             order=1
         )
 
@@ -566,8 +566,8 @@ class TestPointsWithTypeContract:
 
         # Create default type
         default_type = PointType.objects.create(
-            name='Point',
-            user=None,
+            names={'en': 'Point'},
+            owner=None,
             order=0
         )
 
@@ -604,8 +604,8 @@ class TestPointsWithTypeContract:
         from apps.points.models import PointType
 
         bob_type = PointType.objects.create(
-            name='BobType',
-            user=bob,
+            names={'en': 'BobType'},
+            owner=bob,
             order=1
         )
 
@@ -626,8 +626,8 @@ class TestPointsWithTypeContract:
         from apps.points.models import PointType, GPSPoint
         from django.contrib.gis.geos import Point
 
-        type1 = PointType.objects.create(name='Type1', user=alice, order=1)
-        type2 = PointType.objects.create(name='Type2', user=alice, order=2)
+        type1 = PointType.objects.create(names={'en': 'Type1'}, owner=alice, order=1)
+        type2 = PointType.objects.create(names={'en': 'Type2'}, owner=alice, order=2)
 
         point = GPSPoint.objects.create(
             title='Test Point',
@@ -649,7 +649,7 @@ class TestPointsWithTypeContract:
         from apps.points.models import PointType, GPSPoint
         from django.contrib.gis.geos import Point
 
-        point_type = PointType.objects.create(name='Museum', user=alice, order=1)
+        point_type = PointType.objects.create(names={'en': 'Museum'}, owner=alice, order=1)
 
         GPSPoint.objects.create(
             title='Louvre',
@@ -671,7 +671,7 @@ class TestPointsWithTypeContract:
         from apps.points.models import PointType, GPSPoint
         from django.contrib.gis.geos import Point
 
-        point_type = PointType.objects.create(name='Park', user=alice, order=1)
+        point_type = PointType.objects.create(names={'en': 'Park'}, owner=alice, order=1)
 
         point = GPSPoint.objects.create(
             title='Central Park',
