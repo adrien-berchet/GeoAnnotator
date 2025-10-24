@@ -160,17 +160,20 @@ class PointType(models.Model):
                 'owner': 'Custom types must have an owner.'
             })
 
-        # Validate max 1000 types per user
+        # Validate max types per user
         if self.owner and not self.pk:  # Only check on creation
             active_types_count = PointType.objects.filter(
                 owner=self.owner,
                 status='active'
             ).count()
 
-            if active_types_count >= 1000:
+            if active_types_count >= settings.MAX_POINT_TYPES_PER_USER:
                 raise ValidationError({
-                    'owner': 'You have reached the maximum of 1000 point types. '
-                           'Please delete some types before creating new ones.'
+                    'owner': (
+                        'You have reached the maximum of '
+                        f'{settings.MAX_POINT_TYPES_PER_USER} custom point types. '
+                        'Please delete some types before creating new ones.'
+                    )
                 })
 
     def save(self, *args, **kwargs):

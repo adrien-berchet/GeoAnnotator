@@ -198,6 +198,9 @@ SIMPLE_JWT = {
 DEFAULT_STORAGE_LIMIT = 2 * 1024 * 1024 * 1024  # 2GB
 MAX_FILE_SIZE = 1 * 1024 * 1024 * 1024  # 1GB
 
+# Point type limits
+MAX_POINT_TYPES_PER_USER = 1000
+
 # Trash retention (in days)
 TRASH_RETENTION_DAYS = 30
 

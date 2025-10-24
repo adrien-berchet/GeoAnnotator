@@ -101,11 +101,11 @@ class TestScenario6TrashRestoration:
 
         # Then
         assert response.status_code == status.HTTP_200_OK
-        assert response.data["count"] >= 1
+        assert len(response.data) >= 1
 
         # Find the trashed point
         trashed_point = next(
-            (item for item in response.data["results"] if item["gps_point"]["id"] == self.point_id),
+            (item for item in response.data if item["gps_point"]["id"] == self.point_id),
             None
         )
         assert trashed_point is not None
@@ -252,7 +252,7 @@ class TestScenario6TrashRestoration:
         # Step 2: List trash
         list_response = self.client.get(self.trash_list_url)
         assert list_response.status_code == status.HTTP_200_OK
-        assert list_response.data["count"] >= 1
+        assert len(list_response.data) == 1
 
         # Step 3: Restore point
         restore_url = reverse("trash:points-restore", kwargs={"pk": self.point_id})

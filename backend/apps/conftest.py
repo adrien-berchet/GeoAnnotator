@@ -4,8 +4,15 @@ Pytest configuration and shared fixtures for tests.
 This module provides common fixtures and configuration for all tests.
 """
 
+import shutil
+from io import BytesIO
+from PIL import Image
+
 import pytest
+from django.conf import settings
 from django.contrib.gis.geos import Point
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.urls import reverse
 from rest_framework.test import APIClient
 
 from apps.authentication.models import User
@@ -46,10 +53,9 @@ def charlie(db):
 
 
 @pytest.fixture
-def authenticated_client_alice(api_client, alice):
+def authenticated_client_alice(alice):
     """Provide an authenticated API client for Alice."""
-    from django.urls import reverse
-
+    api_client = APIClient()
     login_response = api_client.post(
         reverse("authentication:login"),
         {"email": "alice@example.com", "password": "SecurePass123"},
@@ -61,10 +67,9 @@ def authenticated_client_alice(api_client, alice):
 
 
 @pytest.fixture
-def authenticated_client_bob(api_client, bob):
+def authenticated_client_bob(bob):
     """Provide an authenticated API client for Bob."""
-    from django.urls import reverse
-
+    api_client = APIClient()
     login_response = api_client.post(
         reverse("authentication:login"),
         {"email": "bob@example.com", "password": "SecurePass456"},
@@ -114,10 +119,6 @@ def tag_hiking(db):
 @pytest.fixture
 def sample_image_file():
     """Create a sample image file for testing."""
-    from io import BytesIO
-    from PIL import Image
-    from django.core.files.uploadedfile import SimpleUploadedFile
-
     image = Image.new("RGB", (100, 100), color="red")
     image_io = BytesIO()
     image.save(image_io, format="JPEG")
@@ -133,8 +134,6 @@ def sample_image_file():
 @pytest.fixture
 def sample_pdf_file():
     """Create a sample PDF file for testing."""
-    from django.core.files.uploadedfile import SimpleUploadedFile
-
     pdf_content = b"%PDF-1.4\n%\xE2\xE3\xCF\xD3\n" + (b"0" * 1000)
 
     return SimpleUploadedFile(
@@ -188,9 +187,6 @@ def enable_db_access_for_all_tests(db):
 @pytest.fixture
 def clear_media_files():
     """Clean up media files after tests."""
-    import shutil
-    from django.conf import settings
-
     yield
 
     # Cleanup media files after test

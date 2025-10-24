@@ -16,9 +16,11 @@ Tests cover:
 """
 
 import pytest
+from django.contrib.gis.geos import Point
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
+from apps.points.models import PointType, GPSPoint
 
 
 @pytest.mark.django_db
@@ -536,8 +538,6 @@ class TestPointsWithTypeContract:
 
     def test_create_point_with_type(self, authenticated_client_alice, alice):
         """Test creating a point with a specific type."""
-        from apps.points.models import PointType
-
         # Create point type
         point_type = PointType.objects.create(
             names={'en': 'Restaurant'},
@@ -558,18 +558,12 @@ class TestPointsWithTypeContract:
         assert response.status_code == status.HTTP_201_CREATED
         assert 'type' in response.data
         assert response.data['type']['id'] == str(point_type.id)
-        assert response.data['type']['name'] == 'Restaurant'
+        assert response.data['type']['names']['en'] == 'Restaurant'
 
     def test_create_point_without_type_uses_default(self, authenticated_client_alice):
         """Test that creating point without type assigns default type."""
-        from apps.points.models import PointType
-
         # Create default type
-        default_type = PointType.objects.create(
-            names={'en': 'Point'},
-            owner=None,
-            order=0
-        )
+        default_type = PointType.get_default_type()
 
         url = reverse('points:list')
         data = {
@@ -582,7 +576,8 @@ class TestPointsWithTypeContract:
 
         assert response.status_code == status.HTTP_201_CREATED
         assert 'type' in response.data
-        assert response.data['type']['name'] == 'Point'
+
+        assert response.data['type']['names']['en'] == 'Point'
 
     def test_create_point_with_invalid_type(self, authenticated_client_alice):
         """Test that creating point with invalid type_id fails."""
@@ -601,8 +596,6 @@ class TestPointsWithTypeContract:
 
     def test_create_point_with_another_users_type(self, authenticated_client_alice, bob):
         """Test that user cannot use another user's type."""
-        from apps.points.models import PointType
-
         bob_type = PointType.objects.create(
             names={'en': 'BobType'},
             owner=bob,
@@ -623,9 +616,6 @@ class TestPointsWithTypeContract:
 
     def test_update_point_type(self, authenticated_client_alice, alice):
         """Test updating a point's type."""
-        from apps.points.models import PointType, GPSPoint
-        from django.contrib.gis.geos import Point
-
         type1 = PointType.objects.create(names={'en': 'Type1'}, owner=alice, order=1)
         type2 = PointType.objects.create(names={'en': 'Type2'}, owner=alice, order=2)
 
@@ -646,9 +636,6 @@ class TestPointsWithTypeContract:
 
     def test_list_points_includes_type(self, authenticated_client_alice, alice):
         """Test that listing points includes type information."""
-        from apps.points.models import PointType, GPSPoint
-        from django.contrib.gis.geos import Point
-
         point_type = PointType.objects.create(names={'en': 'Museum'}, owner=alice, order=1)
 
         GPSPoint.objects.create(
@@ -662,15 +649,12 @@ class TestPointsWithTypeContract:
         response = authenticated_client_alice.get(url)
 
         assert response.status_code == status.HTTP_200_OK
-        assert len(response.data) > 0
-        assert 'type' in response.data[0]
-        assert response.data[0]['type']['name'] == 'Museum'
+        assert len(response.data['results']) > 0
+        assert 'type' in response.data['results'][0]
+        assert response.data['results'][0]['type']['names']['en'] == 'Museum'
 
     def test_get_point_detail_includes_type(self, authenticated_client_alice, alice):
         """Test that point detail includes type information."""
-        from apps.points.models import PointType, GPSPoint
-        from django.contrib.gis.geos import Point
-
         point_type = PointType.objects.create(names={'en': 'Park'}, owner=alice, order=1)
 
         point = GPSPoint.objects.create(
@@ -686,4 +670,4 @@ class TestPointsWithTypeContract:
         assert response.status_code == status.HTTP_200_OK
         assert 'type' in response.data
         assert response.data['type']['id'] == str(point_type.id)
-        assert response.data['type']['name'] == 'Park'
+        assert response.data['type']['names']['en'] == 'Park'

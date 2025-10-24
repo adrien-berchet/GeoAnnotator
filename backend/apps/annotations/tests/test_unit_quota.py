@@ -102,10 +102,10 @@ class TestStorageQuota:
         )
 
         user.refresh_from_db()
-        used_after_upload = user.storage_used
+        used_after_upload = user.storage_used * 1
 
         # Delete annotation
-        AnnotationService.delete_annotation(annotation, user)
+        AnnotationService.permanently_delete_annotation(annotation, user)
 
         # Refresh user
         user.refresh_from_db()

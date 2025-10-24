@@ -476,7 +476,7 @@ class PointTypeViewSet(viewsets.ModelViewSet):
 
         # Check permission: user must own the type or it's a base type
         if point_type.owner is not None and point_type.owner != request.user:
-            raise PermissionDenied('You do not have permission to view this type')
+            raise NotFound('Point type not found')
 
         serializer = PointTypeSerializer(point_type, context={'request': request})
         return Response(serializer.data)
@@ -490,7 +490,7 @@ class PointTypeViewSet(viewsets.ModelViewSet):
 
         # Check permission: user must own the type
         if point_type.owner != request.user:
-            raise PermissionDenied('You can only update your own types')
+            raise NotFound('Point type not found')
 
         serializer = PointTypeSerializer(
             point_type,
@@ -516,7 +516,7 @@ class PointTypeViewSet(viewsets.ModelViewSet):
 
         # Check permission: user must own the type
         if point_type.owner != request.user:
-            raise PermissionDenied('You can only delete your own types')
+            raise NotFound('Point type not found')
 
         # Get or create default type
         default_type, _ = PointType.objects.get_or_create(

@@ -4,6 +4,7 @@ Serializers for points app.
 Handles GPS points, tags, editing locks, and spatial data.
 """
 
+from django.conf import settings
 from django.contrib.gis.geos import Point
 from rest_framework import serializers
 from rest_framework_gis.serializers import GeoFeatureModelSerializer
@@ -88,6 +89,27 @@ class PointTypeSerializer(serializers.ModelSerializer):
                     'creation_language': f"Creation language '{attrs['creation_language']}' must have a corresponding name."
                 })
 
+        # Validate duplicate names for updates
+        if 'names' in attrs:
+            user = self.context['request'].user
+            names = attrs['names']
+
+            # Check if another type with these names already exists for this user
+            existing_query = PointType.objects.filter(
+                owner=user,
+                names=names,
+                status='active'
+            )
+
+            # Exclude current instance if this is an update
+            if self.instance:
+                existing_query = existing_query.exclude(pk=self.instance.pk)
+
+            if existing_query.exists():
+                raise serializers.ValidationError({
+                    'names': 'A point type with these names already exists.'
+                })
+
         return attrs
 
     def create(self, validated_data):
@@ -139,6 +161,40 @@ class CreatePointTypeSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("At least one translation is required.")
 
         return value
+
+    def validate(self, attrs):
+        """Validate the entire serializer data."""
+        user = self.context['request'].user
+        names = attrs.get('names')
+
+        if names:
+            existing_type = PointType.objects.filter(
+                owner=user,
+                names=names,
+                status='active'
+            ).exists()
+
+            if existing_type:
+                raise serializers.ValidationError({
+                    'names': 'A point type with these names already exists.'
+                })
+
+        # Validate max types per user
+        active_types_count = PointType.objects.filter(
+            owner=user,
+            status='active'
+        ).count()
+
+        if active_types_count >= settings.MAX_POINT_TYPES_PER_USER:
+            raise serializers.ValidationError({
+                'names': (
+                    'You have reached the maximum of '
+                    f'{settings.MAX_POINT_TYPES_PER_USER} point types. '
+                    'Please delete some types before creating new ones.'
+                )
+            })
+
+        return attrs
 
     def create(self, validated_data):
         """Create with user from context and defaults."""

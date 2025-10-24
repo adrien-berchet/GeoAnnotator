@@ -172,6 +172,10 @@ class PointService:
         Returns:
             GPSPoint object
         """
+        # Set default type if not provided
+        if point_type is None:
+            point_type = PointType.get_default_type()
+
         # Create PostGIS Point
         location = GeoPoint(longitude, latitude, srid=4326)
 
