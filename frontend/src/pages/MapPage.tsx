@@ -64,6 +64,9 @@ export function MapPage() {
   const [mapInstance, setMapInstance] = useState<LeafletMap | null>(null);
   const [showGeolocationNotification, setShowGeolocationNotification] = useState(false);
 
+  // Initial map center state
+  const [initialCenter, setInitialCenter] = useState<[number, number]>([48.8566, 2.3522]); // Default to Paris
+
   /**
    * Load tags, types, and points on mount, and restore filter from URL.
    * Also load user's default map type preference at the start of a new session.
@@ -73,6 +76,19 @@ export function MapPage() {
     loadTypes();
     loadPoints();
     loadDefaultMapType();
+
+    // Load last map center from localStorage
+    const savedCenter = localStorage.getItem('mapLastCenter');
+    if (savedCenter) {
+      try {
+        const center = JSON.parse(savedCenter) as [number, number];
+        if (Array.isArray(center) && center.length === 2 && typeof center[0] === 'number' && typeof center[1] === 'number') {
+          setInitialCenter(center);
+        }
+      } catch (err) {
+        console.warn('Invalid map center in localStorage:', err);
+      }
+    }
 
     // Restore filter from URL
     const tagsParam = searchParams.get('tags');
@@ -311,6 +327,12 @@ export function MapPage() {
         setIsCreateModalOpen(true);
       }
     });
+
+    // Save map center to localStorage on move end
+    mapInstance.on('moveend', () => {
+      const center = mapInstance.getCenter();
+      localStorage.setItem('mapLastCenter', JSON.stringify([center.lat, center.lng]));
+    });
   };
 
   /**
@@ -368,7 +390,7 @@ export function MapPage() {
 
   return (
     <div className="map-page">
-      <MapView onMapReady={handleMapReady} tileLayer={currentTileLayer}>
+      <MapView onMapReady={handleMapReady} tileLayer={currentTileLayer} center={initialCenter}>
         {/* Render point markers */}
         {points.map((point) => (
           <PointMarker
