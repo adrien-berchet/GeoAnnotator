@@ -18,6 +18,34 @@
   position: relative;
 }
 
+/* Map Controls Toggle Button */
+.map-controls-toggle {
+  position: absolute;
+  bottom: 1rem;
+  left: 1rem;
+  z-index: 1000;
+  background: var(--color-bg-primary);
+  padding: 0.5rem;
+  border-radius: 50%;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--color-border-primary);
+  font-size: 1.2rem;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 3rem;
+  height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+}
+
+.map-controls-toggle:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
 /* Map Controls */
 .map-controls {
   position: absolute;
@@ -40,6 +68,10 @@
   .map-controls {
     flex-direction: row;
   }
+
+  .map-controls-toggle {
+    display: none;
+  }
 }
 
 /* Mobile layout (<768px): vertical layout, search bar between counter and button */
@@ -47,9 +79,20 @@
   .map-controls {
     flex-direction: column;
     align-items: stretch;
-    top: 0.5rem;
+    top: calc(var(--navbar-height) + 0.5rem);
     right: 0.5rem;
     left: 0.5rem;
+    transition: opacity 0.3s, transform 0.3s;
+  }
+
+  .map-controls.closed {
+    display: none;
+  }
+
+  .map-controls.open {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
   }
 }
 

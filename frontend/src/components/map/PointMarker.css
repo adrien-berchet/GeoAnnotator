@@ -12,6 +12,10 @@
   padding: 0 !important;
 }
 
+.leaflet-popup {
+  z-index: 1100 !important;
+}
+
 .leaflet-popup-content {
   margin: 0 !important;
   min-width: 280px !important;

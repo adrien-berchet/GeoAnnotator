@@ -49,6 +49,9 @@ export function MapPage() {
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
+  // Controls visibility state for mobile
+  const [isControlsOpen, setIsControlsOpen] = useState(true);
+
   // Create point modal state
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newPointLocation, setNewPointLocation] = useState<[number, number] | null>(null);
@@ -82,6 +85,20 @@ export function MapPage() {
     if (typesParam) {
       setSelectedTypes(typesParam.split(',').map(t => t.trim()));
     }
+
+    // Close controls on mobile by default
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setIsControlsOpen(false);
+      } else {
+        setIsControlsOpen(true);
+      }
+    };
+
+    handleResize(); // Check initial size
+    window.addEventListener('resize', handleResize);
+
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   /**
@@ -381,8 +398,17 @@ export function MapPage() {
         />
       )}
 
+      {/* Map controls toggle button for mobile */}
+      <button
+        className="map-controls-toggle"
+        onClick={() => setIsControlsOpen(!isControlsOpen)}
+        title={isControlsOpen ? t('map.hideControls', 'Hide controls') : t('map.showControls', 'Show controls')}
+      >
+        {isControlsOpen ? '▲' : '▼'}
+      </button>
+
       {/* Map controls */}
-      <div className="map-controls">
+      <div className={`map-controls ${isControlsOpen ? 'open' : 'closed'}`}>
         {/* Search bar */}
         <MapSearchBar onSearch={handleSearch} />
 
