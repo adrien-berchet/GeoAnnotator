@@ -37,7 +37,7 @@ WORKDIR /app
 
 # Install Python dependencies (GDAL is excluded, using system package)
 COPY requirements/base.txt requirements/development.txt ./requirements/
-RUN pip install --upgrade pip && \
+RUN pip install --no-cache-dir --upgrade pip && \
     # Remove GDAL from base requirements
     grep -v "^GDAL" ./requirements/base.txt > /tmp/base-no-gdal.txt && \
     # Remove the -r base.txt line from development.txt and use our filtered base
@@ -45,7 +45,7 @@ RUN pip install --upgrade pip && \
     # Combine filtered base + filtered development
     cat /tmp/base-no-gdal.txt /tmp/dev-no-include.txt > /tmp/requirements.txt && \
     # Install all dependencies
-    pip install -r /tmp/requirements.txt && \
+    pip install --no-cache-dir -r /tmp/requirements.txt && \
     # Cleanup
     rm /tmp/base-no-gdal.txt /tmp/dev-no-include.txt /tmp/requirements.txt
 
@@ -67,11 +67,16 @@ FROM base AS production
 # Install production dependencies only (excluding GDAL, using system package)
 COPY requirements/production.txt ./requirements/
 RUN grep -v "^-r base.txt" ./requirements/production.txt > /tmp/prod-no-include.txt && \
-    pip install -r /tmp/prod-no-include.txt && \
+    pip install --no-cache-dir -r /tmp/prod-no-include.txt && \
     rm /tmp/prod-no-include.txt
 
 # Collect static files
 RUN python manage.py collectstatic --noinput
+
+# Create default point types icons only (no DB changes)
+RUN mkdir -p /app/apps/points/management/commands/
+COPY apps/points/management/commands/base_types_icons /app/apps/points/management/commands/base_types_icons
+RUN python manage.py create_default_types --icon-files-only
 
 # Use gunicorn for production
 CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:10000", "--workers", "4"]

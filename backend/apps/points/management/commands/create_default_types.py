@@ -8,17 +8,16 @@ import shutil
 import uuid as uuid_lib
 from pathlib import Path
 from django.core.management.base import BaseCommand
-from django.core.files.storage import default_storage
-from django.core.files.base import ContentFile
 from django.conf import settings
-from yaml import serialize
 from apps.points.models import PointType
-
-from ...serializers import PointTypeSerializer
 
 
 class Command(BaseCommand):
     help = 'Create default point types (base types with multilingual support)'
+
+    def add_arguments(self, parser):
+        # Positional arguments
+        parser.add_argument("--icon-files-only", action="store_true", help="Do not write types to the database, just create media files for icons.")
 
     def load_icon(self, icon_value):
         """
@@ -52,24 +51,15 @@ class Command(BaseCommand):
                 media_path = os.path.join('point_type_icons', unique_filename)
 
                 # Check if file already exists in media storage
-                if default_storage.exists(media_path):
-                    # File already exists, build and return absolute URL
-                    base_url = getattr(settings, 'BASE_URL', 'http://localhost:8000')
-                    media_url = settings.MEDIA_URL.lstrip('/')
-                    return f"{base_url}/{media_url}{media_path}"
+                target_path = Path(settings.MEDIA_ROOT) / media_path
+                if not target_path.exists():
+                    target_path.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy(icon_path, target_path)
 
-                # Read the image file
-                with open(icon_path, 'rb') as img_file:
-                    file_content = img_file.read()
-
-                # Save to media storage
-                saved_path = default_storage.save(media_path, ContentFile(file_content))
-
-                # Build absolute URL (like the upload API does)
-                # Get base URL from settings or use default
+                # Build URL
                 base_url = getattr(settings, 'BASE_URL', 'http://localhost:8000')
                 media_url = settings.MEDIA_URL.lstrip('/')
-                icon_url = f"{base_url}/{media_url}{saved_path}"
+                icon_url = f"{base_url}/{media_url}{media_path}"
 
                 self.stdout.write(
                     self.style.SUCCESS(f'  → Copied icon: {icon_value} → {icon_url}')
@@ -87,8 +77,15 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """Create default point types with English and French translations."""
+        if options.get('icon_files_only', False):
+            icon_files_only = True
+            self.stdout.write(self.style.WARNING('Icon files only mode: no database changes will be made.'))
+        else:
+            icon_files_only = False
+
         # === DEFAULT GENERIC POINT ===
-        PointType.get_default_type()  # Create default 'Point' type
+        if not icon_files_only:
+            PointType.get_default_type()  # Create default 'Point' type
 
         default_types = [
             # === NATURE & LANDSCAPE (1-15) ===
@@ -253,6 +250,9 @@ class Command(BaseCommand):
 
             # Load the icon (emoji or image file)
             icon = self.load_icon(type_data['icon'])
+
+            if icon_files_only:
+                continue  # Skip database operations in icon-files-only mode
 
             # Check if type already exists (by English name in names field)
             existing_types = PointType.objects.filter(
