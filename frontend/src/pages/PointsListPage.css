@@ -131,16 +131,10 @@
   border-color: var(--color-primary);
 }
 
-.loading-indicator {
-  display: inline-block;
-  margin-left: var(--spacing-xs);
-  animation: spin 1s linear infinite;
-  font-size: var(--font-size-lg);
-}
+/* Note: .loading-indicator and @keyframes spin are now in components.css */
 
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+.loading-indicator {
+  margin-left: var(--spacing-xs);
 }
 
 /* Filter Panel (Drawer) */
@@ -398,27 +392,7 @@
   font-weight: var(--font-weight-medium);
 }
 
-/* Error Container */
-.error-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: var(--spacing-3xl);
-  text-align: center;
-  min-height: 400px;
-}
-
-.error-container h2 {
-  color: var(--color-danger);
-  font-size: var(--font-size-xl);
-  margin-bottom: var(--spacing-md);
-}
-
-.error-container p {
-  color: var(--color-text-secondary);
-  margin-bottom: var(--spacing-xl);
-}
+/* Note: .error-container is now in components.css */
 
 /* Points Grid - auto-fit avec largeur explicite */
 .points-grid {

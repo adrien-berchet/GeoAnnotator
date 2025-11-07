@@ -113,26 +113,7 @@
 
 /* Les form-actions, btn-primary et btn-secondary utilisent maintenant les classes communes */
 
-/* Error container - utilise maintenant empty-state */
-.error-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 400px;
-  text-align: center;
-  padding: var(--spacing-2xl);
-}
-
-.error-container h2 {
-  color: var(--color-text-primary);
-  margin-bottom: var(--spacing-lg);
-}
-
-.error-container p {
-  color: var(--color-text-tertiary);
-  margin-bottom: var(--spacing-xl);
-}
+/* Note: .error-container is now in components.css */
 
 /* Plus besoin de media queries dark mode ! Les variables CSS s'adaptent automatiquement */
 
