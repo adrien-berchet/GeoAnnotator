@@ -66,19 +66,40 @@ export function Navbar() {
           {user ? (
             <>
 
-              <NavLink to="/" className="nav-link" onClick={() => setShowMobileMenu(false)} end>
+              <NavLink
+                to="/"
+                className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+                onClick={() => setShowMobileMenu(false)}
+                end
+              >
                 🗺️ <span>{t('nav.map', 'Map')}</span>
               </NavLink>
-              <NavLink to="/points" className="nav-link" onClick={() => setShowMobileMenu(false)}>
+              <NavLink
+                to="/points"
+                className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+                onClick={() => setShowMobileMenu(false)}
+              >
                 📌 <span>{t('nav.points', 'Points')}</span>
               </NavLink>
-              <NavLink to="/tags" className="nav-link" onClick={() => setShowMobileMenu(false)}>
+              <NavLink
+                to="/tags"
+                className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+                onClick={() => setShowMobileMenu(false)}
+              >
                 🏷️ <span>{t('nav.tags', 'Tags')}</span>
               </NavLink>
-              <NavLink to="/types" className="nav-link" onClick={() => setShowMobileMenu(false)}>
+              <NavLink
+                to="/types"
+                className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+                onClick={() => setShowMobileMenu(false)}
+              >
                 📋 <span>{t('nav.types', 'Types')}</span>
               </NavLink>
-              <NavLink to="/trash" className="nav-link" onClick={() => setShowMobileMenu(false)}>
+              <NavLink
+                to="/trash"
+                className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+                onClick={() => setShowMobileMenu(false)}
+              >
                 🗑️ <span>{t('nav.trash', 'Trash')}</span>
               </NavLink>
 

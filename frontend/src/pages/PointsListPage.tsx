@@ -16,7 +16,7 @@ import type { GPSPoint, Tag, PointType } from '../types/point';
 import './PointsListPage.css';
 
 export function PointsListPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [points, setPoints] = useState<GPSPoint[]>([]);
   const [availableTags, setAvailableTags] = useState<Tag[]>([]);
   const [availableTypes, setAvailableTypes] = useState<PointType[]>([]);
@@ -339,6 +339,12 @@ export function PointsListPage() {
               <div className="point-card-location">
                 📍 {point.latitude.toFixed(6)}, {point.longitude.toFixed(6)}
               </div>
+
+              {point.type && (
+                <div className="point-card-type">
+                  🏷️ {point.type.names[language] || point.type.names[point.type.creation_language]}
+                </div>
+              )}
 
               {point.description && (
                 <p className="point-card-description">

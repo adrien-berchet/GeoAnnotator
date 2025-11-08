@@ -7,6 +7,7 @@
 import { useState } from 'react';
 import type { TrashPoint } from '../../types/trash';
 import { restorePoint, permanentlyDeletePoint } from '../../api/trash';
+import { useLanguage } from '../../contexts/LanguageContext';
 import './TrashCard.css';
 
 interface TrashPointCardProps {
@@ -16,11 +17,12 @@ interface TrashPointCardProps {
 }
 
 export function TrashPointCard({ item, onRestore, onDelete }: TrashPointCardProps) {
+  const { t } = useLanguage();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleRestore = async () => {
-    if (!confirm('Restaurer ce point depuis la corbeille ?')) return;
+    if (!confirm(t('trash.confirmRestorePoint', 'Restore this point from trash?'))) return;
 
     setIsLoading(true);
     try {
@@ -28,7 +30,7 @@ export function TrashPointCard({ item, onRestore, onDelete }: TrashPointCardProp
       onRestore();
     } catch (error) {
       console.error('Failed to restore point:', error);
-      alert('Échec de la restauration du point');
+      alert(t('trash.restorePointFailed', 'Failed to restore point'));
     } finally {
       setIsLoading(false);
     }
@@ -37,7 +39,7 @@ export function TrashPointCard({ item, onRestore, onDelete }: TrashPointCardProp
   const handleDelete = async () => {
     if (
       !confirm(
-        'Supprimer définitivement ce point ? Cette action est irréversible et supprimera également toutes les annotations associées.'
+        t('trash.confirmDeletePoint', 'Permanently delete this point? This action is irreversible and will also delete all associated annotations.')
       )
     ) {
       return;
@@ -49,7 +51,7 @@ export function TrashPointCard({ item, onRestore, onDelete }: TrashPointCardProp
       onDelete();
     } catch (error) {
       console.error('Failed to delete point:', error);
-      alert('Échec de la suppression du point');
+      alert(t('trash.deletePointFailed', 'Failed to delete point'));
     } finally {
       setIsLoading(false);
     }
@@ -59,6 +61,18 @@ export function TrashPointCard({ item, onRestore, onDelete }: TrashPointCardProp
     if (item.days_remaining <= 7) return 'critical';
     if (item.days_remaining <= 14) return 'warning';
     return 'normal';
+  };
+
+  const formatDate = (dateString: string) => {
+    const locale = t('common.locale', 'en-US');
+    return new Date(dateString).toLocaleDateString(locale);
+  };
+
+  const getDaysRemainingText = (days: number) => {
+    if (days === 1) {
+      return t('trash.oneDayRemaining', '1 day remaining');
+    }
+    return t('trash.daysRemaining', '{count} days remaining').replace('{count}', String(days));
   };
 
   return (
@@ -71,16 +85,15 @@ export function TrashPointCard({ item, onRestore, onDelete }: TrashPointCardProp
           </h3>
           <div className="trash-card-meta">
             <span className="deleted-by">
-              Supprimé par {item.deleted_by.email}
+              {t('trash.deletedBy', 'Deleted by {email}').replace('{email}', item.deleted_by.email)}
             </span>
             <span className="deleted-at">
-              le {new Date(item.deleted_at).toLocaleDateString('fr-FR')}
+              {t('trash.on', 'on')} {formatDate(item.deleted_at)}
             </span>
           </div>
         </div>
         <div className={`days-remaining ${getDaysRemainingClass()}`}>
-          {item.days_remaining} jour{item.days_remaining > 1 ? 's' : ''} restant
-          {item.days_remaining > 1 ? 's' : ''}
+          {getDaysRemainingText(item.days_remaining)}
         </div>
       </div>
 
@@ -91,15 +104,27 @@ export function TrashPointCard({ item, onRestore, onDelete }: TrashPointCardProp
       <div className="trash-card-details">
         <div className="detail-item">
           <span className="icon">📝</span>
-          <span>{item.annotations.length} annotation(s)</span>
+          <span>
+            {item.annotations.length} {item.annotations.length === 1
+              ? t('trash.annotation', 'annotation')
+              : t('trash.annotations', 'annotations')}
+          </span>
         </div>
         <div className="detail-item">
           <span className="icon">👥</span>
-          <span>{item.shares.length} partage(s)</span>
+          <span>
+            {item.shares.length} {item.shares.length === 1
+              ? t('trash.share', 'share')
+              : t('trash.shares', 'shares')}
+          </span>
         </div>
         <div className="detail-item">
           <span className="icon">🏷️</span>
-          <span>{item.gps_point.tags.length} tag(s)</span>
+          <span>
+            {item.gps_point.tags.length} {item.gps_point.tags.length === 1
+              ? t('common.tag', 'tag')
+              : t('common.tags', 'tags')}
+          </span>
         </div>
       </div>
 
@@ -107,14 +132,16 @@ export function TrashPointCard({ item, onRestore, onDelete }: TrashPointCardProp
         className="toggle-details-btn"
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        {isExpanded ? '▼ Masquer les détails' : '▶ Afficher les détails'}
+        {isExpanded
+          ? `▼ ${t('trash.hideDetails', 'Hide details')}`
+          : `▶ ${t('trash.showDetails', 'Show details')}`}
       </button>
 
       {isExpanded && (
         <div className="trash-card-expanded">
           {item.annotations.length > 0 && (
             <div className="expanded-section">
-              <h4>Annotations associées</h4>
+              <h4>{t('trash.associatedAnnotations', 'Associated annotations')}</h4>
               <div className="annotations-list">
                 {item.annotations.map((annotation) => (
                   <div key={annotation.id} className="annotation-item">
@@ -135,7 +162,7 @@ export function TrashPointCard({ item, onRestore, onDelete }: TrashPointCardProp
                             : '📎'}
                         </span>
                         <span className="annotation-preview">
-                          {annotation.file?.file_name || 'Fichier'}
+                          {annotation.file?.file_name || t('trash.file', 'File')}
                         </span>
                       </>
                     )}
@@ -147,7 +174,7 @@ export function TrashPointCard({ item, onRestore, onDelete }: TrashPointCardProp
 
           {item.shares.length > 0 && (
             <div className="expanded-section">
-              <h4>Partages (désactivés)</h4>
+              <h4>{t('trash.sharesDeactivated', 'Shares (deactivated)')}</h4>
               <div className="shares-list">
                 {item.shares.map((share) => (
                   <div key={share.id} className="share-item">
@@ -158,14 +185,14 @@ export function TrashPointCard({ item, onRestore, onDelete }: TrashPointCardProp
                 ))}
               </div>
               <p className="shares-note">
-                ℹ️ Ces personnes n'ont plus accès au point et à ses annotations.
+                ℹ️ {t('trash.sharesNoAccessNote', 'These people no longer have access to the point and its annotations.')}
               </p>
             </div>
           )}
 
           {item.gps_point.tags.length > 0 && (
             <div className="expanded-section">
-              <h4>Tags</h4>
+              <h4>{t('common.tags', 'Tags')}</h4>
               <div className="tags-list">
                 {item.gps_point.tags.map((tag) => (
                   <span key={tag.id} className="tag">
@@ -184,20 +211,20 @@ export function TrashPointCard({ item, onRestore, onDelete }: TrashPointCardProp
           onClick={handleRestore}
           disabled={isLoading || item.is_expired}
         >
-          ↺ Restaurer
+          ↺ {t('trash.restore', 'Restore')}
         </button>
         <button
           className="btn btn-delete"
           onClick={handleDelete}
           disabled={isLoading}
         >
-          🗑️ Supprimer définitivement
+          🗑️ {t('trash.deletePermanently', 'Delete permanently')}
         </button>
       </div>
 
       {item.is_expired && (
         <div className="expired-notice">
-          ⚠️ Ce point a expiré et sera supprimé automatiquement.
+          ⚠️ {t('trash.pointExpiredNotice', 'This point has expired and will be automatically deleted.')}
         </div>
       )}
     </div>

@@ -418,6 +418,70 @@
   font-size: var(--font-size-sm);
 }
 
+.loading-spinner,
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid var(--color-border-primary);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-indicator {
+  display: inline-block;
+  animation: spin 1s linear infinite;
+  font-size: var(--font-size-lg);
+}
+
+/* === ERROR & EMPTY STATES === */
+
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-3xl);
+  text-align: center;
+  min-height: 400px;
+}
+
+.error-container h2 {
+  color: var(--color-danger);
+  font-size: var(--font-size-xl);
+  margin-bottom: var(--spacing-md);
+}
+
+.error-container p {
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-xl);
+}
+
+.error-message {
+  color: var(--color-danger);
+  font-size: var(--font-size-base);
+  margin: 0;
+  padding: var(--spacing-lg);
+  background: var(--color-danger-bg);
+  border-radius: var(--radius-md);
+  width: 100%;
+}
+
+.success-message {
+  color: var(--color-success-dark);
+  font-size: var(--font-size-base);
+  margin: 0 0 var(--spacing-lg) 0;
+  padding: var(--spacing-lg);
+  background: var(--color-success-bg);
+  border-radius: var(--radius-md);
+}
+
 /* === CONTAINER === */
 
 .container {
@@ -511,6 +575,18 @@
 
 .gap-lg {
   gap: var(--spacing-lg);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
 }
 
 /* === RESPONSIVE === */

@@ -11,6 +11,7 @@
   --color-primary-hover: #3182ce;
   --color-primary-light: #bee3f8;
   --color-primary-dark: #2c5282;
+  --color-primary-contrast: #ffffff;
 
   /* Neutral Colors (Light Mode) */
   --color-bg-primary: #ffffff;
@@ -23,10 +24,16 @@
   --color-text-tertiary: #4d5964;
   --color-text-muted: #a0aec0;
   --color-text-disabled: #a0aec0;
+  --color-text-on-primary: #ffffff;
+  --color-text-on-danger: #ffffff;
 
   --color-border-primary: #e2e8f0;
   --color-border-secondary: #cbd5e0;
   --color-border-tertiary: #a0aec0;
+
+  /* Backdrop */
+  --color-backdrop: rgba(0, 0, 0, 0.5);
+  --color-backdrop-dark: rgba(0, 0, 0, 0.7);
 
   /* Success Colors */
   --color-success: #48bb78;
@@ -48,6 +55,8 @@
   --color-warning-hover: #dd6b20;
   --color-warning-light: #fbd38d;
   --color-warning-bg: #fff3e0;
+  --color-warning-border: #ff9800;
+  --color-warning-text: #e65100;
   --color-warning-dark: #e65100;
 
   /* Info Colors */
@@ -71,6 +80,7 @@
   --spacing-4xl: 4rem;     /* 64px */
 
   /* === BORDER RADIUS === */
+  --radius-xs: 2px;
   --radius-sm: 4px;
   --radius-md: 6px;
   --radius-lg: 8px;
@@ -82,6 +92,7 @@
   --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.1);
   --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.15);
   --shadow-xl: 0 10px 25px rgba(0, 0, 0, 0.1);
+  --shadow-focus-ring: 0 0 0 3px rgba(66, 153, 225, 0.5);
 
   /* === TRANSITIONS === */
   --transition-fast: 0.15s;
@@ -148,6 +159,9 @@
   --color-border-secondary: #718096;
   --color-border-tertiary: #a0aec0;
 
+  /* Backdrop */
+  --color-backdrop: rgba(0, 0, 0, 0.7);
+
   /* Primary Colors (adjusted for dark mode) */
   --color-primary: #63b3ed;
   --color-primary-hover: #4299e1;
@@ -162,7 +176,9 @@
   --color-danger-bg: #742a2a;
 
   /* Warning Colors (adjusted) */
-  --color-warning-bg: #744210;
+  --color-warning-bg: rgba(255, 152, 0, 0.15);
+  --color-warning-border: #ffa726;
+  --color-warning-text: #ffa726;
 
   /* Link Colors */
   --color-link: #60a5fa;
@@ -173,4 +189,5 @@
   --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.3);
   --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.4);
   --shadow-xl: 0 10px 25px rgba(0, 0, 0, 0.3);
+  --shadow-focus-ring: 0 0 0 3px rgba(99, 179, 237, 0.5);
 }

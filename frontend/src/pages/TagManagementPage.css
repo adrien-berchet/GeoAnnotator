@@ -1,38 +1,40 @@
 .tag-management-page {
-  padding: 2rem;
-  max-width: 1400px;
+  max-width: var(--max-width-content);
   margin: 0 auto;
-  min-height: calc(100vh - 64px);
+  padding: var(--spacing-2xl);
+  min-height: calc(100vh - var(--navbar-height));
 }
 
 .tag-management-header {
-  margin-bottom: 2rem;
+  margin-bottom: var(--spacing-2xl);
 }
 
 .tag-management-header h1 {
-  font-size: 2rem;
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
   color: var(--color-text-primary);
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--spacing-sm);
 }
 
 .tag-management-header .description {
   color: var(--color-text-secondary);
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
 }
 
+/* Note: .loading is in components.css */
 .loading {
   text-align: center;
-  padding: 2rem;
+  padding: var(--spacing-2xl);
   color: var(--color-text-tertiary);
 }
 
 .error-message {
   background-color: var(--color-danger-bg);
   border: 1px solid var(--color-danger-light);
-  border-radius: 8px;
-  padding: 1rem;
-  margin-bottom: 1rem;
-  color: var(--color-danger-hover);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+  color: var(--color-danger);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -41,72 +43,77 @@
 .close-error {
   background: none;
   border: none;
-  font-size: 1.5rem;
+  font-size: var(--font-size-2xl);
   cursor: pointer;
-  color: var(--color-danger-hover);
+  color: var(--color-danger);
   padding: 0;
   width: 24px;
   height: 24px;
+  transition: opacity var(--transition-base);
+}
+
+.close-error:hover {
+  opacity: 0.7;
 }
 
 /* Create Form */
 .create-tag-section {
   background: var(--color-bg-primary);
   border: 1px solid var(--color-border-primary);
-  border-radius: 8px;
-  padding: 1.5rem;
-  margin-bottom: 2rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-xl);
+  margin-bottom: var(--spacing-2xl);
+  box-shadow: var(--shadow-md);
 }
 
 .create-tag-form h2 {
-  font-size: 1.25rem;
-  font-weight: 600;
-  margin: 0 0 1rem;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  margin: 0 0 var(--spacing-lg);
   color: var(--color-text-primary);
 }
 
 .create-error {
-  background-color: var(--color-danger-bg, #fee);
-  border: 1px solid var(--color-danger-light, #f88);
-  border-radius: 4px;
-  padding: 0.75rem;
-  margin-bottom: 1rem;
-  color: var(--color-danger-hover, #c00);
-  font-size: 0.875rem;
-  font-weight: 500;
+  background-color: var(--color-danger-bg);
+  border: 1px solid var(--color-danger-light);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+  color: var(--color-danger);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
 }
 
 .form-group {
-  margin-bottom: 1rem;
+  margin-bottom: var(--spacing-lg);
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 500;
+  margin-bottom: var(--spacing-sm);
+  font-weight: var(--font-weight-medium);
   color: var(--color-text-primary);
 }
 
 .form-group .required {
-  color: var(--color-danger-text, #c00);
+  color: var(--color-danger);
 }
 
 .tag-name-input {
   width: 100%;
-  padding: 0.5rem 0.75rem;
+  padding: var(--spacing-md) var(--spacing-lg);
   border: 1px solid var(--color-border-primary);
-  border-radius: 4px;
-  font-size: 1rem;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-base);
   color: var(--color-text-primary);
   background: var(--color-bg-primary);
-  transition: border-color 0.2s;
+  transition: border-color var(--transition-base);
 }
 
 .tag-name-input:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+  box-shadow: var(--shadow-focus-ring);
 }
 
 .tag-name-input:disabled {
@@ -117,21 +124,21 @@
 
 .form-actions {
   display: flex;
-  gap: 1rem;
-  margin-top: 1.5rem;
+  gap: var(--spacing-lg);
+  margin-top: var(--spacing-xl);
 }
 
 .create-button {
-  padding: 0.5rem 1.5rem;
+  padding: var(--spacing-sm) var(--spacing-xl);
   background-color: var(--color-primary);
-  color: var(--color-text-on-primary, #ffffff);
+  color: var(--color-primary-contrast);
   border: none;
-  border-radius: 4px;
-  font-size: 1rem;
-  font-weight: 500;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
   white-space: nowrap;
-  transition: all 0.2s;
+  transition: all var(--transition-base);
 }
 
 .create-button:hover:not(:disabled) {
@@ -139,35 +146,39 @@
 }
 
 .create-button:disabled {
-  background-color: var(--color-text-secondary);
-  color: var(--color-bg-primary);
-  opacity: 0.6;
+  background-color: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
   cursor: not-allowed;
 }
 
 /* Tags Section */
 .tags-section {
-  margin-top: 2rem;
+  background: var(--color-bg-primary);
+  padding: var(--spacing-xl);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border-primary);
+  box-shadow: var(--shadow-md);
 }
 
 .tags-section h2 {
-  font-size: 1.25rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
+  margin: 0 0 var(--spacing-lg);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
 }
 
+/* Note: .empty-state is in components.css */
 .empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 4rem 2rem;
+  padding: var(--spacing-3xl) var(--spacing-2xl);
   text-align: center;
 }
 
 .empty-state p {
-  font-size: 1.125rem;
+  font-size: var(--font-size-lg);
   color: var(--color-text-tertiary);
 }
 
@@ -175,20 +186,20 @@
 .tags-list {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: var(--spacing-md);
 }
 
 .tag-item {
-  background: var(--color-bg-primary);
+  background: var(--color-bg-secondary);
   border: 1px solid var(--color-border-primary);
-  border-radius: 8px;
-  padding: 1rem 1.25rem;
-  transition: all 0.2s;
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg) var(--spacing-xl);
+  transition: all var(--transition-base);
 }
 
 .tag-item:hover {
   border-color: var(--color-border-secondary);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-md);
 }
 
 /* View Mode */
@@ -196,39 +207,40 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 2rem;
+  gap: var(--spacing-xl);
 }
 
 .tag-name {
-  font-size: 1rem;
+  font-size: var(--font-size-base);
   color: var(--color-text-primary);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   flex: 1;
   min-width: 0;
 }
 
 .tag-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--spacing-sm);
   flex-wrap: wrap;
   flex-shrink: 0;
 }
 
+/* Match button styles from PointTypeManagementPage */
 .btn-view,
 .edit-button,
 .delete-button {
-  padding: 0.375rem 0.875rem;
+  padding: var(--spacing-sm) var(--spacing-lg);
   border: none;
-  border-radius: 4px;
-  font-size: 0.875rem;
-  font-weight: 500;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--transition-base);
 }
 
 .btn-view {
   background-color: #1976d2;
-  color: white;
+  color: var(--color-primary-contrast);
 }
 
 .btn-view:hover:not(:disabled) {
@@ -236,28 +248,26 @@
 }
 
 .edit-button {
-  background-color: var(--color-primary-light);
-  color: var(--color-primary-dark);
+  background-color: #0288d1;
+  color: var(--color-primary-contrast);
 }
 
 .edit-button:hover:not(:disabled) {
-  background-color: var(--color-primary-hover);
-  color: white;
+  background-color: #0277bd;
 }
 
 .delete-button {
-  background-color: var(--color-danger-bg);
-  color: var(--color-danger-hover);
+  background-color: #d32f2f;
+  color: var(--color-primary-contrast);
 }
 
 .delete-button:hover:not(:disabled) {
-  background-color: var(--color-danger-light);
-  color: var(--color-text-on-danger, #fff);
+  background-color: #c62828;
 }
 
 .edit-button:disabled,
 .delete-button:disabled {
-  opacity: 0.5;
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
@@ -265,226 +275,88 @@
 .tag-edit-mode {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: var(--spacing-md);
 }
 
 .tag-edit-input {
-  padding: 0.5rem 0.75rem;
+  padding: var(--spacing-md) var(--spacing-lg);
   border: 1px solid var(--color-primary);
-  border-radius: 4px;
-  font-size: 1rem;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-base);
   color: var(--color-text-primary);
+  background: var(--color-bg-primary);
+  transition: border-color var(--transition-base);
 }
 
 .tag-edit-input:focus {
   outline: none;
   border-color: var(--color-primary-hover);
-  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+  box-shadow: var(--shadow-focus-ring);
 }
 
 .tag-edit-input:disabled {
   background-color: var(--color-bg-tertiary);
   cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .tag-edit-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--spacing-sm);
 }
 
 .save-button,
 .cancel-button {
-  padding: 0.375rem 1rem;
+  padding: var(--spacing-sm) var(--spacing-lg);
   border: none;
-  border-radius: 4px;
-  font-size: 0.875rem;
-  font-weight: 500;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--transition-base);
 }
 
 .save-button {
-  background-color: var(--color-primary);
-  color: var(--color-text-on-primary, #ffffff);
+  background-color: #388e3c;
+  color: var(--color-primary-contrast);
 }
 
 .save-button:hover:not(:disabled) {
-  background-color: var(--color-primary-hover);
+  background-color: #2e7d32;
 }
 
 .save-button:disabled {
-  background-color: var(--color-border-secondary, #cbd5e0);
+  background-color: var(--color-border-secondary);
   cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .cancel-button {
-  background-color: var(--color-bg-tertiary);
-  color: var(--color-text-secondary);
+  background-color: #757575;
+  color: var(--color-primary-contrast);
 }
 
 .cancel-button:hover:not(:disabled) {
-  background-color: var(--color-bg-hover);
-  color: var(--color-text-primary);
+  background-color: #616161;
 }
 
 .cancel-button:disabled {
-  opacity: 0.5;
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
-/* Dark mode */
-
-/* Use data-theme='dark' as prefix for all dark rules (non-nested, valid CSS) */
-[data-theme='dark'] .tag-management-page {
-  background: var(--color-bg-dark, #1a202c);
-}
-
-[data-theme='dark'] .tag-management-header h1 {
-  color: var(--color-text-dark, #f7fafc);
-}
-
-[data-theme='dark'] .tag-management-header .description {
-  color: var(--color-text-tertiary-dark, #a0aec0);
-}
-
-[data-theme='dark'] .loading {
-  color: var(--color-text-tertiary-dark, #a0aec0);
-}
-
-[data-theme='dark'] .error-message {
-  background-color: var(--color-danger-dark-bg, #742a2a);
-  border-color: var(--color-danger-hover);
-  color: var(--color-danger-dark-text, #feb2b2);
-}
-
-[data-theme='dark'] .close-error {
-  color: var(--color-danger-dark-text, #feb2b2);
-}
-
-[data-theme='dark'] .create-tag-section,
-[data-theme='dark'] .tag-item {
-  background: var(--color-bg-dark-secondary, #2d3748);
-  border-color: var(--color-border-dark, var(--color-text-secondary));
-}
-
-[data-theme='dark'] .create-tag-form h2,
-[data-theme='dark'] .tags-section h2 {
-  color: var(--color-text-dark, #f7fafc);
-}
-
-[data-theme='dark'] .form-group label {
-  color: var(--color-text-dark, #f7fafc);
-}
-
-[data-theme='dark'] .create-error {
-  background-color: var(--color-danger-dark-bg, #742a2a);
-  border-color: var(--color-danger-hover);
-  color: var(--color-danger-dark-text, #feb2b2);
-}
-
-[data-theme='dark'] .tag-name-input,
-[data-theme='dark'] .tag-edit-input {
-  background: var(--color-input-bg-dark, #374151);
-  border-color: var(--color-border-dark, var(--color-text-secondary));
-  color: var(--color-text-dark, #f7fafc);
-}
-
-[data-theme='dark'] .tag-name-input:focus,
-[data-theme='dark'] .tag-edit-input:focus {
-  border-color: var(--color-focus-dark, #63b3ed);
-}
-
-[data-theme='dark'] .tag-name-input:disabled,
-[data-theme='dark'] .tag-edit-input:disabled {
-  background-color: var(--color-bg-dark, #1a202c);
-}
-
-[data-theme='dark'] .create-button {
-  background-color: var(--color-primary-hover);
-}
-
-[data-theme='dark'] .create-button:hover:not(:disabled) {
-  background-color: var(--color-primary-hover-hover, #2c5282);
-}
-
-[data-theme='dark'] .create-button:disabled {
-  background-color: var(--color-text-secondary);
-  color: var(--color-bg-primary);
-  opacity: 0.7;
-}
-
-[data-theme='dark'] .tag-item:hover {
-  border-color: var(--color-text-tertiary);
-}
-
-[data-theme='dark'] .tag-name {
-  color: var(--color-text-dark, #f7fafc);
-}
-
-[data-theme='dark'] .btn-view {
-  background-color: #1976d2;
-}
-
-[data-theme='dark'] .btn-view:hover:not(:disabled) {
-  background-color: #1565c0;
-}
-
-[data-theme='dark'] .edit-button {
-  background-color: var(--color-primary-light);
-  color: var(--color-primary-dark);
-}
-
-[data-theme='dark'] .edit-button:hover:not(:disabled) {
-  background-color: var(--color-primary-hover);
-  color: white;
-}
-
-[data-theme='dark'] .delete-button {
-  background-color: var(--color-danger-dark-bg, #742a2a);
-  color: var(--color-danger-dark-text, #feb2b2);
-}
-
-[data-theme='dark'] .delete-button:hover:not(:disabled) {
-  background-color: var(--color-danger-hover);
-  color: var(--color-text-on-danger, #fff);
-}
-
-[data-theme='dark'] .save-button {
-  background-color: var(--color-primary-hover);
-}
-
-[data-theme='dark'] .save-button:hover:not(:disabled) {
-  background-color: var(--color-primary-hover-hover, #2c5282);
-}
-
-[data-theme='dark'] .save-button:disabled {
-  background-color: var(--color-text-secondary);
-}
-
-[data-theme='dark'] .cancel-button {
-  background-color: var(--color-text-secondary);
-  color: var(--color-cancel-dark-text, #e2e8e0);
-}
-
-[data-theme='dark'] .cancel-button:hover:not(:disabled) {
-  background-color: var(--color-text-tertiary);
-  color: var(--color-text-dark, #f7fafc);
-}
-
-[data-theme='dark'] .empty-state p {
-  color: var(--color-text-tertiary-dark, #a0aec0);
-}
+/* Note: Dark mode is handled automatically by CSS variables in variables.css */
 
 /* Responsive */
 @media (max-width: 768px) {
   .tag-management-page {
-    padding: 1rem;
+    padding: var(--spacing-lg);
   }
 
   .tag-view-mode {
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.75rem;
+    gap: var(--spacing-md);
   }
 
   .tag-actions {
@@ -492,11 +364,14 @@
     justify-content: flex-end;
   }
 
-  .form-actions {
+  .form-actions,
+  .tag-edit-actions {
     flex-direction: column;
   }
 
-  .create-button {
+  .create-button,
+  .save-button,
+  .cancel-button {
     width: 100%;
   }
 }
