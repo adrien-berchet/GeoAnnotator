@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { TrashAnnotation } from '../../types/trash';
 import { restoreAnnotation, permanentlyDeleteAnnotation } from '../../api/trash';
+import { useLanguage } from '../../contexts/LanguageContext';
 import './TrashCard.css';
 
 interface TrashAnnotationCardProps {
@@ -21,6 +22,7 @@ export function TrashAnnotationCard({
   onRestore,
   onDelete,
 }: TrashAnnotationCardProps) {
+  const { t } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -154,14 +156,14 @@ export function TrashAnnotationCard({
           onClick={handleRestore}
           disabled={isLoading || item.is_expired}
         >
-          ↺ Restaurer
+          ↺ {t('trash.restore', 'Restaurer')}
         </button>
         <button
           className="btn btn-delete"
           onClick={handleDelete}
           disabled={isLoading}
         >
-          🗑️ Supprimer définitivement
+          🗑️ {t('trash.deletePermanently', 'Supprimer définitivement')}
         </button>
       </div>
 

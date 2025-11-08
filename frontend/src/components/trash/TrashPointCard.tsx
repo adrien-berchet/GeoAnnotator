@@ -7,6 +7,7 @@
 import { useState } from 'react';
 import type { TrashPoint } from '../../types/trash';
 import { restorePoint, permanentlyDeletePoint } from '../../api/trash';
+import { useLanguage } from '../../contexts/LanguageContext';
 import './TrashCard.css';
 
 interface TrashPointCardProps {
@@ -16,6 +17,7 @@ interface TrashPointCardProps {
 }
 
 export function TrashPointCard({ item, onRestore, onDelete }: TrashPointCardProps) {
+  const { t } = useLanguage();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -184,14 +186,14 @@ export function TrashPointCard({ item, onRestore, onDelete }: TrashPointCardProp
           onClick={handleRestore}
           disabled={isLoading || item.is_expired}
         >
-          ↺ Restaurer
+          ↺ {t('trash.restore', 'Restaurer')}
         </button>
         <button
           className="btn btn-delete"
           onClick={handleDelete}
           disabled={isLoading}
         >
-          🗑️ Supprimer définitivement
+          🗑️ {t('trash.deletePermanently', 'Supprimer définitivement')}
         </button>
       </div>
 
