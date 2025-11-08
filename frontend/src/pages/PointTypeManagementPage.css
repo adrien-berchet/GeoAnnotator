@@ -248,12 +248,19 @@
   color: var(--color-text-primary);
 }
 
-.types-table tr:hover {
-  background-color: var(--color-bg-hover);
+/* Alternating row colors for better readability */
+.types-table tbody tr:nth-child(4n+1),
+.types-table tbody tr:nth-child(4n+2) {
+  background-color: var(--color-bg-primary);
 }
 
-.types-table tr.base-type {
-  background-color: var(--color-bg-tertiary);
+.types-table tbody tr:nth-child(4n+3),
+.types-table tbody tr:nth-child(4n+4) {
+  background-color: var(--color-bg-secondary);
+}
+
+.types-table tr:hover {
+  background-color: var(--color-bg-hover) !important;
 }
 
 .order-controls {
@@ -349,14 +356,22 @@
   gap: 0.5rem;
 }
 
-/* Icon Editing Row */
-.edit-icon-row {
-  background-color: var(--color-bg-secondary) !important;
+/* Translation Editing Row */
+.edit-translation-row {
   border-left: 3px solid var(--color-primary);
 }
 
-.edit-icon-row td {
+.edit-translation-row td {
   padding: 1rem !important;
+}
+
+.edit-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: var(--color-bg-tertiary);
+  border-radius: var(--radius-md);
 }
 
 .icon-edit-section {
