@@ -4,9 +4,10 @@ Management command to create default point types with multilingual names.
 Usage: python manage.py create_default_types
 """
 import os
-import shutil
 import uuid as uuid_lib
 from pathlib import Path
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand
 from django.conf import settings
 from apps.points.models import PointType
@@ -50,16 +51,14 @@ class Command(BaseCommand):
                 unique_filename = f"base_{base_filename}_{uuid_lib.uuid4().hex[:8]}{file_ext}"
                 media_path = os.path.join('point_type_icons', unique_filename)
 
-                # Check if file already exists in media storage
-                target_path = Path(settings.MEDIA_ROOT) / media_path
-                if not target_path.exists():
-                    target_path.parent.mkdir(parents=True, exist_ok=True)
-                    shutil.copy(icon_path, target_path)
+                # Save to storage backend (works with both local filesystem and S3)
+                if not default_storage.exists(media_path):
+                    with open(icon_path, 'rb') as icon_file:
+                        default_storage.save(media_path, ContentFile(icon_file.read()))
 
-                # Build URL
-                base_url = getattr(settings, 'BASE_URL', 'http://localhost:8000')
-                media_url = settings.MEDIA_URL.lstrip('/')
-                icon_url = f"{base_url}/{media_url}{media_path}"
+                # Build domain-relative URL (works in any environment)
+                # Use storage.url() to get the correct URL for the storage backend
+                icon_url = default_storage.url(media_path)
 
                 self.stdout.write(
                     self.style.SUCCESS(f'  → Copied icon: {icon_value} → {icon_url}')

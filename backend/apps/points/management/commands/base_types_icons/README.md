@@ -18,9 +18,14 @@ Example:
 
 When the management command runs:
 - If the `icon` value ends with an image extension, it loads the file from this directory
-- The file is copied to `media/point_type_icons/` with a unique `base_` prefixed filename
-- The media URL path is stored in the database's `icon` field (e.g., `/media/point_type_icons/base_hunting_area_abc12345.png`)
-- The frontend displays the image from the media URL
+- The file is saved using Django's storage backend to `point_type_icons/` with a unique `base_` prefixed filename
+- The storage backend automatically handles the destination:
+  - **Development**: Local filesystem at `media/point_type_icons/`
+  - **Production**: S3/MinIO object storage
+- The storage URL is stored in the database's `icon` field:
+  - **Development**: Domain-relative path (e.g., `/media/point_type_icons/base_hunting_area_abc12345.png`)
+  - **Production**: Full S3 URL (e.g., `https://s3.amazonaws.com/bucket/point_type_icons/base_hunting_area_abc12345.png`)
+- The frontend displays the image using this URL, which works correctly in any environment
 - This is consistent with how user-uploaded custom type icons are handled
 
 ## Image Recommendations
