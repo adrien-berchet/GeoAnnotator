@@ -6,7 +6,7 @@ Usage: python manage.py create_default_types
 import os
 import uuid as uuid_lib
 from pathlib import Path
-from django.core.files.storage import default_storage
+from django.core.files.storage import default_storage, FileSystemStorage
 from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand
 from django.conf import settings
@@ -20,13 +20,18 @@ class Command(BaseCommand):
         # Positional arguments
         parser.add_argument("--icon-files-only", action="store_true", help="Do not write types to the database, just create media files for icons.")
 
-    def load_icon(self, icon_value):
+    def load_icon(self, icon_value, use_local_storage=False):
         """
         Load icon - either return emoji as-is or copy image file to media storage.
 
         If icon_value ends with .png, .jpg, .jpeg, .gif, .svg, it's treated as a file path
         relative to the base_types_icons directory. The file is copied to media/point_type_icons/
         with a unique base-prefixed filename to avoid conflicts with user uploads.
+
+        Args:
+            icon_value: Emoji or image filename
+            use_local_storage: If True, always use local filesystem (for Docker build).
+                             If False, use configured storage backend (S3 in production).
 
         Returns the icon value (emoji or media URL for images).
         """
@@ -51,14 +56,27 @@ class Command(BaseCommand):
                 unique_filename = f"base_{base_filename}_{uuid_lib.uuid4().hex[:8]}{file_ext}"
                 media_path = os.path.join('point_type_icons', unique_filename)
 
-                # Save to storage backend (works with both local filesystem and S3)
-                if not default_storage.exists(media_path):
-                    with open(icon_path, 'rb') as icon_file:
-                        default_storage.save(media_path, ContentFile(icon_file.read()))
+                # Select storage backend
+                if use_local_storage:
+                    # Use local filesystem for Docker build (--icon-files-only mode)
+                    storage = FileSystemStorage(location=settings.MEDIA_ROOT)
+                else:
+                    # Use configured storage backend (S3 in production, local in dev)
+                    storage = default_storage
 
-                # Build domain-relative URL (works in any environment)
-                # Use storage.url() to get the correct URL for the storage backend
-                icon_url = default_storage.url(media_path)
+                # Save to storage backend
+                if not storage.exists(media_path):
+                    with open(icon_path, 'rb') as icon_file:
+                        storage.save(media_path, ContentFile(icon_file.read()))
+
+                # Generate URL based on storage type
+                if use_local_storage:
+                    # For Docker build: generate domain-relative path
+                    media_url = settings.MEDIA_URL.lstrip('/')
+                    icon_url = f"/{media_url}{media_path}"
+                else:
+                    # For runtime: use storage backend's URL (S3 URL in production, relative path in dev)
+                    icon_url = storage.url(media_path)
 
                 self.stdout.write(
                     self.style.SUCCESS(f'  → Copied icon: {icon_value} → {icon_url}')
@@ -248,7 +266,8 @@ class Command(BaseCommand):
             english_name = type_data['names']['en']
 
             # Load the icon (emoji or image file)
-            icon = self.load_icon(type_data['icon'])
+            # In icon-files-only mode, use local filesystem to bundle icons in Docker image
+            icon = self.load_icon(type_data['icon'], use_local_storage=icon_files_only)
 
             if icon_files_only:
                 continue  # Skip database operations in icon-files-only mode

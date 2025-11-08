@@ -73,7 +73,9 @@ RUN grep -v "^-r base.txt" ./requirements/production.txt > /tmp/prod-no-include.
 # Collect static files
 RUN python manage.py collectstatic --noinput
 
-# Create default point types icons only (no DB changes)
+# Bundle default point type icons into the image
+# This copies icons to /app/media/point_type_icons/ inside the Docker image
+# At runtime, these will be uploaded to S3 when create_default_types runs
 RUN mkdir -p /app/apps/points/management/commands/
 COPY apps/points/management/commands/base_types_icons /app/apps/points/management/commands/base_types_icons
 RUN python manage.py create_default_types --icon-files-only
