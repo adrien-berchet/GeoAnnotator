@@ -340,6 +340,12 @@ export function PointsListPage() {
                 📍 {point.latitude.toFixed(6)}, {point.longitude.toFixed(6)}
               </div>
 
+              {point.type && (
+                <div className="point-card-type">
+                  🏷️ {point.type.name}
+                </div>
+              )}
+
               {point.description && (
                 <p className="point-card-description">
                   {point.description.length > 100

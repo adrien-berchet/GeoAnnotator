@@ -465,6 +465,12 @@
   font-family: var(--font-family-mono);
 }
 
+.point-card-type {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-medium);
+}
+
 .point-card-description {
   color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
