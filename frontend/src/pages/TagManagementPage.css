@@ -147,7 +147,7 @@
 
 .create-button:disabled {
   background-color: var(--color-bg-tertiary);
-  color: var(--color-text-disabled);
+  color: var(--color-text-secondary);
   cursor: not-allowed;
 }
 
