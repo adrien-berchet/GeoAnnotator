@@ -70,14 +70,7 @@ RUN grep -v "^-r base.txt" ./requirements/production.txt > /tmp/prod-no-include.
     pip install --no-cache-dir -r /tmp/prod-no-include.txt && \
     rm /tmp/prod-no-include.txt
 
-# Copy default point type icon source files into the image
-COPY apps/points/management/commands/base_types_icons /app/apps/points/management/commands/base_types_icons
-
-# Copy default icon files to static directory (before collectstatic)
-# This makes them part of the static files system, served from the Docker image
-RUN python manage.py create_default_types --icon-files-only
-
-# Collect static files (includes the default point type icons)
+# Collect static files (includes default point type icons from apps/points/static/)
 RUN python manage.py collectstatic --noinput
 
 # Use gunicorn for production
