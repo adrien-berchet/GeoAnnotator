@@ -70,13 +70,8 @@ RUN grep -v "^-r base.txt" ./requirements/production.txt > /tmp/prod-no-include.
     pip install --no-cache-dir -r /tmp/prod-no-include.txt && \
     rm /tmp/prod-no-include.txt
 
-# Collect static files
+# Collect static files (includes default point type icons from apps/points/static/)
 RUN python manage.py collectstatic --noinput
-
-# Create default point types icons only (no DB changes)
-RUN mkdir -p /app/apps/points/management/commands/
-COPY apps/points/management/commands/base_types_icons /app/apps/points/management/commands/base_types_icons
-RUN python manage.py create_default_types --icon-files-only
 
 # Use gunicorn for production
 CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:10000", "--workers", "4"]

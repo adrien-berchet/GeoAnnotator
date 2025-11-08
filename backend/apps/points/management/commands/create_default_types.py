@@ -3,9 +3,6 @@ Management command to create default point types with multilingual names.
 
 Usage: python manage.py create_default_types
 """
-import os
-import shutil
-import uuid as uuid_lib
 from pathlib import Path
 from django.core.management.base import BaseCommand
 from django.conf import settings
@@ -15,77 +12,46 @@ from apps.points.models import PointType
 class Command(BaseCommand):
     help = 'Create default point types (base types with multilingual support)'
 
-    def add_arguments(self, parser):
-        # Positional arguments
-        parser.add_argument("--icon-files-only", action="store_true", help="Do not write types to the database, just create media files for icons.")
-
     def load_icon(self, icon_value):
         """
-        Load icon - either return emoji as-is or copy image file to media storage.
+        Load icon - either return emoji as-is or generate static URL for image.
 
-        If icon_value ends with .png, .jpg, .jpeg, .gif, .svg, it's treated as a file path
-        relative to the base_types_icons directory. The file is copied to media/point_type_icons/
-        with a unique base-prefixed filename to avoid conflicts with user uploads.
+        For image files (e.g., 'viewpoint.png'), this returns the static URL
+        to the corresponding file in static/points/icons/ (e.g., 'base_viewpoint.png').
 
-        Returns the icon value (emoji or media URL for images).
+        Args:
+            icon_value: Emoji or image filename (e.g., 'viewpoint.png')
+
+        Returns the icon value (emoji or static URL for images).
         """
         image_extensions = ('.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp')
 
         if icon_value.lower().endswith(image_extensions):
             # This is an image file reference
-            icons_dir = Path(__file__).parent / 'base_types_icons'
-            icon_path = icons_dir / icon_value
+            # Convert filename to static file name (e.g., 'viewpoint.png' -> 'base_viewpoint.png')
+            file_ext = Path(icon_value).suffix
+            base_filename = Path(icon_value).stem
+            static_filename = f"base_{base_filename}{file_ext}"
 
-            if not icon_path.exists():
-                self.stdout.write(
-                    self.style.WARNING(f'Image file not found: {icon_path}. Using placeholder.')
-                )
-                return '📍'  # Default placeholder
+            # Generate static URL
+            # The actual file should exist at: backend/apps/points/static/points/icons/{static_filename}
+            static_url = settings.STATIC_URL.rstrip('/')
+            icon_url = f"{static_url}/points/icons/{static_filename}"
 
-            try:
-                # Generate unique filename with 'base_' prefix to distinguish from user uploads
-                # Keep original filename for readability
-                file_ext = icon_path.suffix
-                base_filename = icon_path.stem
-                unique_filename = f"base_{base_filename}_{uuid_lib.uuid4().hex[:8]}{file_ext}"
-                media_path = os.path.join('point_type_icons', unique_filename)
+            self.stdout.write(
+                self.style.SUCCESS(f'  → Using static icon: {icon_value} → {icon_url}')
+            )
 
-                # Check if file already exists in media storage
-                target_path = Path(settings.MEDIA_ROOT) / media_path
-                if not target_path.exists():
-                    target_path.parent.mkdir(parents=True, exist_ok=True)
-                    shutil.copy(icon_path, target_path)
-
-                # Build URL
-                base_url = getattr(settings, 'BASE_URL', 'http://localhost:8000')
-                media_url = settings.MEDIA_URL.lstrip('/')
-                icon_url = f"{base_url}/{media_url}{media_path}"
-
-                self.stdout.write(
-                    self.style.SUCCESS(f'  → Copied icon: {icon_value} → {icon_url}')
-                )
-                return icon_url
-
-            except Exception as e:
-                self.stdout.write(
-                    self.style.ERROR(f'Error loading image {icon_path}: {e}')
-                )
-                return '📍'  # Default placeholder on error
+            return icon_url
 
         # It's an emoji, return as-is
         return icon_value
 
     def handle(self, *args, **options):
         """Create default point types with English and French translations."""
-        if options.get('icon_files_only', False):
-            icon_files_only = True
-            self.stdout.write(self.style.WARNING('Icon files only mode: no database changes will be made.'))
-        else:
-            icon_files_only = False
 
         # === DEFAULT GENERIC POINT ===
-        if not icon_files_only:
-            PointType.get_default_type()  # Create default 'Point' type
+        PointType.get_default_type()  # Create default 'Point' type
 
         default_types = [
             # === NATURE & LANDSCAPE (1-15) ===
@@ -248,11 +214,8 @@ class Command(BaseCommand):
             # Try to find existing type by English name
             english_name = type_data['names']['en']
 
-            # Load the icon (emoji or image file)
+            # Load the icon (emoji or static file URL)
             icon = self.load_icon(type_data['icon'])
-
-            if icon_files_only:
-                continue  # Skip database operations in icon-files-only mode
 
             # Check if type already exists (by English name in names field)
             existing_types = PointType.objects.filter(
