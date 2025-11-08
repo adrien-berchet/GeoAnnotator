@@ -21,24 +21,20 @@ The command has two modes of operation:
 ### 1. Docker Build (--icon-files-only mode)
 
 During Docker image build, the command is run with `--icon-files-only`:
-- Icon files are copied from this directory to `/app/media/point_type_icons/` **inside the Docker image**
-- Uses local filesystem storage (ignores production S3 settings)
-- Generates domain-relative URLs (e.g., `/media/point_type_icons/base_hunting_area_abc12345.png`)
-- **No database changes** - only prepares the icon files
-- These bundled icons become part of the Docker image
+- Icon files are copied from this directory to `backend/apps/points/static/points/icons/`
+- Then `collectstatic` bundles them with other static files into the Docker image
+- Generates static file URLs (e.g., `/static/points/icons/base_hunting_area.png`)
+- **No database changes** - only prepares the static icon files
+- These icons are served directly from the Docker image (not from S3)
 
 ### 2. Runtime (normal mode)
 
-When the container starts in production, the command is run without `--icon-files-only`:
-- Reads icon files from the bundled location in the Docker image
-- Uploads them to the configured storage backend:
-  - **Development**: Local filesystem at `media/point_type_icons/`
-  - **Production**: S3/MinIO object storage
-- Creates database entries with the appropriate URLs:
-  - **Development**: Domain-relative path (e.g., `/media/point_type_icons/base_hunting_area_abc12345.png`)
-  - **Production**: Full S3 URL (e.g., `https://s3.amazonaws.com/bucket/point_type_icons/base_hunting_area_abc12345.png`)
-- The frontend displays icons using these URLs, which work correctly in any environment
-- This is consistent with how user-uploaded custom type icons are handled
+When the container starts (or during development setup), the command runs without `--icon-files-only`:
+- References the static icon files that are already bundled in the image
+- Creates database entries with static file URLs (e.g., `/static/points/icons/base_viewpoint.png`)
+- The frontend displays icons from the static files served by Django/Nginx
+- **Icons are served from the Docker image**, not uploaded to S3
+- This is different from user-uploaded custom type icons (which use media storage/S3)
 
 ## Image Recommendations
 

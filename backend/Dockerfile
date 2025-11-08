@@ -70,15 +70,15 @@ RUN grep -v "^-r base.txt" ./requirements/production.txt > /tmp/prod-no-include.
     pip install --no-cache-dir -r /tmp/prod-no-include.txt && \
     rm /tmp/prod-no-include.txt
 
-# Collect static files
-RUN python manage.py collectstatic --noinput
-
-# Bundle default point type icons into the image
-# This copies icons to /app/media/point_type_icons/ inside the Docker image
-# At runtime, these will be uploaded to S3 when create_default_types runs
-RUN mkdir -p /app/apps/points/management/commands/
+# Copy default point type icon source files into the image
 COPY apps/points/management/commands/base_types_icons /app/apps/points/management/commands/base_types_icons
+
+# Copy default icon files to static directory (before collectstatic)
+# This makes them part of the static files system, served from the Docker image
 RUN python manage.py create_default_types --icon-files-only
+
+# Collect static files (includes the default point type icons)
+RUN python manage.py collectstatic --noinput
 
 # Use gunicorn for production
 CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:10000", "--workers", "4"]

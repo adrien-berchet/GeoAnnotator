@@ -3,11 +3,8 @@ Management command to create default point types with multilingual names.
 
 Usage: python manage.py create_default_types
 """
-import os
-import uuid as uuid_lib
+import shutil
 from pathlib import Path
-from django.core.files.storage import default_storage, FileSystemStorage
-from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand
 from django.conf import settings
 from apps.points.models import PointType
@@ -17,75 +14,80 @@ class Command(BaseCommand):
     help = 'Create default point types (base types with multilingual support)'
 
     def add_arguments(self, parser):
-        # Positional arguments
-        parser.add_argument("--icon-files-only", action="store_true", help="Do not write types to the database, just create media files for icons.")
+        parser.add_argument(
+            "--icon-files-only",
+            action="store_true",
+            help="Copy icon files to static directory (for Docker build). Does not write to database."
+        )
 
-    def load_icon(self, icon_value, use_local_storage=False):
+    def load_icon(self, icon_value, copy_to_static=False):
         """
-        Load icon - either return emoji as-is or copy image file to media storage.
+        Load icon - either return emoji as-is or get static file URL for image.
 
-        If icon_value ends with .png, .jpg, .jpeg, .gif, .svg, it's treated as a file path
-        relative to the base_types_icons directory. The file is copied to media/point_type_icons/
-        with a unique base-prefixed filename to avoid conflicts with user uploads.
+        For image files, this method:
+        - In copy_to_static mode (Docker build): Copies icon to static directory
+        - In normal mode (runtime): Returns static URL to the bundled icon
 
         Args:
             icon_value: Emoji or image filename
-            use_local_storage: If True, always use local filesystem (for Docker build).
-                             If False, use configured storage backend (S3 in production).
+            copy_to_static: If True, copy icon to static directory (Docker build mode)
 
-        Returns the icon value (emoji or media URL for images).
+        Returns the icon value (emoji or static URL for images).
         """
         image_extensions = ('.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp')
 
         if icon_value.lower().endswith(image_extensions):
             # This is an image file reference
-            icons_dir = Path(__file__).parent / 'base_types_icons'
-            icon_path = icons_dir / icon_value
+            source_icons_dir = Path(__file__).parent / 'base_types_icons'
+            source_icon_path = source_icons_dir / icon_value
 
-            if not icon_path.exists():
+            if not source_icon_path.exists():
                 self.stdout.write(
-                    self.style.WARNING(f'Image file not found: {icon_path}. Using placeholder.')
+                    self.style.WARNING(f'Image file not found: {source_icon_path}. Using placeholder.')
                 )
                 return '📍'  # Default placeholder
 
             try:
-                # Generate unique filename with 'base_' prefix to distinguish from user uploads
-                # Keep original filename for readability
-                file_ext = icon_path.suffix
-                base_filename = icon_path.stem
-                unique_filename = f"base_{base_filename}_{uuid_lib.uuid4().hex[:8]}{file_ext}"
-                media_path = os.path.join('point_type_icons', unique_filename)
+                # Use deterministic filename (no random UUID needed for static files)
+                # Just prefix with 'base_' to distinguish from any potential user uploads
+                file_ext = source_icon_path.suffix
+                base_filename = source_icon_path.stem
+                static_filename = f"base_{base_filename}{file_ext}"
 
-                # Select storage backend
-                if use_local_storage:
-                    # Use local filesystem for Docker build (--icon-files-only mode)
-                    storage = FileSystemStorage(location=settings.MEDIA_ROOT)
-                else:
-                    # Use configured storage backend (S3 in production, local in dev)
-                    storage = default_storage
+                if copy_to_static:
+                    # Docker build mode: Copy icon to static directory
+                    # Find the points app static directory
+                    points_app_dir = Path(__file__).parent.parent.parent.parent
+                    static_icons_dir = points_app_dir / 'static' / 'points' / 'icons'
+                    static_icons_dir.mkdir(parents=True, exist_ok=True)
 
-                # Save to storage backend
-                if not storage.exists(media_path):
-                    with open(icon_path, 'rb') as icon_file:
-                        storage.save(media_path, ContentFile(icon_file.read()))
+                    dest_path = static_icons_dir / static_filename
 
-                # Generate URL based on storage type
-                if use_local_storage:
-                    # For Docker build: generate domain-relative path
-                    media_url = settings.MEDIA_URL.lstrip('/')
-                    icon_url = f"/{media_url}{media_path}"
-                else:
-                    # For runtime: use storage backend's URL (S3 URL in production, relative path in dev)
-                    icon_url = storage.url(media_path)
+                    if not dest_path.exists():
+                        shutil.copy(source_icon_path, dest_path)
+                        self.stdout.write(
+                            self.style.SUCCESS(f'  → Copied to static: {icon_value} → {dest_path}')
+                        )
+                    else:
+                        self.stdout.write(
+                            self.style.SUCCESS(f'  → Static file exists: {static_filename}')
+                        )
 
-                self.stdout.write(
-                    self.style.SUCCESS(f'  → Copied icon: {icon_value} → {icon_url}')
-                )
+                # Generate static URL (works in both modes)
+                # These files will be served via Django's static files system
+                static_url = settings.STATIC_URL.rstrip('/')
+                icon_url = f"{static_url}/points/icons/{static_filename}"
+
+                if not copy_to_static:
+                    self.stdout.write(
+                        self.style.SUCCESS(f'  → Using static icon: {icon_value} → {icon_url}')
+                    )
+
                 return icon_url
 
             except Exception as e:
                 self.stdout.write(
-                    self.style.ERROR(f'Error loading image {icon_path}: {e}')
+                    self.style.ERROR(f'Error loading image {source_icon_path}: {e}')
                 )
                 return '📍'  # Default placeholder on error
 
@@ -266,8 +268,8 @@ class Command(BaseCommand):
             english_name = type_data['names']['en']
 
             # Load the icon (emoji or image file)
-            # In icon-files-only mode, use local filesystem to bundle icons in Docker image
-            icon = self.load_icon(type_data['icon'], use_local_storage=icon_files_only)
+            # In icon-files-only mode, copy icons to static directory
+            icon = self.load_icon(type_data['icon'], copy_to_static=icon_files_only)
 
             if icon_files_only:
                 continue  # Skip database operations in icon-files-only mode
