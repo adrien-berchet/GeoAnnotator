@@ -249,13 +249,11 @@
 }
 
 /* Alternating row colors for better readability */
-.types-table tbody tr:nth-child(4n+1),
-.types-table tbody tr:nth-child(4n+2) {
+.types-table tbody tr:nth-child(odd) {
   background-color: var(--color-bg-primary);
 }
 
-.types-table tbody tr:nth-child(4n+3),
-.types-table tbody tr:nth-child(4n+4) {
+.types-table tbody tr:nth-child(even) {
   background-color: var(--color-bg-secondary);
 }
 
