@@ -146,9 +146,8 @@
 }
 
 .create-button:disabled {
-  background-color: var(--color-text-secondary);
+  background-color: var(--color-border-secondary);
   color: var(--color-primary-contrast);
-  opacity: 0.6;
   cursor: not-allowed;
 }
 
