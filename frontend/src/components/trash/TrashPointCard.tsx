@@ -17,7 +17,7 @@ interface TrashPointCardProps {
 }
 
 export function TrashPointCard({ item, onRestore, onDelete }: TrashPointCardProps) {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 

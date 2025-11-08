@@ -22,7 +22,7 @@ export function TrashAnnotationCard({
   onRestore,
   onDelete,
 }: TrashAnnotationCardProps) {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
