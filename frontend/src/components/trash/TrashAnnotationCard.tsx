@@ -22,12 +22,12 @@ export function TrashAnnotationCard({
   onRestore,
   onDelete,
 }: TrashAnnotationCardProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleRestore = async () => {
-    if (!confirm('Restaurer cette annotation depuis la corbeille ?')) return;
+    if (!confirm(t('trash.confirmRestoreAnnotation', 'Restore this annotation from trash?'))) return;
 
     setIsLoading(true);
     try {
@@ -35,7 +35,7 @@ export function TrashAnnotationCard({
       onRestore();
     } catch (error) {
       console.error('Failed to restore annotation:', error);
-      alert("Échec de la restauration de l'annotation");
+      alert(t('trash.restoreAnnotationFailed', 'Failed to restore annotation'));
     } finally {
       setIsLoading(false);
     }
@@ -44,7 +44,7 @@ export function TrashAnnotationCard({
   const handleDelete = async () => {
     if (
       !confirm(
-        "Supprimer définitivement cette annotation ? Cette action est irréversible."
+        t('trash.confirmDeleteAnnotation', 'Permanently delete this annotation? This action is irreversible.')
       )
     ) {
       return;
@@ -56,7 +56,7 @@ export function TrashAnnotationCard({
       onDelete();
     } catch (error) {
       console.error('Failed to delete annotation:', error);
-      alert("Échec de la suppression de l'annotation");
+      alert(t('trash.deleteAnnotationFailed', 'Failed to delete annotation'));
     } finally {
       setIsLoading(false);
     }
@@ -70,6 +70,18 @@ export function TrashAnnotationCard({
     if (item.days_remaining <= 7) return 'critical';
     if (item.days_remaining <= 14) return 'warning';
     return 'normal';
+  };
+
+  const formatDate = (dateString: string) => {
+    const locale = t('common.locale', 'en-US');
+    return new Date(dateString).toLocaleDateString(locale);
+  };
+
+  const getDaysRemainingText = (days: number) => {
+    if (days === 1) {
+      return t('trash.oneDayRemaining', '1 day remaining');
+    }
+    return t('trash.daysRemaining', '{count} days remaining').replace('{count}', String(days));
   };
 
   const renderAnnotationPreview = () => {
@@ -118,20 +130,19 @@ export function TrashAnnotationCard({
       <div className="trash-card-header">
         <div className="trash-card-info">
           <h3 className="trash-card-title">
-            Annotation supprimée
+            {t('trash.deletedAnnotation', 'Deleted annotation')}
           </h3>
           <div className="trash-card-meta">
             <span className="deleted-by">
-              Supprimée par {item.deleted_by.email}
+              {t('trash.deletedBy', 'Deleted by {email}').replace('{email}', item.deleted_by.email)}
             </span>
             <span className="deleted-at">
-              le {new Date(item.deleted_at).toLocaleDateString('fr-FR')}
+              {t('trash.on', 'on')} {formatDate(item.deleted_at)}
             </span>
           </div>
         </div>
         <div className={`days-remaining ${getDaysRemainingClass()}`}>
-          {item.days_remaining} jour{item.days_remaining > 1 ? 's' : ''} restant
-          {item.days_remaining > 1 ? 's' : ''}
+          {getDaysRemainingText(item.days_remaining)}
         </div>
       </div>
 
@@ -139,9 +150,9 @@ export function TrashAnnotationCard({
 
       <div className="associated-point">
         <div className="associated-point-header">
-          <h4>Point associé (actif)</h4>
+          <h4>{t('trash.associatedPointActive', 'Associated point (active)')}</h4>
           <button className="btn-link" onClick={handleViewPoint}>
-            Voir le point →
+            {t('trash.viewPoint', 'View point')} →
           </button>
         </div>
         <div className="point-info">
@@ -156,20 +167,20 @@ export function TrashAnnotationCard({
           onClick={handleRestore}
           disabled={isLoading || item.is_expired}
         >
-          ↺ {t('trash.restore', 'Restaurer')}
+          ↺ {t('trash.restore', 'Restore')}
         </button>
         <button
           className="btn btn-delete"
           onClick={handleDelete}
           disabled={isLoading}
         >
-          🗑️ {t('trash.deletePermanently', 'Supprimer définitivement')}
+          🗑️ {t('trash.deletePermanently', 'Delete permanently')}
         </button>
       </div>
 
       {item.is_expired && (
         <div className="expired-notice">
-          ⚠️ Cette annotation a expiré et sera supprimée automatiquement.
+          ⚠️ {t('trash.annotationExpiredNotice', 'This annotation has expired and will be automatically deleted.')}
         </div>
       )}
     </div>
