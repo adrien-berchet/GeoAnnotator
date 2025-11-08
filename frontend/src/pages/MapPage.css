@@ -162,40 +162,7 @@
   transform: translateX(0);
 }
 
-/* Backdrop overlay */
-.filter-backdrop {
-  position: fixed;
-  top: var(--navbar-height);
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: var(--z-modal-backdrop);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity var(--transition-slow);
-}
-
-.filter-backdrop.open {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.filter-panel-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--spacing-xl) var(--spacing-2xl);
-  border-bottom: 1px solid var(--color-border-primary);
-  background: var(--color-bg-primary);
-}
-
-.filter-panel-header h3 {
-  margin: 0;
-  font-size: var(--font-size-xl);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text-primary);
-}
+/* Note: Filter panel styles are now in FilterPanel.css */
 
 .close-panel-button {
   padding: var(--spacing-sm);
@@ -216,31 +183,6 @@
 .close-panel-button:hover {
   background: var(--color-bg-hover);
   color: var(--color-text-primary);
-}
-
-.filter-panel-actions {
-  display: flex;
-  gap: var(--spacing-md);
-  padding: var(--spacing-xl) var(--spacing-2xl);
-  border-top: 1px solid var(--color-border-primary);
-  background: var(--color-bg-primary);
-}
-
-.clear-filters-button {
-  flex: 1;
-  padding: var(--spacing-md);
-  background: var(--color-bg-tertiary);
-  color: var(--color-text-primary);
-  border: 1px solid var(--color-border-primary);
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  cursor: pointer;
-  transition: all var(--transition-base);
-}
-
-.clear-filters-button:hover {
-  background: var(--color-bg-hover);
 }
 
 .selected-count {
