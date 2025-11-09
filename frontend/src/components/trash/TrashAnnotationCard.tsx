@@ -84,6 +84,24 @@ export function TrashAnnotationCard({
     return t('trash.daysRemaining', '{count} days remaining').replace('{count}', String(days));
   };
 
+  const translateAnnotationType = (type: string) => {
+    const typeKey = `annotations.${type.toLowerCase()}`;
+    return t(typeKey, type);
+  };
+
+  const formatFileSize = (bytes: number) => {
+    const kb = bytes / 1024;
+    if (kb < 1024) {
+      return `${kb.toFixed(2)} ${t('common.fileSizeKB', 'KB')}`;
+    }
+    const mb = kb / 1024;
+    if (mb < 1024) {
+      return `${mb.toFixed(2)} ${t('common.fileSizeMB', 'MB')}`;
+    }
+    const gb = mb / 1024;
+    return `${gb.toFixed(2)} ${t('common.fileSizeGB', 'GB')}`;
+  };
+
   const renderAnnotationPreview = () => {
     const { annotation } = item;
 
@@ -113,10 +131,10 @@ export function TrashAnnotationCard({
         <div className="file-info">
           <div className="file-name">{annotation.file?.file_name}</div>
           <div className="file-meta">
-            <span className="file-type">{annotation.type}</span>
+            <span className="file-type">{translateAnnotationType(annotation.type)}</span>
             {annotation.file?.file_size && (
               <span className="file-size">
-                {(annotation.file.file_size / 1024).toFixed(2)} KB
+                {formatFileSize(annotation.file.file_size)}
               </span>
             )}
           </div>

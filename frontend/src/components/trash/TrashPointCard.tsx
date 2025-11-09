@@ -75,6 +75,11 @@ export function TrashPointCard({ item, onRestore, onDelete }: TrashPointCardProp
     return t('trash.daysRemaining', '{count} days remaining').replace('{count}', String(days));
   };
 
+  const translatePermission = (permission: string) => {
+    const permissionKey = `sharing.${permission.toLowerCase()}`;
+    return t(permissionKey, permission);
+  };
+
   return (
     <div className="trash-card trash-point-card">
       <div className="trash-card-header">
@@ -180,7 +185,7 @@ export function TrashPointCard({ item, onRestore, onDelete }: TrashPointCardProp
                   <div key={share.id} className="share-item">
                     <span className="icon">👤</span>
                     <span className="share-email">{share.recipient_email}</span>
-                    <span className="share-permission">{share.permission}</span>
+                    <span className="share-permission">{translatePermission(share.permission)}</span>
                   </div>
                 ))}
               </div>
