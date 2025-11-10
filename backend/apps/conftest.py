@@ -105,15 +105,15 @@ def public_gps_point_alice(alice):
 
 
 @pytest.fixture
-def tag_fishing(db):
-    """Create 'fishing' tag."""
-    return Tag.objects.get_or_create(name="fishing")[0]
+def tag_fishing(db, alice):
+    """Create 'fishing' tag for alice."""
+    return Tag.objects.get_or_create(name="fishing", owner=alice)[0]
 
 
 @pytest.fixture
-def tag_hiking(db):
-    """Create 'hiking' tag."""
-    return Tag.objects.get_or_create(name="hiking")[0]
+def tag_hiking(db, alice):
+    """Create 'hiking' tag for alice."""
+    return Tag.objects.get_or_create(name="hiking", owner=alice)[0]
 
 
 @pytest.fixture

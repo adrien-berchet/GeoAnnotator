@@ -18,13 +18,15 @@ class TagSerializer(serializers.ModelSerializer):
     """
     Tag serializer.
 
-    Simple name-only serialization.
+    Simple name-only serialization with owner information.
     Matches OpenAPI schema: Tag
     """
+    owner = UserSummarySerializer(read_only=True)
+
     class Meta:
         model = Tag
-        fields = ['id', 'name', 'created_at']
-        read_only_fields = ['id', 'created_at']
+        fields = ['id', 'name', 'owner', 'created_at']
+        read_only_fields = ['id', 'owner', 'created_at']
 
 
 class UserSummarySerializer(serializers.ModelSerializer):
@@ -503,8 +505,12 @@ class CreateGPSPointSerializer(serializers.ModelSerializer):
         point = GPSPoint.objects.create(**validated_data)
 
         # Create/get tags and associate
+        user = self.context['request'].user
         for tag_name in tag_names:
-            tag, _ = Tag.objects.get_or_create(name=tag_name.lower().strip())
+            tag, _ = Tag.objects.get_or_create(
+                name=tag_name.lower().strip(),
+                owner=user
+            )
             point.tags.add(tag)
 
         return point
@@ -575,8 +581,12 @@ class UpdateGPSPointSerializer(serializers.ModelSerializer):
         # Update tags if provided
         if tag_names is not None:
             instance.tags.clear()
+            user = self.context['request'].user
             for tag_name in tag_names:
-                tag, _ = Tag.objects.get_or_create(name=tag_name.lower().strip())
+                tag, _ = Tag.objects.get_or_create(
+                    name=tag_name.lower().strip(),
+                    owner=user
+                )
                 instance.tags.add(tag)
 
         return instance

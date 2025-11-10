@@ -303,7 +303,8 @@ class Tag(models.Model):
     """
     Tag for categorizing GPS points.
 
-    Tags are shared globally (case-insensitive unique).
+    Tags are unique per user (case-insensitive).
+    Each user can only access tags they created.
     Examples: "forest", "hiking", "restaurant"
     """
 
@@ -319,6 +320,13 @@ class Tag(models.Model):
         help_text="Tag name (alphanumeric, hyphens, underscores only)"
     )
 
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='tags',
+        help_text="Tag owner"
+    )
+
     created_at = models.DateTimeField(
         auto_now_add=True,
         help_text="Tag creation timestamp"
@@ -328,20 +336,22 @@ class Tag(models.Model):
         db_table = 'tags'
         verbose_name = 'Tag'
         verbose_name_plural = 'Tags'
-        # Case-insensitive unique constraint on name
+        # Case-insensitive unique constraint on name per user
         constraints = [
             models.UniqueConstraint(
                 functions.Lower('name'),
-                name='unique_tag_name_case_insensitive'
+                'owner',
+                name='unique_tag_name_per_user'
             )
         ]
         indexes = [
             models.Index(fields=['name'], name='idx_tag_name'),
+            models.Index(fields=['owner'], name='idx_tag_owner'),
         ]
         ordering = ['name']
 
     def __str__(self):
-        return self.name
+        return f"{self.name} ({self.owner.email})"
 
 
 class GPSPoint(models.Model):
