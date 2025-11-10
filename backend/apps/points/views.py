@@ -342,8 +342,10 @@ class TagViewSet(viewsets.ModelViewSet):
     """
     ViewSet for managing tags (CRUD operations).
 
+    Tags are filtered by current user - each user can only access their own tags.
+
     Endpoints:
-    - GET /api/tags/ - List all tags
+    - GET /api/tags/ - List current user's tags
     - POST /api/tags/ - Create new tag
     - GET /api/tags/{id}/ - Get tag detail
     - PUT/PATCH /api/tags/{id}/ - Update tag
@@ -358,14 +360,19 @@ class TagViewSet(viewsets.ModelViewSet):
     pagination_class = None  # Disable pagination for tags
 
     def get_queryset(self):
-        """Filter tags by search query if provided."""
-        queryset = super().get_queryset()
+        """Filter tags by current user and search query if provided."""
+        # Filter by current user
+        queryset = Tag.objects.filter(owner=self.request.user).order_by('name')
         search = self.request.query_params.get('search', None)
 
         if search:
             queryset = queryset.filter(name__istartswith=search)
 
         return queryset
+
+    def perform_create(self, serializer):
+        """Create tag and assign to current user."""
+        serializer.save(owner=self.request.user)
 
     def create(self, request, *args, **kwargs):
         """Create new tag with proper error handling for duplicates."""
@@ -379,10 +386,10 @@ class TagViewSet(viewsets.ModelViewSet):
             headers = self.get_success_headers(serializer.data)
             return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
         except IntegrityError:
-            # Handle duplicate tag name
+            # Handle duplicate tag name for this user
             tag_name = request.data.get('name', '')
             return Response(
-                {'name': [f'Tag with name "{tag_name}" already exists.']},
+                {'name': [f'You already have a tag with name "{tag_name}".']},
                 status=status.HTTP_400_BAD_REQUEST
             )
 

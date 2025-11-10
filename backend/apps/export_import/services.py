@@ -378,7 +378,7 @@ class ImportService:
                             from apps.points.models import Tag
                             existing.tags.clear()
                             for tag_name in tags:
-                                tag, _ = Tag.objects.get_or_create(name=tag_name)
+                                tag, _ = Tag.objects.get_or_create(name=tag_name, owner=user)
                                 existing.tags.add(tag)
 
                         result['imported_points'] += 1
@@ -490,7 +490,7 @@ class ImportService:
                                 from apps.points.models import Tag
                                 existing.tags.clear()
                                 for tag_name in tags:
-                                    tag, _ = Tag.objects.get_or_create(name=tag_name)
+                                    tag, _ = Tag.objects.get_or_create(name=tag_name, owner=user)
                                     existing.tags.add(tag)
 
                             result['imported_points'] += 1
@@ -703,7 +703,7 @@ class ImportService:
                                 from apps.points.models import Tag
                                 existing.tags.clear()
                                 for tag_name in tags:
-                                    tag, _ = Tag.objects.get_or_create(name=tag_name)
+                                    tag, _ = Tag.objects.get_or_create(name=tag_name, owner=user)
                                     existing.tags.add(tag)
 
                             result['imported_points'] += 1

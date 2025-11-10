@@ -75,9 +75,9 @@ class TestScenario2PointManagement:
         assert len(response.data["tags"]) == 2
         assert response.data["is_public"] is False
 
-        # Verify tags were created
-        assert Tag.objects.filter(name="fishing").exists()
-        assert Tag.objects.filter(name="river").exists()
+        # Verify tags were created for alice
+        assert Tag.objects.filter(name="fishing", owner=self.alice).exists()
+        assert Tag.objects.filter(name="river", owner=self.alice).exists()
 
     def test_step_2_create_public_gps_point(self):
         """
