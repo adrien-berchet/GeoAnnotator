@@ -41,7 +41,7 @@ export function ImportExportPage() {
   const loadPoints = async () => {
     try {
       const data = await getPoints();
-      setPoints(data.results || []);
+      setPoints(data || []);
     } catch (err) {
       console.error('Failed to load points:', err);
     }
