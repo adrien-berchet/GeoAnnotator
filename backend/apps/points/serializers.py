@@ -14,6 +14,19 @@ from apps.authentication.serializers import UserSerializer
 from .models import GPSPoint, Tag, PointType
 
 
+class UserSummarySerializer(serializers.ModelSerializer):
+    """
+    User summary serializer for nested relations.
+
+    Only includes id and email (lighter than full UserSerializer).
+    Matches OpenAPI schema: UserSummary
+    """
+    class Meta:
+        model = User
+        fields = ['id', 'email']
+        read_only_fields = ['id', 'email']
+
+
 class TagSerializer(serializers.ModelSerializer):
     """
     Tag serializer.
@@ -27,19 +40,6 @@ class TagSerializer(serializers.ModelSerializer):
         model = Tag
         fields = ['id', 'name', 'owner', 'created_at']
         read_only_fields = ['id', 'owner', 'created_at']
-
-
-class UserSummarySerializer(serializers.ModelSerializer):
-    """
-    User summary serializer for nested relations.
-
-    Only includes id and email (lighter than full UserSerializer).
-    Matches OpenAPI schema: UserSummary
-    """
-    class Meta:
-        model = User
-        fields = ['id', 'email']
-        read_only_fields = ['id', 'email']
 
 
 class PointTypeSerializer(serializers.ModelSerializer):
