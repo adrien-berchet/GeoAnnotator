@@ -302,8 +302,8 @@ class TestPointsContract:
         detail_url = reverse('points:detail', kwargs={'pk': point_id})
         response = client2.get(detail_url)
 
-        assert response.status_code == status.HTTP_403_FORBIDDEN
-        assert response.data['error'] == 'ACCESS_DENIED'
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert response.data['error'] == 'POINT_NOT_FOUND'
 
     # T019: PUT /points/{id} - Update point
     def test_update_point_success(self, authenticated_user, valid_point_data):

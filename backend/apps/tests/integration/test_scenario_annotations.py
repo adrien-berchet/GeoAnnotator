@@ -441,6 +441,7 @@ class TestScenario3Annotations:
 
         # Verify storage reclaimed
         self.alice.refresh_from_db()
+
         assert self.alice.storage_used == storage_before - file_size
 
     def test_complete_annotation_lifecycle(self):
