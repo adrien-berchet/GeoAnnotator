@@ -51,7 +51,7 @@ class AnnotationViewSet(viewsets.ModelViewSet):
         point_id = self.kwargs.get('point_id')
 
         # Check if we should include trashed annotations
-        include_trashed = self.request.query_params.get('include_trashed', 'true').lower() == 'true'
+        include_trashed = self.request.query_params.get('include_trashed', 'false').lower() == 'true'
 
         if point_id:
             # Annotations for a specific point

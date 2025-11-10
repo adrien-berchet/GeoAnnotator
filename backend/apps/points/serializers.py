@@ -153,6 +153,9 @@ class CreatePointTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = PointType
         fields = ['names', 'creation_language', 'icon', 'order', 'visibility']
+        extra_kwargs = {
+            'names': {'required': True}
+        }
 
     def validate_names(self, value):
         """Validate names field."""

@@ -102,8 +102,9 @@ class GPSPointViewSet(viewsets.ModelViewSet):
             raise NotFound('Point not found')
 
         # Check view permission
+        # Return 404 instead of 403 to not reveal existence of private points
         if not PermissionService.can_view(point, request.user):
-            raise PermissionDenied('You do not have permission to view this point')
+            raise NotFound('Point not found')
 
         serializer = GPSPointSerializer(point, context={'request': request})
         return Response(serializer.data)
