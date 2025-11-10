@@ -61,6 +61,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      target: base
     container_name: geoannotator_backend
     command: python manage.py runserver 0.0.0.0:8000
     environment:
