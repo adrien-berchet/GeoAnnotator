@@ -400,14 +400,23 @@ class AnnotationService:
     @staticmethod
     def permanently_delete_annotation(annotation: Annotation, user: User) -> None:
         """
-        Permanently delete annotation from trash.
-        Note: Quota was already reclaimed when annotation was moved to trash,
-        so we don't reclaim it again here.
+        Permanently delete annotation from trash or directly.
+
+        If annotation is in trash, quota was already reclaimed when moved to trash.
+        If annotation is NOT in trash (direct permanent delete), reclaim quota now.
 
         Args:
             annotation: Annotation object
-            user: User (for quota management, kept for API compatibility)
+            user: User (for quota management)
         """
+        # Check if annotation is in trash
+        is_in_trash = hasattr(annotation, 'trash_entry') and annotation.trash_entry
+
+        # Reclaim quota if file attached AND not in trash
+        # (if in trash, quota was already reclaimed on soft delete)
+        if not is_in_trash and annotation.file and annotation.file_size:
+            StorageQuotaService.remove_usage(user, annotation.file_size)
+
         # Delete file from storage
         if annotation.file:
             annotation.file.delete(save=False)
