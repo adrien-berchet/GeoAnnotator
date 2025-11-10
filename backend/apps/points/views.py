@@ -16,7 +16,7 @@ from django.db.models import Q
 from django.core.files.storage import default_storage
 from django.conf import settings
 
-from .models import GPSPoint, PointType
+from .models import GPSPoint, PointType, Tag
 from .serializers import (
     GPSPointSerializer, CreateGPSPointSerializer, UpdateGPSPointSerializer,
     PointTypeSerializer, CreatePointTypeSerializer, PointTypeReorderSerializer
