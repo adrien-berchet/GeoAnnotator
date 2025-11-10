@@ -184,7 +184,7 @@ def import_view(request):
             )
 
         # Return import result
-        # Check for format errors
+        # Check for format errors (complete failure)
         if result.get('errors'):
             for error in result['errors']:
                 if error.get('error') in ['INVALID_JSON', 'INVALID_CSV', 'INVALID_GPX', 'INVALID_KML', 'INVALID_ZIP']:
@@ -193,12 +193,9 @@ def import_view(request):
                         status=status.HTTP_400_BAD_REQUEST
                     )
 
-        if result['failed_points'] > 0:
-            # Partial success
-            return Response(result, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            # Full success
-            return Response(result, status=status.HTTP_200_OK)
+        # Return 200 for both full and partial success
+        # Client can check failed_points/errors for details
+        return Response(result, status=status.HTTP_200_OK)
 
     except ValueError as e:
         return Response(
