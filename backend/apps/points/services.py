@@ -195,10 +195,10 @@ class PointService:
                 tag_name_clean = tag_name.strip()
                 # Try to find existing tag (case-insensitive)
                 try:
-                    tag = Tag.objects.get(name__iexact=tag_name_clean)
+                    tag = Tag.objects.get(name__iexact=tag_name_clean, owner=owner)
                 except Tag.DoesNotExist:
                     # Create new tag with lowercase name
-                    tag = Tag.objects.create(name=tag_name_clean.lower())
+                    tag = Tag.objects.create(name=tag_name_clean.lower(), owner=owner)
                 point.tags.add(tag)
 
         return point
@@ -256,10 +256,10 @@ class PointService:
                 tag_name_clean = tag_name.strip()
                 # Try to find existing tag (case-insensitive)
                 try:
-                    tag = Tag.objects.get(name__iexact=tag_name_clean)
+                    tag = Tag.objects.get(name__iexact=tag_name_clean, owner=user)
                 except Tag.DoesNotExist:
                     # Create new tag with lowercase name
-                    tag = Tag.objects.create(name=tag_name_clean.lower())
+                    tag = Tag.objects.create(name=tag_name_clean.lower(), owner=user)
                 point.tags.add(tag)
 
         return point
