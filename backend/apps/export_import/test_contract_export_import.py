@@ -21,6 +21,43 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 
+@pytest.fixture
+def api_client():
+    """Create API client for tests."""
+    return APIClient()
+
+
+@pytest.fixture
+def authenticated_user_with_points(api_client):
+    """Create user with GPS points."""
+    # Register and authenticate
+    register_url = reverse('authentication:register')
+    register_data = {
+        'email': 'test@example.com',
+        'password': 'SecurePass123'
+    }
+    response = api_client.post(register_url, register_data, format='json')
+    access_token = response.data['access']
+    user = response.data['user']
+
+    api_client.credentials(HTTP_AUTHORIZATION=f'Bearer {access_token}')
+
+    # Create GPS points
+    point_url = reverse('points:list')
+    point_ids = []
+    for i in range(3):
+        point_data = {
+            'title': f'Test Point {i+1}',
+            'latitude': 37.7749 + (i * 0.01),
+            'longitude': -122.4194 + (i * 0.01),
+            'tags': ['test', f'point{i+1}']
+        }
+        point_response = api_client.post(point_url, point_data, format='json')
+        point_ids.append(point_response.data['id'])
+
+    return api_client, user, point_ids
+
+
 @pytest.mark.django_db
 @pytest.mark.contract
 class TestExportImportContract:
@@ -29,41 +66,6 @@ class TestExportImportContract:
 
     These tests validate request/response schemas match the OpenAPI spec.
     """
-
-    @pytest.fixture
-    def api_client(self):
-        """Create API client for tests."""
-        return APIClient()
-
-    @pytest.fixture
-    def authenticated_user_with_points(self, api_client):
-        """Create user with GPS points."""
-        # Register and authenticate
-        register_url = reverse('authentication:register')
-        register_data = {
-            'email': 'test@example.com',
-            'password': 'SecurePass123'
-        }
-        response = api_client.post(register_url, register_data, format='json')
-        access_token = response.data['access']
-        user = response.data['user']
-
-        api_client.credentials(HTTP_AUTHORIZATION=f'Bearer {access_token}')
-
-        # Create GPS points
-        point_url = reverse('points:list')
-        point_ids = []
-        for i in range(3):
-            point_data = {
-                'title': f'Test Point {i+1}',
-                'latitude': 37.7749 + (i * 0.01),
-                'longitude': -122.4194 + (i * 0.01),
-                'tags': ['test', f'point{i+1}']
-            }
-            point_response = api_client.post(point_url, point_data, format='json')
-            point_ids.append(point_response.data['id'])
-
-        return api_client, user, point_ids
 
     # T036: POST /export - Export GPS points
     def test_export_geojson_success(self, authenticated_user_with_points):
