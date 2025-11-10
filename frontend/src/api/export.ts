@@ -12,7 +12,7 @@ export type ExportFormat = 'geojson' | 'gpx' | 'kml' | 'csv' | 'zip';
 /**
  * Import format type.
  */
-export type ImportFormat = 'geojson' | 'gpx' | 'csv';
+export type ImportFormat = 'geojson' | 'gpx' | 'csv' | 'kml' | 'zip';
 
 /**
  * Merge strategy for imports.

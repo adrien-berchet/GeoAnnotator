@@ -10,6 +10,7 @@ import zipfile
 from io import StringIO, BytesIO
 from datetime import datetime
 from pathlib import Path
+import xml.etree.ElementTree as ET
 import geopandas as gpd
 import gpxpy
 import gpxpy.gpx
@@ -219,9 +220,16 @@ class ExportService:
                         if ann.file:
                             file_path = f'annotations/{point.id}/{ann.id}_{ann.file_name}'
                             try:
-                                zf.writestr(file_path, ann.file.read())
+                                # Open and read the file content
+                                ann.file.open('rb')
+                                file_content = ann.file.read()
+                                ann.file.close()
+                                zf.writestr(file_path, file_content)
                             except Exception as e:
-                                print(f"Failed to add annotation file: {e}")
+                                # Log error but continue with other annotations
+                                import logging
+                                logger = logging.getLogger(__name__)
+                                logger.warning(f"Failed to add annotation file {file_path}: {e}")
 
         output.seek(0)
         return output
@@ -349,6 +357,33 @@ class ImportService:
                     if existing:
                         result['skipped_points'] += 1
                         continue
+                elif merge_strategy == 'replace':
+                    from django.contrib.gis.geos import Point
+                    location = Point(longitude, latitude, srid=4326)
+                    existing = GPSPoint.objects.filter(
+                        owner=user,
+                        location__distance_lte=(location, 1)  # Within 1 meter
+                    ).first()
+
+                    if existing:
+                        # Update existing point
+                        existing.title = properties.get('title', 'Imported Point')
+                        existing.description = properties.get('description')
+                        existing.is_public = properties.get('is_public', False)
+                        existing.save()
+
+                        # Update tags
+                        tags = properties.get('tags', [])
+                        if tags:
+                            from apps.points.models import Tag
+                            existing.tags.clear()
+                            for tag_name in tags:
+                                tag, _ = Tag.objects.get_or_create(name=tag_name)
+                                existing.tags.add(tag)
+
+                        result['imported_points'] += 1
+                        result['created_point_ids'].append(str(existing.id))
+                        continue
 
                 # Create point
                 from apps.points.services import PointService
@@ -422,6 +457,45 @@ class ImportService:
                     description = row.get('description', '').strip() or None
                     is_public = row.get('is_public', 'false').lower() in ['true', '1', 'yes']
                     tags = [t.strip() for t in row.get('tags', '').split('|') if t.strip()]
+
+                    # Check for duplicates
+                    if merge_strategy == 'skip':
+                        from django.contrib.gis.geos import Point
+                        location = Point(longitude, latitude, srid=4326)
+                        existing = GPSPoint.objects.filter(
+                            owner=user,
+                            location__distance_lte=(location, 1)  # Within 1 meter
+                        ).first()
+
+                        if existing:
+                            result['skipped_points'] += 1
+                            continue
+                    elif merge_strategy == 'replace':
+                        from django.contrib.gis.geos import Point
+                        location = Point(longitude, latitude, srid=4326)
+                        existing = GPSPoint.objects.filter(
+                            owner=user,
+                            location__distance_lte=(location, 1)  # Within 1 meter
+                        ).first()
+
+                        if existing:
+                            # Update existing point
+                            existing.title = title
+                            existing.description = description
+                            existing.is_public = is_public
+                            existing.save()
+
+                            # Update tags
+                            if tags:
+                                from apps.points.models import Tag
+                                existing.tags.clear()
+                                for tag_name in tags:
+                                    tag, _ = Tag.objects.get_or_create(name=tag_name)
+                                    existing.tags.add(tag)
+
+                            result['imported_points'] += 1
+                            result['created_point_ids'].append(str(existing.id))
+                            continue
 
                     # Create point
                     from apps.points.services import PointService
@@ -509,6 +583,287 @@ class ImportService:
             result['errors'].append({
                 'line_number': 0,
                 'error': 'INVALID_GPX',
+                'message': str(e),
+            })
+
+        return result
+
+    @staticmethod
+    def import_kml(file_content: str, user: User, merge_strategy: str = 'create_new') -> dict:
+        """
+        Import points from KML.
+
+        Args:
+            file_content: KML XML string
+            user: User importing points
+            merge_strategy: 'create_new', 'skip', or 'replace'
+
+        Returns:
+            dict: Import result
+        """
+        result = {
+            'total_points': 0,
+            'imported_points': 0,
+            'skipped_points': 0,
+            'failed_points': 0,
+            'errors': [],
+            'created_point_ids': [],
+        }
+
+        try:
+            # Parse KML XML
+            root = ET.fromstring(file_content)
+
+            # KML namespace
+            ns = {'kml': 'http://www.opengis.net/kml/2.2'}
+
+            # Find all Placemark elements (can work with or without namespace)
+            placemarks = root.findall('.//kml:Placemark', ns)
+            if not placemarks:
+                # Try without namespace (some KML files don't use it)
+                placemarks = root.findall('.//Placemark')
+
+            result['total_points'] = len(placemarks)
+
+            for idx, placemark in enumerate(placemarks, start=1):
+                try:
+                    # Extract name (title)
+                    name_elem = placemark.find('.//kml:name', ns) or placemark.find('.//name')
+                    title = name_elem.text if name_elem is not None and name_elem.text else f'KML Point {idx}'
+
+                    # Extract description
+                    desc_elem = placemark.find('.//kml:description', ns) or placemark.find('.//description')
+                    description = desc_elem.text if desc_elem is not None and desc_elem.text else None
+
+                    # Extract coordinates from Point geometry
+                    coord_elem = placemark.find('.//kml:Point/kml:coordinates', ns) or placemark.find('.//Point/coordinates')
+                    if coord_elem is None:
+                        raise ValueError('No Point coordinates found')
+
+                    coords_text = coord_elem.text.strip()
+                    # KML format: longitude,latitude[,altitude]
+                    coords = coords_text.split(',')
+                    if len(coords) < 2:
+                        raise ValueError('Invalid coordinates format')
+
+                    longitude = float(coords[0])
+                    latitude = float(coords[1])
+
+                    # Validate coordinates
+                    if not (-180 <= longitude <= 180):
+                        raise ValueError(f'Longitude out of range: {longitude}')
+                    if not (-90 <= latitude <= 90):
+                        raise ValueError(f'Latitude out of range: {latitude}')
+
+                    # Extract extended data (tags, is_public, etc.)
+                    extended_data = {}
+                    ext_data_elem = placemark.find('.//kml:ExtendedData', ns) or placemark.find('.//ExtendedData')
+                    if ext_data_elem is not None:
+                        data_elems = ext_data_elem.findall('.//kml:Data', ns) or ext_data_elem.findall('.//Data')
+                        for data_elem in data_elems:
+                            name = data_elem.get('name')
+                            value_elem = data_elem.find('.//kml:value', ns) or data_elem.find('.//value')
+                            if name and value_elem is not None:
+                                extended_data[name] = value_elem.text
+
+                    # Parse extended data
+                    is_public = extended_data.get('is_public', 'false').lower() in ['true', '1', 'yes']
+                    tags_str = extended_data.get('tags', '')
+                    tags = [t.strip() for t in tags_str.replace(',', '|').split('|') if t.strip()]
+
+                    # Check for duplicates
+                    if merge_strategy == 'skip':
+                        from django.contrib.gis.geos import Point
+                        location = Point(longitude, latitude, srid=4326)
+                        existing = GPSPoint.objects.filter(
+                            owner=user,
+                            location__distance_lte=(location, 1)  # Within 1 meter
+                        ).first()
+
+                        if existing:
+                            result['skipped_points'] += 1
+                            continue
+                    elif merge_strategy == 'replace':
+                        from django.contrib.gis.geos import Point
+                        location = Point(longitude, latitude, srid=4326)
+                        existing = GPSPoint.objects.filter(
+                            owner=user,
+                            location__distance_lte=(location, 1)  # Within 1 meter
+                        ).first()
+
+                        if existing:
+                            # Update existing point
+                            existing.title = title
+                            existing.description = description
+                            existing.is_public = is_public
+                            existing.save()
+
+                            # Update tags
+                            if tags:
+                                from apps.points.models import Tag
+                                existing.tags.clear()
+                                for tag_name in tags:
+                                    tag, _ = Tag.objects.get_or_create(name=tag_name)
+                                    existing.tags.add(tag)
+
+                            result['imported_points'] += 1
+                            result['created_point_ids'].append(str(existing.id))
+                            continue
+
+                    # Create point
+                    from apps.points.services import PointService
+                    point = PointService.create_point(
+                        title=title,
+                        latitude=latitude,
+                        longitude=longitude,
+                        owner=user,
+                        description=description,
+                        tags=tags,
+                        is_public=is_public,
+                    )
+
+                    result['imported_points'] += 1
+                    result['created_point_ids'].append(str(point.id))
+
+                except Exception as e:
+                    result['failed_points'] += 1
+                    result['errors'].append({
+                        'line_number': idx,
+                        'error': 'IMPORT_ERROR',
+                        'message': str(e),
+                    })
+
+        except Exception as e:
+            result['errors'].append({
+                'line_number': 0,
+                'error': 'INVALID_KML',
+                'message': str(e),
+            })
+
+        return result
+
+    @staticmethod
+    def import_zip(file_content: bytes, user: User, merge_strategy: str = 'create_new') -> dict:
+        """
+        Import points and annotations from ZIP file.
+
+        Args:
+            file_content: ZIP file bytes
+            user: User importing points
+            merge_strategy: 'create_new', 'skip', or 'replace'
+
+        Returns:
+            dict: Import result
+        """
+        result = {
+            'total_points': 0,
+            'imported_points': 0,
+            'skipped_points': 0,
+            'failed_points': 0,
+            'errors': [],
+            'created_point_ids': [],
+        }
+
+        try:
+            # Extract ZIP file
+            zip_buffer = BytesIO(file_content)
+
+            with zipfile.ZipFile(zip_buffer, 'r') as zf:
+                # Find the points file (should be points.geojson)
+                points_file = None
+                for filename in zf.namelist():
+                    if filename.endswith('.geojson') and 'points' in filename.lower():
+                        points_file = filename
+                        break
+
+                if not points_file:
+                    raise ValueError('No points.geojson file found in ZIP archive')
+
+                # Read and import points
+                geojson_content = zf.read(points_file).decode('utf-8')
+
+                # First pass: import points and build ID mapping
+                points_result = ImportService.import_geojson(geojson_content, user, merge_strategy)
+                result.update(points_result)
+
+                # Parse GeoJSON to get point IDs and annotation references
+                geojson_data = json.loads(geojson_content)
+                features = geojson_data.get('features', [])
+
+                # Build mapping from original point IDs to new point IDs
+                id_mapping = {}
+                if len(features) == len(points_result['created_point_ids']):
+                    for idx, feature in enumerate(features):
+                        original_id = feature.get('id')
+                        if original_id and idx < len(points_result['created_point_ids']):
+                            new_id = points_result['created_point_ids'][idx]
+                            id_mapping[str(original_id)] = new_id
+
+                # Second pass: import annotation files
+                annotation_count = 0
+                for filename in zf.namelist():
+                    if filename.startswith('annotations/') and not filename.endswith('/'):
+                        try:
+                            # Extract point ID from path: annotations/{point_id}/{annotation_id}_{filename}
+                            parts = filename.split('/')
+                            if len(parts) >= 3:
+                                original_point_id = parts[1]
+                                file_name = parts[2]
+
+                                # Get the new point ID
+                                new_point_id = id_mapping.get(original_point_id)
+                                if not new_point_id:
+                                    continue
+
+                                # Get the point
+                                point = GPSPoint.objects.filter(id=new_point_id).first()
+                                if not point:
+                                    continue
+
+                                # Extract annotation ID and actual filename
+                                # Format: {annotation_id}_{filename}
+                                ann_parts = file_name.split('_', 1)
+                                actual_filename = ann_parts[1] if len(ann_parts) > 1 else file_name
+
+                                # Read file content
+                                file_content = zf.read(filename)
+
+                                # Determine MIME type based on extension
+                                import mimetypes
+                                mime_type, _ = mimetypes.guess_type(actual_filename)
+
+                                # Determine annotation type
+                                if mime_type:
+                                    if mime_type.startswith('image/'):
+                                        ann_type = 'image'
+                                    elif mime_type == 'application/pdf':
+                                        ann_type = 'document'
+                                    else:
+                                        ann_type = 'file'
+                                else:
+                                    ann_type = 'file'
+
+                                # Create annotation with file
+                                from django.core.files.base import ContentFile
+                                annotation = Annotation.objects.create(
+                                    gps_point=point,
+                                    type=ann_type,
+                                    file_name=actual_filename,
+                                    file_size=len(file_content),
+                                    mime_type=mime_type or 'application/octet-stream',
+                                    order=annotation_count,
+                                )
+                                annotation.file.save(actual_filename, ContentFile(file_content))
+                                annotation_count += 1
+
+                        except Exception as e:
+                            # Log error but continue importing other files
+                            print(f"Failed to import annotation {filename}: {e}")
+
+        except Exception as e:
+            result['errors'].append({
+                'line_number': 0,
+                'error': 'INVALID_ZIP',
                 'message': str(e),
             })
 

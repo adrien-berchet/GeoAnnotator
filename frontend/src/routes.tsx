@@ -17,6 +17,7 @@ import TagManagementPage from './pages/TagManagementPage';
 import PointTypeManagementPage from './pages/PointTypeManagementPage';
 import { TrashPage } from './pages/TrashPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { ImportExportPage } from './pages/ImportExportPage';
 
 // Placeholder components - to be implemented
 const ProfilePage = () => <div>Profile Page</div>;
@@ -160,6 +161,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <SharedPointsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'import-export',
+        element: (
+          <ProtectedRoute>
+            <ImportExportPage />
           </ProtectedRoute>
         ),
       },

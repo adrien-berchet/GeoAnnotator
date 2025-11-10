@@ -182,8 +182,21 @@ class Annotation(models.Model):
         if self.file:
             # Delete the file from storage
             storage = self.file.storage
-            if storage.exists(self.file.name):
-                storage.delete(self.file.name)
+            try:
+                # Try to check if file exists before deleting
+                # This may fail with S3 permission errors, so we handle it gracefully
+                if storage.exists(self.file.name):
+                    storage.delete(self.file.name)
+            except Exception as e:
+                # If we can't check existence (e.g., S3 403), try to delete anyway
+                # If file doesn't exist, delete will fail silently in most storage backends
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.warning(f"Could not check file existence, attempting direct deletion: {e}")
+                try:
+                    storage.delete(self.file.name)
+                except Exception as delete_error:
+                    logger.warning(f"Could not delete file {self.file.name}: {delete_error}")
 
             # Update user's storage quota
             owner = self.gps_point.owner

@@ -10,7 +10,7 @@ export type ThemeMode = 'auto' | 'light' | 'dark';
 /**
  * Data export format options
  */
-export type ExportFormat = 'geojson' | 'kml' | 'csv';
+export type ExportFormat = 'geojson' | 'gpx' | 'kml' | 'csv' | 'zip';
 
 /**
  * Map type options
