@@ -71,7 +71,12 @@ RUN grep -v "^-r base.txt" ./requirements/production.txt > /tmp/prod-no-include.
     rm /tmp/prod-no-include.txt
 
 # Collect static files (includes default point type icons from apps/points/static/)
-RUN python manage.py collectstatic --noinput
+# Use base settings to avoid S3/production complications during build
+RUN SECRET_KEY=docker-build-secret \
+    DATABASE_URL=sqlite:///db.sqlite3 \
+    DJANGO_SETTINGS_MODULE=config.settings.base \
+    ALLOWED_HOSTS=localhost \
+    python manage.py collectstatic --noinput
 
 # Use gunicorn for production
 CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:10000", "--workers", "4"]
