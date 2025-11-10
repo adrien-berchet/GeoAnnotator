@@ -220,9 +220,16 @@ class ExportService:
                         if ann.file:
                             file_path = f'annotations/{point.id}/{ann.id}_{ann.file_name}'
                             try:
-                                zf.writestr(file_path, ann.file.read())
+                                # Open and read the file content
+                                ann.file.open('rb')
+                                file_content = ann.file.read()
+                                ann.file.close()
+                                zf.writestr(file_path, file_content)
                             except Exception as e:
-                                print(f"Failed to add annotation file: {e}")
+                                # Log error but continue with other annotations
+                                import logging
+                                logger = logging.getLogger(__name__)
+                                logger.warning(f"Failed to add annotation file {file_path}: {e}")
 
         output.seek(0)
         return output
