@@ -532,3 +532,192 @@ class TestTrashContract:
         response = client2.delete(url)
 
         assert response.status_code in [status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND]
+
+    # T041: POST /import - Import KML file
+    def test_import_kml_success(self, authenticated_user_with_points):
+        """
+        Test importing points from KML file.
+
+        Expected:
+        - Status: 200 OK
+        - Points are created successfully
+        - Response includes import statistics
+        """
+        api_client, user, _ = authenticated_user_with_points
+
+        # Create KML content
+        kml_content = '''<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <Placemark>
+      <name>KML Test Point 1</name>
+      <description>Test description</description>
+      <Point>
+        <coordinates>-122.5,37.8,0</coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>KML Test Point 2</name>
+      <Point>
+        <coordinates>-122.6,37.9,0</coordinates>
+      </Point>
+    </Placemark>
+  </Document>
+</kml>'''
+
+        kml_file = SimpleUploadedFile(
+            'test_import.kml',
+            kml_content.encode('utf-8'),
+            content_type='application/vnd.google-earth.kml+xml'
+        )
+
+        url = reverse('export_import:import')
+        import_data = {
+            'format': 'kml',
+            'file': kml_file,
+            'merge_strategy': 'create_new'
+        }
+        response = api_client.post(url, import_data, format='multipart')
+
+        assert response.status_code == status.HTTP_200_OK
+        assert 'total_points' in response.data
+        assert 'imported_points' in response.data
+        assert response.data['total_points'] == 2
+        assert response.data['imported_points'] == 2
+        assert len(response.data['created_point_ids']) == 2
+
+    # T042: POST /import - Import KML with merge strategy skip
+    def test_import_kml_skip_duplicates(self, authenticated_user_with_points):
+        """
+        Test importing KML with skip merge strategy.
+
+        Expected:
+        - Status: 200 OK
+        - Duplicate points are skipped
+        """
+        api_client, user, point_ids = authenticated_user_with_points
+
+        # Create KML with point at same location as existing point
+        kml_content = '''<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <Placemark>
+      <name>Duplicate Point</name>
+      <Point>
+        <coordinates>-122.4194,37.7749,0</coordinates>
+      </Point>
+    </Placemark>
+  </Document>
+</kml>'''
+
+        kml_file = SimpleUploadedFile('test.kml', kml_content.encode('utf-8'))
+
+        url = reverse('export_import:import')
+        import_data = {
+            'format': 'kml',
+            'file': kml_file,
+            'merge_strategy': 'skip'
+        }
+        response = api_client.post(url, import_data, format='multipart')
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data['total_points'] == 1
+        assert response.data['skipped_points'] == 1
+
+    # T043: POST /import - Import KML with merge strategy replace
+    def test_import_kml_replace_existing(self, authenticated_user_with_points):
+        """
+        Test importing KML with replace merge strategy.
+
+        Expected:
+        - Status: 200 OK
+        - Existing points are updated
+        """
+        api_client, user, point_ids = authenticated_user_with_points
+
+        # Create KML with point at same location as existing point
+        kml_content = '''<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <Placemark>
+      <name>Updated Point Title</name>
+      <description>Updated description</description>
+      <Point>
+        <coordinates>-122.4194,37.7749,0</coordinates>
+      </Point>
+    </Placemark>
+  </Document>
+</kml>'''
+
+        kml_file = SimpleUploadedFile('test.kml', kml_content.encode('utf-8'))
+
+        url = reverse('export_import:import')
+        import_data = {
+            'format': 'kml',
+            'file': kml_file,
+            'merge_strategy': 'replace'
+        }
+        response = api_client.post(url, import_data, format='multipart')
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data['total_points'] == 1
+        assert response.data['imported_points'] == 1
+
+    # T044: POST /import - Import ZIP file with annotations
+    def test_import_zip_success(self, authenticated_user_with_points):
+        """
+        Test importing ZIP file containing GeoJSON and annotation files.
+
+        Expected:
+        - Status: 200 OK
+        - Points and annotations are created
+        """
+        api_client, user, _ = authenticated_user_with_points
+
+        # Create a simple ZIP file with GeoJSON
+        import zipfile
+        zip_buffer = io.BytesIO()
+
+        geojson_content = json.dumps({
+            'type': 'FeatureCollection',
+            'features': [
+                {
+                    'type': 'Feature',
+                    'id': 'test-point-1',
+                    'geometry': {
+                        'type': 'Point',
+                        'coordinates': [-122.7, 38.0]
+                    },
+                    'properties': {
+                        'title': 'ZIP Test Point',
+                        'description': 'Test from ZIP'
+                    }
+                }
+            ]
+        })
+
+        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zf:
+            zf.writestr('points.geojson', geojson_content)
+            # Add a test annotation file
+            zf.writestr('annotations/test-point-1/ann1_test.txt', 'Test annotation content')
+
+        zip_buffer.seek(0)
+
+        zip_file = SimpleUploadedFile(
+            'test_import.zip',
+            zip_buffer.read(),
+            content_type='application/zip'
+        )
+
+        url = reverse('export_import:import')
+        import_data = {
+            'format': 'zip',
+            'file': zip_file,
+            'merge_strategy': 'create_new'
+        }
+        response = api_client.post(url, import_data, format='multipart')
+
+        assert response.status_code == status.HTTP_200_OK
+        assert 'total_points' in response.data
+        assert response.data['total_points'] == 1
+        assert response.data['imported_points'] == 1

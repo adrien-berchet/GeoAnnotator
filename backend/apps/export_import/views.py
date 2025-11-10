@@ -93,11 +93,11 @@ def export_view(request):
 def import_view(request):
     """
     POST /api/import/
-    Import points from various formats: geojson, gpx, csv
+    Import points from various formats: geojson, gpx, csv, kml, zip
 
     Request (multipart/form-data):
     - file: uploaded file
-    - format: geojson|gpx|csv
+    - format: geojson|gpx|csv|kml|zip
     - merge_strategy: create_new|skip|replace (optional, default: create_new)
 
     Response:
@@ -118,7 +118,7 @@ def import_view(request):
 
     if not import_format:
         return Response(
-            {'error': 'Format is required (geojson, gpx, csv)'},
+            {'error': 'Format is required (geojson, gpx, csv, kml, zip)'},
             status=status.HTTP_400_BAD_REQUEST
         )
 
@@ -130,7 +130,11 @@ def import_view(request):
 
     # Read file content
     try:
-        file_content = uploaded_file.read().decode('utf-8')
+        # ZIP files are binary, others are text
+        if import_format == 'zip':
+            file_content = uploaded_file.read()
+        else:
+            file_content = uploaded_file.read().decode('utf-8')
     except UnicodeDecodeError:
         return Response(
             {'error': 'File must be UTF-8 encoded'},
@@ -159,6 +163,20 @@ def import_view(request):
                 merge_strategy
             )
 
+        elif import_format == 'kml':
+            result = ImportService.import_kml(
+                file_content,
+                request.user,
+                merge_strategy
+            )
+
+        elif import_format == 'zip':
+            result = ImportService.import_zip(
+                file_content,
+                request.user,
+                merge_strategy
+            )
+
         else:
             return Response(
                 {'error': f'Unsupported format: {import_format}'},
@@ -169,9 +187,9 @@ def import_view(request):
         # Check for format errors
         if result.get('errors'):
             for error in result['errors']:
-                if error.get('error') in ['INVALID_JSON', 'INVALID_CSV']:
+                if error.get('error') in ['INVALID_JSON', 'INVALID_CSV', 'INVALID_GPX', 'INVALID_KML', 'INVALID_ZIP']:
                     return Response(
-                        {'error': 'INVALID_FORMAT'},
+                        {'error': 'INVALID_FORMAT', 'message': error.get('message')},
                         status=status.HTTP_400_BAD_REQUEST
                     )
 

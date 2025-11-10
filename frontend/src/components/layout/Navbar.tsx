@@ -96,6 +96,13 @@ export function Navbar() {
                 📋 <span>{t('nav.types', 'Types')}</span>
               </NavLink>
               <NavLink
+                to="/import-export"
+                className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+                onClick={() => setShowMobileMenu(false)}
+              >
+                💾 <span>{t('nav.importExport', 'Import/Export')}</span>
+              </NavLink>
+              <NavLink
                 to="/trash"
                 className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
                 onClick={() => setShowMobileMenu(false)}
