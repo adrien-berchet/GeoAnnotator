@@ -381,6 +381,7 @@ class AnnotationService:
     def delete_annotation(annotation: Annotation, user: User) -> None:
         """
         Soft delete annotation by moving it to trash (30-day retention).
+        Reclaims storage quota immediately upon deletion.
 
         Args:
             annotation: Annotation object
@@ -389,23 +390,24 @@ class AnnotationService:
         # Import here to avoid circular import
         from apps.trash.services import AnnotationTrashService
 
+        # Reclaim quota if file attached (before moving to trash)
+        if annotation.file and annotation.file_size:
+            StorageQuotaService.remove_usage(user, annotation.file_size)
+
         # Move to trash (soft delete)
         AnnotationTrashService.move_to_trash(annotation, user)
 
     @staticmethod
     def permanently_delete_annotation(annotation: Annotation, user: User) -> None:
         """
-        Permanently delete annotation and reclaim quota.
-        Used only when emptying trash or when trash retention expires.
+        Permanently delete annotation from trash.
+        Note: Quota was already reclaimed when annotation was moved to trash,
+        so we don't reclaim it again here.
 
         Args:
             annotation: Annotation object
-            user: User (for quota management)
+            user: User (for quota management, kept for API compatibility)
         """
-        # Reclaim quota if file attached
-        if annotation.file and annotation.file_size:
-            StorageQuotaService.remove_usage(user, annotation.file_size)
-
         # Delete file from storage
         if annotation.file:
             annotation.file.delete(save=False)

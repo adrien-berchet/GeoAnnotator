@@ -209,7 +209,7 @@ class AnnotationTrashService:
     @staticmethod
     def restore_from_trash(annotation_trash: AnnotationTrash) -> Annotation:
         """
-        Restore annotation from trash.
+        Restore annotation from trash and restore storage quota if applicable.
 
         Args:
             annotation_trash: AnnotationTrash object
@@ -223,10 +223,20 @@ class AnnotationTrashService:
         if annotation_trash.is_expired:
             raise ValueError('Annotation has been permanently deleted (>30 days)')
 
+        annotation = annotation_trash.annotation
+
+        # Restore quota if file attached (quota was reclaimed when moved to trash)
+        if annotation.file and annotation.file_size:
+            from apps.annotations.services import StorageQuotaService
+            StorageQuotaService.add_usage(
+                annotation.gps_point.owner,
+                annotation.file_size
+            )
+
         # Use model's restore method (deletes trash entry)
         annotation_trash.restore()
 
-        return annotation_trash.annotation
+        return annotation
 
     @staticmethod
     def permanently_delete(annotation_trash: AnnotationTrash, user: User) -> None:
