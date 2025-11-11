@@ -136,7 +136,7 @@ class PointType(models.Model):
             })
 
         # Validate creation_language exists in names (for new objects)
-        if not self.pk and self.creation_language not in self.names:
+        if self._state.adding and self.creation_language not in self.names:
             raise ValidationError({
                 'creation_language': f'Creation language "{self.creation_language}" '
                                    f'must have a corresponding name in the names field.'
