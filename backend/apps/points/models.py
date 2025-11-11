@@ -190,6 +190,8 @@ class PointType(models.Model):
     @classmethod
     def get_default_type(cls):
         """Get or create the default base 'Point' type."""
+        from django.db import IntegrityError
+
         # Try to find existing default type
         # Use filter().first() to avoid JSONField comparison issues with get()
         default_type = cls.objects.filter(
@@ -200,15 +202,27 @@ class PointType(models.Model):
 
         if not default_type:
             # Create default type
-            default_type = cls.objects.create(
-                names={"en": "Point"},
-                owner=None,
-                type_choice="base",
-                icon="📍",
-                order=0,
-                creation_language="en",
-                visibility="public",
-            )
+            try:
+                default_type = cls.objects.create(
+                    names={"en": "Point"},
+                    owner=None,
+                    type_choice="base",
+                    icon="📍",
+                    order=0,
+                    creation_language="en",
+                    visibility="public",
+                )
+            except IntegrityError:
+                # If creation fails due to constraint (race condition), try fetching again
+                default_type = cls.objects.filter(
+                    owner__isnull=True,
+                    type_choice='base',
+                    creation_language='en'
+                ).first()
+
+                if not default_type:
+                    # If still not found, raise the error
+                    raise
 
         return default_type
 
