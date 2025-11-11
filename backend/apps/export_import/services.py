@@ -440,8 +440,16 @@ class ImportService:
             for idx, row in enumerate(rows, start=2):  # Start at 2 (1 is header)
                 try:
                     # Required fields
-                    latitude = float(row.get('latitude', 0))
-                    longitude = float(row.get('longitude', 0))
+                    lat_str = row.get('latitude', '').strip()
+                    lon_str = row.get('longitude', '').strip()
+
+                    if not lat_str:
+                        raise ValueError('Latitude is required')
+                    if not lon_str:
+                        raise ValueError('Longitude is required')
+
+                    latitude = float(lat_str)
+                    longitude = float(lon_str)
                     title = row.get('title', '').strip()
 
                     if not title:

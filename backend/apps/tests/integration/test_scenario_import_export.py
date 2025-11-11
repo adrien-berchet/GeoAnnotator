@@ -246,6 +246,17 @@ class TestScenario5ImportExport:
         )
 
         # Then
+        # Debug: show errors if import failed
+        if response.data.get("imported_points", 0) == 0:
+            print("\n=== CSV Import Debug ===")
+            print(f"Total: {response.data.get('total_points')}")
+            print(f"Imported: {response.data.get('imported_points')}")
+            print(f"Failed: {response.data.get('failed_points')}")
+            print("Errors:")
+            for err in response.data.get('errors', []):
+                print(f"  Line {err.get('line_number')}: {err.get('error')} - {err.get('message')}")
+            print("====================\n")
+
         assert response.status_code == status.HTTP_200_OK
         assert response.data["total_points"] == 3
         assert response.data["imported_points"] == 1
