@@ -9,6 +9,9 @@ import { getSettings, updateSettings } from '@/api/settings';
 import { apiClient } from '@/api/client';
 import type { UserPreferences } from '@/types/settings';
 
+// Unmock the settings API to test the real implementation
+vi.unmock('@/api/settings');
+
 // Mock apiClient
 vi.mock('@/api/client', () => ({
   apiClient: {

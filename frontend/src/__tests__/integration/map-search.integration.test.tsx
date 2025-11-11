@@ -6,9 +6,9 @@
  */
 
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { BrowserRouter } from 'react-router-dom';
+import { renderWithProviders } from '@/test/test-utils';
 import { MapPage } from '../../pages/MapPage';
 
 // Mock React Router useSearchParams
@@ -31,11 +31,7 @@ describe('Map Search Integration', () => {
 
   describe('Search Filtering - T009', () => {
     it('renders search bar on map page', async () => {
-      render(
-        <BrowserRouter>
-          <MapPage />
-        </BrowserRouter>
-      );
+      renderWithProviders(<MapPage />);
 
       const searchBar = await screen.findByRole('search');
       expect(searchBar).toBeInTheDocument();
@@ -46,11 +42,7 @@ describe('Map Search Integration', () => {
 
     it('displays search query in points counter when searching', async () => {
       const user = userEvent.setup();
-      const { container } = render(
-        <BrowserRouter>
-          <MapPage />
-        </BrowserRouter>
-      );
+      const { container } = renderWithProviders(<MapPage />);
 
       const input = await screen.findByPlaceholderText('Search points...');
       await user.type(input, 'test search');
@@ -69,11 +61,7 @@ describe('Map Search Integration', () => {
 
     it('combines search with tag filters', async () => {
       const user = userEvent.setup();
-      const { container } = render(
-        <BrowserRouter>
-          <MapPage />
-        </BrowserRouter>
-      );
+      const { container } = renderWithProviders(<MapPage />);
 
       // Wait for the input to be available
       const input = await screen.findByPlaceholderText('Search points...');
@@ -95,11 +83,7 @@ describe('Map Search Integration', () => {
 
     it('clears search query when clear button is clicked', async () => {
       const user = userEvent.setup();
-      const { container } = render(
-        <BrowserRouter>
-          <MapPage />
-        </BrowserRouter>
-      );
+      const { container } = renderWithProviders(<MapPage />);
 
       const input = await screen.findByPlaceholderText('Search points...');
       await user.type(input, 'test query');
@@ -116,11 +100,7 @@ describe('Map Search Integration', () => {
     });
 
     it('does not show search bar in Navbar', async () => {
-      render(
-        <BrowserRouter>
-          <MapPage />
-        </BrowserRouter>
-      );
+      renderWithProviders(<MapPage />);
 
       // Look for navbar
       const navbar = screen.queryByRole('navigation');

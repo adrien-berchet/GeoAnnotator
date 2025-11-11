@@ -4,15 +4,16 @@
  * Tests export format selection UI with GeoJSON, KML, CSV options.
  */
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { renderWithProviders } from '@/test/test-utils';
 import ExportSettings from '@/components/settings/ExportSettings';
 
 describe('ExportSettings Component', () => {
   it('should render three export format options', () => {
     const mockOnChange = vi.fn();
 
-    render(<ExportSettings value="geojson" onChange={mockOnChange} />);
+    renderWithProviders(<ExportSettings value="geojson" onChange={mockOnChange} />);
 
     expect(screen.getByText(/geojson/i)).toBeInTheDocument();
     expect(screen.getByText(/kml/i)).toBeInTheDocument();
@@ -23,7 +24,7 @@ describe('ExportSettings Component', () => {
     const mockOnChange = vi.fn();
     const user = userEvent.setup();
 
-    render(<ExportSettings value="geojson" onChange={mockOnChange} />);
+    renderWithProviders(<ExportSettings value="geojson" onChange={mockOnChange} />);
 
     const kmlOption = screen.getByRole('radio', { name: /kml/i });
     await user.click(kmlOption);
@@ -35,7 +36,7 @@ describe('ExportSettings Component', () => {
   it('should highlight selected value', () => {
     const mockOnChange = vi.fn();
 
-    const { rerender } = render(
+    const { rerender } = renderWithProviders(
       <ExportSettings value="geojson" onChange={mockOnChange} />
     );
 
@@ -53,7 +54,7 @@ describe('ExportSettings Component', () => {
   it('should display description for each format', () => {
     const mockOnChange = vi.fn();
 
-    render(<ExportSettings value="geojson" onChange={mockOnChange} />);
+    renderWithProviders(<ExportSettings value="geojson" onChange={mockOnChange} />);
 
     // Each format should have a description
     expect(screen.getByText(/geographic data/i) || screen.getByText(/json/i)).toBeInTheDocument();
@@ -62,7 +63,7 @@ describe('ExportSettings Component', () => {
   it('should have accessible labels', () => {
     const mockOnChange = vi.fn();
 
-    render(<ExportSettings value="geojson" onChange={mockOnChange} />);
+    renderWithProviders(<ExportSettings value="geojson" onChange={mockOnChange} />);
 
     expect(
       screen.getByLabelText(/export format/i) || screen.getByText(/default export format/i)
@@ -72,7 +73,7 @@ describe('ExportSettings Component', () => {
   it('should update aria-checked attribute on selection', () => {
     const mockOnChange = vi.fn();
 
-    render(<ExportSettings value="kml" onChange={mockOnChange} />);
+    renderWithProviders(<ExportSettings value="kml" onChange={mockOnChange} />);
 
     const kmlOption = screen.getByRole('radio', { name: /kml/i });
     expect(kmlOption).toHaveAttribute('aria-checked', 'true');
@@ -86,7 +87,7 @@ describe('ExportSettings Component', () => {
   it('should display format icons', () => {
     const mockOnChange = vi.fn();
 
-    render(<ExportSettings value="geojson" onChange={mockOnChange} />);
+    renderWithProviders(<ExportSettings value="geojson" onChange={mockOnChange} />);
 
     // Check that icons are present (they are emoji characters in the text content)
     const container = screen.getByRole('radiogroup');
@@ -102,7 +103,7 @@ describe('ExportSettings Component', () => {
     const mockOnChange = vi.fn();
     const user = userEvent.setup();
 
-    render(<ExportSettings value="geojson" onChange={mockOnChange} />);
+    renderWithProviders(<ExportSettings value="geojson" onChange={mockOnChange} />);
 
     // Verify all three radio options exist
     expect(screen.getByRole('radio', { name: /geojson/i })).toBeInTheDocument();
