@@ -636,8 +636,11 @@ class ImportService:
                     description = desc_elem.text if desc_elem is not None and desc_elem.text else None
 
                     # Extract coordinates from Point geometry
-                    # Search for coordinates element directly (works with or without namespace)
-                    coord_elem = placemark.find('.//kml:coordinates', ns) or placemark.find('.//coordinates')
+                    # Use explicit namespace syntax for better compatibility
+                    coord_elem = placemark.find('.//{http://www.opengis.net/kml/2.2}coordinates')
+                    if coord_elem is None:
+                        # Try without namespace (for KML files without namespace)
+                        coord_elem = placemark.find('.//coordinates')
                     if coord_elem is None:
                         raise ValueError('No Point coordinates found')
 
