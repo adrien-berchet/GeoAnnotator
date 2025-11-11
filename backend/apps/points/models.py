@@ -161,7 +161,7 @@ class PointType(models.Model):
             })
 
         # Validate max types per user
-        if self.owner and not self.pk:  # Only check on creation
+        if self.owner and self._state.adding:  # Only check on creation (use _state.adding since pk has default value)
             active_types_count = PointType.objects.filter(
                 owner=self.owner,
                 status='active'
