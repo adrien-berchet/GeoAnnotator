@@ -581,6 +581,13 @@ class TestTrashContract:
         }
         response = api_client.post(url, import_data, format='multipart')
 
+        # Debug: show errors if import failed
+        if response.data.get('imported_points', 0) == 0 and response.data.get('failed_points', 0) > 0:
+            print("\n=== Import Errors ===")
+            for err in response.data.get('errors', []):
+                print(f"Line {err.get('line_number')}: {err.get('error')} - {err.get('message')}")
+            print("====================\n")
+
         assert response.status_code == status.HTTP_200_OK
         assert 'total_points' in response.data
         assert 'imported_points' in response.data
