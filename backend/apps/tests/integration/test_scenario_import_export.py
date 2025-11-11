@@ -222,8 +222,9 @@ class TestScenario5ImportExport:
         - errors array contains validation errors
         """
         # Given - CSV with validation errors
+        # Note: Use unique coordinates to avoid duplicate detection with setup points
         csv_content = """latitude,longitude,title,description,tags
-45.5231,-122.6765,"Valid Point","Description","tag1|tag2"
+45.5250,-122.6800,"Valid Point","Description","tag1|tag2"
 99.0000,-122.6765,"Invalid Lat","Bad coordinates","tag3"
 45.5195,,"Missing Lon","No longitude","""
 
@@ -246,17 +247,6 @@ class TestScenario5ImportExport:
         )
 
         # Then
-        # Debug: show errors if import failed
-        if response.data.get("imported_points", 0) == 0:
-            print("\n=== CSV Import Debug ===")
-            print(f"Total: {response.data.get('total_points')}")
-            print(f"Imported: {response.data.get('imported_points')}")
-            print(f"Failed: {response.data.get('failed_points')}")
-            print("Errors:")
-            for err in response.data.get('errors', []):
-                print(f"  Line {err.get('line_number')}: {err.get('error')} - {err.get('message')}")
-            print("====================\n")
-
         assert response.status_code == status.HTTP_200_OK
         assert response.data["total_points"] == 3
         assert response.data["imported_points"] == 1
