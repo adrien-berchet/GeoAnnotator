@@ -20,7 +20,7 @@ import TagManagementPage from '../../pages/TagManagementPage';
 
 // Mock API client
 vi.mock('../../api/client', () => ({
-  default: {
+  apiClient: {
     get: vi.fn(),
     post: vi.fn(),
     patch: vi.fn(),
