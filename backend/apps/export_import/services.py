@@ -628,11 +628,15 @@ class ImportService:
             for idx, placemark in enumerate(placemarks, start=1):
                 try:
                     # Extract name (title)
-                    name_elem = placemark.find('.//kml:name', ns) or placemark.find('.//name')
+                    name_elem = placemark.find('.//{http://www.opengis.net/kml/2.2}name')
+                    if name_elem is None:
+                        name_elem = placemark.find('.//name')
                     title = name_elem.text if name_elem is not None and name_elem.text else f'KML Point {idx}'
 
                     # Extract description
-                    desc_elem = placemark.find('.//kml:description', ns) or placemark.find('.//description')
+                    desc_elem = placemark.find('.//{http://www.opengis.net/kml/2.2}description')
+                    if desc_elem is None:
+                        desc_elem = placemark.find('.//description')
                     description = desc_elem.text if desc_elem is not None and desc_elem.text else None
 
                     # Extract coordinates from Point geometry
@@ -661,12 +665,18 @@ class ImportService:
 
                     # Extract extended data (tags, is_public, etc.)
                     extended_data = {}
-                    ext_data_elem = placemark.find('.//kml:ExtendedData', ns) or placemark.find('.//ExtendedData')
+                    ext_data_elem = placemark.find('.//{http://www.opengis.net/kml/2.2}ExtendedData')
+                    if ext_data_elem is None:
+                        ext_data_elem = placemark.find('.//ExtendedData')
                     if ext_data_elem is not None:
-                        data_elems = ext_data_elem.findall('.//kml:Data', ns) or ext_data_elem.findall('.//Data')
+                        data_elems = ext_data_elem.findall('.//{http://www.opengis.net/kml/2.2}Data')
+                        if not data_elems:
+                            data_elems = ext_data_elem.findall('.//Data')
                         for data_elem in data_elems:
                             name = data_elem.get('name')
-                            value_elem = data_elem.find('.//kml:value', ns) or data_elem.find('.//value')
+                            value_elem = data_elem.find('.//{http://www.opengis.net/kml/2.2}value')
+                            if value_elem is None:
+                                value_elem = data_elem.find('.//value')
                             if name and value_elem is not None:
                                 extended_data[name] = value_elem.text
 
