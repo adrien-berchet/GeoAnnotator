@@ -191,15 +191,19 @@ class PointService:
 
         # Add tags
         if tags:
+            print(f"    [create_point] Adding {len(tags)} tags...")
             for tag_name in tags:
                 tag_name_clean = tag_name.strip()
                 # Try to find existing tag (case-insensitive)
                 try:
                     tag = Tag.objects.get(name__iexact=tag_name_clean, owner=owner)
+                    print(f"    [create_point] Found existing tag: {tag.name}")
                 except Tag.DoesNotExist:
                     # Create new tag with lowercase name
+                    print(f"    [create_point] Creating new tag: {tag_name_clean.lower()}")
                     tag = Tag.objects.create(name=tag_name_clean.lower(), owner=owner)
                 point.tags.add(tag)
+            print(f"    [create_point] Tags added successfully")
 
         return point
 

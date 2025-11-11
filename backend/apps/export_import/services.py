@@ -438,10 +438,13 @@ class ImportService:
             result['total_points'] = len(rows)
 
             for idx, row in enumerate(rows, start=2):  # Start at 2 (1 is header)
+                print(f"\n=== Processing CSV line {idx} ===")
+                print(f"Row data: {row}")
                 try:
                     # Required fields
                     lat_str = row.get('latitude', '').strip()
                     lon_str = row.get('longitude', '').strip()
+                    print(f"  Lat: '{lat_str}', Lon: '{lon_str}'")
 
                     if not lat_str:
                         raise ValueError('Latitude is required')
@@ -465,9 +468,11 @@ class ImportService:
                     description = row.get('description', '').strip() or None
                     is_public = row.get('is_public', 'false').lower() in ['true', '1', 'yes']
                     tags = [t.strip() for t in row.get('tags', '').split('|') if t.strip()]
+                    print(f"  Tags: {tags}")
 
                     # Check for duplicates
                     if merge_strategy == 'skip':
+                        print(f"  Checking for duplicates...")
                         from django.contrib.gis.geos import Point
                         location = Point(longitude, latitude, srid=4326)
                         existing = GPSPoint.objects.filter(
@@ -476,8 +481,10 @@ class ImportService:
                         ).first()
 
                         if existing:
+                            print(f"  Duplicate found, skipping")
                             result['skipped_points'] += 1
                             continue
+                        print(f"  No duplicate found")
                     elif merge_strategy == 'replace':
                         from django.contrib.gis.geos import Point
                         location = Point(longitude, latitude, srid=4326)
@@ -506,6 +513,7 @@ class ImportService:
                             continue
 
                     # Create point
+                    print(f"  Creating point: title='{title}', lat={latitude}, lon={longitude}")
                     from apps.points.services import PointService
                     point = PointService.create_point(
                         title=title,
@@ -516,11 +524,13 @@ class ImportService:
                         tags=tags,
                         is_public=is_public,
                     )
+                    print(f"  Point created successfully: {point.id}")
 
                     result['imported_points'] += 1
                     result['created_point_ids'].append(str(point.id))
 
                 except Exception as e:
+                    print(f"  Exception caught: {type(e).__name__}: {e}")
                     result['failed_points'] += 1
                     result['errors'].append({
                         'line_number': idx,
