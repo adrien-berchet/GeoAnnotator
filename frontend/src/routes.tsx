@@ -17,6 +17,9 @@ import PointTypeManagementPage from "./pages/PointTypeManagementPage";
 import { TrashPage } from "./pages/TrashPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { ImportExportPage } from "./pages/ImportExportPage";
+import { AccountPage } from "./pages/AccountPage";
+import { EmailConfirmPage } from "./pages/EmailConfirmPage";
+import { AccountDeleteConfirmPage } from "./pages/AccountDeleteConfirmPage";
 import { ProtectedRoute } from "./routes/ProtectedRoute";
 import { PublicRoute } from "./routes/PublicRoute";
 import { ProfilePage, SharedPointsPage } from "./pages/PlaceholderPages";
@@ -111,6 +114,14 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: "account",
+        element: (
+          <ProtectedRoute>
+            <AccountPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: "settings",
         element: (
           <ProtectedRoute>
@@ -147,6 +158,24 @@ export const router = createBrowserRouter([
       {
         path: "shares/accept/:token",
         element: <div>Accept Share Page</div>,
+      },
+
+      // Account management confirmation routes (require login)
+      {
+        path: "account/confirm-email",
+        element: (
+          <ProtectedRoute>
+            <EmailConfirmPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "account/confirm-delete",
+        element: (
+          <ProtectedRoute>
+            <AccountDeleteConfirmPage />
+          </ProtectedRoute>
+        ),
       },
 
       // 404 page
