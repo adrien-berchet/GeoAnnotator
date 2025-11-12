@@ -7,6 +7,7 @@ For production, see settings/production.py
 """
 
 import os
+import warnings
 from datetime import timedelta
 from pathlib import Path
 
@@ -17,7 +18,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 # Load environment variables from .env file
 env = environ.Env()
-env_file = BASE_DIR / env.str("ENV_PATH", ".env")
+env_file = BASE_DIR / str(env.str("ENV_PATH", ".env"))
 if env_file.exists():
     environ.Env.read_env(env_file, parse_comments=True)
 
@@ -172,9 +173,9 @@ REST_FRAMEWORK = {
     ],
     "DEFAULT_THROTTLE_RATES": {
         "user": "1000/hour",  # Default rate for authenticated users
-        "anon": "100/hour",   # Default rate for anonymous users
+        "anon": "100/hour",  # Default rate for anonymous users
         "account": "10/min",  # Account operations (pseudonym, password changes)
-        "email": "3/hour",    # Email operations (change email, delete account)
+        "email": "3/hour",  # Email operations (change email, delete account)
         "validation": "30/min",  # Validation endpoints (pseudonym validation)
     },
     "EXCEPTION_HANDLER": "config.exception_handlers.custom_exception_handler",
@@ -216,10 +217,11 @@ DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "noreply@geoannotator.
 # Generate with: from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())
 FERNET_KEY = os.environ.get("FERNET_KEY", "")
 if not FERNET_KEY:
-    import warnings
     warnings.warn(
         "FERNET_KEY not set. Email encryption will not work. "
-        "Generate a key with: python -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())'"
+        "Generate a key with: "
+        "python -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())'",
+        stacklevel=2,
     )
 
 # Celery Configuration
@@ -229,6 +231,9 @@ CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = "UTC"
+
+# Fernet encryption key for sensitive data (email addresses)
+FERNET_KEY = os.environ.get("FERNET_KEY", "")
 
 # CORS settings
 CORS_ALLOW_ALL_ORIGINS = False  # Override in development
