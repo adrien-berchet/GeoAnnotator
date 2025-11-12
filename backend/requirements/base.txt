@@ -36,6 +36,10 @@ bleach>=6.1  # HTML sanitization for rich text
 # Security
 django-fernet-fields>=0.6  # Email encryption
 
+# Background Tasks
+celery>=5.3  # Distributed task queue
+redis>=5.0  # Message broker for Celery
+
 # Utilities
 humanize>=4.10  # Human-readable numbers
 python-dateutil>=2.8
