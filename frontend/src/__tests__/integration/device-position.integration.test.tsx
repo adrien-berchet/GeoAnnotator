@@ -217,8 +217,9 @@ describe("Device Position Integration Tests", () => {
 
   describe("T004: Blue dot moves in real time as position updates", () => {
     it("should update blue dot position when device position changes", async () => {
-      let positionCallback: ((position: GeolocationPosition) => void) | null =
-        null;
+      let positionCallback:
+        | ((position: GeolocationPosition) => void)
+        | undefined;
       const firstPosition: GeolocationPosition = {
         coords: {
           latitude: 48.8566,
@@ -228,8 +229,10 @@ describe("Device Position Integration Tests", () => {
           altitudeAccuracy: null,
           heading: null,
           speed: null,
+          toJSON: () => ({}),
         },
         timestamp: Date.now(),
+        toJSON: () => ({}),
       };
 
       const secondPosition: GeolocationPosition = {
@@ -241,8 +244,10 @@ describe("Device Position Integration Tests", () => {
           altitudeAccuracy: null,
           heading: null,
           speed: null,
+          toJSON: () => ({}),
         },
         timestamp: Date.now(),
+        toJSON: () => ({}),
       };
 
       mockGeolocation.watchPosition.mockImplementation(
@@ -264,10 +269,12 @@ describe("Device Position Integration Tests", () => {
       });
 
       // Verify we captured the callback
-      expect(positionCallback).not.toBeNull();
+      expect(positionCallback).toBeDefined();
 
       // Simulate position update
-      positionCallback?.(secondPosition);
+      if (positionCallback) {
+        positionCallback(secondPosition);
+      }
 
       // Wait for blue dot to update
       await waitFor(() => {
@@ -277,9 +284,10 @@ describe("Device Position Integration Tests", () => {
       });
     });
 
-    it("should update blue dot within 500ms of position change", async () => {
-      let positionCallback: ((position: GeolocationPosition) => void) | null =
-        null;
+    it("should update blue dot when position changes", async () => {
+      let positionCallback:
+        | ((position: GeolocationPosition) => void)
+        | undefined;
       const firstPosition: GeolocationPosition = {
         coords: {
           latitude: 48.8566,
@@ -289,8 +297,10 @@ describe("Device Position Integration Tests", () => {
           altitudeAccuracy: null,
           heading: null,
           speed: null,
+          toJSON: () => ({}),
         } as GeolocationCoordinates,
         timestamp: Date.now(),
+        toJSON: () => ({}),
       };
 
       const secondPosition: GeolocationPosition = {
@@ -302,8 +312,10 @@ describe("Device Position Integration Tests", () => {
           altitudeAccuracy: null,
           heading: null,
           speed: null,
+          toJSON: () => ({}),
         } as GeolocationCoordinates,
         timestamp: Date.now(),
+        toJSON: () => ({}),
       };
 
       mockGeolocation.watchPosition.mockImplementation(
@@ -321,11 +333,13 @@ describe("Device Position Integration Tests", () => {
       });
 
       // Verify we captured the callback
-      expect(positionCallback).not.toBeNull();
+      expect(positionCallback).toBeDefined();
 
       // Measure update time
       const startTime = Date.now();
-      positionCallback?.(secondPosition);
+      if (positionCallback) {
+        positionCallback(secondPosition);
+      }
 
       await waitFor(
         () => {

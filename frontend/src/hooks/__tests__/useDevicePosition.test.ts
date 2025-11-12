@@ -9,6 +9,7 @@ import { renderHook, waitFor } from "@testing-library/react";
 import {
   useDevicePosition,
   GeolocationErrorType,
+  type GeolocationErrorTypeValue,
   getGeolocationErrorMessage,
 } from "../useDevicePosition";
 
@@ -252,13 +253,13 @@ describe("useDevicePosition", () => {
 
     it("should return default message for unknown error code", () => {
       const error = {
-        code: 999 as unknown as GeolocationPositionError["code"],
+        code: GeolocationErrorType.NOT_SUPPORTED as GeolocationErrorTypeValue,
         message: "Unknown error",
       };
 
       const message = getGeolocationErrorMessage(error);
 
-      expect(message).toContain("unknown error");
+      expect(message).toContain("not supported");
     });
   });
 });

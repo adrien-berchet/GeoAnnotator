@@ -48,6 +48,21 @@ repos:
         files: ^frontend/.*\.[jt]sx?$
         types: [file]
         args: ['--config', 'frontend/eslint.config.js', '--fix']
+        additional_dependencies:
+          - eslint@9.39.1
+          - typescript@5.9.3
+          - '@typescript-eslint/parser@8.19.1'
+          - '@typescript-eslint/eslint-plugin@8.19.1'
+
+  # TypeScript type checking
+  - repo: local
+    hooks:
+      - id: typescript-check
+        name: TypeScript type check
+        entry: bash -c 'cd frontend && npm run typecheck'
+        language: system
+        files: ^frontend/.*\.[jt]sx?$
+        pass_filenames: false
 
   # General hooks
   - repo: https://github.com/pre-commit/pre-commit-hooks
