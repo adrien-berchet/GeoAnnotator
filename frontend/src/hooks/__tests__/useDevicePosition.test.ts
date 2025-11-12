@@ -252,7 +252,7 @@ describe("useDevicePosition", () => {
 
     it("should return default message for unknown error code", () => {
       const error = {
-        code: 999 as any,
+        code: 999 as unknown as GeolocationPositionError["code"],
         message: "Unknown error",
       };
 

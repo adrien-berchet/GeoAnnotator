@@ -122,6 +122,7 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
  * @returns The language context
  * @throws Error if used outside of LanguageProvider
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function useLanguage(): LanguageContextType {
   const context = useContext(LanguageContext);
   if (context === undefined) {

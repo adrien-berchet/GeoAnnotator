@@ -26,13 +26,6 @@ export function PointList({ filter, onPointSelect }: PointListProps) {
   const [error, setError] = useState("");
 
   /**
-   * Load points on mount or filter change.
-   */
-  useEffect(() => {
-    loadPoints();
-  }, [filter]);
-
-  /**
    * Load points from API.
    */
   const loadPoints = async () => {
@@ -48,6 +41,14 @@ export function PointList({ filter, onPointSelect }: PointListProps) {
       setIsLoading(false);
     }
   };
+
+  /**
+   * Load points on mount or filter change.
+   */
+  useEffect(() => {
+    loadPoints();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filter]);
 
   /**
    * Handle point click.

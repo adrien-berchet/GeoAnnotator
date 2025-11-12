@@ -20,7 +20,10 @@ vi.mock("@/api/client", () => ({
   },
 }));
 
-const mockedApiClient = apiClient as any;
+const mockedApiClient = apiClient as {
+  get: ReturnType<typeof vi.fn>;
+  patch: ReturnType<typeof vi.fn>;
+};
 
 describe("Settings API Client", () => {
   beforeEach(() => {
@@ -138,7 +141,7 @@ describe("Settings API Client", () => {
 
       mockedApiClient.patch.mockResolvedValueOnce({ data: mockResponse });
 
-      const result = await updateSettings(updates);
+      await updateSettings(updates);
 
       expect(mockedApiClient.patch).toHaveBeenCalledWith("/settings/", updates);
     });
@@ -167,7 +170,7 @@ describe("Settings API Client", () => {
 
     it("should handle 400 bad request error", async () => {
       const updates = {
-        theme_mode: "invalid_theme" as any,
+        theme_mode: "invalid_theme" as unknown as "light" | "dark" | "auto",
       };
 
       const error = {

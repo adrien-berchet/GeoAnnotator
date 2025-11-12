@@ -107,7 +107,9 @@ export function getErrorMessage(error: unknown): string {
       detail?: string;
       message?: string;
       error?: string;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       details?: any;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       [key: string]: any;
     }>;
 

@@ -12,7 +12,13 @@ import { BlueDot } from "../../src/components/map/BlueDot";
 
 // Mock react-leaflet components
 vi.mock("react-leaflet", () => ({
-  Marker: ({ children, eventHandlers }: any) => (
+  Marker: ({
+    children,
+    eventHandlers,
+  }: {
+    children: React.ReactNode;
+    eventHandlers?: { click?: () => void };
+  }) => (
     <div data-testid="marker" onClick={eventHandlers?.click}>
       {children}
     </div>

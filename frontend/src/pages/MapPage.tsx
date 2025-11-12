@@ -135,6 +135,7 @@ export function MapPage() {
     window.addEventListener("resize", handleResize);
 
     return () => window.removeEventListener("resize", handleResize);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   /**
@@ -142,6 +143,7 @@ export function MapPage() {
    */
   useEffect(() => {
     applyFilters();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedTags, selectedTypes, searchQuery, allPoints]);
 
   /**
@@ -273,7 +275,7 @@ export function MapPage() {
 
       // Find the tile layer that matches the preference
       const preferredLayer = TILE_LAYERS.find(
-        (layer) => layer.id === preferredMapType,
+        (layer: TileLayer) => layer.id === preferredMapType,
       );
 
       if (preferredLayer) {

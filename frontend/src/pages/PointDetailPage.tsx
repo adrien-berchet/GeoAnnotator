@@ -33,12 +33,6 @@ export function PointDetailPage() {
   const [selectedAnnotationType, setSelectedAnnotationType] =
     useState<AnnotationType | null>(null);
 
-  useEffect(() => {
-    if (id) {
-      loadPointData();
-    }
-  }, [id]);
-
   const loadPointData = async () => {
     if (!id) return;
 
@@ -59,6 +53,13 @@ export function PointDetailPage() {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (id) {
+      loadPointData();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   const handleAnnotationCreated = (annotation: Annotation) => {
     setAnnotations([...annotations, annotation]);

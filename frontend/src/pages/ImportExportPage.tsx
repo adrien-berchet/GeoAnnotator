@@ -143,10 +143,11 @@ export function ImportExportPage() {
       if (result.imported_points > 0) {
         await loadPoints();
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Import failed:", err);
+      const errorResponse = err as { response?: { data?: { error?: string } } };
       setImportError(
-        err.response?.data?.error ||
+        errorResponse.response?.data?.error ||
           t(
             "importExport.importError",
             "Failed to import points. Please check the file format.",

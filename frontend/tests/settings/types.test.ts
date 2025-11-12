@@ -121,7 +121,10 @@ describe("Settings Types", () => {
 
   describe("ThemeContextValue interface", () => {
     it("should have all required theme context fields", () => {
-      const mockSetTheme = (theme: ThemeMode) => {};
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const mockSetTheme = (_theme: ThemeMode) => {
+        // Mock function for theme changes
+      };
 
       const themeContext: ThemeContextValue = {
         theme: "auto",

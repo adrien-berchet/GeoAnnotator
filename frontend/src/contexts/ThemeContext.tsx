@@ -17,6 +17,7 @@ const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
  * Hook to access theme context
  * @throws Error if used outside ThemeProvider
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function useTheme(): ThemeContextValue {
   const context = useContext(ThemeContext);
   if (!context) {
@@ -49,7 +50,7 @@ export function ThemeProvider({
           : "light";
       }
       return initialTheme as ResolvedTheme;
-    } catch (e) {
+    } catch {
       return "light";
     }
   });

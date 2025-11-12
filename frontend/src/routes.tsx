@@ -5,7 +5,6 @@
  */
 
 import { createBrowserRouter, Navigate } from "react-router-dom";
-import { useAuth } from "./hooks/useAuth";
 import App from "./App";
 import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
@@ -18,46 +17,9 @@ import PointTypeManagementPage from "./pages/PointTypeManagementPage";
 import { TrashPage } from "./pages/TrashPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { ImportExportPage } from "./pages/ImportExportPage";
-
-// Placeholder components - to be implemented
-const ProfilePage = () => <div>Profile Page</div>;
-const SharedPointsPage = () => <div>Shared Points Page</div>;
-
-/**
- * Protected route wrapper.
- * Redirects to login if user is not authenticated.
- */
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated, isLoading } = useAuth();
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return <>{children}</>;
-};
-
-/**
- * Public route wrapper.
- * Redirects to map if user is already authenticated.
- */
-const PublicRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated, isLoading } = useAuth();
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-
-  if (isAuthenticated) {
-    return <Navigate to="/map" replace />;
-  }
-
-  return <>{children}</>;
-};
+import { ProtectedRoute } from "./routes/ProtectedRoute";
+import { PublicRoute } from "./routes/PublicRoute";
+import { ProfilePage, SharedPointsPage } from "./pages/PlaceholderPages";
 
 /**
  * Router configuration.

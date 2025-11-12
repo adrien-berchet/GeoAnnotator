@@ -28,6 +28,7 @@ export async function getPointTypes(): Promise<PointType[]> {
     typeof response.data === "object" &&
     "results" in response.data
   ) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (response.data as any).results;
   }
 

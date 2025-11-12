@@ -47,8 +47,28 @@ export function SettingsPage() {
   );
 
   // Load settings on mount
+  const loadSettings = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const data = await getSettings();
+      setPreferences(data);
+      setThemeMode(data.theme_mode);
+      setLanguage(data.language);
+      setExportFormat(data.export_format);
+      setDefaultMapType(data.default_map_type);
+    } catch (err) {
+      setError(t("settings.errorLoading", "Failed to load settings"));
+      console.error("Error loading settings:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadSettings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Sync local theme state with context when it changes
@@ -60,31 +80,6 @@ export function SettingsPage() {
   useEffect(() => {
     setLanguage(contextLanguage);
   }, [contextLanguage]);
-
-  const loadSettings = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await getSettings();
-      setPreferences(data);
-      // Use theme from context (which is loaded from backend)
-      setThemeMode(contextThemeMode);
-      setLanguage(data.language);
-      setExportFormat(data.export_format);
-      setDefaultMapType(data.default_map_type);
-      setIsDirty(false);
-    } catch (err) {
-      setError(
-        t(
-          "settings.settingsError",
-          "Failed to load settings. Please try again.",
-        ),
-      );
-      console.error("Error loading settings:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleThemeChange = async (mode: ThemeMode) => {
     setThemeMode(mode);

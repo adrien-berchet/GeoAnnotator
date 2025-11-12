@@ -35,11 +35,21 @@ vi.mock("../../api/types", () => ({
 
 // Mock Leaflet
 vi.mock("react-leaflet", () => ({
-  MapContainer: ({ children }: any) => (
+  MapContainer: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="map-container">{children}</div>
   ),
   TileLayer: () => <div data-testid="tile-layer" />,
-  Marker: ({ children, eventHandlers, icon, position }: any) => {
+  Marker: ({
+    children,
+    eventHandlers,
+    icon,
+    position,
+  }: {
+    children?: React.ReactNode;
+    eventHandlers?: { click?: () => void };
+    icon?: { options?: { html?: string } };
+    position?: [number, number];
+  }) => {
     // Don't add onClick handler - it causes infinite loops
     // Instead, the test will need to trigger the modal directly or via other means
 
@@ -77,9 +87,15 @@ vi.mock("react-leaflet", () => ({
       </div>
     );
   },
-  Popup: ({ children }: any) => <div data-testid="popup">{children}</div>,
-  Circle: ({ children }: any) => <div data-testid="circle">{children}</div>,
-  Polygon: ({ children }: any) => <div data-testid="polygon">{children}</div>,
+  Popup: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="popup">{children}</div>
+  ),
+  Circle: ({ children }: { children?: React.ReactNode }) => (
+    <div data-testid="circle">{children}</div>
+  ),
+  Polygon: ({ children }: { children?: React.ReactNode }) => (
+    <div data-testid="polygon">{children}</div>
+  ),
   useMap: () => ({
     setView: vi.fn(),
     flyTo: vi.fn(),
@@ -201,8 +217,9 @@ describe("Device Position Integration Tests", () => {
 
   describe("T004: Blue dot moves in real time as position updates", () => {
     it("should update blue dot position when device position changes", async () => {
-      let positionCallback: ((position: any) => void) | null = null;
-      const firstPosition = {
+      let positionCallback: ((position: GeolocationPosition) => void) | null =
+        null;
+      const firstPosition: GeolocationPosition = {
         coords: {
           latitude: 48.8566,
           longitude: 2.3522,
@@ -215,7 +232,7 @@ describe("Device Position Integration Tests", () => {
         timestamp: Date.now(),
       };
 
-      const secondPosition = {
+      const secondPosition: GeolocationPosition = {
         coords: {
           latitude: 48.8584,
           longitude: 2.2945,
@@ -229,7 +246,7 @@ describe("Device Position Integration Tests", () => {
       };
 
       mockGeolocation.watchPosition.mockImplementation(
-        (successCallback: (position: any) => void) => {
+        (successCallback: (position: GeolocationPosition) => void) => {
           positionCallback = successCallback;
           successCallback(firstPosition);
           return 1;
@@ -250,7 +267,7 @@ describe("Device Position Integration Tests", () => {
       expect(positionCallback).not.toBeNull();
 
       // Simulate position update
-      (positionCallback || ((_position: any) => {}))(secondPosition);
+      positionCallback?.(secondPosition);
 
       // Wait for blue dot to update
       await waitFor(() => {
@@ -261,8 +278,9 @@ describe("Device Position Integration Tests", () => {
     });
 
     it("should update blue dot within 500ms of position change", async () => {
-      let positionCallback: ((position: any) => void) | null = null;
-      const firstPosition = {
+      let positionCallback: ((position: GeolocationPosition) => void) | null =
+        null;
+      const firstPosition: GeolocationPosition = {
         coords: {
           latitude: 48.8566,
           longitude: 2.3522,
@@ -271,11 +289,11 @@ describe("Device Position Integration Tests", () => {
           altitudeAccuracy: null,
           heading: null,
           speed: null,
-        },
+        } as GeolocationCoordinates,
         timestamp: Date.now(),
       };
 
-      const secondPosition = {
+      const secondPosition: GeolocationPosition = {
         coords: {
           latitude: 48.8584,
           longitude: 2.2945,
@@ -284,12 +302,12 @@ describe("Device Position Integration Tests", () => {
           altitudeAccuracy: null,
           heading: null,
           speed: null,
-        },
+        } as GeolocationCoordinates,
         timestamp: Date.now(),
       };
 
       mockGeolocation.watchPosition.mockImplementation(
-        (successCallback: (position: any) => void) => {
+        (successCallback: (position: GeolocationPosition) => void) => {
           positionCallback = successCallback;
           successCallback(firstPosition);
           return 1;
@@ -307,7 +325,7 @@ describe("Device Position Integration Tests", () => {
 
       // Measure update time
       const startTime = Date.now();
-      (positionCallback || ((_position: any) => {}))(secondPosition);
+      positionCallback?.(secondPosition);
 
       await waitFor(
         () => {

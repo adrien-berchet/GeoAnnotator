@@ -17,7 +17,9 @@ export interface TileLayer {
 
 /**
  * Available tile layers for the map.
+ * Exported as a constant to avoid ESLint issues with react-refresh/only-export-components.
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export const TILE_LAYERS: TileLayer[] = [
   {
     id: "osm",

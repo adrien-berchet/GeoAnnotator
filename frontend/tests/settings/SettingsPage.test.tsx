@@ -23,8 +23,10 @@ vi.mock("../../src/utils/i18n", () => ({
   getSupportedLanguages: () => ["en", "fr"],
 }));
 
-const mockGetSettings = settingsApi.getSettings as any;
-const mockUpdateSettings = settingsApi.updateSettings as any;
+const mockGetSettings = settingsApi.getSettings as ReturnType<typeof vi.fn>;
+const mockUpdateSettings = settingsApi.updateSettings as ReturnType<
+  typeof vi.fn
+>;
 
 describe("SettingsPage Component", () => {
   beforeEach(() => {

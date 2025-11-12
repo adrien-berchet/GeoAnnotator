@@ -34,42 +34,10 @@ export function PointsListPage() {
   const typesFilter = searchParams.get("types") || "";
   const isFilterPanelOpen = searchParams.get("filterOpen") === "true";
 
-  useEffect(() => {
-    loadTags();
-    loadTypes();
-  }, []);
-
-  useEffect(() => {
-    loadPoints();
-  }, [searchQuery, tagsFilter, typesFilter]);
-
-  useEffect(() => {
-    // Sync selectedTagNames with URL params
-    if (tagsFilter) {
-      setSelectedTagNames(tagsFilter.split(",").map((t) => t.trim()));
-    } else {
-      setSelectedTagNames([]);
-    }
-  }, [tagsFilter]);
-
-  useEffect(() => {
-    // Sync selectedTypeIds with URL params
-    if (typesFilter) {
-      setSelectedTypeIds(typesFilter.split(",").map((t) => t.trim()));
-    } else {
-      setSelectedTypeIds([]);
-    }
-  }, [typesFilter]);
-
-  useEffect(() => {
-    // Sync searchInput with URL params
-    setSearchInput(searchQuery);
-  }, [searchQuery]);
-
   const loadTags = async () => {
     try {
-      const tags = await getTags();
-      setAvailableTags(tags);
+      const data = await getTags();
+      setAvailableTags(data);
     } catch (err) {
       console.error("Error loading tags:", err);
     }
@@ -77,8 +45,8 @@ export function PointsListPage() {
 
   const loadTypes = async () => {
     try {
-      const types = await getPointTypes();
-      setAvailableTypes(types);
+      const data = await getPointTypes();
+      setAvailableTypes(data);
     } catch (err) {
       console.error("Error loading types:", err);
     }
@@ -89,30 +57,33 @@ export function PointsListPage() {
     setError("");
 
     try {
-      let data: GPSPoint[];
+      let results: GPSPoint[];
 
       if (tagsFilter) {
-        // Filter by tags using the dedicated endpoint
-        const tagNames = tagsFilter.split(",").map((t) => t.trim());
-        data = await searchPointsByTags(tagNames);
-      } else if (searchQuery) {
-        // Search by text
-        const filters = { search: searchQuery };
-        data = await getPoints(filters);
+        const tags = tagsFilter.split(",").map((t) => t.trim());
+        results = await searchPointsByTags(tags);
       } else {
-        // Get all points
-        data = await getPoints();
+        results = await getPoints();
       }
 
-      // Apply type filter client-side
-      if (typesFilter) {
-        const typeIds = typesFilter.split(",").map((t) => t.trim());
-        data = data.filter(
-          (point) => point.type && typeIds.includes(point.type.id),
+      // Client-side search filter
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        results = results.filter(
+          (p) =>
+            p.title.toLowerCase().includes(query) ||
+            p.description?.toLowerCase().includes(query) ||
+            p.tags.some((t) => t.name.toLowerCase().includes(query)),
         );
       }
 
-      setPoints(data);
+      // Client-side type filter
+      if (typesFilter) {
+        const typeIds = typesFilter.split(",").map((t) => t.trim());
+        results = results.filter((p) => p.type && typeIds.includes(p.type.id));
+      }
+
+      setPoints(results);
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
@@ -120,6 +91,27 @@ export function PointsListPage() {
       setIsInitialLoad(false);
     }
   };
+
+  useEffect(() => {
+    loadTags();
+    loadTypes();
+  }, []);
+
+  useEffect(() => {
+    loadPoints();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery, tagsFilter, typesFilter]);
+
+  useEffect(() => {
+    // Sync searchInput with URL params
+    setSearchInput(searchQuery);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    // Sync filters with URL params
+    setSelectedTagNames(tagsFilter ? tagsFilter.split(",") : []);
+    setSelectedTypeIds(typesFilter ? typesFilter.split(",") : []);
+  }, [tagsFilter, typesFilter]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();

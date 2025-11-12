@@ -61,7 +61,8 @@ export default function TranslationManager({
 
   const handleRemoveTranslation = (langCode: string) => {
     if (Object.keys(names).length <= 1) return;
-    const { [langCode]: removed, ...rest } = names;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { [langCode]: _, ...rest } = names;
     onChange(rest);
   };
 

@@ -11,7 +11,15 @@ import type { DevicePosition } from "../../../hooks/useDevicePosition";
 
 // Mock react-leaflet components
 vi.mock("react-leaflet", () => ({
-  Marker: ({ children, eventHandlers, position }: any) => (
+  Marker: ({
+    children,
+    eventHandlers,
+    position,
+  }: {
+    children: React.ReactNode;
+    eventHandlers?: { click?: () => void };
+    position: [number, number];
+  }) => (
     <div
       data-testid="marker"
       data-position={JSON.stringify(position)}
@@ -20,7 +28,13 @@ vi.mock("react-leaflet", () => ({
       {children}
     </div>
   ),
-  Circle: ({ center, radius }: any) => (
+  Circle: ({
+    center,
+    radius,
+  }: {
+    center: [number, number];
+    radius: number;
+  }) => (
     <div
       data-testid="circle"
       data-center={JSON.stringify(center)}

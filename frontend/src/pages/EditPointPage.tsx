@@ -45,23 +45,6 @@ export function EditPointPage() {
   const [isPublic, setIsPublic] = useState(false);
 
   /**
-   * Load point and acquire lock on mount.
-   */
-  useEffect(() => {
-    if (id) {
-      loadPoint();
-    }
-    loadAvailableTags();
-
-    // Release lock on unmount
-    return () => {
-      if (id && hasLock) {
-        releaseLock(id).catch(console.error);
-      }
-    };
-  }, [id]);
-
-  /**
    * Load available tags from API.
    */
   const loadAvailableTags = async () => {
@@ -128,6 +111,24 @@ export function EditPointPage() {
       setIsLoading(false);
     }
   };
+
+  /**
+   * Load point and acquire lock on mount.
+   */
+  useEffect(() => {
+    if (id) {
+      loadPoint();
+    }
+    loadAvailableTags();
+
+    // Release lock on unmount
+    return () => {
+      if (id && hasLock) {
+        releaseLock(id).catch(console.error);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   /**
    * Handle form submission.

@@ -33,6 +33,13 @@ export function Notification({
 }: NotificationProps) {
   const [isVisible, setIsVisible] = useState(true);
 
+  const handleClose = () => {
+    setIsVisible(false);
+    setTimeout(() => {
+      onClose?.();
+    }, 300); // Wait for fade out animation
+  };
+
   useEffect(() => {
     if (duration > 0) {
       const timer = setTimeout(() => {
@@ -41,14 +48,8 @@ export function Notification({
 
       return () => clearTimeout(timer);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [duration]);
-
-  const handleClose = () => {
-    setIsVisible(false);
-    setTimeout(() => {
-      onClose?.();
-    }, 300); // Wait for fade out animation
-  };
 
   if (!isVisible) {
     return null;

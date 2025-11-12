@@ -43,8 +43,29 @@ export function TrashPage() {
     "points",
   );
 
+  const loadTrashData = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await getAllTrashData();
+      setPointsTrash(data.points);
+      setPointsStats(data.pointsStats);
+      setAnnotationsTrash(data.annotations);
+      setAnnotationsStats(data.annotationsStats);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : t("trash.loadError", "Failed to load trash"),
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadTrashData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Handle hash navigation to specific annotation
@@ -69,43 +90,6 @@ export function TrashPage() {
       }, 100);
     }
   }, [location.hash, annotationsTrash]);
-
-  const loadTrashData = async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const data = await getAllTrashData();
-
-      // Ensure data is in the correct format
-      setPointsTrash(Array.isArray(data.points) ? data.points : []);
-      setAnnotationsTrash(
-        Array.isArray(data.annotations) ? data.annotations : [],
-      );
-      setPointsStats(
-        data.pointsStats || {
-          total_items: 0,
-          expiring_soon: 0,
-          oldest_item_age_days: 0,
-        },
-      );
-      setAnnotationsStats(
-        data.annotationsStats || {
-          total_items: 0,
-          expiring_soon: 0,
-          oldest_item_age_days: 0,
-        },
-      );
-    } catch (err) {
-      console.error("Failed to load trash data:", err);
-      setError(t("trash.loadError", "Failed to load trash data"));
-      // Set empty arrays to avoid map errors
-      setPointsTrash([]);
-      setAnnotationsTrash([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleEmptyPointsTrash = async () => {
     const message = t(

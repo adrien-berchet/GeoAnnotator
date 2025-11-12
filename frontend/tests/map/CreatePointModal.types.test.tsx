@@ -59,7 +59,7 @@ describe("CreatePointModal - Type Selection", () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     const { getPointTypes } = await import("../../src/api/types");
-    vi.mocked(getPointTypes).mockResolvedValue(mockTypes as any);
+    vi.mocked(getPointTypes).mockResolvedValue(mockTypes);
   });
 
   it("should display type dropdown", async () => {
@@ -160,7 +160,7 @@ describe("CreatePointModal - Type Selection", () => {
       updated_at: "2025-01-01T00:00:00Z",
       editing_lock_user: null,
       editing_lock_acquired_at: null,
-    } as any);
+    });
 
     renderWithProviders(
       <CreatePointModal

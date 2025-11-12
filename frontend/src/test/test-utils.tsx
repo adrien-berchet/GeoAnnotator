@@ -2,6 +2,9 @@
  * Test utilities for rendering components with all necessary providers
  */
 
+/* eslint-disable react-refresh/only-export-components */
+export * from "@testing-library/react";
+
 import type { ReactElement, ReactNode } from "react";
 import { render, type RenderOptions } from "@testing-library/react";
 import {
@@ -20,7 +23,9 @@ interface AllProvidersProps {
 }
 
 /**
- * Wrapper component that provides all necessary contexts for testing
+ * Wrapper component that provides all necessary contexts for testing.
+ * Note: This file may show react-refresh/only-export-components warning,
+ * but it's acceptable for test utility files.
  */
 function AllProviders({
   children,
@@ -82,20 +87,21 @@ interface CustomRenderOptions extends Omit<RenderOptions, "wrapper"> {
 }
 
 /**
- * Custom render function that wraps components with all necessary providers
+ * Custom render function that provides all necessary providers
  *
- * @param ui - The component to render
- * @param options - Render options including useMemoryRouter and initialEntries
- * @returns The result of render() with all providers
+ * @param ui - The React component to render
+ * @param options - Render options including useMemoryRouter flag
  */
 export function renderWithProviders(
   ui: ReactElement,
-  {
+  options: CustomRenderOptions = {},
+) {
+  const {
     useMemoryRouter = false,
     initialEntries = ["/"],
     ...renderOptions
-  }: CustomRenderOptions = {},
-) {
+  } = options;
+
   const Wrapper = ({ children }: { children: ReactNode }) => (
     <AllProviders
       useMemoryRouter={useMemoryRouter}
@@ -114,7 +120,7 @@ export function renderWithProviders(
  */
 export function renderWithQueryClient(
   ui: ReactElement,
-  options: CustomRenderOptions = {},
+  { ...renderOptions }: CustomRenderOptions = {},
 ) {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -135,9 +141,5 @@ export function renderWithQueryClient(
     </QueryClientProvider>
   );
 
-  return render(ui, { wrapper: Wrapper, ...options });
+  return render(ui, { wrapper: Wrapper, ...renderOptions });
 }
-
-// Re-export everything from testing-library
-export * from "@testing-library/react";
-export { default as userEvent } from "@testing-library/user-event";
