@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirm Account Deletion</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #dc3545;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }
+        .content {
+            background-color: #f9f9f9;
+            padding: 30px;
+            border: 1px solid #ddd;
+            border-radius: 0 0 5px 5px;
+        }
+        .button {
+            display: inline-block;
+            background-color: #dc3545;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .button:hover {
+            background-color: #c82333;
+        }
+        .warning {
+            background-color: #f8d7da;
+            border-left: 4px solid #dc3545;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border-left: 4px solid #0c5460;
+            padding: 12px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .footer {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            color: #666;
+            font-size: 12px;
+            text-align: center;
+        }
+        ul {
+            margin: 10px 0;
+            padding-left: 25px;
+        }
+        li {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>⚠️ Confirm Account Deletion</h1>
+    </div>
+    <div class="content">
+        <p>Hi <strong>{{ pseudonym }}</strong>,</p>
+
+        <p>You requested to delete your GeoAnnotator account.</p>
+
+        <div class="warning">
+            <h3>⚠️ WARNING: This action cannot be undone!</h3>
+            <p><strong>What will happen when you delete your account:</strong></p>
+            <ul>
+                <li>All your GPS points and annotations will be permanently deleted in <strong>30 days</strong></li>
+                <li>All content you've shared with others will be immediately unshared</li>
+                <li>You will no longer be able to access your account</li>
+                <li>Your account data will be permanently removed from our database after 30 days</li>
+            </ul>
+        </div>
+
+        <p>If you're sure you want to proceed, please click the button below to confirm account deletion:</p>
+
+        <center>
+            <a href="{{ confirmation_link }}" class="button">Confirm Account Deletion</a>
+        </center>
+
+        <div class="info">
+            <p><strong>💡 Changed your mind?</strong></p>
+            <p>If you didn't request this deletion or have changed your mind, simply ignore this email and your account will remain active.</p>
+        </div>
+
+        <p>For security reasons, do not share this link with anyone.</p>
+
+        <p>We're sorry to see you go,<br>The GeoAnnotator Team</p>
+    </div>
+    <div class="footer">
+        <p>This is an automated email. Please do not reply to this message.</p>
+    </div>
+</body>
+</html>
