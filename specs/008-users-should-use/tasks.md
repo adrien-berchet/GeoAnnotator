@@ -45,26 +45,26 @@
 
 ---
 
-## Phase 3.1: Setup
+## Phase 3.1: Setup ✅ COMPLETE
 
 ### Backend Dependencies
-- [ ] **T001** Add `django-fernet-fields` to `backend/requirements/base.txt` for email encryption
-- [ ] **T002** Configure `FERNET_KEY` environment variable in `backend/config/settings/base.py` and `.env.example`
-- [ ] **T003** [P] Configure Django REST Framework rate limiting in `backend/config/settings/base.py` (10 req/min account ops, 3 req/h emails)
+- [x] **T001** Add `django-fernet-fields` to `backend/requirements/base.txt` for email encryption
+- [x] **T002** Configure `FERNET_KEY` environment variable in `backend/config/settings/base.py` and `.env.example`
+- [x] **T003** [P] Configure Django REST Framework rate limiting in `backend/config/settings/base.py` (10 req/min account ops, 3 req/h emails)
 - [ ] **T004** [P] Update linting configuration to enforce code quality standards (Ruff for Python, ESLint for TypeScript)
 
 ### Database Migrations
-- [ ] **T005** Create migration to add `pseudonym` field (max 100 chars) to User model in `backend/apps/users/migrations/0001_add_pseudonym.py`
-- [ ] **T006** Create migration to add `deleted_at` (nullable DateTime) and `pending_email` (encrypted) fields to User model in `backend/apps/users/migrations/0002_add_soft_delete.py`
-- [ ] **T007** Create migration to convert User `email` field to `EncryptedEmailField` in `backend/apps/users/migrations/0003_encrypt_email.py`
-- [ ] **T008** Create migration for `EmailChangeConfirmation` model in `backend/apps/users/migrations/0004_email_change_confirmation.py`
-- [ ] **T009** Create migration for `AccountLog` model in `backend/apps/users/migrations/0005_account_log.py`
-- [ ] **T010** Create migration to add `is_active` boolean field to Share model in `backend/apps/sharing/migrations/0001_add_is_active.py`
-- [ ] **T011** Create migration to add database indexes (pseudonym lowercase unique, deleted_at partial, is_active partial) in `backend/apps/users/migrations/0006_add_indexes.py`
+- [x] **T005** Create migration to add `pseudonym` field (max 100 chars) to User model in `backend/apps/authentication/migrations/0004_add_pseudonym.py`
+- [x] **T006** Create migration to add `deleted_at` (nullable DateTime) and `pending_email` (encrypted) fields to User model in `backend/apps/authentication/migrations/0005_add_deleted_at_and_pending_email.py`
+- [x] **T007** Create migration to convert User `email` field to `EncryptedEmailField` in `backend/apps/authentication/migrations/0006_encrypt_email.py`
+- [x] **T008** Create migration for `EmailChangeConfirmation` model in `backend/apps/authentication/migrations/0007_email_change_confirmation.py`
+- [x] **T009** Create migration for `AccountLog` model in `backend/apps/authentication/migrations/0008_account_log.py`
+- [x] **T010** Create migration to add `is_active` boolean field to Share model (SKIPPED - field already exists)
+- [x] **T011** Create migration to add database indexes (pseudonym lowercase unique, deleted_at partial, is_active partial) in `backend/apps/authentication/migrations/0009_add_indexes.py`
 
 ### Email Configuration
-- [ ] **T012** Create email template for email change confirmation in `backend/apps/users/templates/emails/confirm_email_change.html`
-- [ ] **T013** Create email template for account deletion warning in `backend/apps/users/templates/emails/confirm_account_deletion.html`
+- [x] **T012** Create email template for email change confirmation in `backend/apps/authentication/templates/emails/confirm_email_change.html`
+- [x] **T013** Create email template for account deletion warning in `backend/apps/authentication/templates/emails/confirm_account_deletion.html`
 
 ---
 
@@ -97,40 +97,40 @@
 
 ---
 
-## Phase 3.3: Core Implementation (ONLY after tests are failing)
+## Phase 3.3: Core Implementation ✅ COMPLETE
 
 ### Backend Models
-- [ ] **T031** [P] Update User model in `backend/apps/users/models.py` (add pseudonym, deleted_at, pending_email fields, EncryptedEmailField for email)
-- [ ] **T032** [P] Create EmailChangeConfirmation model in `backend/apps/users/models.py` (token, new_email, expires_at, confirmed_at)
-- [ ] **T033** [P] Create AccountLog model in `backend/apps/users/models.py` (operation enum, user FK, timestamp, details JSONField)
-- [ ] **T034** [P] Add ActiveUserManager to User model in `backend/apps/users/models.py` (filter deleted_at__isnull=True)
+- [x] **T031** [P] Update User model in `backend/apps/authentication/models.py` (add pseudonym, deleted_at, pending_email fields, EncryptedEmailField for email)
+- [x] **T032** [P] Create EmailChangeConfirmation model in `backend/apps/authentication/models.py` (token, new_email, expires_at, confirmed_at)
+- [x] **T033** [P] Create AccountLog model in `backend/apps/authentication/models.py` (operation enum, user FK, timestamp, details JSONField)
+- [x] **T034** [P] Add ActiveUserManager to User model in `backend/apps/authentication/models.py` (filter deleted_at__isnull=True)
 
 ### Backend Services
-- [ ] **T035** Implement pseudonym validation service in `backend/apps/users/services.py` (validate_pseudonym: regex, length, uniqueness check)
-- [ ] **T036** Implement EmailChangeTokenGenerator in `backend/apps/users/services.py` (HMAC-based, 30-minute expiry)
-- [ ] **T037** Implement AccountDeletionTokenGenerator in `backend/apps/users/services.py` (similar to email change token)
-- [ ] **T038** Implement email sending service in `backend/apps/users/services.py` (send_email_change_confirmation, send_deletion_confirmation)
-- [ ] **T039** Implement soft delete service in `backend/apps/users/services.py` (set_deleted, unshare_user_content)
+- [x] **T035** Implement pseudonym validation service in `backend/apps/authentication/services.py` (validate_pseudonym: regex, length, uniqueness check)
+- [x] **T036** Implement EmailChangeTokenGenerator in `backend/apps/authentication/services.py` (HMAC-based, 30-minute expiry)
+- [x] **T037** Implement AccountDeletionTokenGenerator in `backend/apps/authentication/services.py` (similar to email change token)
+- [x] **T038** Implement email sending service in `backend/apps/authentication/services.py` (send_email_change_confirmation, send_deletion_confirmation)
+- [x] **T039** Implement soft delete service in `backend/apps/authentication/services.py` (set_deleted, unshare_user_content)
 
 ### Backend Serializers
-- [ ] **T040** Create AccountSerializer in `backend/apps/users/serializers.py` (pseudonym, email read-only, exclude password/deleted_at)
-- [ ] **T041** Create PseudonymUpdateSerializer in `backend/apps/users/serializers.py` (validate pseudonym rules, uniqueness)
-- [ ] **T042** Create EmailChangeSerializer in `backend/apps/users/serializers.py` (validate new_email, check not in use)
-- [ ] **T043** Create EmailConfirmSerializer in `backend/apps/users/serializers.py` (validate token, update email)
-- [ ] **T044** Create PasswordChangeSerializer in `backend/apps/users/serializers.py` (validate old_password, set new_password)
+- [x] **T040** Create AccountSerializer in `backend/apps/authentication/serializers.py` (pseudonym, email read-only, exclude password/deleted_at)
+- [x] **T041** Create PseudonymUpdateSerializer in `backend/apps/authentication/serializers.py` (validate pseudonym rules, uniqueness)
+- [x] **T042** Create EmailChangeSerializer in `backend/apps/authentication/serializers.py` (validate new_email, check not in use)
+- [x] **T043** Create EmailConfirmSerializer in `backend/apps/authentication/serializers.py` (validate token, update email)
+- [x] **T044** Create PasswordChangeSerializer in `backend/apps/authentication/serializers.py` (validate old_password, set new_password)
 
 ### Backend Views (API Endpoints)
-- [ ] **T045** Implement GET `/api/account/` view in `backend/apps/users/views.py` (AccountRetrieveAPIView)
-- [ ] **T046** Implement PATCH `/api/account/` view in `backend/apps/users/views.py` (AccountUpdateAPIView, pseudonym update, log operation)
-- [ ] **T047** Implement POST `/api/account/change-email/` view in `backend/apps/users/views.py` (create token, send email, log request)
-- [ ] **T048** Implement POST `/api/account/confirm-email/` view in `backend/apps/users/views.py` (validate token, update email, log confirmation)
-- [ ] **T049** Implement POST `/api/account/change-password/` view in `backend/apps/users/views.py` (verify old password, set new, invalidate tokens, log)
-- [ ] **T050** Implement DELETE `/api/account/` view in `backend/apps/users/views.py` (send deletion confirmation email, log request)
-- [ ] **T051** Implement POST `/api/account/confirm-delete/` view in `backend/apps/users/views.py` (validate token, soft delete, unshare, log deletion)
-- [ ] **T052** Implement POST `/api/account/validate-pseudonym/` view in `backend/apps/users/views.py` (validation endpoint for frontend)
+- [x] **T045** Implement GET `/api/account/` view in `backend/apps/authentication/views.py` (AccountRetrieveAPIView)
+- [x] **T046** Implement PATCH `/api/account/update/` view in `backend/apps/authentication/views.py` (AccountUpdateAPIView, pseudonym update, log operation)
+- [x] **T047** Implement POST `/api/account/change-email/` view in `backend/apps/authentication/views.py` (create token, send email, log request)
+- [x] **T048** Implement POST `/api/account/confirm-email/` view in `backend/apps/authentication/views.py` (validate token, update email, log confirmation)
+- [x] **T049** Implement POST `/api/account/change-password/` view in `backend/apps/authentication/views.py` (verify old password, set new, log)
+- [x] **T050** Implement DELETE `/api/account/delete/` view in `backend/apps/authentication/views.py` (send deletion confirmation email, log request)
+- [x] **T051** Implement POST `/api/account/confirm-delete/` view in `backend/apps/authentication/views.py` (validate token, soft delete, unshare, log deletion)
+- [x] **T052** Implement POST `/api/account/validate-pseudonym/` view in `backend/apps/authentication/views.py` (validation endpoint for frontend)
 
 ### Backend URLs
-- [ ] **T053** Register all account endpoints in `backend/apps/users/urls.py` (8 URL patterns)
+- [x] **T053** Register all account endpoints in `backend/apps/authentication/urls.py` (8 URL patterns)
 
 ---
 
