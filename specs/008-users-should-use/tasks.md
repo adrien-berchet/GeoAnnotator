@@ -134,12 +134,19 @@
 
 ---
 
-## Phase 3.4: Integration
+## Phase 3.4: Integration ✅ COMPLETE
 
 ### Backend Infrastructure
-- [ ] **T054** Create Django signal for unsharing on delete in `backend/apps/sharing/signals.py` (pre_delete receiver, set is_active=False)
-- [ ] **T055** Create Celery periodic task for cleanup_deleted_users in `backend/apps/users/tasks.py` (delete users where deleted_at < now() - 30 days, run daily)
-- [ ] **T056** Update Share model queryset manager in `backend/apps/sharing/models.py` (filter is_active=True by default)
+- [x] **T054** Create Django signal for unsharing on delete in `backend/apps/sharing/signals.py` (pre_save receiver, set is_active=False when deleted_at is set)
+- [x] **T055** Create Celery periodic task for cleanup_deleted_users in `backend/apps/authentication/tasks.py` (delete users where deleted_at < now() - 30 days, run daily at 2AM)
+- [x] **T056** Update Share model queryset manager in `backend/apps/sharing/models.py` (ActiveShareManager filters is_active=True by default)
+
+### Additional Infrastructure Completed
+- [x] Created Celery configuration in `backend/config/celery.py` with Beat schedule
+- [x] Registered Celery app in `backend/config/__init__.py`
+- [x] Added Celery dependencies (celery>=5.3, redis>=5.0) to requirements
+- [x] Configured Celery settings in `backend/config/settings/base.py`
+- [x] Updated `.env.example` with Celery configuration
 
 ---
 
