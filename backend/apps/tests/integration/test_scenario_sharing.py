@@ -16,7 +16,6 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from apps.authentication.models import User
-from apps.points.models import GPSPoint
 from apps.sharing.models import Share
 
 
@@ -29,9 +28,7 @@ class TestScenario4SharingPermissions:
         self.client = APIClient()
 
         # Create and authenticate Alice (owner)
-        self.alice = User.objects.create_user(
-            email="alice@example.com", password="SecurePass123"
-        )
+        self.alice = User.objects.create_user(email="alice@example.com", password="SecurePass123")
         alice_login = self.client.post(
             reverse("authentication:login"),
             {"email": "alice@example.com", "password": "SecurePass123"},
@@ -40,9 +37,7 @@ class TestScenario4SharingPermissions:
         self.alice_token = alice_login.data["access"]
 
         # Create and authenticate Bob (recipient)
-        self.bob = User.objects.create_user(
-            email="bob@example.com", password="SecurePass456"
-        )
+        self.bob = User.objects.create_user(email="bob@example.com", password="SecurePass456")
         bob_login = self.client.post(
             reverse("authentication:login"),
             {"email": "bob@example.com", "password": "SecurePass456"},
@@ -145,7 +140,9 @@ class TestScenario4SharingPermissions:
         )
 
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.bob_token}")
-        accept_url = reverse("global_sharing:accept", kwargs={"token": share_response.data["invitation_token"]})
+        accept_url = reverse(
+            "global_sharing:accept", kwargs={"token": share_response.data["invitation_token"]}
+        )
         self.client.post(accept_url)
 
         # When - Bob views the point
@@ -176,7 +173,9 @@ class TestScenario4SharingPermissions:
         )
 
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.bob_token}")
-        accept_url = reverse("global_sharing:accept", kwargs={"token": share_response.data["invitation_token"]})
+        accept_url = reverse(
+            "global_sharing:accept", kwargs={"token": share_response.data["invitation_token"]}
+        )
         self.client.post(accept_url)
 
         # When - Bob attempts to edit
@@ -186,7 +185,10 @@ class TestScenario4SharingPermissions:
 
         # Then
         assert response.status_code == status.HTTP_403_FORBIDDEN
-        assert "ACCESS_DENIED" in str(response.data).upper() or "permission" in str(response.data).lower()
+        assert (
+            "ACCESS_DENIED" in str(response.data).upper()
+            or "permission" in str(response.data).lower()
+        )
 
     def test_step_5_alice_updates_share_to_edit_permission(self):
         """
@@ -209,8 +211,7 @@ class TestScenario4SharingPermissions:
 
         # When - Alice updates permission
         share_detail_url = reverse(
-            "sharing:detail",
-            kwargs={"point_id": self.point_id, "pk": share_id}
+            "sharing:detail", kwargs={"point_id": self.point_id, "pk": share_id}
         )
         update_data = {"permission_level": "edit"}
         response = self.client.patch(share_detail_url, update_data, format="json")
@@ -238,7 +239,9 @@ class TestScenario4SharingPermissions:
         )
 
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.bob_token}")
-        accept_url = reverse("global_sharing:accept", kwargs={"token": share_response.data["invitation_token"]})
+        accept_url = reverse(
+            "global_sharing:accept", kwargs={"token": share_response.data["invitation_token"]}
+        )
         self.client.post(accept_url)
 
         # When - Bob edits the point
@@ -270,7 +273,9 @@ class TestScenario4SharingPermissions:
         )
 
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.bob_token}")
-        accept_url = reverse("global_sharing:accept", kwargs={"token": share_response.data["invitation_token"]})
+        accept_url = reverse(
+            "global_sharing:accept", kwargs={"token": share_response.data["invitation_token"]}
+        )
         self.client.post(accept_url)
 
         # Bob acquires lock
@@ -283,7 +288,9 @@ class TestScenario4SharingPermissions:
 
         # Then
         assert response.status_code == status.HTTP_409_CONFLICT
-        assert "POINT_LOCKED" in str(response.data).upper() or "locked" in str(response.data).lower()
+        assert (
+            "POINT_LOCKED" in str(response.data).upper() or "locked" in str(response.data).lower()
+        )
 
     def test_step_8_bob_releases_lock(self):
         """
@@ -304,7 +311,9 @@ class TestScenario4SharingPermissions:
         )
 
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.bob_token}")
-        accept_url = reverse("global_sharing:accept", kwargs={"token": share_response.data["invitation_token"]})
+        accept_url = reverse(
+            "global_sharing:accept", kwargs={"token": share_response.data["invitation_token"]}
+        )
         self.client.post(accept_url)
 
         # Bob acquires lock
@@ -339,13 +348,10 @@ class TestScenario4SharingPermissions:
 
         # When - Upgrade to transfer
         share_detail_url = reverse(
-            "sharing:detail",
-            kwargs={"point_id": self.point_id, "pk": share_id}
+            "sharing:detail", kwargs={"point_id": self.point_id, "pk": share_id}
         )
         response = self.client.patch(
-            share_detail_url,
-            {"permission_level": "transfer"},
-            format="json"
+            share_detail_url, {"permission_level": "transfer"}, format="json"
         )
 
         # Then
@@ -371,7 +377,9 @@ class TestScenario4SharingPermissions:
         )
 
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.bob_token}")
-        accept_url = reverse("global_sharing:accept", kwargs={"token": share_response.data["invitation_token"]})
+        accept_url = reverse(
+            "global_sharing:accept", kwargs={"token": share_response.data["invitation_token"]}
+        )
         self.client.post(accept_url)
 
         # When - Bob shares with Charlie
@@ -408,22 +416,22 @@ class TestScenario4SharingPermissions:
         bob_share_id = bob_share_response.data["id"]
 
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.bob_token}")
-        accept_url = reverse("global_sharing:accept", kwargs={"token": bob_share_response.data["invitation_token"]})
+        accept_url = reverse(
+            "global_sharing:accept", kwargs={"token": bob_share_response.data["invitation_token"]}
+        )
         self.client.post(accept_url)
 
         # Bob shares with Charlie
-        charlie_share_response = self.client.post(
+        self.client.post(
             shares_url,
             {"recipient_email": "charlie@example.com", "permission_level": "view"},
             format="json",
         )
-        charlie_share_id = charlie_share_response.data["id"]
 
         # When - Alice revokes Bob's share
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.alice_token}")
         bob_share_url = reverse(
-            "sharing:detail",
-            kwargs={"point_id": self.point_id, "pk": bob_share_id}
+            "sharing:detail", kwargs={"point_id": self.point_id, "pk": bob_share_id}
         )
         response = self.client.delete(bob_share_url)
 

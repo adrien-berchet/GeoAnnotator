@@ -4,12 +4,9 @@ Authentication services.
 Handles JWT token generation, validation, and user authentication logic.
 """
 
-from datetime import timedelta
-from django.conf import settings
 from django.contrib.auth import authenticate
-from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
-from typing import Optional
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import User
 
@@ -18,7 +15,7 @@ class AuthenticationService:
     """Service for user authentication and JWT token management."""
 
     @staticmethod
-    def authenticate_user(email: str, password: str) -> Optional[User]:
+    def authenticate_user(email: str, password: str) -> User | None:
         """
         Authenticate user with email and password.
 
@@ -54,9 +51,9 @@ class AuthenticationService:
         refresh = RefreshToken.for_user(user)
 
         return {
-            'access': str(refresh.access_token),
-            'refresh': str(refresh),
-            'user': user,
+            "access": str(refresh.access_token),
+            "refresh": str(refresh),
+            "user": user,
         }
 
     @staticmethod
@@ -77,7 +74,7 @@ class AuthenticationService:
             refresh = RefreshToken(token=refresh_token)
             return str(refresh.access_token)
         except TokenError as e:
-            raise ValueError(f"Invalid or expired refresh token: {str(e)}")
+            raise ValueError(f"Invalid or expired refresh token: {str(e)}") from None
 
     @staticmethod
     def validate_token(token: str) -> bool:
@@ -109,7 +106,7 @@ class AuthenticationService:
         """
         try:
             refresh = RefreshToken(token)
-            user_id = refresh.get('user_id')
+            user_id = refresh.get("user_id")
             return User.objects.get(id=user_id)
         except (TokenError, User.DoesNotExist):
             return None
@@ -163,7 +160,7 @@ class AuthenticationService:
         """
         if user.verification_code == code:
             user.is_verified = True
-            user.verification_code = ''  # Clear the code after verification
+            user.verification_code = ""  # Clear the code after verification
             user.save()
             return True
         return False

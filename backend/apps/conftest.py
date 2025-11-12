@@ -6,17 +6,18 @@ This module provides common fixtures and configuration for all tests.
 
 import shutil
 from io import BytesIO
-from PIL import Image
 
 import pytest
 from django.conf import settings
 from django.contrib.gis.geos import Point
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
+from PIL import Image
 from rest_framework.test import APIClient
 
 from apps.authentication.models import User
-from apps.points.models import GPSPoint, Tag
+from apps.points.models import GPSPoint
+from apps.points.models import Tag
 
 
 @pytest.fixture
@@ -28,28 +29,19 @@ def api_client():
 @pytest.fixture
 def alice(db):
     """Create Alice test user."""
-    return User.objects.create_user(
-        email="alice@example.com",
-        password="SecurePass123"
-    )
+    return User.objects.create_user(email="alice@example.com", password="SecurePass123")
 
 
 @pytest.fixture
 def bob(db):
     """Create Bob test user."""
-    return User.objects.create_user(
-        email="bob@example.com",
-        password="SecurePass456"
-    )
+    return User.objects.create_user(email="bob@example.com", password="SecurePass456")
 
 
 @pytest.fixture
 def charlie(db):
     """Create Charlie test user."""
-    return User.objects.create_user(
-        email="charlie@example.com",
-        password="SecurePass789"
-    )
+    return User.objects.create_user(email="charlie@example.com", password="SecurePass789")
 
 
 @pytest.fixture
@@ -59,7 +51,7 @@ def authenticated_client_alice(alice):
     login_response = api_client.post(
         reverse("authentication:login"),
         {"email": "alice@example.com", "password": "SecurePass123"},
-        format="json"
+        format="json",
     )
     token = login_response.data["access"]
     api_client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
@@ -73,7 +65,7 @@ def authenticated_client_bob(bob):
     login_response = api_client.post(
         reverse("authentication:login"),
         {"email": "bob@example.com", "password": "SecurePass456"},
-        format="json"
+        format="json",
     )
     token = login_response.data["access"]
     api_client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
@@ -88,7 +80,7 @@ def gps_point_alice(alice):
         description="<p>Test point for integration tests</p>",
         location=Point(-122.6765, 45.5231),  # Portland, OR
         owner=alice,
-        is_public=False
+        is_public=False,
     )
 
 
@@ -100,7 +92,7 @@ def public_gps_point_alice(alice):
         description="<p>Public test point</p>",
         location=Point(-122.7095, 45.5195),  # Portland Japanese Garden
         owner=alice,
-        is_public=True
+        is_public=True,
     )
 
 
@@ -124,23 +116,15 @@ def sample_image_file():
     image.save(image_io, format="JPEG")
     image_io.seek(0)
 
-    return SimpleUploadedFile(
-        "test_image.jpg",
-        image_io.read(),
-        content_type="image/jpeg"
-    )
+    return SimpleUploadedFile("test_image.jpg", image_io.read(), content_type="image/jpeg")
 
 
 @pytest.fixture
 def sample_pdf_file():
     """Create a sample PDF file for testing."""
-    pdf_content = b"%PDF-1.4\n%\xE2\xE3\xCF\xD3\n" + (b"0" * 1000)
+    pdf_content = b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n" + (b"0" * 1000)
 
-    return SimpleUploadedFile(
-        "test_document.pdf",
-        pdf_content,
-        content_type="application/pdf"
-    )
+    return SimpleUploadedFile("test_document.pdf", pdf_content, content_type="application/pdf")
 
 
 @pytest.fixture
@@ -151,16 +135,10 @@ def sample_geojson():
         "features": [
             {
                 "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [-122.6765, 45.5231]
-                },
-                "properties": {
-                    "title": "Test Point",
-                    "description": "Test import"
-                }
+                "geometry": {"type": "Point", "coordinates": [-122.6765, 45.5231]},
+                "properties": {"title": "Test Point", "description": "Test import"},
             }
-        ]
+        ],
     }
 
 

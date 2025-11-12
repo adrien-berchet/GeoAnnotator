@@ -6,6 +6,7 @@ Handles soft-deleted GPS points with 30-day retention period.
 
 import uuid
 from datetime import timedelta
+
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
@@ -28,49 +29,44 @@ class Trash(models.Model):
         primary_key=True,
         default=uuid.uuid4,
         editable=False,
-        help_text="Unique trash entry identifier"
+        help_text="Unique trash entry identifier",
     )
 
     gps_point = models.OneToOneField(
-        'points.GPSPoint',
+        "points.GPSPoint",
         on_delete=models.CASCADE,
-        related_name='trash_entry',
-        help_text="Trashed GPS point (one-to-one relationship)"
+        related_name="trash_entry",
+        help_text="Trashed GPS point (one-to-one relationship)",
     )
 
     deleted_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         null=True,
-        related_name='deleted_points',
-        help_text="User who deleted the point"
+        related_name="deleted_points",
+        help_text="User who deleted the point",
     )
 
-    deleted_at = models.DateTimeField(
-        auto_now_add=True,
-        help_text="Deletion timestamp"
-    )
+    deleted_at = models.DateTimeField(auto_now_add=True, help_text="Deletion timestamp")
 
     permanent_deletion_at = models.DateTimeField(
-        db_index=True,
-        help_text="Auto-calculated: deleted_at + 30 days"
+        db_index=True, help_text="Auto-calculated: deleted_at + 30 days"
     )
 
     original_is_public = models.BooleanField(
-        default=False,
-        help_text="Original public status (for restoration)"
+        default=False, help_text="Original public status (for restoration)"
     )
 
     class Meta:
-        db_table = 'trash'
-        verbose_name = 'Trash Item'
-        verbose_name_plural = 'Trash Items'
+        db_table = "trash"
+        verbose_name = "Trash Item"
+        verbose_name_plural = "Trash Items"
         indexes = [
-            models.Index(fields=['permanent_deletion_at'], name='idx_trash_permanent_deletion'),
-            models.Index(fields=['deleted_by'], name='idx_trash_deleted_by'),
-            models.Index(fields=['-deleted_at'], name='idx_trash_deleted_at'),
+            models.Index(fields=["permanent_deletion_at"], name="idx_trash_permanent_deletion"),
+            models.Index(fields=["deleted_by"], name="idx_trash_deleted_by"),
+            models.Index(fields=["-deleted_at"], name="idx_trash_deleted_at"),
         ]
-        ordering = ['-deleted_at']  # Most recent first
+        ordering = ["-deleted_at"]  # Most recent first
 
     def save(self, *args, **kwargs):
         """Auto-calculate permanent_deletion_at if not set."""
@@ -109,7 +105,7 @@ class Trash(models.Model):
 
         # Restore original public status
         self.gps_point.is_public = self.original_is_public
-        self.gps_point.save(update_fields=['is_public'])
+        self.gps_point.save(update_fields=["is_public"])
 
         # Reactivate all non-revoked shares
         for share in self.gps_point.shares.all():
@@ -137,9 +133,7 @@ class Trash(models.Model):
         Returns:
             int: Number of points permanently deleted
         """
-        expired_items = cls.objects.filter(
-            permanent_deletion_at__lte=timezone.now()
-        )
+        expired_items = cls.objects.filter(permanent_deletion_at__lte=timezone.now())
 
         count = 0
         for item in expired_items:
@@ -171,44 +165,40 @@ class AnnotationTrash(models.Model):
         primary_key=True,
         default=uuid.uuid4,
         editable=False,
-        help_text="Unique trash entry identifier"
+        help_text="Unique trash entry identifier",
     )
 
     annotation = models.OneToOneField(
-        'annotations.Annotation',
+        "annotations.Annotation",
         on_delete=models.CASCADE,
-        related_name='trash_entry',
-        help_text="Trashed annotation (one-to-one relationship)"
+        related_name="trash_entry",
+        help_text="Trashed annotation (one-to-one relationship)",
     )
 
     deleted_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         null=True,
-        related_name='deleted_annotations',
-        help_text="User who deleted the annotation"
+        related_name="deleted_annotations",
+        help_text="User who deleted the annotation",
     )
 
-    deleted_at = models.DateTimeField(
-        auto_now_add=True,
-        help_text="Deletion timestamp"
-    )
+    deleted_at = models.DateTimeField(auto_now_add=True, help_text="Deletion timestamp")
 
     permanent_deletion_at = models.DateTimeField(
-        db_index=True,
-        help_text="Auto-calculated: deleted_at + 30 days"
+        db_index=True, help_text="Auto-calculated: deleted_at + 30 days"
     )
 
     class Meta:
-        db_table = 'annotation_trash'
-        verbose_name = 'Annotation Trash Item'
-        verbose_name_plural = 'Annotation Trash Items'
+        db_table = "annotation_trash"
+        verbose_name = "Annotation Trash Item"
+        verbose_name_plural = "Annotation Trash Items"
         indexes = [
-            models.Index(fields=['permanent_deletion_at'], name='idx_annot_trash_perm_del'),
-            models.Index(fields=['deleted_by'], name='idx_annot_trash_deleted_by'),
-            models.Index(fields=['-deleted_at'], name='idx_annot_trash_deleted_at'),
+            models.Index(fields=["permanent_deletion_at"], name="idx_annot_trash_perm_del"),
+            models.Index(fields=["deleted_by"], name="idx_annot_trash_deleted_by"),
+            models.Index(fields=["-deleted_at"], name="idx_annot_trash_deleted_at"),
         ]
-        ordering = ['-deleted_at']  # Most recent first
+        ordering = ["-deleted_at"]  # Most recent first
 
     def save(self, *args, **kwargs):
         """Auto-calculate permanent_deletion_at if not set."""
@@ -267,9 +257,7 @@ class AnnotationTrash(models.Model):
         Returns:
             int: Number of annotations permanently deleted
         """
-        expired_items = cls.objects.filter(
-            permanent_deletion_at__lte=timezone.now()
-        )
+        expired_items = cls.objects.filter(permanent_deletion_at__lte=timezone.now())
 
         count = 0
         for item in expired_items:

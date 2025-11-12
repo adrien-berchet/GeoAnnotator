@@ -13,16 +13,15 @@ Acceptance Criteria: FR-019 to FR-029
 """
 
 import io
+
 import pytest
-from PIL import Image
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
+from PIL import Image
 from rest_framework import status
 from rest_framework.test import APIClient
 
 from apps.authentication.models import User
-from apps.points.models import GPSPoint
-from apps.annotations.models import Annotation
 
 
 @pytest.mark.django_db
@@ -34,9 +33,7 @@ class TestScenario3Annotations:
         self.client = APIClient()
 
         # Create and authenticate Alice
-        self.alice = User.objects.create_user(
-            email="alice@example.com", password="SecurePass123"
-        )
+        self.alice = User.objects.create_user(email="alice@example.com", password="SecurePass123")
         login_response = self.client.post(
             reverse("authentication:login"),
             {"email": "alice@example.com", "password": "SecurePass123"},
@@ -56,9 +53,7 @@ class TestScenario3Annotations:
             format="json",
         )
         self.point_id = point_response.data["id"]
-        self.annotations_url = reverse(
-            "annotations:list", kwargs={"point_id": self.point_id}
-        )
+        self.annotations_url = reverse("annotations:list", kwargs={"point_id": self.point_id})
 
     def test_step_1_add_text_annotation(self):
         """
@@ -99,9 +94,7 @@ class TestScenario3Annotations:
         image_io.seek(0)
 
         image_file = SimpleUploadedFile(
-            "trout_photo.jpg",
-            image_io.read(),
-            content_type="image/jpeg"
+            "trout_photo.jpg", image_io.read(), content_type="image/jpeg"
         )
 
         # Get initial storage
@@ -139,11 +132,9 @@ class TestScenario3Annotations:
         - User's storage_used updated
         """
         # Given - Create a fake PDF (500KB)
-        pdf_content = b"%PDF-1.4\n%\xE2\xE3\xCF\xD3\n" + (b"0" * 500000)
+        pdf_content = b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n" + (b"0" * 500000)
         pdf_file = SimpleUploadedFile(
-            "fishing_license.pdf",
-            pdf_content,
-            content_type="application/pdf"
+            "fishing_license.pdf", pdf_content, content_type="application/pdf"
         )
 
         # Get initial storage
@@ -183,11 +174,7 @@ class TestScenario3Annotations:
         self.alice.save()
 
         # Create a 2KB file (will exceed quota)
-        large_file = SimpleUploadedFile(
-            "large_video.mp4",
-            b"0" * 2000,
-            content_type="video/mp4"
-        )
+        large_file = SimpleUploadedFile("large_video.mp4", b"0" * 2000, content_type="video/mp4")
 
         # When
         response = self.client.post(
@@ -201,8 +188,8 @@ class TestScenario3Annotations:
 
         # Then
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert response.data['error'] == 'VALIDATION_ERROR'
-        assert response.data['details']['file']['error'] == 'QUOTA_EXCEEDED'
+        assert response.data["error"] == "VALIDATION_ERROR"
+        assert response.data["details"]["file"]["error"] == "QUOTA_EXCEEDED"
 
     def test_step_5_upload_invalid_file_type(self):
         """
@@ -215,8 +202,8 @@ class TestScenario3Annotations:
         # Given - Create an executable file
         exe_file = SimpleUploadedFile(
             "malware.exe",
-            b"MZ\x90\x00",  # DOS header
-            content_type="application/x-msdownload"
+            b"MZ\x90\x00",
+            content_type="application/x-msdownload",  # DOS header
         )
 
         # When
@@ -231,8 +218,8 @@ class TestScenario3Annotations:
 
         # Then
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert response.data['error'] == 'INVALID_OPERATION'
-        assert response.data['message'] == 'Invalid annotation type: BAD FILE TYPE'
+        assert response.data["error"] == "INVALID_OPERATION"
+        assert response.data["message"] == "Invalid annotation type: BAD FILE TYPE"
 
     def test_step_6_list_point_annotations(self):
         """
@@ -272,7 +259,9 @@ class TestScenario3Annotations:
             self.annotations_url,
             {
                 "type": "document",
-                "file": SimpleUploadedFile("test.pdf", b"%PDF-1.4\n", content_type="application/pdf"),
+                "file": SimpleUploadedFile(
+                    "test.pdf", b"%PDF-1.4\n", content_type="application/pdf"
+                ),
             },
             format="multipart",
         )
@@ -307,15 +296,16 @@ class TestScenario3Annotations:
             self.annotations_url,
             {
                 "type": "image",
-                "file": SimpleUploadedFile("trout_photo.jpg", image_io.read(), content_type="image/jpeg"),
+                "file": SimpleUploadedFile(
+                    "trout_photo.jpg", image_io.read(), content_type="image/jpeg"
+                ),
             },
             format="multipart",
         )
         annotation_id = create_response.data["id"]
 
         download_url = reverse(
-            "annotations:download",
-            kwargs={"point_id": self.point_id, "pk": annotation_id}
+            "annotations:download", kwargs={"point_id": self.point_id, "pk": annotation_id}
         )
 
         # When
@@ -346,15 +336,16 @@ class TestScenario3Annotations:
             self.annotations_url,
             {
                 "type": "image",
-                "file": SimpleUploadedFile("large_image.jpg", image_io.read(), content_type="image/jpeg"),
+                "file": SimpleUploadedFile(
+                    "large_image.jpg", image_io.read(), content_type="image/jpeg"
+                ),
             },
             format="multipart",
         )
         annotation_id = create_response.data["id"]
 
         preview_url = reverse(
-            "annotations:preview",
-            kwargs={"point_id": self.point_id, "pk": annotation_id}
+            "annotations:preview", kwargs={"point_id": self.point_id, "pk": annotation_id}
         )
 
         # When
@@ -383,8 +374,7 @@ class TestScenario3Annotations:
         annotation_id = create_response.data["id"]
 
         detail_url = reverse(
-            "annotations:detail",
-            kwargs={"point_id": self.point_id, "pk": annotation_id}
+            "annotations:detail", kwargs={"point_id": self.point_id, "pk": annotation_id}
         )
 
         # When
@@ -417,7 +407,9 @@ class TestScenario3Annotations:
             self.annotations_url,
             {
                 "type": "image",
-                "file": SimpleUploadedFile("to_delete.jpg", image_io.read(), content_type="image/jpeg"),
+                "file": SimpleUploadedFile(
+                    "to_delete.jpg", image_io.read(), content_type="image/jpeg"
+                ),
             },
             format="multipart",
         )
@@ -429,8 +421,7 @@ class TestScenario3Annotations:
         storage_before = self.alice.storage_used
 
         detail_url = reverse(
-            "annotations:detail",
-            kwargs={"point_id": self.point_id, "pk": annotation_id}
+            "annotations:detail", kwargs={"point_id": self.point_id, "pk": annotation_id}
         )
 
         # When
@@ -441,6 +432,7 @@ class TestScenario3Annotations:
 
         # Verify storage reclaimed
         self.alice.refresh_from_db()
+
         assert self.alice.storage_used == storage_before - file_size
 
     def test_complete_annotation_lifecycle(self):
@@ -470,7 +462,9 @@ class TestScenario3Annotations:
             self.annotations_url,
             {
                 "type": "image",
-                "file": SimpleUploadedFile("lifecycle.jpg", image_io.read(), content_type="image/jpeg"),
+                "file": SimpleUploadedFile(
+                    "lifecycle.jpg", image_io.read(), content_type="image/jpeg"
+                ),
             },
             format="multipart",
         )
@@ -484,8 +478,7 @@ class TestScenario3Annotations:
         # Step 4: Update text annotation
         text_id = text_response.data["id"]
         update_url = reverse(
-            "annotations:detail",
-            kwargs={"point_id": self.point_id, "pk": text_id}
+            "annotations:detail", kwargs={"point_id": self.point_id, "pk": text_id}
         )
         update_response = self.client.patch(
             update_url,
@@ -497,8 +490,7 @@ class TestScenario3Annotations:
         # Step 5: Delete image annotation
         image_id = image_response.data["id"]
         delete_url = reverse(
-            "annotations:detail",
-            kwargs={"point_id": self.point_id, "pk": image_id}
+            "annotations:detail", kwargs={"point_id": self.point_id, "pk": image_id}
         )
         delete_response = self.client.delete(delete_url)
         assert delete_response.status_code == status.HTTP_204_NO_CONTENT

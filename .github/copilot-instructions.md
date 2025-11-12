@@ -18,7 +18,7 @@ tests/
 ```
 
 ## Commands
-# Add commands for 
+# Add commands for
 
 ## Code Style
 : Follow standard conventions

@@ -5,7 +5,7 @@
  * permission denied, position unavailable, and timeout scenarios.
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 
 /**
  * Device position coordinates.
@@ -28,7 +28,8 @@ export const GeolocationErrorType = {
   NOT_SUPPORTED: 4,
 } as const;
 
-export type GeolocationErrorTypeValue = typeof GeolocationErrorType[keyof typeof GeolocationErrorType];
+export type GeolocationErrorTypeValue =
+  (typeof GeolocationErrorType)[keyof typeof GeolocationErrorType];
 
 /**
  * Geolocation error information.
@@ -104,7 +105,7 @@ export function useDevicePosition(): UseDevicePositionReturn {
     if (!navigator.geolocation) {
       setError({
         code: GeolocationErrorType.NOT_SUPPORTED,
-        message: 'Geolocation is not supported by this browser',
+        message: "Geolocation is not supported by this browser",
       });
       setIsLoading(false);
       return;
@@ -120,7 +121,7 @@ export function useDevicePosition(): UseDevicePositionReturn {
     const id = navigator.geolocation.watchPosition(
       handleSuccess,
       handleError,
-      options
+      options,
     );
 
     // Cleanup: clear watch on unmount
@@ -145,19 +146,21 @@ export function useDevicePosition(): UseDevicePositionReturn {
  * @param error - Geolocation error
  * @returns User-friendly error message
  */
-export function getGeolocationErrorMessage(error: GeolocationError | null): string {
-  if (!error) return '';
+export function getGeolocationErrorMessage(
+  error: GeolocationError | null,
+): string {
+  if (!error) return "";
 
   switch (error.code) {
     case GeolocationErrorType.PERMISSION_DENIED:
-      return 'Access to location was denied. Please enable location permissions in your browser settings.';
+      return "Access to location was denied. Please enable location permissions in your browser settings.";
     case GeolocationErrorType.POSITION_UNAVAILABLE:
-      return 'Unable to determine location. Please check your device settings.';
+      return "Unable to determine location. Please check your device settings.";
     case GeolocationErrorType.TIMEOUT:
-      return 'Location request timed out. Please try again.';
+      return "Location request timed out. Please try again.";
     case GeolocationErrorType.NOT_SUPPORTED:
-      return 'Geolocation is not supported by this browser.';
+      return "Geolocation is not supported by this browser.";
     default:
-      return 'An unknown error occurred while retrieving location.';
+      return "An unknown error occurred while retrieving location.";
   }
 }

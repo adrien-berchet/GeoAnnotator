@@ -2,8 +2,8 @@
  * Authentication API calls.
  */
 
-import { apiClient } from './client';
-import type { User, LoginCredentials, RegisterData } from '../types/auth';
+import { apiClient } from "./client";
+import type { User, LoginCredentials, RegisterData } from "../types/auth";
 
 /**
  * Login response.
@@ -34,23 +34,33 @@ interface RefreshResponse {
  * Register new user.
  */
 export async function register(data: RegisterData): Promise<RegisterResponse> {
-  const response = await apiClient.post<RegisterResponse>('/auth/register/', data);
+  const response = await apiClient.post<RegisterResponse>(
+    "/auth/register/",
+    data,
+  );
   return response.data;
 }
 
 /**
  * Login user.
  */
-export async function login(credentials: LoginCredentials): Promise<LoginResponse> {
-  const response = await apiClient.post<LoginResponse>('/auth/login/', credentials);
+export async function login(
+  credentials: LoginCredentials,
+): Promise<LoginResponse> {
+  const response = await apiClient.post<LoginResponse>(
+    "/auth/login/",
+    credentials,
+  );
   return response.data;
 }
 
 /**
  * Refresh access token.
  */
-export async function refreshToken(refreshToken: string): Promise<RefreshResponse> {
-  const response = await apiClient.post<RefreshResponse>('/auth/refresh/', {
+export async function refreshToken(
+  refreshToken: string,
+): Promise<RefreshResponse> {
+  const response = await apiClient.post<RefreshResponse>("/auth/refresh/", {
     refresh: refreshToken,
   });
   return response.data;
@@ -60,7 +70,7 @@ export async function refreshToken(refreshToken: string): Promise<RefreshRespons
  * Logout user.
  */
 export async function logout(refreshToken: string): Promise<void> {
-  await apiClient.post('/auth/logout/', {
+  await apiClient.post("/auth/logout/", {
     refresh: refreshToken,
   });
 }
@@ -69,6 +79,6 @@ export async function logout(refreshToken: string): Promise<void> {
  * Get current user profile.
  */
 export async function getProfile(): Promise<User> {
-  const response = await apiClient.get<User>('/auth/me/');
+  const response = await apiClient.get<User>("/auth/me/");
   return response.data;
 }

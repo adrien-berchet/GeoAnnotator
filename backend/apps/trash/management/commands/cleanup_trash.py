@@ -18,6 +18,7 @@ Scheduled Execution:
 
 from django.core.management.base import BaseCommand
 from django.utils import timezone
+
 from apps.trash.models import Trash
 
 
@@ -26,20 +27,20 @@ class Command(BaseCommand):
     Management command to cleanup expired trash items.
     """
 
-    help = 'Permanently delete GPS points in trash that have exceeded 30-day retention period'
+    help = "Permanently delete GPS points in trash that have exceeded 30-day retention period"
 
     def add_arguments(self, parser):
         """Add command arguments."""
         parser.add_argument(
-            '--dry-run',
-            action='store_true',
-            help='Show what would be deleted without actually deleting',
+            "--dry-run",
+            action="store_true",
+            help="Show what would be deleted without actually deleting",
         )
 
         parser.add_argument(
-            '--verbose',
-            action='store_true',
-            help='Show detailed information about each deletion',
+            "--verbose",
+            action="store_true",
+            help="Show detailed information about each deletion",
         )
 
     def handle(self, *args, **options):
@@ -49,31 +50,27 @@ class Command(BaseCommand):
         Args:
             options: Command options (dry_run, verbose)
         """
-        dry_run = options.get('dry_run', False)
-        verbose = options.get('verbose', False)
+        dry_run = options.get("dry_run", False)
+        verbose = options.get("verbose", False)
 
-        self.stdout.write(self.style.NOTICE('Starting trash cleanup...'))
-        self.stdout.write(f'Current time: {timezone.now().isoformat()}')
+        self.stdout.write(self.style.NOTICE("Starting trash cleanup..."))
+        self.stdout.write(f"Current time: {timezone.now().isoformat()}")
 
         # Find expired items
         expired_items = Trash.objects.filter(
             permanent_deletion_at__lte=timezone.now()
-        ).select_related('gps_point', 'deleted_by')
+        ).select_related("gps_point", "deleted_by")
 
         total_count = expired_items.count()
 
         if total_count == 0:
-            self.stdout.write(self.style.SUCCESS('No expired items found'))
+            self.stdout.write(self.style.SUCCESS("No expired items found"))
             return
 
-        self.stdout.write(
-            self.style.WARNING(f'Found {total_count} expired item(s)')
-        )
+        self.stdout.write(self.style.WARNING(f"Found {total_count} expired item(s)"))
 
         if dry_run:
-            self.stdout.write(
-                self.style.NOTICE('[DRY RUN] No items will be deleted')
-            )
+            self.stdout.write(self.style.NOTICE("[DRY RUN] No items will be deleted"))
 
         # Process deletions
         deleted_count = 0
@@ -84,21 +81,22 @@ class Command(BaseCommand):
             point_title = point.title
             point_id = point.id
             deleted_at = item.deleted_at
-            deleted_by = item.deleted_by.email if item.deleted_by else 'Unknown'
+            deleted_by = item.deleted_by.email if item.deleted_by else "Unknown"
 
             # Calculate storage to be freed (sum of annotation file sizes)
             storage_freed = sum(
-                ann.file_size for ann in point.annotations.filter(file__isnull=False)
+                ann.file_size
+                for ann in point.annotations.filter(file__isnull=False)
                 if ann.file_size
             )
 
             if verbose or dry_run:
                 self.stdout.write(
                     f'  - Point "{point_title}" (ID: {point_id})\n'
-                    f'    Deleted by: {deleted_by}\n'
-                    f'    Deleted at: {deleted_at.isoformat()}\n'
-                    f'    Annotations: {point.annotations.count()}\n'
-                    f'    Storage freed: {self._format_size(storage_freed)}'
+                    f"    Deleted by: {deleted_by}\n"
+                    f"    Deleted at: {deleted_at.isoformat()}\n"
+                    f"    Annotations: {point.annotations.count()}\n"
+                    f"    Storage freed: {self._format_size(storage_freed)}"
                 )
 
             if not dry_run:
@@ -108,21 +106,13 @@ class Command(BaseCommand):
                 total_size_freed += storage_freed
 
         if dry_run:
-            self.stdout.write(
-                self.style.SUCCESS(
-                    f'\n[DRY RUN] Would delete {total_count} item(s)'
-                )
-            )
+            self.stdout.write(self.style.SUCCESS(f"\n[DRY RUN] Would delete {total_count} item(s)"))
         else:
             self.stdout.write(
-                self.style.SUCCESS(
-                    f'\nSuccessfully deleted {deleted_count} expired item(s)'
-                )
+                self.style.SUCCESS(f"\nSuccessfully deleted {deleted_count} expired item(s)")
             )
             self.stdout.write(
-                self.style.SUCCESS(
-                    f'Total storage freed: {self._format_size(total_size_freed)}'
-                )
+                self.style.SUCCESS(f"Total storage freed: {self._format_size(total_size_freed)}")
             )
 
     def _format_size(self, bytes_size):
@@ -136,9 +126,9 @@ class Command(BaseCommand):
             str: Formatted size (e.g., "1.5 MB")
         """
         if bytes_size == 0:
-            return '0 B'
+            return "0 B"
 
-        units = ['B', 'KB', 'MB', 'GB', 'TB']
+        units = ["B", "KB", "MB", "GB", "TB"]
         unit_index = 0
 
         size = float(bytes_size)
@@ -148,6 +138,6 @@ class Command(BaseCommand):
             unit_index += 1
 
         if unit_index == 0:
-            return f'{int(size)} {units[unit_index]}'
+            return f"{int(size)} {units[unit_index]}"
         else:
-            return f'{size:.2f} {units[unit_index]}'
+            return f"{size:.2f} {units[unit_index]}"

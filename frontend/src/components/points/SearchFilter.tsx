@@ -4,9 +4,9 @@
  * Provides filters for searching points by bounding box, tags, and text.
  */
 
-import { useState } from 'react';
-import type { FormEvent } from 'react';
-import type { PointsFilter } from '../../types/point';
+import { useState } from "react";
+import type { FormEvent } from "react";
+import type { PointsFilter } from "../../types/point";
 
 interface SearchFilterProps {
   onFilterChange: (filter: PointsFilter) => void;
@@ -16,16 +16,16 @@ interface SearchFilterProps {
  * Search filter component.
  */
 export function SearchFilter({ onFilterChange }: SearchFilterProps) {
-  const [searchText, setSearchText] = useState('');
-  const [tags, setTags] = useState('');
+  const [searchText, setSearchText] = useState("");
+  const [tags, setTags] = useState("");
   const [isPublicOnly, setIsPublicOnly] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   // Bounding box coordinates
-  const [minLat, setMinLat] = useState('');
-  const [maxLat, setMaxLat] = useState('');
-  const [minLon, setMinLon] = useState('');
-  const [maxLon, setMaxLon] = useState('');
+  const [minLat, setMinLat] = useState("");
+  const [maxLat, setMaxLat] = useState("");
+  const [minLon, setMinLon] = useState("");
+  const [maxLon, setMaxLon] = useState("");
 
   /**
    * Handle form submission.
@@ -48,7 +48,10 @@ export function SearchFilter({ onFilterChange }: SearchFilterProps) {
 
     // Tags
     if (tags.trim()) {
-      filter.tags = tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
+      filter.tags = tags
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter((tag) => tag.length > 0);
     }
 
     // Public only
@@ -63,7 +66,12 @@ export function SearchFilter({ onFilterChange }: SearchFilterProps) {
       const minLonNum = parseFloat(minLon);
       const maxLonNum = parseFloat(maxLon);
 
-      if (!isNaN(minLatNum) && !isNaN(maxLatNum) && !isNaN(minLonNum) && !isNaN(maxLonNum)) {
+      if (
+        !isNaN(minLatNum) &&
+        !isNaN(maxLatNum) &&
+        !isNaN(minLonNum) &&
+        !isNaN(maxLonNum)
+      ) {
         filter.bbox = {
           min_lat: minLatNum,
           max_lat: maxLatNum,
@@ -80,13 +88,13 @@ export function SearchFilter({ onFilterChange }: SearchFilterProps) {
    * Clear all filters.
    */
   const clearFilters = () => {
-    setSearchText('');
-    setTags('');
+    setSearchText("");
+    setTags("");
     setIsPublicOnly(false);
-    setMinLat('');
-    setMaxLat('');
-    setMinLon('');
-    setMaxLon('');
+    setMinLat("");
+    setMaxLat("");
+    setMinLon("");
+    setMaxLon("");
     onFilterChange({});
   };
 
@@ -132,7 +140,7 @@ export function SearchFilter({ onFilterChange }: SearchFilterProps) {
           className="btn-link"
           onClick={() => setShowAdvanced(!showAdvanced)}
         >
-          {showAdvanced ? 'Hide' : 'Show'} advanced filters
+          {showAdvanced ? "Hide" : "Show"} advanced filters
         </button>
 
         {/* Advanced filters */}
@@ -198,7 +206,11 @@ export function SearchFilter({ onFilterChange }: SearchFilterProps) {
 
         {/* Actions */}
         <div className="filter-actions">
-          <button type="button" className="btn-secondary" onClick={clearFilters}>
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={clearFilters}
+          >
             Clear
           </button>
           <button type="submit" className="btn-primary">

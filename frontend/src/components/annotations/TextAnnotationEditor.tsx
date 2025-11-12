@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
-import MDEditor from '@uiw/react-md-editor';
-import { updateTextAnnotation } from '../../api/annotations';
-import { getErrorMessage } from '../../api/client';
-import type { Annotation } from '../../types/annotation';
-import { useColorMode } from '../../hooks/useColorMode';
-import './TextAnnotationEditor.css';
+import { useState, useEffect } from "react";
+import MDEditor from "@uiw/react-md-editor";
+import { updateTextAnnotation } from "../../api/annotations";
+import { getErrorMessage } from "../../api/client";
+import type { Annotation } from "../../types/annotation";
+import { useColorMode } from "../../hooks/useColorMode";
+import "./TextAnnotationEditor.css";
 
 interface TextAnnotationEditorProps {
   annotation: Annotation;
@@ -19,29 +19,33 @@ export function TextAnnotationEditor({
   onSave,
   onCancel,
 }: TextAnnotationEditorProps) {
-  const [content, setContent] = useState(annotation.text_content || '');
+  const [content, setContent] = useState(annotation.text_content || "");
   const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const colorMode = useColorMode();
 
   // Apply color mode to document root for MDEditor
   useEffect(() => {
-    document.documentElement.setAttribute('data-color-mode', colorMode);
+    document.documentElement.setAttribute("data-color-mode", colorMode);
   }, [colorMode]);
 
   const handleSave = async () => {
     if (!content.trim()) {
-      setError('Text content cannot be empty');
+      setError("Text content cannot be empty");
       return;
     }
 
     setIsSaving(true);
-    setError('');
+    setError("");
 
     try {
-      const updatedAnnotation = await updateTextAnnotation(pointId, annotation.id, {
-        text_content: content,
-      });
+      const updatedAnnotation = await updateTextAnnotation(
+        pointId,
+        annotation.id,
+        {
+          text_content: content,
+        },
+      );
       onSave(updatedAnnotation);
     } catch (err) {
       setError(getErrorMessage(err));
@@ -70,7 +74,7 @@ export function TextAnnotationEditor({
         <div data-color-mode={colorMode}>
           <MDEditor
             value={content}
-            onChange={(val) => setContent(val || '')}
+            onChange={(val) => setContent(val || "")}
             preview="edit"
             height={300}
             visibleDragbar={false}
@@ -96,7 +100,7 @@ export function TextAnnotationEditor({
           className="btn btn-primary"
           disabled={isSaving}
         >
-          {isSaving ? 'Saving...' : 'Save'}
+          {isSaving ? "Saving..." : "Save"}
         </button>
       </div>
     </div>

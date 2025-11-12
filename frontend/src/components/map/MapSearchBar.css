@@ -61,7 +61,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.2s ease, transform 0.1s ease;
+  transition:
+    background-color 0.2s ease,
+    transform 0.1s ease;
   padding: 0;
 }
 
@@ -95,7 +97,7 @@
 }
 
 /* Dark mode support */
-[data-theme='dark'] {
+[data-theme="dark"] {
   .map-search-bar {
     background-color: var(--bg-primary, #1e293b);
     border-color: var(--border-color, #334155);

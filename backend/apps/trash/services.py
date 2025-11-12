@@ -4,14 +4,14 @@ Trash services.
 Handles soft deletion, 30-day retention, and restoration logic for points and annotations.
 """
 
-from datetime import timedelta
 from django.utils import timezone
-from django.db.models import Q
 
-from .models import Trash, AnnotationTrash
-from apps.points.models import GPSPoint
 from apps.annotations.models import Annotation
 from apps.authentication.models import User
+from apps.points.models import GPSPoint
+
+from .models import AnnotationTrash
+from .models import Trash
 
 
 class TrashService:
@@ -39,6 +39,7 @@ class TrashService:
 
         # Deactivate shares
         from apps.sharing.services import ShareService
+
         ShareService.deactivate_shares_for_point(point)
 
         return trash
@@ -58,7 +59,7 @@ class TrashService:
             ValueError: If point has expired
         """
         if trash.is_expired:
-            raise ValueError('Point has been permanently deleted (>30 days)')
+            raise ValueError("Point has been permanently deleted (>30 days)")
 
         # Use model's restore method (reactivates shares and deletes trash entry)
         trash.restore()
@@ -78,7 +79,7 @@ class TrashService:
             ValueError: If user is not owner
         """
         if trash.gps_point.owner != user:
-            raise ValueError('Only the point owner can permanently delete')
+            raise ValueError("Only the point owner can permanently delete")
 
         point = trash.gps_point
 
@@ -119,7 +120,7 @@ class TrashService:
         Returns:
             QuerySet of Trash objects
         """
-        return Trash.objects.filter(gps_point__owner=user).order_by('-deleted_at')
+        return Trash.objects.filter(gps_point__owner=user).order_by("-deleted_at")
 
     @staticmethod
     def cleanup_expired() -> int:
@@ -160,24 +161,22 @@ class TrashService:
 
         if total == 0:
             return {
-                'total_items': 0,
-                'expiring_soon': 0,
-                'oldest_item_age_days': 0,
+                "total_items": 0,
+                "expiring_soon": 0,
+                "oldest_item_age_days": 0,
             }
 
         # Count items expiring soon (<7 days remaining)
-        expiring_soon = sum(
-            1 for item in trash_items if item.days_remaining <= 7
-        )
+        expiring_soon = sum(1 for item in trash_items if item.days_remaining <= 7)
 
         # Get oldest item
-        oldest = trash_items.order_by('deleted_at').first()
+        oldest = trash_items.order_by("deleted_at").first()
         oldest_age = (timezone.now() - oldest.deleted_at).days
 
         return {
-            'total_items': total,
-            'expiring_soon': expiring_soon,
-            'oldest_item_age_days': oldest_age,
+            "total_items": total,
+            "expiring_soon": expiring_soon,
+            "oldest_item_age_days": oldest_age,
         }
 
 
@@ -209,7 +208,7 @@ class AnnotationTrashService:
     @staticmethod
     def restore_from_trash(annotation_trash: AnnotationTrash) -> Annotation:
         """
-        Restore annotation from trash.
+        Restore annotation from trash and restore storage quota if applicable.
 
         Args:
             annotation_trash: AnnotationTrash object
@@ -221,12 +220,20 @@ class AnnotationTrashService:
             ValueError: If annotation has expired
         """
         if annotation_trash.is_expired:
-            raise ValueError('Annotation has been permanently deleted (>30 days)')
+            raise ValueError("Annotation has been permanently deleted (>30 days)")
+
+        annotation = annotation_trash.annotation
+
+        # Restore quota if file attached (quota was reclaimed when moved to trash)
+        if annotation.file and annotation.file_size:
+            from apps.annotations.services import StorageQuotaService
+
+            StorageQuotaService.add_usage(annotation.gps_point.owner, annotation.file_size)
 
         # Use model's restore method (deletes trash entry)
         annotation_trash.restore()
 
-        return annotation_trash.annotation
+        return annotation
 
     @staticmethod
     def permanently_delete(annotation_trash: AnnotationTrash, user: User) -> None:
@@ -241,7 +248,7 @@ class AnnotationTrashService:
             ValueError: If user is not point owner
         """
         if annotation_trash.annotation.gps_point.owner != user:
-            raise ValueError('Only the point owner can permanently delete')
+            raise ValueError("Only the point owner can permanently delete")
 
         annotation = annotation_trash.annotation
 
@@ -261,9 +268,7 @@ class AnnotationTrashService:
         Returns:
             int: Number of annotations deleted
         """
-        annotation_trash_items = AnnotationTrash.objects.filter(
-            annotation__gps_point__owner=user
-        )
+        annotation_trash_items = AnnotationTrash.objects.filter(annotation__gps_point__owner=user)
         count = annotation_trash_items.count()
 
         for annotation_trash in annotation_trash_items:
@@ -283,9 +288,9 @@ class AnnotationTrashService:
         Returns:
             QuerySet of AnnotationTrash objects
         """
-        return AnnotationTrash.objects.filter(
-            annotation__gps_point__owner=user
-        ).order_by('-deleted_at')
+        return AnnotationTrash.objects.filter(annotation__gps_point__owner=user).order_by(
+            "-deleted_at"
+        )
 
     @staticmethod
     def cleanup_expired() -> int:
@@ -321,29 +326,25 @@ class AnnotationTrashService:
                 'oldest_item_age_days': int,
             }
         """
-        annotation_trash_items = AnnotationTrash.objects.filter(
-            annotation__gps_point__owner=user
-        )
+        annotation_trash_items = AnnotationTrash.objects.filter(annotation__gps_point__owner=user)
         total = annotation_trash_items.count()
 
         if total == 0:
             return {
-                'total_items': 0,
-                'expiring_soon': 0,
-                'oldest_item_age_days': 0,
+                "total_items": 0,
+                "expiring_soon": 0,
+                "oldest_item_age_days": 0,
             }
 
         # Count items expiring soon (<7 days remaining)
-        expiring_soon = sum(
-            1 for item in annotation_trash_items if item.days_remaining <= 7
-        )
+        expiring_soon = sum(1 for item in annotation_trash_items if item.days_remaining <= 7)
 
         # Get oldest item
-        oldest = annotation_trash_items.order_by('deleted_at').first()
+        oldest = annotation_trash_items.order_by("deleted_at").first()
         oldest_age = (timezone.now() - oldest.deleted_at).days
 
         return {
-            'total_items': total,
-            'expiring_soon': expiring_soon,
-            'oldest_item_age_days': oldest_age,
+            "total_items": total,
+            "expiring_soon": expiring_soon,
+            "oldest_item_age_days": oldest_age,
         }

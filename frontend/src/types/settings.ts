@@ -5,22 +5,22 @@
 /**
  * Theme mode options for the application
  */
-export type ThemeMode = 'auto' | 'light' | 'dark';
+export type ThemeMode = "auto" | "light" | "dark";
 
 /**
  * Data export format options
  */
-export type ExportFormat = 'geojson' | 'gpx' | 'kml' | 'csv' | 'zip';
+export type ExportFormat = "geojson" | "gpx" | "kml" | "csv" | "zip";
 
 /**
  * Map type options
  */
-export type MapType = 'osm' | 'satellite' | 'topo' | 'cycle';
+export type MapType = "osm" | "satellite" | "topo" | "cycle";
 
 /**
  * Resolved theme mode (auto resolved to light or dark)
  */
-export type ResolvedTheme = 'light' | 'dark';
+export type ResolvedTheme = "light" | "dark";
 
 /**
  * User preferences stored on the backend

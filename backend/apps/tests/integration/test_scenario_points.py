@@ -12,13 +12,13 @@ Acceptance Criteria: FR-005 to FR-018
 """
 
 import pytest
-from django.contrib.gis.geos import Point
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
 from apps.authentication.models import User
-from apps.points.models import GPSPoint, Tag
+from apps.points.models import GPSPoint
+from apps.points.models import Tag
 
 
 @pytest.mark.django_db
@@ -30,9 +30,7 @@ class TestScenario2PointManagement:
         self.client = APIClient()
 
         # Create and authenticate Alice
-        self.alice = User.objects.create_user(
-            email="alice@example.com", password="SecurePass123"
-        )
+        self.alice = User.objects.create_user(email="alice@example.com", password="SecurePass123")
         login_response = self.client.post(
             reverse("authentication:login"),
             {"email": "alice@example.com", "password": "SecurePass123"},
@@ -140,9 +138,7 @@ class TestScenario2PointManagement:
         )
 
         # When
-        response = self.client.get(
-            self.points_list_url, {"visibility": "owned"}, format="json"
-        )
+        response = self.client.get(self.points_list_url, {"visibility": "owned"}, format="json")
 
         # Then
         assert response.status_code == status.HTTP_200_OK
@@ -162,7 +158,7 @@ class TestScenario2PointManagement:
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.alice_token}")
 
         # Inside bbox
-        inside_response = self.client.post(
+        self.client.post(
             self.points_list_url,
             {
                 "title": "Inside BBox",
@@ -232,9 +228,7 @@ class TestScenario2PointManagement:
 
         # When - Use the correct endpoint for tag filtering
         search_tags_url = reverse("points:search-tags")
-        response = self.client.post(
-            search_tags_url, {"tags": ["fishing"]}, format="json"
-        )
+        response = self.client.post(search_tags_url, {"tags": ["fishing"]}, format="json")
 
         # Then
         assert response.status_code == status.HTTP_200_OK
@@ -275,9 +269,7 @@ class TestScenario2PointManagement:
 
         # When - Use the correct endpoint for full-text search
         search_text_url = reverse("points:search-text")
-        response = self.client.get(
-            search_text_url, {"q": "garden"}, format="json"
-        )
+        response = self.client.get(search_text_url, {"q": "garden"}, format="json")
 
         # Then
         assert response.status_code == status.HTTP_200_OK
@@ -390,9 +382,7 @@ class TestScenario2PointManagement:
         assert point_id in point_ids
 
         # Step 3: Search by tag
-        search_response = self.client.get(
-            self.points_list_url, {"tags": "lifecycle"}
-        )
+        search_response = self.client.get(self.points_list_url, {"tags": "lifecycle"})
         assert search_response.status_code == status.HTTP_200_OK
         assert search_response.data["count"] >= 1
 

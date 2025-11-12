@@ -4,10 +4,10 @@
  * Unified drawer panel for filtering by tags and types
  */
 
-import type { Tag, PointType } from '../../types/point';
-import { getPointTypeName } from '../../utils/pointTypeUtils';
-import { useLanguage } from '../../contexts/LanguageContext';
-import './FilterPanel.css';
+import type { Tag, PointType } from "../../types/point";
+import { getPointTypeName } from "../../utils/pointTypeUtils";
+import { useLanguage } from "../../contexts/LanguageContext";
+import "./FilterPanel.css";
 
 interface FilterPanelProps {
   isOpen: boolean;
@@ -39,12 +39,12 @@ export function FilterPanel({
     <>
       {/* Backdrop */}
       <div
-        className={`filter-backdrop ${isOpen ? 'open' : ''}`}
+        className={`filter-backdrop ${isOpen ? "open" : ""}`}
         onClick={onClose}
       />
 
       {/* Panel */}
-      <div className={`filter-panel ${isOpen ? 'open' : ''}`}>
+      <div className={`filter-panel ${isOpen ? "open" : ""}`}>
         {/* Header */}
         <div className="filter-header">
           <h2>Filters</h2>
@@ -71,20 +71,30 @@ export function FilterPanel({
                     <button
                       key={type.id}
                       type="button"
-                      className={`filter-option ${selectedTypes.includes(type.id) ? 'selected' : ''}`}
+                      className={`filter-option ${selectedTypes.includes(type.id) ? "selected" : ""}`}
                       onClick={() => onToggleType(type.id)}
                     >
                       <span className="filter-checkbox">
-                        {selectedTypes.includes(type.id) ? '✓' : ''}
+                        {selectedTypes.includes(type.id) ? "✓" : ""}
                       </span>
-                      {type.icon && type.icon !== '/icons/default.svg' && (
-                        type.icon.startsWith('http') || type.icon.startsWith('/') || type.icon.startsWith('data:') ? (
-                          <img src={type.icon} alt="" className="filter-type-icon" />
+                      {type.icon &&
+                        type.icon !== "/icons/default.svg" &&
+                        (type.icon.startsWith("http") ||
+                        type.icon.startsWith("/") ||
+                        type.icon.startsWith("data:") ? (
+                          <img
+                            src={type.icon}
+                            alt=""
+                            className="filter-type-icon"
+                          />
                         ) : (
-                          <span className="filter-type-icon-emoji">{type.icon}</span>
-                        )
-                      )}
-                      <span className="filter-name">{getPointTypeName(type, language)}</span>
+                          <span className="filter-type-icon-emoji">
+                            {type.icon}
+                          </span>
+                        ))}
+                      <span className="filter-name">
+                        {getPointTypeName(type, language)}
+                      </span>
                     </button>
                   ))}
                 </div>
@@ -104,11 +114,11 @@ export function FilterPanel({
                     <button
                       key={tag.id}
                       type="button"
-                      className={`filter-option ${selectedTags.includes(tag.name) ? 'selected' : ''}`}
+                      className={`filter-option ${selectedTags.includes(tag.name) ? "selected" : ""}`}
                       onClick={() => onToggleTag(tag.name)}
                     >
                       <span className="filter-checkbox">
-                        {selectedTags.includes(tag.name) ? '✓' : ''}
+                        {selectedTags.includes(tag.name) ? "✓" : ""}
                       </span>
                       <span className="filter-name">{tag.name}</span>
                     </button>
@@ -126,7 +136,9 @@ export function FilterPanel({
             onClick={onClearAll}
             disabled={!hasActiveFilters}
           >
-            Clear All {hasActiveFilters && `(${selectedTags.length + selectedTypes.length})`}
+            Clear All{" "}
+            {hasActiveFilters &&
+              `(${selectedTags.length + selectedTypes.length})`}
           </button>
         </div>
       </div>

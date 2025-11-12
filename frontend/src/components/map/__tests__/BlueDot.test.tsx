@@ -4,14 +4,22 @@
  * Tests rendering, positioning, and click behavior of the device position marker.
  */
 
-import { describe, it, expect, vi } from 'vitest';
-import { render } from '@testing-library/react';
-import { BlueDot } from '../BlueDot';
-import type { DevicePosition } from '../../../hooks/useDevicePosition';
+import { describe, it, expect, vi } from "vitest";
+import { render } from "@testing-library/react";
+import { BlueDot } from "../BlueDot";
+import type { DevicePosition } from "../../../hooks/useDevicePosition";
 
 // Mock react-leaflet components
-vi.mock('react-leaflet', () => ({
-  Marker: ({ children, eventHandlers, position }: any) => (
+vi.mock("react-leaflet", () => ({
+  Marker: ({
+    children,
+    eventHandlers,
+    position,
+  }: {
+    children: React.ReactNode;
+    eventHandlers?: { click?: () => void };
+    position: [number, number];
+  }) => (
     <div
       data-testid="marker"
       data-position={JSON.stringify(position)}
@@ -20,7 +28,13 @@ vi.mock('react-leaflet', () => ({
       {children}
     </div>
   ),
-  Circle: ({ center, radius }: any) => (
+  Circle: ({
+    center,
+    radius,
+  }: {
+    center: [number, number];
+    radius: number;
+  }) => (
     <div
       data-testid="circle"
       data-center={JSON.stringify(center)}
@@ -29,7 +43,7 @@ vi.mock('react-leaflet', () => ({
   ),
 }));
 
-describe('BlueDot', () => {
+describe("BlueDot", () => {
   const mockPosition: DevicePosition = {
     latitude: 48.8566,
     longitude: 2.3522,
@@ -40,71 +54,73 @@ describe('BlueDot', () => {
 
   const mockOnClick = vi.fn();
 
-  describe('Rendering', () => {
-    it('should render marker and accuracy circle', () => {
+  describe("Rendering", () => {
+    it("should render marker and accuracy circle", () => {
       const { getByTestId } = render(
-        <BlueDot position={mockPosition} onClick={mockOnClick} />
+        <BlueDot position={mockPosition} onClick={mockOnClick} />,
       );
 
-      expect(getByTestId('marker')).toBeInTheDocument();
-      expect(getByTestId('circle')).toBeInTheDocument();
+      expect(getByTestId("marker")).toBeInTheDocument();
+      expect(getByTestId("circle")).toBeInTheDocument();
     });
 
-    it('should position marker at correct coordinates', () => {
+    it("should position marker at correct coordinates", () => {
       const { getByTestId } = render(
-        <BlueDot position={mockPosition} onClick={mockOnClick} />
+        <BlueDot position={mockPosition} onClick={mockOnClick} />,
       );
 
-      const marker = getByTestId('marker');
-      const positionData = JSON.parse(marker.getAttribute('data-position') || '[]');
+      const marker = getByTestId("marker");
+      const positionData = JSON.parse(
+        marker.getAttribute("data-position") || "[]",
+      );
 
       expect(positionData[0]).toBe(48.8566);
       expect(positionData[1]).toBe(2.3522);
     });
 
-    it('should render accuracy circle with correct radius', () => {
+    it("should render accuracy circle with correct radius", () => {
       const { getByTestId } = render(
-        <BlueDot position={mockPosition} onClick={mockOnClick} />
+        <BlueDot position={mockPosition} onClick={mockOnClick} />,
       );
 
-      const circle = getByTestId('circle');
+      const circle = getByTestId("circle");
 
-      expect(circle.getAttribute('data-radius')).toBe('10');
+      expect(circle.getAttribute("data-radius")).toBe("10");
     });
 
-    it('should center accuracy circle at marker position', () => {
+    it("should center accuracy circle at marker position", () => {
       const { getByTestId } = render(
-        <BlueDot position={mockPosition} onClick={mockOnClick} />
+        <BlueDot position={mockPosition} onClick={mockOnClick} />,
       );
 
-      const circle = getByTestId('circle');
-      const centerData = JSON.parse(circle.getAttribute('data-center') || '[]');
+      const circle = getByTestId("circle");
+      const centerData = JSON.parse(circle.getAttribute("data-center") || "[]");
 
       expect(centerData[0]).toBe(48.8566);
       expect(centerData[1]).toBe(2.3522);
     });
   });
 
-  describe('Click Behavior', () => {
-    it('should call onClick when marker is clicked', () => {
+  describe("Click Behavior", () => {
+    it("should call onClick when marker is clicked", () => {
       const onClick = vi.fn();
       const { getByTestId } = render(
-        <BlueDot position={mockPosition} onClick={onClick} />
+        <BlueDot position={mockPosition} onClick={onClick} />,
       );
 
-      const marker = getByTestId('marker');
+      const marker = getByTestId("marker");
       marker.click();
 
       expect(onClick).toHaveBeenCalledTimes(1);
     });
 
-    it('should not call onClick when circle is clicked', () => {
+    it("should not call onClick when circle is clicked", () => {
       const onClick = vi.fn();
       const { getByTestId } = render(
-        <BlueDot position={mockPosition} onClick={onClick} />
+        <BlueDot position={mockPosition} onClick={onClick} />,
       );
 
-      const circle = getByTestId('circle');
+      const circle = getByTestId("circle");
       circle.click();
 
       // Circle doesn't have click handler, only marker does
@@ -112,10 +128,10 @@ describe('BlueDot', () => {
     });
   });
 
-  describe('Position Updates', () => {
-    it('should update marker position when position prop changes', () => {
+  describe("Position Updates", () => {
+    it("should update marker position when position prop changes", () => {
       const { getByTestId, rerender } = render(
-        <BlueDot position={mockPosition} onClick={mockOnClick} />
+        <BlueDot position={mockPosition} onClick={mockOnClick} />,
       );
 
       const newPosition: DevicePosition = {
@@ -128,16 +144,18 @@ describe('BlueDot', () => {
 
       rerender(<BlueDot position={newPosition} onClick={mockOnClick} />);
 
-      const marker = getByTestId('marker');
-      const positionData = JSON.parse(marker.getAttribute('data-position') || '[]');
+      const marker = getByTestId("marker");
+      const positionData = JSON.parse(
+        marker.getAttribute("data-position") || "[]",
+      );
 
       expect(positionData[0]).toBe(48.8584);
       expect(positionData[1]).toBe(2.2945);
     });
 
-    it('should update accuracy circle when position changes', () => {
+    it("should update accuracy circle when position changes", () => {
       const { getByTestId, rerender } = render(
-        <BlueDot position={mockPosition} onClick={mockOnClick} />
+        <BlueDot position={mockPosition} onClick={mockOnClick} />,
       );
 
       const newPosition: DevicePosition = {
@@ -147,14 +165,14 @@ describe('BlueDot', () => {
 
       rerender(<BlueDot position={newPosition} onClick={mockOnClick} />);
 
-      const circle = getByTestId('circle');
+      const circle = getByTestId("circle");
 
-      expect(circle.getAttribute('data-radius')).toBe('25');
+      expect(circle.getAttribute("data-radius")).toBe("25");
     });
   });
 
-  describe('Edge Cases', () => {
-    it('should handle very high accuracy values', () => {
+  describe("Edge Cases", () => {
+    it("should handle very high accuracy values", () => {
       const highAccuracyPosition: DevicePosition = {
         latitude: 48.8566,
         longitude: 2.3522,
@@ -164,15 +182,15 @@ describe('BlueDot', () => {
       };
 
       const { getByTestId } = render(
-        <BlueDot position={highAccuracyPosition} onClick={mockOnClick} />
+        <BlueDot position={highAccuracyPosition} onClick={mockOnClick} />,
       );
 
-      const circle = getByTestId('circle');
+      const circle = getByTestId("circle");
 
-      expect(circle.getAttribute('data-radius')).toBe('1000');
+      expect(circle.getAttribute("data-radius")).toBe("1000");
     });
 
-    it('should handle very low accuracy values', () => {
+    it("should handle very low accuracy values", () => {
       const lowAccuracyPosition: DevicePosition = {
         latitude: 48.8566,
         longitude: 2.3522,
@@ -182,15 +200,15 @@ describe('BlueDot', () => {
       };
 
       const { getByTestId } = render(
-        <BlueDot position={lowAccuracyPosition} onClick={mockOnClick} />
+        <BlueDot position={lowAccuracyPosition} onClick={mockOnClick} />,
       );
 
-      const circle = getByTestId('circle');
+      const circle = getByTestId("circle");
 
-      expect(circle.getAttribute('data-radius')).toBe('1');
+      expect(circle.getAttribute("data-radius")).toBe("1");
     });
 
-    it('should handle extreme latitude/longitude values', () => {
+    it("should handle extreme latitude/longitude values", () => {
       const extremePosition: DevicePosition = {
         latitude: 89.999,
         longitude: 179.999,
@@ -200,11 +218,13 @@ describe('BlueDot', () => {
       };
 
       const { getByTestId } = render(
-        <BlueDot position={extremePosition} onClick={mockOnClick} />
+        <BlueDot position={extremePosition} onClick={mockOnClick} />,
       );
 
-      const marker = getByTestId('marker');
-      const positionData = JSON.parse(marker.getAttribute('data-position') || '[]');
+      const marker = getByTestId("marker");
+      const positionData = JSON.parse(
+        marker.getAttribute("data-position") || "[]",
+      );
 
       expect(positionData[0]).toBe(89.999);
       expect(positionData[1]).toBe(179.999);

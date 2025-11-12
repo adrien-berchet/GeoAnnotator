@@ -1,9 +1,10 @@
 # Generated manually for restricting tags by user
 
-from django.conf import settings
-from django.db import migrations, models
 import django.db.models.deletion
 import django.db.models.functions.text
+from django.conf import settings
+from django.db import migrations
+from django.db import models
 
 
 def assign_tags_to_first_user(apps, schema_editor):
@@ -11,7 +12,7 @@ def assign_tags_to_first_user(apps, schema_editor):
     Assign all existing tags to the first user in the system.
     If no users exist, tags will be deleted.
     """
-    Tag = apps.get_model('points', 'Tag')
+    Tag = apps.get_model("points", "Tag")
     User = apps.get_model(settings.AUTH_USER_MODEL)
 
     # Get first user
@@ -26,7 +27,6 @@ def assign_tags_to_first_user(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ("points", "0007_pointtype_unique_pointtype_name_per_user"),
@@ -51,10 +51,7 @@ class Migration(migrations.Migration):
             ),
         ),
         # Assign existing tags to first user
-        migrations.RunPython(
-            assign_tags_to_first_user,
-            reverse_code=migrations.RunPython.noop
-        ),
+        migrations.RunPython(assign_tags_to_first_user, reverse_code=migrations.RunPython.noop),
         # Make owner field required
         migrations.AlterField(
             model_name="tag",

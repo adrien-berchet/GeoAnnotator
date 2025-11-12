@@ -5,18 +5,18 @@
  * Clicking the marker opens the point creation panel with the device position pre-filled.
  */
 
-import { useEffect, useRef } from 'react';
-import { Marker, Circle, Polygon } from 'react-leaflet';
-import L from 'leaflet';
-import type { DevicePosition } from '../../hooks/useDevicePosition';
-import './BlueDot.css';
+import { useEffect, useRef } from "react";
+import { Marker, Circle, Polygon } from "react-leaflet";
+import L from "leaflet";
+import type { DevicePosition } from "../../hooks/useDevicePosition";
+import "./BlueDot.css";
 
 /**
  * Create custom blue dot icon for the marker.
  */
 const createBlueDotIcon = () => {
   return L.divIcon({
-    className: 'blue-dot-icon',
+    className: "blue-dot-icon",
     html: `
       <div class="blue-dot-outer" data-testid="blue-dot">
         <div class="blue-dot-inner"></div>
@@ -42,7 +42,7 @@ const calculateConeCoordinates = (
   lng: number,
   heading: number,
   distance: number = 50,
-  angle: number = 45
+  angle: number = 45,
 ): [number, number][] => {
   // Convert heading to radians (0 degrees is north, clockwise)
   const headingRad = (heading * Math.PI) / 180;
@@ -53,17 +53,28 @@ const calculateConeCoordinates = (
 
   // Calculate tip of the cone
   const tipLat = lat + (distance / R) * Math.cos(headingRad) * (180 / Math.PI);
-  const tipLng = lng + (distance / R) * Math.sin(headingRad) * (180 / Math.PI) / Math.cos(lat * Math.PI / 180);
+  const tipLng =
+    lng +
+    ((distance / R) * Math.sin(headingRad) * (180 / Math.PI)) /
+      Math.cos((lat * Math.PI) / 180);
 
   // Calculate left edge of the cone
   const leftHeading = headingRad - halfAngleRad;
-  const leftLat = lat + (distance / R) * Math.cos(leftHeading) * (180 / Math.PI);
-  const leftLng = lng + (distance / R) * Math.sin(leftHeading) * (180 / Math.PI) / Math.cos(lat * Math.PI / 180);
+  const leftLat =
+    lat + (distance / R) * Math.cos(leftHeading) * (180 / Math.PI);
+  const leftLng =
+    lng +
+    ((distance / R) * Math.sin(leftHeading) * (180 / Math.PI)) /
+      Math.cos((lat * Math.PI) / 180);
 
   // Calculate right edge of the cone
   const rightHeading = headingRad + halfAngleRad;
-  const rightLat = lat + (distance / R) * Math.cos(rightHeading) * (180 / Math.PI);
-  const rightLng = lng + (distance / R) * Math.sin(rightHeading) * (180 / Math.PI) / Math.cos(lat * Math.PI / 180);
+  const rightLat =
+    lat + (distance / R) * Math.cos(rightHeading) * (180 / Math.PI);
+  const rightLng =
+    lng +
+    ((distance / R) * Math.sin(rightHeading) * (180 / Math.PI)) /
+      Math.cos((lat * Math.PI) / 180);
 
   // Return the cone as a triangle: center, left, tip, right, back to center
   return [
@@ -96,16 +107,17 @@ export function BlueDot({ position, onClick }: BlueDotProps) {
     if (marker) {
       const element = marker.getElement();
       if (element) {
-        element.setAttribute('data-lat', latitude.toString());
-        element.setAttribute('data-lng', longitude.toString());
+        element.setAttribute("data-lat", latitude.toString());
+        element.setAttribute("data-lng", longitude.toString());
       }
     }
   }, [latitude, longitude]);
 
   // Calculate cone coordinates if heading is available
-  const coneCoordinates = heading !== null && heading >= 0
-    ? calculateConeCoordinates(latitude, longitude, heading)
-    : null;
+  const coneCoordinates =
+    heading !== null && heading >= 0
+      ? calculateConeCoordinates(latitude, longitude, heading)
+      : null;
 
   return (
     <>
@@ -114,8 +126,8 @@ export function BlueDot({ position, onClick }: BlueDotProps) {
         center={[latitude, longitude]}
         radius={accuracy}
         pathOptions={{
-          color: '#4285F4',
-          fillColor: '#4285F4',
+          color: "#4285F4",
+          fillColor: "#4285F4",
           fillOpacity: 0.1,
           weight: 1,
         }}
@@ -126,8 +138,8 @@ export function BlueDot({ position, onClick }: BlueDotProps) {
         <Polygon
           positions={coneCoordinates}
           pathOptions={{
-            color: '#4285F4',
-            fillColor: '#4285F4',
+            color: "#4285F4",
+            fillColor: "#4285F4",
             fillOpacity: 0.3,
             weight: 2,
           }}

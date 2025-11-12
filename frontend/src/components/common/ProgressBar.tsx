@@ -16,7 +16,7 @@ interface ProgressBarProps {
 export function ProgressBar({
   progress,
   label,
-  showPercentage = true
+  showPercentage = true,
 }: ProgressBarProps) {
   // Clamp progress between 0 and 100
   const clampedProgress = Math.min(100, Math.max(0, progress));

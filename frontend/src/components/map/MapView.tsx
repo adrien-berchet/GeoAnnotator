@@ -4,12 +4,12 @@
  * Displays interactive Leaflet map with tile layer, viewport management, and clustering.
  */
 
-import { useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, useMap } from 'react-leaflet';
-import type { Map as LeafletMap } from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-import { initializeLeaflet } from '../../utils/leaflet-config';
-import type { TileLayer as TileLayerType } from './MapLayerSelector';
+import { useEffect, useRef } from "react";
+import { MapContainer, TileLayer, useMap } from "react-leaflet";
+import type { Map as LeafletMap } from "leaflet";
+import "leaflet/dist/leaflet.css";
+import { initializeLeaflet } from "../../utils/leaflet-config";
+import type { TileLayer as TileLayerType } from "./MapLayerSelector";
 
 // Initialize Leaflet configuration
 initializeLeaflet();
@@ -25,7 +25,11 @@ interface MapViewProps {
 /**
  * Component to handle map instance after initialization.
  */
-function MapEventHandler({ onMapReady }: { onMapReady?: (map: LeafletMap) => void }) {
+function MapEventHandler({
+  onMapReady,
+}: {
+  onMapReady?: (map: LeafletMap) => void;
+}) {
   const map = useMap();
 
   useEffect(() => {
@@ -51,10 +55,11 @@ export function MapView({
 
   // Default tile layer (OpenStreetMap)
   const defaultLayer = {
-    id: 'osm',
-    name: 'Street Map',
-    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    id: "osm",
+    name: "Street Map",
+    url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    attribution:
+      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     maxZoom: 19,
   };
 
@@ -65,7 +70,7 @@ export function MapView({
       <MapContainer
         center={center}
         zoom={zoom}
-        style={{ height: '100%', width: '100%' }}
+        style={{ height: "100%", width: "100%" }}
         ref={mapRef}
       >
         {/* Dynamic tile layer */}

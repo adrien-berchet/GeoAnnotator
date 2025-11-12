@@ -4,10 +4,10 @@
  * Allows selecting existing tags or creating new ones.
  */
 
-import { useState, useEffect, useRef } from 'react';
-import type { Tag } from '../../types/point';
-import { useLanguage } from '../../contexts/LanguageContext';
-import './TagSelector.css';
+import { useState, useEffect, useRef } from "react";
+import type { Tag } from "../../types/point";
+import { useLanguage } from "../../contexts/LanguageContext";
+import "./TagSelector.css";
 
 interface TagSelectorProps {
   selectedTags: string[];
@@ -30,7 +30,7 @@ export function TagSelector({
   helpText,
 }: TagSelectorProps) {
   const { t } = useLanguage();
-  const [inputValue, setInputValue] = useState('');
+  const [inputValue, setInputValue] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [filteredTags, setFilteredTags] = useState<Tag[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -45,15 +45,15 @@ export function TagSelector({
     if (query) {
       // Filter tags that match the query and are not already selected
       const filtered = availableTags.filter(
-        tag =>
+        (tag) =>
           tag.name.toLowerCase().includes(query) &&
-          !selectedTags.includes(tag.name)
+          !selectedTags.includes(tag.name),
       );
       setFilteredTags(filtered);
     } else {
       // Show all available tags (not selected) when input is empty
       const unselectedTags = availableTags.filter(
-        tag => !selectedTags.includes(tag.name)
+        (tag) => !selectedTags.includes(tag.name),
       );
       setFilteredTags(unselectedTags);
     }
@@ -74,8 +74,8 @@ export function TagSelector({
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   /**
@@ -85,7 +85,7 @@ export function TagSelector({
     const trimmedTag = tagName.trim();
     if (trimmedTag && !selectedTags.includes(trimmedTag)) {
       onTagsChange([...selectedTags, trimmedTag]);
-      setInputValue('');
+      setInputValue("");
       setShowSuggestions(false);
     }
   };
@@ -94,19 +94,23 @@ export function TagSelector({
    * Remove a tag.
    */
   const removeTag = (tagName: string) => {
-    onTagsChange(selectedTags.filter(t => t !== tagName));
+    onTagsChange(selectedTags.filter((t) => t !== tagName));
   };
 
   /**
    * Handle input key press.
    */
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       e.preventDefault();
       if (inputValue.trim()) {
         addTag(inputValue);
       }
-    } else if (e.key === 'Backspace' && !inputValue && selectedTags.length > 0) {
+    } else if (
+      e.key === "Backspace" &&
+      !inputValue &&
+      selectedTags.length > 0
+    ) {
       // Remove last tag on backspace if input is empty
       removeTag(selectedTags[selectedTags.length - 1]);
     }
@@ -123,11 +127,7 @@ export function TagSelector({
   return (
     <div className="tag-selector">
       {/* Label */}
-      {label && (
-        <label className="tag-selector-label">
-          {label}
-        </label>
-      )}
+      {label && <label className="tag-selector-label">{label}</label>}
 
       {/* Selected tags */}
       <div className="selected-tags">
@@ -139,7 +139,10 @@ export function TagSelector({
                 type="button"
                 className="tag-remove"
                 onClick={() => removeTag(tag)}
-                aria-label={t('tags.removeTag', 'Remove {tag}').replace('{tag}', tag)}
+                aria-label={t("tags.removeTag", "Remove {tag}").replace(
+                  "{tag}",
+                  tag,
+                )}
               >
                 ×
               </button>
@@ -159,7 +162,11 @@ export function TagSelector({
             // Show suggestions on focus, even if input is empty
             setShowSuggestions(true);
           }}
-          placeholder={selectedTags.length === 0 ? t('tags.selectorPlaceholder', 'Type to search or add tags...') : ''}
+          placeholder={
+            selectedTags.length === 0
+              ? t("tags.selectorPlaceholder", "Type to search or add tags...")
+              : ""
+          }
           disabled={disabled}
         />
       </div>
@@ -169,7 +176,9 @@ export function TagSelector({
         <div ref={suggestionsRef} className="tag-suggestions">
           {filteredTags.length > 0 ? (
             <>
-              <div className="suggestions-header">{t('tags.selectorExistingTags', 'Existing tags:')}</div>
+              <div className="suggestions-header">
+                {t("tags.selectorExistingTags", "Existing tags:")}
+              </div>
               {filteredTags.map((tag) => (
                 <button
                   key={tag.id}
@@ -185,15 +194,20 @@ export function TagSelector({
 
           {/* Option to create new tag */}
           {inputValue.trim() &&
-            !availableTags.some(t => t.name.toLowerCase() === inputValue.toLowerCase()) && (
+            !availableTags.some(
+              (t) => t.name.toLowerCase() === inputValue.toLowerCase(),
+            ) && (
               <>
-                {filteredTags.length > 0 && <div className="suggestions-divider" />}
+                {filteredTags.length > 0 && (
+                  <div className="suggestions-divider" />
+                )}
                 <button
                   type="button"
                   className="tag-suggestion create-new"
                   onClick={() => handleSuggestionClick(inputValue.trim())}
                 >
-                  ✨ {t('tags.selectorCreateNew', 'Create new tag:')} <strong>{inputValue.trim()}</strong>
+                  ✨ {t("tags.selectorCreateNew", "Create new tag:")}{" "}
+                  <strong>{inputValue.trim()}</strong>
                 </button>
               </>
             )}
@@ -201,11 +215,7 @@ export function TagSelector({
       )}
 
       {/* Help text */}
-      {helpText && (
-        <small className="tag-selector-help">
-          {helpText}
-        </small>
-      )}
+      {helpText && <small className="tag-selector-help">{helpText}</small>}
     </div>
   );
 }

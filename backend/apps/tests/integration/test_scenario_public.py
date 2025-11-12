@@ -15,7 +15,6 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from apps.authentication.models import User
-from apps.points.models import GPSPoint
 
 
 @pytest.mark.django_db
@@ -27,9 +26,7 @@ class TestScenario7PublicPointBrowsing:
         self.client = APIClient()
 
         # Create and authenticate Alice (point owner)
-        self.alice = User.objects.create_user(
-            email="alice@example.com", password="SecurePass123"
-        )
+        self.alice = User.objects.create_user(email="alice@example.com", password="SecurePass123")
         alice_login = self.client.post(
             reverse("authentication:login"),
             {"email": "alice@example.com", "password": "SecurePass123"},
@@ -38,9 +35,7 @@ class TestScenario7PublicPointBrowsing:
         self.alice_token = alice_login.data["access"]
 
         # Create and authenticate Bob (viewer)
-        self.bob = User.objects.create_user(
-            email="bob@example.com", password="SecurePass456"
-        )
+        self.bob = User.objects.create_user(email="bob@example.com", password="SecurePass456")
         bob_login = self.client.post(
             reverse("authentication:login"),
             {"email": "bob@example.com", "password": "SecurePass456"},
@@ -193,7 +188,10 @@ class TestScenario7PublicPointBrowsing:
 
         # Then
         assert response.status_code == status.HTTP_403_FORBIDDEN
-        assert "ACCESS_DENIED" in str(response.data).upper() or "permission" in str(response.data).lower()
+        assert (
+            "ACCESS_DENIED" in str(response.data).upper()
+            or "permission" in str(response.data).lower()
+        )
 
     def test_step_5_anonymous_user_browses_public_points(self):
         """
@@ -225,9 +223,6 @@ class TestScenario7PublicPointBrowsing:
         assert response.status_code in [status.HTTP_200_OK, status.HTTP_401_UNAUTHORIZED]
 
         if response.status_code == status.HTTP_200_OK:
-            # If anonymous access is allowed, verify public points are returned
-            point_titles = [p["title"] for p in response.data["results"]]
-            # May or may not include the point depending on implementation
             # Just verify the response structure is correct
             assert "results" in response.data
 
@@ -259,9 +254,7 @@ class TestScenario7PublicPointBrowsing:
 
         # Step 3: Alice makes it private
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.alice_token}")
-        update_response = self.client.patch(
-            point_url, {"is_public": False}, format="json"
-        )
+        update_response = self.client.patch(point_url, {"is_public": False}, format="json")
         assert update_response.status_code == status.HTTP_200_OK
 
         # Step 4: Bob can no longer view it
@@ -280,7 +273,7 @@ class TestScenario7PublicPointBrowsing:
         # Given - Alice creates public and private points with searchable text
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.alice_token}")
 
-        public_response = self.client.post(
+        self.client.post(
             self.points_url,
             {
                 "title": "Public Garden Landmark",
@@ -291,7 +284,7 @@ class TestScenario7PublicPointBrowsing:
             format="json",
         )
 
-        private_response = self.client.post(
+        self.client.post(
             self.points_url,
             {
                 "title": "Private Garden Secret",
@@ -327,7 +320,7 @@ class TestScenario7PublicPointBrowsing:
         # Given - Alice creates public and private points
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.alice_token}")
 
-        public_response = self.client.post(
+        self.client.post(
             self.points_url,
             {
                 "title": "Alice's Public",
@@ -338,7 +331,7 @@ class TestScenario7PublicPointBrowsing:
             format="json",
         )
 
-        private_response = self.client.post(
+        self.client.post(
             self.points_url,
             {
                 "title": "Alice's Private",

@@ -5,9 +5,9 @@
  * and automatic token refresh.
  */
 
-import { createContext, useContext, useState, useEffect } from 'react';
-import type { ReactNode } from 'react';
-import type { User, AuthState } from '../types/auth';
+import { createContext, useContext, useState, useEffect } from "react";
+import type { ReactNode } from "react";
+import type { User, AuthState } from "../types/auth";
 
 interface AuthContextType extends AuthState {
   login: (accessToken: string, refreshToken: string, user: User) => void;
@@ -22,9 +22,9 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 /**
  * Token storage keys.
  */
-const ACCESS_TOKEN_KEY = 'access_token';
-const REFRESH_TOKEN_KEY = 'refresh_token';
-const USER_KEY = 'user';
+const ACCESS_TOKEN_KEY = "access_token";
+const REFRESH_TOKEN_KEY = "refresh_token";
+const USER_KEY = "user";
 
 /**
  * Authentication provider component.
@@ -60,7 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           });
         }
       } catch (error) {
-        console.error('Failed to initialize auth:', error);
+        console.error("Failed to initialize auth:", error);
         setState({
           user: null,
           isAuthenticated: false,
@@ -95,7 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem(REFRESH_TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
     // Clear map type session tracking so preference is restored on next login
-    localStorage.removeItem('lastUserMapTypeLoaded');
+    localStorage.removeItem("lastUserMapTypeLoaded");
 
     setState({
       user: null,
@@ -145,11 +145,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 /**
  * Hook to use authentication context.
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth(): AuthContextType {
   const context = useContext(AuthContext);
 
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
 
   return context;

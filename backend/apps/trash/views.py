@@ -1,19 +1,21 @@
 """
 Trash views for managing soft-deleted points and annotations.
 """
-from rest_framework import viewsets, status
+
+from rest_framework import status
+from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from .models import Trash, AnnotationTrash
-from .serializers import (
-    TrashSerializer, AnnotationTrashSerializer,
-    RestoreAnnotationTrashSerializer, DeleteAnnotationPermanentlySerializer,
-    EmptyAnnotationTrashSerializer
-)
-from .services import TrashService, AnnotationTrashService
 from apps.sharing.services import PermissionService
+
+from .models import AnnotationTrash
+from .models import Trash
+from .serializers import AnnotationTrashSerializer
+from .serializers import TrashSerializer
+from .services import AnnotationTrashService
+from .services import TrashService
 
 
 class TrashViewSet(viewsets.ReadOnlyModelViewSet):
@@ -25,6 +27,7 @@ class TrashViewSet(viewsets.ReadOnlyModelViewSet):
     - POST /api/trash/{id}/restore/ - Restore from trash
     - DELETE /api/trash/{id}/permanent/ - Permanently delete
     """
+
     permission_classes = [IsAuthenticated]
     serializer_class = TrashSerializer
     pagination_class = None  # Disable pagination for trash
@@ -39,23 +42,22 @@ class TrashViewSet(viewsets.ReadOnlyModelViewSet):
         try:
             trash = Trash.objects.get(gps_point_id=pk)
         except Trash.DoesNotExist:
-            return Response(
-                {'error': 'TRASH_NOT_FOUND'},
-                status=status.HTTP_404_NOT_FOUND
-            )
+            return Response({"error": "TRASH_NOT_FOUND"}, status=status.HTTP_404_NOT_FOUND)
 
         # Check if user is owner
         if not PermissionService.is_owner(trash.gps_point, request.user):
             return Response(
-                {'error': 'Only owner can restore points'},
-                status=status.HTTP_403_FORBIDDEN
+                {"error": "Only owner can restore points"}, status=status.HTTP_403_FORBIDDEN
             )
 
         # Check if expired
         if trash.is_expired:
             return Response(
-                {'error': 'PERMANENTLY_DELETED', 'message': 'This point has been permanently deleted (>30 days)'},
-                status=status.HTTP_410_GONE
+                {
+                    "error": "PERMANENTLY_DELETED",
+                    "message": "This point has been permanently deleted (>30 days)",
+                },
+                status=status.HTTP_410_GONE,
             )
 
         # Restore via service
@@ -63,7 +65,8 @@ class TrashViewSet(viewsets.ReadOnlyModelViewSet):
 
         # Return the restored point data
         from apps.points.serializers import GPSPointSerializer
-        serializer = GPSPointSerializer(restored_point, context={'request': request})
+
+        serializer = GPSPointSerializer(restored_point, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def permanent_delete(self, request, pk=None):
@@ -72,16 +75,13 @@ class TrashViewSet(viewsets.ReadOnlyModelViewSet):
         try:
             trash = Trash.objects.get(gps_point_id=pk)
         except Trash.DoesNotExist:
-            return Response(
-                {'error': 'TRASH_NOT_FOUND'},
-                status=status.HTTP_404_NOT_FOUND
-            )
+            return Response({"error": "TRASH_NOT_FOUND"}, status=status.HTTP_404_NOT_FOUND)
 
         # Check if user is owner
         if not PermissionService.is_owner(trash.gps_point, request.user):
             return Response(
-                {'error': 'Only owner can permanently delete points'},
-                status=status.HTTP_403_FORBIDDEN
+                {"error": "Only owner can permanently delete points"},
+                status=status.HTTP_403_FORBIDDEN,
             )
 
         # Permanently delete via service
@@ -89,20 +89,20 @@ class TrashViewSet(viewsets.ReadOnlyModelViewSet):
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @action(detail=False, methods=['delete'])
+    @action(detail=False, methods=["delete"])
     def empty(self, request):
         """Empty entire trash for current user."""
         count = TrashService.empty_trash(request.user)
 
         return Response(
             {
-                'message': f'Trash emptied: {count} items permanently deleted',
-                'deleted_count': count
+                "message": f"Trash emptied: {count} items permanently deleted",
+                "deleted_count": count,
             },
-            status=status.HTTP_200_OK
+            status=status.HTTP_200_OK,
         )
 
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=["get"])
     def stats(self, request):
         """Get trash statistics."""
         stats = TrashService.get_trash_stats(request.user)
@@ -119,6 +119,7 @@ class AnnotationTrashViewSet(viewsets.ReadOnlyModelViewSet):
     - POST /api/trash/annotations/{id}/restore/ - Restore annotation from trash
     - DELETE /api/trash/annotations/{id}/permanent/ - Permanently delete annotation
     """
+
     permission_classes = [IsAuthenticated]
     serializer_class = AnnotationTrashSerializer
     pagination_class = None  # Disable pagination for trash
@@ -134,22 +135,24 @@ class AnnotationTrashViewSet(viewsets.ReadOnlyModelViewSet):
             annotation_trash = AnnotationTrash.objects.get(annotation_id=pk)
         except AnnotationTrash.DoesNotExist:
             return Response(
-                {'error': 'ANNOTATION_TRASH_NOT_FOUND'},
-                status=status.HTTP_404_NOT_FOUND
+                {"error": "ANNOTATION_TRASH_NOT_FOUND"}, status=status.HTTP_404_NOT_FOUND
             )
 
         # Check if user is point owner
         if not PermissionService.is_owner(annotation_trash.annotation.gps_point, request.user):
             return Response(
-                {'error': 'Only point owner can restore annotations'},
-                status=status.HTTP_403_FORBIDDEN
+                {"error": "Only point owner can restore annotations"},
+                status=status.HTTP_403_FORBIDDEN,
             )
 
         # Check if expired
         if annotation_trash.is_expired:
             return Response(
-                {'error': 'PERMANENTLY_DELETED', 'message': 'This annotation has been permanently deleted (>30 days)'},
-                status=status.HTTP_410_GONE
+                {
+                    "error": "PERMANENTLY_DELETED",
+                    "message": "This annotation has been permanently deleted (>30 days)",
+                },
+                status=status.HTTP_410_GONE,
             )
 
         # Restore via service
@@ -157,7 +160,8 @@ class AnnotationTrashViewSet(viewsets.ReadOnlyModelViewSet):
 
         # Return the restored annotation data
         from apps.annotations.serializers import AnnotationSerializer
-        serializer = AnnotationSerializer(restored_annotation, context={'request': request})
+
+        serializer = AnnotationSerializer(restored_annotation, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def permanent_delete(self, request, pk=None):
@@ -167,15 +171,14 @@ class AnnotationTrashViewSet(viewsets.ReadOnlyModelViewSet):
             annotation_trash = AnnotationTrash.objects.get(annotation_id=pk)
         except AnnotationTrash.DoesNotExist:
             return Response(
-                {'error': 'ANNOTATION_TRASH_NOT_FOUND'},
-                status=status.HTTP_404_NOT_FOUND
+                {"error": "ANNOTATION_TRASH_NOT_FOUND"}, status=status.HTTP_404_NOT_FOUND
             )
 
         # Check if user is point owner
         if not PermissionService.is_owner(annotation_trash.annotation.gps_point, request.user):
             return Response(
-                {'error': 'Only point owner can permanently delete annotations'},
-                status=status.HTTP_403_FORBIDDEN
+                {"error": "Only point owner can permanently delete annotations"},
+                status=status.HTTP_403_FORBIDDEN,
             )
 
         # Permanently delete via service
@@ -183,20 +186,20 @@ class AnnotationTrashViewSet(viewsets.ReadOnlyModelViewSet):
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @action(detail=False, methods=['delete'])
+    @action(detail=False, methods=["delete"])
     def empty(self, request):
         """Empty entire annotation trash for current user."""
         count = AnnotationTrashService.empty_trash(request.user)
 
         return Response(
             {
-                'message': f'Annotation trash emptied: {count} items permanently deleted',
-                'deleted_count': count
+                "message": f"Annotation trash emptied: {count} items permanently deleted",
+                "deleted_count": count,
             },
-            status=status.HTTP_200_OK
+            status=status.HTTP_200_OK,
         )
 
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=["get"])
     def stats(self, request):
         """Get annotation trash statistics."""
         stats = AnnotationTrashService.get_trash_stats(request.user)

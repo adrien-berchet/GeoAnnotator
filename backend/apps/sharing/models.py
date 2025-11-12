@@ -6,6 +6,7 @@ Handles sharing GPS points with other users via email invitations.
 
 import uuid
 from datetime import timedelta
+
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
@@ -28,47 +29,43 @@ class Share(models.Model):
     """
 
     # Permission level choices
-    PERMISSION_VIEW = 'view'
-    PERMISSION_EDIT = 'edit'
-    PERMISSION_TRANSFER = 'transfer'
+    PERMISSION_VIEW = "view"
+    PERMISSION_EDIT = "edit"
+    PERMISSION_TRANSFER = "transfer"
 
     PERMISSION_CHOICES = [
-        (PERMISSION_VIEW, 'View'),
-        (PERMISSION_EDIT, 'Edit'),
-        (PERMISSION_TRANSFER, 'Transfer'),
+        (PERMISSION_VIEW, "View"),
+        (PERMISSION_EDIT, "Edit"),
+        (PERMISSION_TRANSFER, "Transfer"),
     ]
 
     # Invitation status
-    STATUS_PENDING = 'pending'
-    STATUS_ACCEPTED = 'accepted'
+    STATUS_PENDING = "pending"
+    STATUS_ACCEPTED = "accepted"
 
     # Token expiry: 7 days
     INVITATION_EXPIRY_DAYS = 7
 
     id = models.UUIDField(
-        primary_key=True,
-        default=uuid.uuid4,
-        editable=False,
-        help_text="Unique share identifier"
+        primary_key=True, default=uuid.uuid4, editable=False, help_text="Unique share identifier"
     )
 
     gps_point = models.ForeignKey(
-        'points.GPSPoint',
+        "points.GPSPoint",
         on_delete=models.CASCADE,
-        related_name='shares',
-        help_text="Shared GPS point"
+        related_name="shares",
+        help_text="Shared GPS point",
     )
 
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='shares_sent',
-        help_text="Point owner (who created the share)"
+        related_name="shares_sent",
+        help_text="Point owner (who created the share)",
     )
 
     recipient_email = models.EmailField(
-        db_index=True,
-        help_text="Recipient email (may not be registered yet)"
+        db_index=True, help_text="Recipient email (may not be registered yet)"
     )
 
     recipient_user = models.ForeignKey(
@@ -76,8 +73,8 @@ class Share(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='shares_received',
-        help_text="Recipient user (set when invitation accepted)"
+        related_name="shares_received",
+        help_text="Recipient user (set when invitation accepted)",
     )
 
     permission_level = models.CharField(
@@ -85,57 +82,45 @@ class Share(models.Model):
         choices=PERMISSION_CHOICES,
         default=PERMISSION_VIEW,
         db_index=True,
-        help_text="Permission level (view/edit/transfer)"
+        help_text="Permission level (view/edit/transfer)",
     )
 
     invitation_token = models.UUIDField(
-        default=uuid.uuid4,
-        unique=True,
-        db_index=True,
-        help_text="Token for email invitation link"
+        default=uuid.uuid4, unique=True, db_index=True, help_text="Token for email invitation link"
     )
 
     invitation_sent_at = models.DateTimeField(
-        auto_now_add=True,
-        help_text="Invitation email sent timestamp"
+        auto_now_add=True, help_text="Invitation email sent timestamp"
     )
 
     accepted_at = models.DateTimeField(
-        null=True,
-        blank=True,
-        help_text="Invitation acceptance timestamp"
+        null=True, blank=True, help_text="Invitation acceptance timestamp"
     )
 
     is_active = models.BooleanField(
-        default=True,
-        db_index=True,
-        help_text="Share is active (false when point trashed)"
+        default=True, db_index=True, help_text="Share is active (false when point trashed)"
     )
 
-    created_at = models.DateTimeField(
-        auto_now_add=True,
-        help_text="Share creation timestamp"
-    )
+    created_at = models.DateTimeField(auto_now_add=True, help_text="Share creation timestamp")
 
     class Meta:
-        db_table = 'shares'
-        verbose_name = 'Share'
-        verbose_name_plural = 'Shares'
+        db_table = "shares"
+        verbose_name = "Share"
+        verbose_name_plural = "Shares"
         constraints = [
             # No duplicate shares to the same email for a point
             models.UniqueConstraint(
-                fields=['gps_point', 'recipient_email'],
-                name='unique_share_per_point_email'
+                fields=["gps_point", "recipient_email"], name="unique_share_per_point_email"
             )
         ]
         indexes = [
-            models.Index(fields=['gps_point'], name='idx_share_point'),
-            models.Index(fields=['recipient_email'], name='idx_share_recipient_email'),
-            models.Index(fields=['recipient_user'], name='idx_share_recipient_user'),
-            models.Index(fields=['invitation_token'], name='idx_share_token'),
-            models.Index(fields=['is_active'], name='idx_share_active'),
+            models.Index(fields=["gps_point"], name="idx_share_point"),
+            models.Index(fields=["recipient_email"], name="idx_share_recipient_email"),
+            models.Index(fields=["recipient_user"], name="idx_share_recipient_user"),
+            models.Index(fields=["invitation_token"], name="idx_share_token"),
+            models.Index(fields=["is_active"], name="idx_share_active"),
         ]
-        ordering = ['-created_at']
+        ordering = ["-created_at"]
 
     @property
     def invitation_status(self):
@@ -174,18 +159,18 @@ class Share(models.Model):
 
         self.accepted_at = timezone.now()
         self.recipient_user = user
-        self.save(update_fields=['accepted_at', 'recipient_user'])
+        self.save(update_fields=["accepted_at", "recipient_user"])
         return True
 
     def deactivate(self):
         """Deactivate share (when point is trashed)."""
         self.is_active = False
-        self.save(update_fields=['is_active'])
+        self.save(update_fields=["is_active"])
 
     def reactivate(self):
         """Reactivate share (when point is restored from trash)."""
         self.is_active = True
-        self.save(update_fields=['is_active'])
+        self.save(update_fields=["is_active"])
 
     def has_permission(self, permission_level):
         """

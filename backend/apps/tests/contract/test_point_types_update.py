@@ -13,9 +13,7 @@ from rest_framework import status
 class TestUpdatePointTypeContract:
     """Contract tests for updating point types."""
 
-    def test_update_point_type_returns_200_with_object(
-        self, authenticated_client_alice
-    ):
+    def test_update_point_type_returns_200_with_object(self, authenticated_client_alice):
         """
         Test that PATCH /api/point-types/{id}/ returns 200 with updated object.
 
@@ -26,34 +24,19 @@ class TestUpdatePointTypeContract:
         """
         # First create a point type
         url_list = reverse("point-types:list")
-        payload = {
-            "names": {"en": "Tree"},
-            "creation_language": "en",
-            "visibility": "private"
-        }
-        create_response = authenticated_client_alice.post(
-            url_list, payload, format="json"
-        )
+        payload = {"names": {"en": "Tree"}, "creation_language": "en", "visibility": "private"}
+        create_response = authenticated_client_alice.post(url_list, payload, format="json")
         point_type_id = create_response.data["id"]
 
         # Now update it with a French translation
         url_detail = reverse("point-types:detail", args=[point_type_id])
-        update_payload = {
-            "names": {
-                "en": "Tree",
-                "fr": "Arbre"
-            }
-        }
-        response = authenticated_client_alice.patch(
-            url_detail, update_payload, format="json"
-        )
+        update_payload = {"names": {"en": "Tree", "fr": "Arbre"}}
+        response = authenticated_client_alice.patch(url_detail, update_payload, format="json")
 
         assert response.status_code == status.HTTP_200_OK
         assert isinstance(response.data, dict)
 
-    def test_update_point_type_response_schema(
-        self, authenticated_client_alice
-    ):
+    def test_update_point_type_response_schema(self, authenticated_client_alice):
         """
         Test that updated point type has the correct schema.
 
@@ -67,28 +50,15 @@ class TestUpdatePointTypeContract:
         """
         # Create a point type
         url_list = reverse("point-types:list")
-        payload = {
-            "names": {"en": "Lake"},
-            "creation_language": "en",
-            "visibility": "public"
-        }
-        create_response = authenticated_client_alice.post(
-            url_list, payload, format="json"
-        )
+        payload = {"names": {"en": "Lake"}, "creation_language": "en", "visibility": "public"}
+        create_response = authenticated_client_alice.post(url_list, payload, format="json")
         point_type_id = create_response.data["id"]
         original_owner = create_response.data["owner"]
 
         # Update with Spanish translation
         url_detail = reverse("point-types:detail", args=[point_type_id])
-        update_payload = {
-            "names": {
-                "en": "Lake",
-                "es": "Lago"
-            }
-        }
-        response = authenticated_client_alice.patch(
-            url_detail, update_payload, format="json"
-        )
+        update_payload = {"names": {"en": "Lake", "es": "Lago"}}
+        response = authenticated_client_alice.patch(url_detail, update_payload, format="json")
 
         assert response.status_code == status.HTTP_200_OK
 
@@ -103,35 +73,18 @@ class TestUpdatePointTypeContract:
         assert response.data["names"]["en"] == "Lake"
         assert response.data["names"]["es"] == "Lago"
 
-    def test_update_point_type_add_multiple_translations(
-        self, authenticated_client_alice
-    ):
+    def test_update_point_type_add_multiple_translations(self, authenticated_client_alice):
         """Test adding multiple translations at once."""
         # Create a point type
         url_list = reverse("point-types:list")
-        payload = {
-            "names": {"en": "Hill"},
-            "creation_language": "en",
-            "visibility": "private"
-        }
-        create_response = authenticated_client_alice.post(
-            url_list, payload, format="json"
-        )
+        payload = {"names": {"en": "Hill"}, "creation_language": "en", "visibility": "private"}
+        create_response = authenticated_client_alice.post(url_list, payload, format="json")
         point_type_id = create_response.data["id"]
 
         # Add multiple translations
         url_detail = reverse("point-types:detail", args=[point_type_id])
-        update_payload = {
-            "names": {
-                "en": "Hill",
-                "fr": "Colline",
-                "es": "Colina",
-                "de": "Hügel"
-            }
-        }
-        response = authenticated_client_alice.patch(
-            url_detail, update_payload, format="json"
-        )
+        update_payload = {"names": {"en": "Hill", "fr": "Colline", "es": "Colina", "de": "Hügel"}}
+        response = authenticated_client_alice.patch(url_detail, update_payload, format="json")
 
         assert response.status_code == status.HTTP_200_OK
         assert len(response.data["names"]) == 4
@@ -142,36 +95,22 @@ class TestUpdatePointTypeContract:
     def test_update_point_type_requires_authentication(self, api_client):
         """Test that updating a point type requires authentication."""
         url = reverse("point-types:detail", args=["00000000-0000-0000-0000-000000000000"])
-        payload = {
-            "names": {"en": "Tree", "fr": "Arbre"}
-        }
+        payload = {"names": {"en": "Tree", "fr": "Arbre"}}
         response = api_client.patch(url, payload, format="json")
 
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-    def test_update_point_type_cannot_remove_all_translations(
-        self, authenticated_client_alice
-    ):
+    def test_update_point_type_cannot_remove_all_translations(self, authenticated_client_alice):
         """Test that removing all translations is not allowed."""
         # Create a point type
         url_list = reverse("point-types:list")
-        payload = {
-            "names": {"en": "Park"},
-            "creation_language": "en",
-            "visibility": "private"
-        }
-        create_response = authenticated_client_alice.post(
-            url_list, payload, format="json"
-        )
+        payload = {"names": {"en": "Park"}, "creation_language": "en", "visibility": "private"}
+        create_response = authenticated_client_alice.post(url_list, payload, format="json")
         point_type_id = create_response.data["id"]
 
         # Try to update with empty names
         url_detail = reverse("point-types:detail", args=[point_type_id])
-        update_payload = {
-            "names": {}
-        }
-        response = authenticated_client_alice.patch(
-            url_detail, update_payload, format="json"
-        )
+        update_payload = {"names": {}}
+        response = authenticated_client_alice.patch(url_detail, update_payload, format="json")
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST

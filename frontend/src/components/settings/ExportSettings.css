@@ -14,7 +14,7 @@
   cursor: pointer;
 }
 
-.export-option input[type='radio'] {
+.export-option input[type="radio"] {
   position: absolute;
   opacity: 0;
   pointer-events: none;
@@ -36,7 +36,7 @@
   background: var(--hover-background, #f9fafb);
 }
 
-.export-option input[type='radio']:focus + .export-content {
+.export-option input[type="radio"]:focus + .export-content {
   outline: 2px solid var(--primary-color, #3b82f6);
   outline-offset: 2px;
 }
@@ -72,7 +72,7 @@
 }
 
 /* Dark mode support */
-[data-theme='dark'] .export-content {
+[data-theme="dark"] .export-content {
   --border-color: #374151;
   --background-color: #1f2937;
   --hover-background: #111827;

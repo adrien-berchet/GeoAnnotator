@@ -5,7 +5,7 @@
  * Disabled when device position is unavailable.
  */
 
-import './RecenterButton.css';
+import "./RecenterButton.css";
 
 interface RecenterButtonProps {
   onClick: () => void;
@@ -18,14 +18,21 @@ interface RecenterButtonProps {
  * @param onClick - Callback when button is clicked
  * @param disabled - Whether button is disabled
  */
-export function RecenterButton({ onClick, disabled = false }: RecenterButtonProps) {
+export function RecenterButton({
+  onClick,
+  disabled = false,
+}: RecenterButtonProps) {
   return (
     <button
-      className={`recenter-button ${disabled ? 'disabled' : ''}`}
+      className={`recenter-button ${disabled ? "disabled" : ""}`}
       onClick={onClick}
       disabled={disabled}
-      title={disabled ? 'Location unavailable' : 'Recenter on my location'}
-      aria-label={disabled ? 'Recenter on my location (disabled)' : 'Recenter on my location'}
+      title={disabled ? "Location unavailable" : "Recenter on my location"}
+      aria-label={
+        disabled
+          ? "Recenter on my location (disabled)"
+          : "Recenter on my location"
+      }
       type="button"
     >
       <svg

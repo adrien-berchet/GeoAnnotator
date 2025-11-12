@@ -4,24 +4,24 @@
  * Provides user registration with password strength indicator.
  */
 
-import { useState, useEffect } from 'react';
-import type { FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
-import { register } from '../../api/auth';
-import { getErrorMessage } from '../../api/client';
-import './RegisterForm.css';
+import { useState, useEffect } from "react";
+import type { FormEvent } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
+import { register } from "../../api/auth";
+import { getErrorMessage } from "../../api/client";
+import "./RegisterForm.css";
 
 /**
  * Password strength levels.
  */
-type PasswordStrength = 'weak' | 'medium' | 'strong' | 'very-strong';
+type PasswordStrength = "weak" | "medium" | "strong" | "very-strong";
 
 /**
  * Calculate password strength.
  */
 function getPasswordStrength(password: string): PasswordStrength {
-  if (password.length < 6) return 'weak';
+  if (password.length < 6) return "weak";
 
   let score = 0;
 
@@ -35,10 +35,10 @@ function getPasswordStrength(password: string): PasswordStrength {
   if (/[0-9]/.test(password)) score++;
   if (/[^a-zA-Z0-9]/.test(password)) score++;
 
-  if (score <= 2) return 'weak';
-  if (score <= 4) return 'medium';
-  if (score <= 5) return 'strong';
-  return 'very-strong';
+  if (score <= 2) return "weak";
+  if (score <= 4) return "medium";
+  if (score <= 5) return "strong";
+  return "very-strong";
 }
 
 /**
@@ -48,10 +48,10 @@ export function RegisterForm() {
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const passwordStrength = password ? getPasswordStrength(password) : null;
@@ -59,18 +59,23 @@ export function RegisterForm() {
   // Apply system theme for register page (no user is authenticated yet)
   useEffect(() => {
     const applySystemTheme = () => {
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+      const prefersDark = window.matchMedia(
+        "(prefers-color-scheme: dark)",
+      ).matches;
+      document.documentElement.setAttribute(
+        "data-theme",
+        prefersDark ? "dark" : "light",
+      );
     };
 
     applySystemTheme();
 
     // Listen for system theme changes
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
     const handler = applySystemTheme;
-    mediaQuery.addEventListener('change', handler);
+    mediaQuery.addEventListener("change", handler);
 
-    return () => mediaQuery.removeEventListener('change', handler);
+    return () => mediaQuery.removeEventListener("change", handler);
   }, []);
 
   /**
@@ -86,38 +91,40 @@ export function RegisterForm() {
    */
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
 
     // Validate email
     if (!email) {
-      setError('Email is required');
+      setError("Email is required");
       return;
     }
 
     if (!validateEmail(email)) {
-      setError('Invalid email format');
+      setError("Invalid email format");
       return;
     }
 
     // Validate password
     if (!password) {
-      setError('Password is required');
+      setError("Password is required");
       return;
     }
 
     if (password.length < 6) {
-      setError('Password must be at least 6 characters');
+      setError("Password must be at least 6 characters");
       return;
     }
 
-    if (passwordStrength === 'weak') {
-      setError('Please use a stronger password (add uppercase, numbers, or special characters)');
+    if (passwordStrength === "weak") {
+      setError(
+        "Please use a stronger password (add uppercase, numbers, or special characters)",
+      );
       return;
     }
 
     // Validate password confirmation
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      setError("Passwords do not match");
       return;
     }
 
@@ -131,7 +138,7 @@ export function RegisterForm() {
       login(response.access, response.refresh, response.user);
 
       // Redirect to map
-      navigate('/map');
+      navigate("/map");
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
@@ -144,10 +151,10 @@ export function RegisterForm() {
    */
   const getStrengthColor = (strength: PasswordStrength): string => {
     const colors = {
-      'weak': '#dc3545',
-      'medium': '#ffc107',
-      'strong': '#28a745',
-      'very-strong': '#007bff',
+      weak: "#dc3545",
+      medium: "#ffc107",
+      strong: "#28a745",
+      "very-strong": "#007bff",
     };
     return colors[strength];
   };
@@ -157,10 +164,10 @@ export function RegisterForm() {
    */
   const getStrengthLabel = (strength: PasswordStrength): string => {
     const labels = {
-      'weak': 'Weak',
-      'medium': 'Medium',
-      'strong': 'Strong',
-      'very-strong': 'Very Strong',
+      weak: "Weak",
+      medium: "Medium",
+      strong: "Strong",
+      "very-strong": "Very Strong",
     };
     return labels[strength];
   };
@@ -180,7 +187,9 @@ export function RegisterForm() {
 
           {/* Email field */}
           <div className="form-group">
-            <label htmlFor="email" className="form-label">Email</label>
+            <label htmlFor="email" className="form-label">
+              Email
+            </label>
             <input
               id="email"
               type="email"
@@ -196,7 +205,9 @@ export function RegisterForm() {
 
           {/* Password field */}
           <div className="form-group">
-            <label htmlFor="password" className="form-label">Password</label>
+            <label htmlFor="password" className="form-label">
+              Password
+            </label>
             <input
               id="password"
               type="password"
@@ -215,27 +226,40 @@ export function RegisterForm() {
                 <div
                   className="strength-bar"
                   style={{
-                    width: passwordStrength ? `${(['weak', 'medium', 'strong', 'very-strong'].indexOf(passwordStrength) + 1) * 25}%` : '0%',
-                    backgroundColor: passwordStrength ? getStrengthColor(passwordStrength) : 'transparent',
+                    width: passwordStrength
+                      ? `${(["weak", "medium", "strong", "very-strong"].indexOf(passwordStrength) + 1) * 25}%`
+                      : "0%",
+                    backgroundColor: passwordStrength
+                      ? getStrengthColor(passwordStrength)
+                      : "transparent",
                   }}
                 />
               </div>
               <span
                 className="strength-label"
-                style={{ color: passwordStrength ? getStrengthColor(passwordStrength) : 'var(--color-text-muted)' }}
+                style={{
+                  color: passwordStrength
+                    ? getStrengthColor(passwordStrength)
+                    : "var(--color-text-muted)",
+                }}
               >
-                {passwordStrength ? getStrengthLabel(passwordStrength) : 'No password'}
+                {passwordStrength
+                  ? getStrengthLabel(passwordStrength)
+                  : "No password"}
               </span>
             </div>
 
             <div className="form-hint">
-              Use at least 8 characters with a mix of uppercase, lowercase, numbers, and symbols
+              Use at least 8 characters with a mix of uppercase, lowercase,
+              numbers, and symbols
             </div>
           </div>
 
           {/* Confirm password field */}
           <div className="form-group">
-            <label htmlFor="confirmPassword" className="form-label">Confirm Password</label>
+            <label htmlFor="confirmPassword" className="form-label">
+              Confirm Password
+            </label>
             <input
               id="confirmPassword"
               type="password"
@@ -255,15 +279,14 @@ export function RegisterForm() {
             className="btn btn-primary"
             disabled={isLoading}
           >
-            {isLoading ? 'Creating account...' : 'Create Account'}
+            {isLoading ? "Creating account..." : "Create Account"}
           </button>
         </form>
 
         {/* Login link */}
         <div className="form-footer">
           <p>
-            Already have an account?{' '}
-            <a href="/login">Login here</a>
+            Already have an account? <a href="/login">Login here</a>
           </p>
         </div>
       </div>

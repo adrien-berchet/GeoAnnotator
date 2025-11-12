@@ -4,8 +4,8 @@
  * Reusable drawer panel for filtering by tags
  */
 
-import type { Tag } from '../../types/point';
-import './TagFilterPanel.css';
+import type { Tag } from "../../types/point";
+import "./TagFilterPanel.css";
 
 interface TagFilterPanelProps {
   isOpen: boolean;
@@ -28,12 +28,12 @@ export function TagFilterPanel({
     <>
       {/* Backdrop */}
       <div
-        className={`tag-filter-backdrop ${isOpen ? 'open' : ''}`}
+        className={`tag-filter-backdrop ${isOpen ? "open" : ""}`}
         onClick={onClose}
       />
 
       {/* Panel */}
-      <div className={`tag-filter-panel ${isOpen ? 'open' : ''}`}>
+      <div className={`tag-filter-panel ${isOpen ? "open" : ""}`}>
         {/* Header */}
         <div className="tag-filter-header">
           <h2>Filter by Tags</h2>
@@ -56,11 +56,11 @@ export function TagFilterPanel({
                 <button
                   key={tag.id}
                   type="button"
-                  className={`tag-filter-option ${selectedTags.includes(tag.name) ? 'selected' : ''}`}
+                  className={`tag-filter-option ${selectedTags.includes(tag.name) ? "selected" : ""}`}
                   onClick={() => onToggleTag(tag.name)}
                 >
                   <span className="tag-filter-checkbox">
-                    {selectedTags.includes(tag.name) ? '✓' : ''}
+                    {selectedTags.includes(tag.name) ? "✓" : ""}
                   </span>
                   <span className="tag-filter-name">{tag.name}</span>
                 </button>
@@ -71,10 +71,7 @@ export function TagFilterPanel({
 
         {/* Footer */}
         <div className="tag-filter-footer">
-          <button
-            className="tag-filter-clear"
-            onClick={onClearAll}
-          >
+          <button className="tag-filter-clear" onClick={onClearAll}>
             Clear All
           </button>
         </div>

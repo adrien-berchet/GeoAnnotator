@@ -4,13 +4,13 @@
  * Displays all shares for a GPS point with revoke actions.
  */
 
-import { useState, useEffect } from 'react';
-import { getPointShares, deleteShare, updateShare } from '../../api/sharing';
-import type { Share, UpdateShareData } from '../../api/sharing';
-import { getErrorMessage } from '../../api/client';
-import { LoadingSpinner } from '../common/LoadingSpinner';
-import { PermissionSelector } from './PermissionSelector';
-import type { Permission } from '../../types/sharing';
+import { useState, useEffect } from "react";
+import { getPointShares, deleteShare, updateShare } from "../../api/sharing";
+import type { Share, UpdateShareData } from "../../api/sharing";
+import { getErrorMessage } from "../../api/client";
+import { LoadingSpinner } from "../common/LoadingSpinner";
+import { PermissionSelector } from "./PermissionSelector";
+import type { Permission } from "../../types/sharing";
 
 interface SharedPointsListProps {
   pointId: string;
@@ -22,7 +22,7 @@ interface SharedPointsListProps {
 export function SharedPointsList({ pointId }: SharedPointsListProps) {
   const [shares, setShares] = useState<Share[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [revokingId, setRevokingId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -31,7 +31,7 @@ export function SharedPointsList({ pointId }: SharedPointsListProps) {
    */
   const loadShares = async () => {
     setIsLoading(true);
-    setError('');
+    setError("");
 
     try {
       const data = await getPointShares(pointId);
@@ -46,7 +46,10 @@ export function SharedPointsList({ pointId }: SharedPointsListProps) {
   /**
    * Handle permission update.
    */
-  const handleUpdatePermission = async (shareId: string, permission: Permission) => {
+  const handleUpdatePermission = async (
+    shareId: string,
+    permission: Permission,
+  ) => {
     setEditingId(shareId);
 
     try {
@@ -54,7 +57,9 @@ export function SharedPointsList({ pointId }: SharedPointsListProps) {
         permission_level: permission,
       } as UpdateShareData);
 
-      setShares(prev => prev.map(s => s.id === shareId ? updatedShare : s));
+      setShares((prev) =>
+        prev.map((s) => (s.id === shareId ? updatedShare : s)),
+      );
       setEditingId(null);
     } catch (err) {
       alert(`Update error: ${getErrorMessage(err)}`);
@@ -66,7 +71,7 @@ export function SharedPointsList({ pointId }: SharedPointsListProps) {
    * Handle share revocation.
    */
   const handleRevoke = async (shareId: string) => {
-    if (!confirm('Are you sure you want to revoke this share?')) {
+    if (!confirm("Are you sure you want to revoke this share?")) {
       return;
     }
 
@@ -74,7 +79,7 @@ export function SharedPointsList({ pointId }: SharedPointsListProps) {
 
     try {
       await deleteShare(shareId);
-      setShares(prev => prev.filter(s => s.id !== shareId));
+      setShares((prev) => prev.filter((s) => s.id !== shareId));
     } catch (err) {
       alert(`Revoke error: ${getErrorMessage(err)}`);
     } finally {
@@ -86,11 +91,11 @@ export function SharedPointsList({ pointId }: SharedPointsListProps) {
    * Format date.
    */
   const formatDate = (dateString: string | null): string => {
-    if (!dateString) return 'Never';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
+    if (!dateString) return "Never";
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
@@ -132,9 +137,7 @@ export function SharedPointsList({ pointId }: SharedPointsListProps) {
     return (
       <div className="empty-state">
         <p>This point is not shared</p>
-        <p className="empty-state-hint">
-          Click "Share Point" to invite others
-        </p>
+        <p className="empty-state-hint">Click "Share Point" to invite others</p>
       </div>
     );
   }
@@ -156,13 +159,15 @@ export function SharedPointsList({ pointId }: SharedPointsListProps) {
             </tr>
           </thead>
           <tbody>
-            {shares.map(share => (
-              <tr key={share.id} className={!share.is_active ? 'revoked' : ''}>
+            {shares.map((share) => (
+              <tr key={share.id} className={!share.is_active ? "revoked" : ""}>
                 <td>
                   <div className="user-info">
                     <strong>{share.recipient_email}</strong>
                     {share.recipient_user && (
-                      <small className="user-id">ID: {share.recipient_user.id}</small>
+                      <small className="user-id">
+                        ID: {share.recipient_user.id}
+                      </small>
                     )}
                   </div>
                 </td>
@@ -170,7 +175,9 @@ export function SharedPointsList({ pointId }: SharedPointsListProps) {
                   {editingId === share.id ? (
                     <PermissionSelector
                       value={share.permission_level}
-                      onChange={(permission) => handleUpdatePermission(share.id, permission)}
+                      onChange={(permission) =>
+                        handleUpdatePermission(share.id, permission)
+                      }
                       disabled={false}
                     />
                   ) : (
@@ -199,7 +206,7 @@ export function SharedPointsList({ pointId }: SharedPointsListProps) {
                       disabled={revokingId === share.id}
                       className="btn-danger btn-small"
                     >
-                      {revokingId === share.id ? 'Revoking...' : 'Revoke'}
+                      {revokingId === share.id ? "Revoking..." : "Revoke"}
                     </button>
                   )}
                 </td>

@@ -2,8 +2,8 @@
  * Settings API client
  */
 
-import { apiClient } from './client';
-import type { UserPreferences } from '@/types/settings';
+import { apiClient } from "./client";
+import type { UserPreferences } from "@/types/settings";
 
 /**
  * Fetch user settings from the backend
@@ -11,7 +11,7 @@ import type { UserPreferences } from '@/types/settings';
  * @throws Error if request fails
  */
 export async function getSettings(): Promise<UserPreferences> {
-  const response = await apiClient.get<UserPreferences>('/settings/');
+  const response = await apiClient.get<UserPreferences>("/settings/");
   return response.data;
 }
 
@@ -22,11 +22,16 @@ export async function getSettings(): Promise<UserPreferences> {
  * @throws Error if request fails
  */
 export async function updateSettings(
-  updates: Partial<Pick<UserPreferences, 'theme_mode' | 'language' | 'export_format' | 'default_map_type'>>
+  updates: Partial<
+    Pick<
+      UserPreferences,
+      "theme_mode" | "language" | "export_format" | "default_map_type"
+    >
+  >,
 ): Promise<UserPreferences> {
   const response = await apiClient.patch<UserPreferences>(
-    '/settings/',
-    updates
+    "/settings/",
+    updates,
   );
   return response.data;
 }

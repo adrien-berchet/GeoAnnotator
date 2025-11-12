@@ -1,4 +1,4 @@
-import { useTheme } from '../contexts/ThemeContext';
+import { useTheme } from "../contexts/ThemeContext";
 
 /**
  * Custom hook to get the current color mode for MDEditor.
@@ -6,7 +6,7 @@ import { useTheme } from '../contexts/ThemeContext';
  *
  * @returns 'light' | 'dark' based on user's theme preference
  */
-export function useColorMode(): 'light' | 'dark' {
+export function useColorMode(): "light" | "dark" {
   const { resolvedTheme } = useTheme();
   return resolvedTheme;
 }

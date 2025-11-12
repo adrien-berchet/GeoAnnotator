@@ -4,13 +4,13 @@
  */
 
 /* Variables CSS (couleurs, espacements, etc.) */
-@import './styles/variables.css';
+@import "./styles/variables.css";
 
 /* Thème de base et règles globales */
-@import './styles/theme.css';
+@import "./styles/theme.css";
 
 /* Composants réutilisables */
-@import './styles/components.css';
+@import "./styles/components.css";
 
 /* Styles spécifiques restants (peuvent être supprimés progressivement) */
 

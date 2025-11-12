@@ -4,12 +4,12 @@
  * Displays annotations in a full-screen preview mode.
  */
 
-import { useEffect, useState } from 'react';
-import MDEditor from '@uiw/react-md-editor';
-import { downloadAnnotation } from '../../api/annotations';
-import type { Annotation } from '../../types/annotation';
-import { useColorMode } from '../../hooks/useColorMode';
-import './AnnotationPreview.css';
+import { useEffect, useState } from "react";
+import MDEditor from "@uiw/react-md-editor";
+import { downloadAnnotation } from "../../api/annotations";
+import type { Annotation } from "../../types/annotation";
+import { useColorMode } from "../../hooks/useColorMode";
+import "./AnnotationPreview.css";
 
 interface AnnotationPreviewProps {
   annotation: Annotation;
@@ -17,7 +17,11 @@ interface AnnotationPreviewProps {
   onClose: () => void;
 }
 
-export function AnnotationPreview({ annotation, pointId, onClose }: AnnotationPreviewProps) {
+export function AnnotationPreview({
+  annotation,
+  pointId,
+  onClose,
+}: AnnotationPreviewProps) {
   const colorMode = useColorMode();
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -25,17 +29,22 @@ export function AnnotationPreview({ annotation, pointId, onClose }: AnnotationPr
 
   // Apply color mode to document root for MDEditor
   useEffect(() => {
-    document.documentElement.setAttribute('data-color-mode', colorMode);
+    document.documentElement.setAttribute("data-color-mode", colorMode);
   }, [colorMode]);
 
   useEffect(() => {
     // Load file for preview (PDF, images, etc.)
     const loadFile = async () => {
-      if (annotation.type === 'text') return;
+      if (annotation.type === "text") return;
       if (!annotation.file) return;
 
       // For images, PDF and other files, download via authenticated API
-      if (annotation.type === 'image' || annotation.file.mime_type?.includes('pdf') || annotation.type === 'document' || annotation.type === 'file') {
+      if (
+        annotation.type === "image" ||
+        annotation.file.mime_type?.includes("pdf") ||
+        annotation.type === "document" ||
+        annotation.type === "file"
+      ) {
         setIsLoading(true);
         setError(null);
 
@@ -44,8 +53,8 @@ export function AnnotationPreview({ annotation, pointId, onClose }: AnnotationPr
           const url = window.URL.createObjectURL(blob);
           setBlobUrl(url);
         } catch (err) {
-          setError('Failed to load file for preview');
-          console.error('Preview load error:', err);
+          setError("Failed to load file for preview");
+          console.error("Preview load error:", err);
         } finally {
           setIsLoading(false);
         }
@@ -66,25 +75,25 @@ export function AnnotationPreview({ annotation, pointId, onClose }: AnnotationPr
   useEffect(() => {
     // Close on Escape key
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         onClose();
       }
     };
 
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
   }, [onClose]);
 
   useEffect(() => {
     // Prevent body scroll when modal is open
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = "hidden";
     return () => {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = "unset";
     };
   }, []);
 
   const renderPreview = () => {
-    if (annotation.type === 'text' && annotation.text_content) {
+    if (annotation.type === "text" && annotation.text_content) {
       return (
         <div className="preview-text">
           <div data-color-mode={colorMode}>
@@ -94,7 +103,7 @@ export function AnnotationPreview({ annotation, pointId, onClose }: AnnotationPr
       );
     }
 
-    if (annotation.type === 'image' && annotation.file) {
+    if (annotation.type === "image" && annotation.file) {
       if (isLoading) {
         return (
           <div className="preview-loading">
@@ -120,7 +129,7 @@ export function AnnotationPreview({ annotation, pointId, onClose }: AnnotationPr
           <div className="preview-image-container">
             <img
               src={blobUrl}
-              alt={annotation.file.file_name || 'Image preview'}
+              alt={annotation.file.file_name || "Image preview"}
               className="preview-image"
             />
           </div>
@@ -128,9 +137,9 @@ export function AnnotationPreview({ annotation, pointId, onClose }: AnnotationPr
       }
     }
 
-    if (annotation.type === 'document' && annotation.file) {
+    if (annotation.type === "document" && annotation.file) {
       // Check if it's a PDF
-      if (annotation.file.mime_type?.includes('pdf')) {
+      if (annotation.file.mime_type?.includes("pdf")) {
         if (isLoading) {
           return (
             <div className="preview-loading">
@@ -156,7 +165,7 @@ export function AnnotationPreview({ annotation, pointId, onClose }: AnnotationPr
             <div className="preview-pdf">
               <iframe
                 src={blobUrl}
-                title={annotation.file.file_name || 'Document preview'}
+                title={annotation.file.file_name || "Document preview"}
                 className="pdf-viewer"
               />
             </div>
@@ -175,7 +184,7 @@ export function AnnotationPreview({ annotation, pointId, onClose }: AnnotationPr
       );
     }
 
-    if (annotation.type === 'file' && annotation.file) {
+    if (annotation.type === "file" && annotation.file) {
       return (
         <div className="preview-unavailable">
           <div className="unavailable-icon">📎</div>
@@ -191,29 +200,36 @@ export function AnnotationPreview({ annotation, pointId, onClose }: AnnotationPr
 
   return (
     <div className="annotation-preview-overlay" onClick={onClose}>
-      <div className="annotation-preview-modal" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="annotation-preview-modal"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="preview-header">
           <div className="preview-title">
             <span className="preview-type-badge">
-              {annotation.type === 'text' && '📝 Text'}
-              {annotation.type === 'image' && '🖼️ Image'}
-              {annotation.type === 'document' && '📄 Document'}
-              {annotation.type === 'file' && '📎 File'}
+              {annotation.type === "text" && "📝 Text"}
+              {annotation.type === "image" && "🖼️ Image"}
+              {annotation.type === "document" && "📄 Document"}
+              {annotation.type === "file" && "📎 File"}
             </span>
             {annotation.file?.file_name && (
-              <span className="preview-file-name">{annotation.file.file_name}</span>
+              <span className="preview-file-name">
+                {annotation.file.file_name}
+              </span>
             )}
           </div>
-          <button onClick={onClose} className="preview-close-button" title="Close (Esc)">
+          <button
+            onClick={onClose}
+            className="preview-close-button"
+            title="Close (Esc)"
+          >
             ✕
           </button>
         </div>
 
         {/* Content */}
-        <div className="preview-content">
-          {renderPreview()}
-        </div>
+        <div className="preview-content">{renderPreview()}</div>
       </div>
     </div>
   );

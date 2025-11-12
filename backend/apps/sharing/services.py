@@ -4,22 +4,23 @@ Sharing services.
 Handles permissions, email invitations, and share management.
 """
 
-import uuid
 from datetime import timedelta
-from django.utils import timezone
-from django.core.mail import send_mail
+
 from django.conf import settings
+from django.core.mail import send_mail
 from django.db.models import Q
+from django.utils import timezone
+
+from apps.authentication.models import User
+from apps.points.models import GPSPoint
 
 from .models import Share
-from apps.points.models import GPSPoint
-from apps.authentication.models import User
 
 
 class PermissionService:
     """Service for checking and managing permissions."""
 
-    PERMISSION_LEVELS = ['view', 'edit', 'transfer', 'owner']
+    PERMISSION_LEVELS = ["view", "edit", "transfer", "owner"]
 
     @staticmethod
     def get_user_permission(point: GPSPoint, user: User) -> str | None:
@@ -35,7 +36,7 @@ class PermissionService:
         """
         # Owner has full permissions
         if point.owner == user:
-            return 'owner'
+            return "owner"
 
         # Check share permissions
         share = Share.objects.filter(
@@ -49,7 +50,7 @@ class PermissionService:
 
         # Public points are view-only
         if point.is_public:
-            return 'view'
+            return "view"
 
         return None
 
@@ -73,10 +74,10 @@ class PermissionService:
 
         # Permission hierarchy: owner > transfer > edit > view
         hierarchy = {
-            'view': 0,
-            'edit': 1,
-            'transfer': 2,
-            'owner': 3,
+            "view": 0,
+            "edit": 1,
+            "transfer": 2,
+            "owner": 3,
         }
 
         return hierarchy.get(user_level, -1) >= hierarchy.get(required_level, 99)
@@ -84,17 +85,17 @@ class PermissionService:
     @staticmethod
     def can_view(point: GPSPoint, user: User) -> bool:
         """Check if user can view point."""
-        return PermissionService.has_permission(point, user, 'view')
+        return PermissionService.has_permission(point, user, "view")
 
     @staticmethod
     def can_edit(point: GPSPoint, user: User) -> bool:
         """Check if user can edit point."""
-        return PermissionService.has_permission(point, user, 'edit')
+        return PermissionService.has_permission(point, user, "edit")
 
     @staticmethod
     def can_share(point: GPSPoint, user: User) -> bool:
         """Check if user can share point (requires transfer permission)."""
-        return PermissionService.has_permission(point, user, 'transfer')
+        return PermissionService.has_permission(point, user, "transfer")
 
     @staticmethod
     def is_owner(point: GPSPoint, user: User) -> bool:
@@ -125,7 +126,7 @@ class PermissionService:
         query = query.filter(trash_entry__isnull=True)
 
         # Optimize queries by selecting related objects
-        query = query.select_related('type', 'type__owner', 'owner')
+        query = query.select_related("type", "type__owner", "owner")
 
         return query
 
@@ -147,7 +148,7 @@ class EmailInvitationService:
             bool: True if email sent successfully
         """
         # Generate acceptance URL
-        base_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
+        base_url = getattr(settings, "FRONTEND_URL", "http://localhost:5173")
         acceptance_url = f"{base_url}/shares/accept/{share.invitation_token}"
 
         # Email content
@@ -218,12 +219,12 @@ GeoAnnotator Team
             str: 'pending', 'accepted', or 'expired'
         """
         if share.accepted_at:
-            return 'accepted'
+            return "accepted"
 
         if EmailInvitationService.is_invitation_expired(share):
-            return 'expired'
+            return "expired"
 
-        return 'pending'
+        return "pending"
 
 
 class ShareService:
@@ -252,12 +253,12 @@ class ShareService:
             ValueError: If validation fails
         """
         # Validate permission level
-        if permission_level not in ['view', 'edit', 'transfer']:
-            raise ValueError(f'Invalid permission level: {permission_level}')
+        if permission_level not in ["view", "edit", "transfer"]:
+            raise ValueError(f"Invalid permission level: {permission_level}")
 
         # Check if user has permission to share
         if not PermissionService.can_share(point, owner):
-            raise ValueError('User does not have permission to share this point')
+            raise ValueError("User does not have permission to share this point")
 
         # Check for duplicate share
         existing = Share.objects.filter(
@@ -266,11 +267,11 @@ class ShareService:
         ).first()
 
         if existing:
-            raise ValueError(f'Point already shared with {recipient_email}')
+            raise ValueError(f"Point already shared with {recipient_email}")
 
         # Check if recipient is the owner or point owner
         if recipient_email == owner.email or recipient_email == point.owner.email:
-            raise ValueError('Cannot share point with yourself or the owner')
+            raise ValueError("Cannot share point with yourself or the owner")
 
         # Check if recipient user exists
         recipient_user = None
@@ -310,12 +311,12 @@ class ShareService:
             ValueError: If validation fails
         """
         # Validate permission level
-        if permission_level not in ['view', 'edit', 'transfer']:
-            raise ValueError(f'Invalid permission level: {permission_level}')
+        if permission_level not in ["view", "edit", "transfer"]:
+            raise ValueError(f"Invalid permission level: {permission_level}")
 
         # Check if user has permission to update
         if not PermissionService.can_share(share.gps_point, user):
-            raise ValueError('User does not have permission to update this share')
+            raise ValueError("User does not have permission to update this share")
 
         share.permission_level = permission_level
         share.save()
@@ -337,7 +338,7 @@ class ShareService:
         """
         # Check if user has permission to revoke
         if not PermissionService.can_share(share.gps_point, user):
-            raise ValueError('User does not have permission to revoke this share')
+            raise ValueError("User does not have permission to revoke this share")
 
         # Cascade revoke: delete shares created by this recipient
         if cascade and share.recipient_user:
@@ -368,15 +369,15 @@ class ShareService:
         try:
             share = Share.objects.get(invitation_token=invitation_token)
         except Share.DoesNotExist:
-            raise ValueError('Invalid invitation token')
+            raise ValueError("Invalid invitation token") from None
 
         # Check if already accepted
         if share.accepted_at:
-            raise ValueError('Invitation already accepted')
+            raise ValueError("Invitation already accepted")
 
         # Check if expired
         if EmailInvitationService.is_invitation_expired(share):
-            raise ValueError('Invitation has expired (7 days)')
+            raise ValueError("Invitation has expired (7 days)")
 
         # Accept invitation
         share.accept(user)

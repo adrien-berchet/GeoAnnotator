@@ -147,7 +147,9 @@
   background: var(--color-bg-secondary);
   border-radius: var(--radius-md);
   border-left: 3px solid var(--color-primary);
-  transition: background-color var(--transition-base), transform var(--transition-base);
+  transition:
+    background-color var(--transition-base),
+    transform var(--transition-base);
   max-height: 400px;
   overflow-y: auto;
 }
@@ -218,7 +220,9 @@
   background: var(--color-bg-secondary);
   border-radius: var(--radius-md);
   border-left: 3px solid var(--color-primary);
-  transition: background-color var(--transition-base), transform var(--transition-base);
+  transition:
+    background-color var(--transition-base),
+    transform var(--transition-base);
 }
 
 .text-annotation.clickable {
@@ -260,7 +264,9 @@
   object-fit: contain;
   border-radius: var(--radius-md);
   background: var(--color-bg-secondary);
-  transition: transform var(--transition-base), box-shadow var(--transition-base);
+  transition:
+    transform var(--transition-base),
+    box-shadow var(--transition-base);
 }
 
 .annotation-image.clickable {
@@ -365,7 +371,7 @@
 }
 
 .annotation-item.trashed::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -389,7 +395,11 @@
 }
 
 .annotation-item.trashed .trashed-annotation-banner {
-  background: linear-gradient(135deg, var(--color-danger) 0%, var(--color-danger-dark) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-danger) 0%,
+    var(--color-danger-dark) 100%
+  );
   color: white;
   border-radius: var(--radius-md);
   margin-bottom: var(--spacing-sm);
@@ -441,7 +451,7 @@
 }
 
 .annotation-item.trashed::after {
-  content: '🗑️';
+  content: "🗑️";
   position: absolute;
   top: var(--spacing-sm);
   right: var(--spacing-sm);

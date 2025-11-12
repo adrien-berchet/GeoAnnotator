@@ -4,28 +4,35 @@
  * Main map view with points and creation functionality.
  */
 
-import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import type { Map as LeafletMap } from 'leaflet';
-import { MapView } from '../components/map/MapView';
-import { PointMarker } from '../components/map/PointMarker';
-import { BlueDot } from '../components/map/BlueDot';
-import { RecenterButton } from '../components/map/RecenterButton';
-import { CreatePointModal } from '../components/map/CreatePointModal';
-import { LoadingSpinner } from '../components/common/LoadingSpinner';
-import { FilterPanel } from '../components/common/FilterPanel';
-import { Notification } from '../components/common/Notification';
-import { MapSearchBar } from '../components/map/MapSearchBar';
-import { MapLayerSelector, TILE_LAYERS, type TileLayer } from '../components/map/MapLayerSelector';
-import { getPoints, searchPointsByTags, getTags } from '../api/points';
-import { getPointTypes } from '../api/types';
-import { getErrorMessage } from '../api/client';
-import { getSettings } from '../api/settings';
-import type { GPSPoint, Tag, PointType } from '../types/point';
-import { useDevicePosition, getGeolocationErrorMessage } from '../hooks/useDevicePosition';
-import { useLanguage } from '../contexts/LanguageContext';
-import { useAuth } from '../hooks/useAuth';
-import './MapPage.css';
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
+import type { Map as LeafletMap } from "leaflet";
+import { MapView } from "../components/map/MapView";
+import { PointMarker } from "../components/map/PointMarker";
+import { BlueDot } from "../components/map/BlueDot";
+import { RecenterButton } from "../components/map/RecenterButton";
+import { CreatePointModal } from "../components/map/CreatePointModal";
+import { LoadingSpinner } from "../components/common/LoadingSpinner";
+import { FilterPanel } from "../components/common/FilterPanel";
+import { Notification } from "../components/common/Notification";
+import { MapSearchBar } from "../components/map/MapSearchBar";
+import {
+  MapLayerSelector,
+  TILE_LAYERS,
+  type TileLayer,
+} from "../components/map/MapLayerSelector";
+import { getPoints, searchPointsByTags, getTags } from "../api/points";
+import { getPointTypes } from "../api/types";
+import { getErrorMessage } from "../api/client";
+import { getSettings } from "../api/settings";
+import type { GPSPoint, Tag, PointType } from "../types/point";
+import {
+  useDevicePosition,
+  getGeolocationErrorMessage,
+} from "../hooks/useDevicePosition";
+import { useLanguage } from "../contexts/LanguageContext";
+import { useAuth } from "../hooks/useAuth";
+import "./MapPage.css";
 
 /**
  * Map page component.
@@ -37,10 +44,10 @@ export function MapPage() {
   const [points, setPoints] = useState<GPSPoint[]>([]);
   const [allPoints, setAllPoints] = useState<GPSPoint[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   // Search state
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Filter state
   const [tags, setTags] = useState<Tag[]>([]);
@@ -54,18 +61,26 @@ export function MapPage() {
 
   // Create point modal state
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [newPointLocation, setNewPointLocation] = useState<[number, number] | null>(null);
+  const [newPointLocation, setNewPointLocation] = useState<
+    [number, number] | null
+  >(null);
 
   // Map layer state
-  const [currentTileLayer, setCurrentTileLayer] = useState<TileLayer>(TILE_LAYERS[0]);
+  const [currentTileLayer, setCurrentTileLayer] = useState<TileLayer>(
+    TILE_LAYERS[0],
+  );
 
   // Device position state
-  const { position: devicePosition, error: geolocationError } = useDevicePosition();
+  const { position: devicePosition, error: geolocationError } =
+    useDevicePosition();
   const [mapInstance, setMapInstance] = useState<LeafletMap | null>(null);
-  const [showGeolocationNotification, setShowGeolocationNotification] = useState(false);
+  const [showGeolocationNotification, setShowGeolocationNotification] =
+    useState(false);
 
   // Initial map center state
-  const [initialCenter, setInitialCenter] = useState<[number, number]>([48.8566, 2.3522]); // Default to Paris
+  const [initialCenter, setInitialCenter] = useState<[number, number]>([
+    48.8566, 2.3522,
+  ]); // Default to Paris
 
   /**
    * Load tags, types, and points on mount, and restore filter from URL.
@@ -78,28 +93,33 @@ export function MapPage() {
     loadDefaultMapType();
 
     // Load last map center from localStorage
-    const savedCenter = localStorage.getItem('mapLastCenter');
+    const savedCenter = localStorage.getItem("mapLastCenter");
     if (savedCenter) {
       try {
         const center = JSON.parse(savedCenter) as [number, number];
-        if (Array.isArray(center) && center.length === 2 && typeof center[0] === 'number' && typeof center[1] === 'number') {
+        if (
+          Array.isArray(center) &&
+          center.length === 2 &&
+          typeof center[0] === "number" &&
+          typeof center[1] === "number"
+        ) {
           setInitialCenter(center);
         }
       } catch (err) {
-        console.warn('Invalid map center in localStorage:', err);
+        console.warn("Invalid map center in localStorage:", err);
       }
     }
 
     // Restore filter from URL
-    const tagsParam = searchParams.get('tags');
-    const typesParam = searchParams.get('types');
+    const tagsParam = searchParams.get("tags");
+    const typesParam = searchParams.get("types");
 
     if (tagsParam) {
-      setSelectedTags(tagsParam.split(',').map(t => t.trim()));
+      setSelectedTags(tagsParam.split(",").map((t) => t.trim()));
     }
 
     if (typesParam) {
-      setSelectedTypes(typesParam.split(',').map(t => t.trim()));
+      setSelectedTypes(typesParam.split(",").map((t) => t.trim()));
     }
 
     // Close controls on mobile by default
@@ -112,9 +132,10 @@ export function MapPage() {
     };
 
     handleResize(); // Check initial size
-    window.addEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
 
-    return () => window.removeEventListener('resize', handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   /**
@@ -122,6 +143,7 @@ export function MapPage() {
    */
   useEffect(() => {
     applyFilters();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedTags, selectedTypes, searchQuery, allPoints]);
 
   /**
@@ -151,20 +173,20 @@ export function MapPage() {
 
     // Apply type filter if types are selected
     if (selectedTypes.length > 0) {
-      filteredPoints = filteredPoints.filter(point =>
-        point.type && selectedTypes.includes(point.type.id)
+      filteredPoints = filteredPoints.filter(
+        (point) => point.type && selectedTypes.includes(point.type.id),
       );
     }
 
     // Apply search filter if search query exists
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      filteredPoints = filteredPoints.filter(point => {
+      filteredPoints = filteredPoints.filter((point) => {
         // Search in title, description, and tags
         const titleMatch = point.title?.toLowerCase().includes(query);
         const descMatch = point.description?.toLowerCase().includes(query);
-        const tagsMatch = point.tags?.some(tag =>
-          tag.name.toLowerCase().includes(query)
+        const tagsMatch = point.tags?.some((tag) =>
+          tag.name.toLowerCase().includes(query),
         );
         return titleMatch || descMatch || tagsMatch;
       });
@@ -175,10 +197,10 @@ export function MapPage() {
     // Update URL with filters
     const params: Record<string, string> = {};
     if (selectedTags.length > 0) {
-      params.tags = selectedTags.join(',');
+      params.tags = selectedTags.join(",");
     }
     if (selectedTypes.length > 0) {
-      params.types = selectedTypes.join(',');
+      params.types = selectedTypes.join(",");
     }
     if (searchQuery) {
       params.search = searchQuery;
@@ -194,7 +216,7 @@ export function MapPage() {
       const data = await getTags();
       setTags(data);
     } catch (err) {
-      console.error('Error loading tags:', err);
+      console.error("Error loading tags:", err);
     }
   };
 
@@ -206,7 +228,7 @@ export function MapPage() {
       const data = await getPointTypes();
       setTypes(data);
     } catch (err) {
-      console.error('Error loading types:', err);
+      console.error("Error loading types:", err);
     }
   };
 
@@ -215,7 +237,7 @@ export function MapPage() {
    */
   const loadPoints = async () => {
     setIsLoading(true);
-    setError('');
+    setError("");
 
     try {
       const data = await getPoints();
@@ -238,7 +260,7 @@ export function MapPage() {
     }
 
     // Check if we've already loaded the preference for this user's session
-    const lastUserKey = 'lastUserMapTypeLoaded';
+    const lastUserKey = "lastUserMapTypeLoaded";
     const lastUserId = localStorage.getItem(lastUserKey);
 
     // If we've already loaded the preference for this user (they're just reloading the page),
@@ -252,7 +274,9 @@ export function MapPage() {
       const preferredMapType = settings.default_map_type;
 
       // Find the tile layer that matches the preference
-      const preferredLayer = TILE_LAYERS.find(layer => layer.id === preferredMapType);
+      const preferredLayer = TILE_LAYERS.find(
+        (layer: TileLayer) => layer.id === preferredMapType,
+      );
 
       if (preferredLayer) {
         setCurrentTileLayer(preferredLayer);
@@ -261,7 +285,7 @@ export function MapPage() {
       // Mark that we've loaded the preference for this user
       localStorage.setItem(lastUserKey, user.id);
     } catch (err) {
-      console.error('Error loading default map type:', err);
+      console.error("Error loading default map type:", err);
       // Don't show error to user, just use the default map type
     }
   };
@@ -277,10 +301,10 @@ export function MapPage() {
    * Toggle tag selection.
    */
   const toggleTag = (tagName: string) => {
-    setSelectedTags(prev =>
+    setSelectedTags((prev) =>
       prev.includes(tagName)
-        ? prev.filter(t => t !== tagName)
-        : [...prev, tagName]
+        ? prev.filter((t) => t !== tagName)
+        : [...prev, tagName],
     );
   };
 
@@ -288,10 +312,10 @@ export function MapPage() {
    * Toggle type selection.
    */
   const toggleType = (typeId: string) => {
-    setSelectedTypes(prev =>
+    setSelectedTypes((prev) =>
       prev.includes(typeId)
-        ? prev.filter(t => t !== typeId)
-        : [...prev, typeId]
+        ? prev.filter((t) => t !== typeId)
+        : [...prev, typeId],
     );
   };
 
@@ -311,7 +335,7 @@ export function MapPage() {
     let popupJustClosed = false;
 
     // Track when popups are closed
-    mapInstance.on('popupclose', () => {
+    mapInstance.on("popupclose", () => {
       popupJustClosed = true;
       // Reset the flag after a short delay
       setTimeout(() => {
@@ -320,7 +344,7 @@ export function MapPage() {
     });
 
     // Add click handler to create points
-    mapInstance.on('click', (e) => {
+    mapInstance.on("click", (e) => {
       // Don't open create modal if a popup was just closed
       if (!popupJustClosed) {
         setNewPointLocation([e.latlng.lat, e.latlng.lng]);
@@ -329,9 +353,12 @@ export function MapPage() {
     });
 
     // Save map center to localStorage on move end
-    mapInstance.on('moveend', () => {
+    mapInstance.on("moveend", () => {
       const center = mapInstance.getCenter();
-      localStorage.setItem('mapLastCenter', JSON.stringify([center.lat, center.lng]));
+      localStorage.setItem(
+        "mapLastCenter",
+        JSON.stringify([center.lat, center.lng]),
+      );
     });
   };
 
@@ -350,9 +377,13 @@ export function MapPage() {
    */
   const handleRecenter = () => {
     if (devicePosition && mapInstance) {
-      mapInstance.flyTo([devicePosition.latitude, devicePosition.longitude], 16, {
-        duration: 0.5,
-      });
+      mapInstance.flyTo(
+        [devicePosition.latitude, devicePosition.longitude],
+        16,
+        {
+          duration: 0.5,
+        },
+      );
     }
   };
 
@@ -369,20 +400,25 @@ export function MapPage() {
    */
   const handlePointClick = (point: GPSPoint) => {
     // TODO: Navigate to point detail page
-    console.log('Point clicked:', point);
+    console.log("Point clicked:", point);
   };
 
   if (isLoading) {
-    return <LoadingSpinner size="large" message={t('map.loading', 'Loading map...')} />;
+    return (
+      <LoadingSpinner
+        size="large"
+        message={t("map.loading", "Loading map...")}
+      />
+    );
   }
 
   if (error) {
     return (
       <div className="error-container">
-        <h2>{t('map.errorLoading', 'Error loading map')}</h2>
+        <h2>{t("map.errorLoading", "Error loading map")}</h2>
         <p>{error}</p>
         <button onClick={loadPoints} className="btn-primary">
-          {t('common.retry', 'Retry')}
+          {t("common.retry", "Retry")}
         </button>
       </div>
     );
@@ -390,7 +426,11 @@ export function MapPage() {
 
   return (
     <div className="map-page">
-      <MapView onMapReady={handleMapReady} tileLayer={currentTileLayer} center={initialCenter}>
+      <MapView
+        onMapReady={handleMapReady}
+        tileLayer={currentTileLayer}
+        center={initialCenter}
+      >
         {/* Render point markers */}
         {points.map((point) => (
           <PointMarker
@@ -424,13 +464,17 @@ export function MapPage() {
       <button
         className="map-controls-toggle"
         onClick={() => setIsControlsOpen(!isControlsOpen)}
-        title={isControlsOpen ? t('map.hideControls', 'Hide controls') : t('map.showControls', 'Show controls')}
+        title={
+          isControlsOpen
+            ? t("map.hideControls", "Hide controls")
+            : t("map.showControls", "Show controls")
+        }
       >
-        {isControlsOpen ? '▲' : '▼'}
+        {isControlsOpen ? "▲" : "▼"}
       </button>
 
       {/* Map controls */}
-      <div className={`map-controls ${isControlsOpen ? 'open' : 'closed'}`}>
+      <div className={`map-controls ${isControlsOpen ? "open" : "closed"}`}>
         {/* Search bar */}
         <MapSearchBar onSearch={handleSearch} />
 
@@ -442,18 +486,26 @@ export function MapPage() {
 
         {/* Filter toggle button */}
         <button
-          className={`filter-toggle-button ${isFilterOpen ? 'active' : ''}`}
+          className={`filter-toggle-button ${isFilterOpen ? "active" : ""}`}
           onClick={() => setIsFilterOpen(!isFilterOpen)}
-          title={t('map.filterPoints', 'Filter points')}
+          title={t("map.filterPoints", "Filter points")}
         >
-          🔍 {t('common.filter', 'Filters')} {(selectedTags.length + selectedTypes.length) > 0 && `(${selectedTags.length + selectedTypes.length})`}
+          🔍 {t("common.filter", "Filters")}{" "}
+          {selectedTags.length + selectedTypes.length > 0 &&
+            `(${selectedTags.length + selectedTypes.length})`}
         </button>
 
         <div className="points-count">
-          {points.length} {points.length !== 1 ? t('map.points', 'points') : t('map.point', 'point')}
-          {selectedTags.length > 0 && ` (${t('map.filteredByTags', 'filtered by {count} tag(s)').replace('{count}', String(selectedTags.length))})`}
-          {selectedTypes.length > 0 && ` (${t('map.filteredByTypes', 'filtered by {count} type(s)').replace('{count}', String(selectedTypes.length))})`}
-          {searchQuery && ` (${t('map.searchQuery', 'search')}: "${searchQuery}")`}
+          {points.length}{" "}
+          {points.length !== 1
+            ? t("map.points", "points")
+            : t("map.point", "point")}
+          {selectedTags.length > 0 &&
+            ` (${t("map.filteredByTags", "filtered by {count} tag(s)").replace("{count}", String(selectedTags.length))})`}
+          {selectedTypes.length > 0 &&
+            ` (${t("map.filteredByTypes", "filtered by {count} type(s)").replace("{count}", String(selectedTypes.length))})`}
+          {searchQuery &&
+            ` (${t("map.searchQuery", "search")}: "${searchQuery}")`}
         </div>
       </div>
 

@@ -12,9 +12,9 @@
  * - Responsive design (desktop: left of counter, mobile: between counter and filter button)
  */
 
-import { useState } from 'react';
-import type { FormEvent } from 'react';
-import './MapSearchBar.css';
+import { useState } from "react";
+import type { FormEvent } from "react";
+import "./MapSearchBar.css";
 
 interface MapSearchBarProps {
   /**
@@ -29,7 +29,7 @@ interface MapSearchBarProps {
  * Allows users to filter points on the map by search query
  */
 export function MapSearchBar({ onSearch }: MapSearchBarProps) {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
 
   /**
    * Handles form submission
@@ -46,8 +46,8 @@ export function MapSearchBar({ onSearch }: MapSearchBarProps) {
    * Resets search query and triggers empty search
    */
   const handleClear = () => {
-    setSearchQuery('');
-    onSearch('');
+    setSearchQuery("");
+    onSearch("");
   };
 
   return (
@@ -68,11 +68,11 @@ export function MapSearchBar({ onSearch }: MapSearchBarProps) {
       <button
         type="button"
         className="map-search-button"
-        aria-label={searchQuery ? 'Clear search' : 'Submit search'}
+        aria-label={searchQuery ? "Clear search" : "Submit search"}
         onClick={searchQuery ? handleClear : undefined}
-        title={searchQuery ? 'Clear search' : 'Submit search'}
+        title={searchQuery ? "Clear search" : "Submit search"}
       >
-        {searchQuery ? '✕' : '🔍'}
+        {searchQuery ? "✕" : "🔍"}
       </button>
     </form>
   );

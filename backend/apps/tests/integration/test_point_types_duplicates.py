@@ -15,9 +15,7 @@ from apps.points.models import PointType
 class TestPointTypesDuplicatePrevention:
     """Integration tests for preventing duplicate language entries."""
 
-    def test_prevent_duplicate_language_codes_in_names(
-        self, authenticated_client_alice, alice
-    ):
+    def test_prevent_duplicate_language_codes_in_names(self, authenticated_client_alice, alice):
         """
         Test that duplicate language codes are prevented.
 
@@ -32,29 +30,20 @@ class TestPointTypesDuplicatePrevention:
             creation_language="en",
             type_choice="custom",
             owner=alice,
-            visibility="private"
+            visibility="private",
         )
 
         # Try to update with what could be interpreted as duplicate
         # (This test verifies the system handles names as a proper dict)
         url = reverse("point-types:detail", args=[point_type.id])
-        update_payload = {
-            "names": {
-                "en": "Hill",
-                "fr": "Colline"
-            }
-        }
-        response = authenticated_client_alice.patch(
-            url, update_payload, format="json"
-        )
+        update_payload = {"names": {"en": "Hill", "fr": "Colline"}}
+        response = authenticated_client_alice.patch(url, update_payload, format="json")
 
         # Should succeed (no actual duplicate, just updating properly)
         assert response.status_code == status.HTTP_200_OK
         assert len(response.data["names"]) == 2
 
-    def test_names_field_is_proper_dict(
-        self, authenticated_client_alice, alice
-    ):
+    def test_names_field_is_proper_dict(self, authenticated_client_alice, alice):
         """
         Test that names field is stored as a proper dictionary.
 
@@ -66,7 +55,7 @@ class TestPointTypesDuplicatePrevention:
             creation_language="en",
             type_choice="custom",
             owner=alice,
-            visibility="private"
+            visibility="private",
         )
 
         # Get the point type
@@ -81,9 +70,7 @@ class TestPointTypesDuplicatePrevention:
         language_codes = list(response.data["names"].keys())
         assert len(language_codes) == len(set(language_codes))
 
-    def test_update_preserves_unique_language_codes(
-        self, authenticated_client_alice, alice
-    ):
+    def test_update_preserves_unique_language_codes(self, authenticated_client_alice, alice):
         """
         Test that updating a translation preserves uniqueness.
 
@@ -98,29 +85,20 @@ class TestPointTypesDuplicatePrevention:
             creation_language="en",
             type_choice="custom",
             owner=alice,
-            visibility="private"
+            visibility="private",
         )
 
         # Update English translation
         url = reverse("point-types:detail", args=[point_type.id])
-        update_payload = {
-            "names": {
-                "en": "Highway",  # Changed from "Road"
-                "fr": "Route"
-            }
-        }
-        response = authenticated_client_alice.patch(
-            url, update_payload, format="json"
-        )
+        update_payload = {"names": {"en": "Highway", "fr": "Route"}}  # Changed from "Road"
+        response = authenticated_client_alice.patch(url, update_payload, format="json")
 
         assert response.status_code == status.HTTP_200_OK
         assert len(response.data["names"]) == 2
         assert response.data["names"]["en"] == "Highway"
         assert response.data["names"]["fr"] == "Route"
 
-    def test_case_sensitivity_in_language_codes(
-        self, authenticated_client_alice, alice
-    ):
+    def test_case_sensitivity_in_language_codes(self, authenticated_client_alice, alice):
         """
         Test that language codes are case-sensitive (ISO 639-1 uses lowercase).
 
@@ -134,7 +112,7 @@ class TestPointTypesDuplicatePrevention:
             creation_language="en",
             type_choice="custom",
             owner=alice,
-            visibility="private"
+            visibility="private",
         )
 
         # Get the point type
@@ -147,9 +125,7 @@ class TestPointTypesDuplicatePrevention:
         for code in response.data["names"].keys():
             assert code.islower(), f"Language code '{code}' should be lowercase"
 
-    def test_adding_new_language_does_not_duplicate(
-        self, authenticated_client_alice, alice
-    ):
+    def test_adding_new_language_does_not_duplicate(self, authenticated_client_alice, alice):
         """
         Test that adding a new language doesn't create duplicates.
 
@@ -165,24 +141,20 @@ class TestPointTypesDuplicatePrevention:
             creation_language="en",
             type_choice="custom",
             owner=alice,
-            visibility="private"
+            visibility="private",
         )
 
         # Add French
         url = reverse("point-types:detail", args=[point_type.id])
         response1 = authenticated_client_alice.patch(
-            url,
-            {"names": {"en": "Park", "fr": "Parc"}},
-            format="json"
+            url, {"names": {"en": "Park", "fr": "Parc"}}, format="json"
         )
         assert response1.status_code == status.HTTP_200_OK
         assert len(response1.data["names"]) == 2
 
         # Add Spanish
         response2 = authenticated_client_alice.patch(
-            url,
-            {"names": {"en": "Park", "fr": "Parc", "es": "Parque"}},
-            format="json"
+            url, {"names": {"en": "Park", "fr": "Parc", "es": "Parque"}}, format="json"
         )
         assert response2.status_code == status.HTTP_200_OK
         assert len(response2.data["names"]) == 3

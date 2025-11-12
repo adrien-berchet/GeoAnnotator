@@ -38,14 +38,11 @@ class TestPointTypesFallbackLogic:
             creation_language="es",
             type_choice="custom",
             owner=alice,
-            visibility="private"
+            visibility="private",
         )
 
         # Set preference to French
-        UserPreferences.objects.update_or_create(
-            user=alice,
-            defaults={"language": "fr"}
-        )
+        UserPreferences.objects.update_or_create(user=alice, defaults={"language": "fr"})
 
         # Get point type - should fall back to Spanish
         url = reverse("point-types:detail", args=[point_type.id])
@@ -78,14 +75,11 @@ class TestPointTypesFallbackLogic:
             creation_language="es",
             type_choice="custom",
             owner=alice,
-            visibility="private"
+            visibility="private",
         )
 
         # Set preference to French (not available)
-        UserPreferences.objects.update_or_create(
-            user=alice,
-            defaults={"language": "fr"}
-        )
+        UserPreferences.objects.update_or_create(user=alice, defaults={"language": "fr"})
 
         # Get point type - should fall back to English, not creation language (Spanish)
         url = reverse("point-types:detail", args=[point_type.id])
@@ -96,9 +90,7 @@ class TestPointTypesFallbackLogic:
         assert "es" in response.data["names"]
         # Both are present, but English should be the fallback choice
 
-    def test_no_fallback_needed_when_preferred_available(
-        self, authenticated_client_alice, alice
-    ):
+    def test_no_fallback_needed_when_preferred_available(self, authenticated_client_alice, alice):
         """
         Test that no fallback occurs when preferred language is available.
 
@@ -113,14 +105,11 @@ class TestPointTypesFallbackLogic:
             creation_language="en",
             type_choice="custom",
             owner=alice,
-            visibility="private"
+            visibility="private",
         )
 
         # Set preference to French (available)
-        UserPreferences.objects.update_or_create(
-            user=alice,
-            defaults={"language": "fr"}
-        )
+        UserPreferences.objects.update_or_create(user=alice, defaults={"language": "fr"})
 
         # Get point type - should use French
         url = reverse("point-types:detail", args=[point_type.id])
@@ -130,9 +119,7 @@ class TestPointTypesFallbackLogic:
         assert "fr" in response.data["names"]
         assert response.data["names"]["fr"] == "Lac"
 
-    def test_default_to_english_when_no_preference_set(
-        self, authenticated_client_alice, alice
-    ):
+    def test_default_to_english_when_no_preference_set(self, authenticated_client_alice, alice):
         """
         Test that system defaults to English when no preference is set.
 
@@ -147,7 +134,7 @@ class TestPointTypesFallbackLogic:
             creation_language="en",
             type_choice="custom",
             owner=alice,
-            visibility="private"
+            visibility="private",
         )
 
         # Ensure no preference is set (or default is English)

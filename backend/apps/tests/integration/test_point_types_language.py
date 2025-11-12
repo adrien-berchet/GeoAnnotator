@@ -17,9 +17,7 @@ from apps.settings.models import UserPreferences
 class TestPointTypesLanguagePreference:
     """Integration tests for point type language preference."""
 
-    def test_point_types_shown_in_user_preferred_language(
-        self, authenticated_client_alice, alice
-    ):
+    def test_point_types_shown_in_user_preferred_language(self, authenticated_client_alice, alice):
         """
         Test that point type names are shown in user's preferred language.
 
@@ -34,14 +32,11 @@ class TestPointTypesLanguagePreference:
             creation_language="en",
             type_choice="custom",
             owner=alice,
-            visibility="private"
+            visibility="private",
         )
 
         # Set Alice's language preference to French
-        UserPreferences.objects.update_or_create(
-            user=alice,
-            defaults={"language": "fr"}
-        )
+        UserPreferences.objects.update_or_create(user=alice, defaults={"language": "fr"})
 
         # Get list of point types
         url = reverse("point-types:list")
@@ -50,10 +45,7 @@ class TestPointTypesLanguagePreference:
         assert response.status_code == status.HTTP_200_OK
 
         # Find our point type in the response
-        our_type = next(
-            (pt for pt in response.data if str(pt["id"]) == str(point_type.id)),
-            None
-        )
+        our_type = next((pt for pt in response.data if str(pt["id"]) == str(point_type.id)), None)
         assert our_type is not None
         assert our_type["names"]["fr"] == "Arbre"
         assert our_type["names"]["en"] == "Tree"
@@ -75,14 +67,11 @@ class TestPointTypesLanguagePreference:
             creation_language="en",
             type_choice="custom",
             owner=alice,
-            visibility="private"
+            visibility="private",
         )
 
         # Set Alice's language preference to French
-        UserPreferences.objects.update_or_create(
-            user=alice,
-            defaults={"language": "fr"}
-        )
+        UserPreferences.objects.update_or_create(user=alice, defaults={"language": "fr"})
 
         # Get the point type
         url = reverse("point-types:detail", args=[point_type.id])
@@ -92,9 +81,7 @@ class TestPointTypesLanguagePreference:
         assert response.data["names"]["en"] == "Mountain"
         # Should still be accessible even though French is missing
 
-    def test_point_types_fallback_to_creation_language(
-        self, authenticated_client_alice, alice
-    ):
+    def test_point_types_fallback_to_creation_language(self, authenticated_client_alice, alice):
         """
         Test fallback to creation language when both preferred and English missing.
 
@@ -109,14 +96,11 @@ class TestPointTypesLanguagePreference:
             creation_language="es",
             type_choice="custom",
             owner=alice,
-            visibility="private"
+            visibility="private",
         )
 
         # Set Alice's language preference to French
-        UserPreferences.objects.update_or_create(
-            user=alice,
-            defaults={"language": "fr"}
-        )
+        UserPreferences.objects.update_or_create(user=alice, defaults={"language": "fr"})
 
         # Get the point type
         url = reverse("point-types:detail", args=[point_type.id])
@@ -126,9 +110,7 @@ class TestPointTypesLanguagePreference:
         assert response.data["names"]["es"] == "Montaña"
         # Should fall back to creation language (Spanish)
 
-    def test_base_types_default_to_english(
-        self, authenticated_client_alice, alice
-    ):
+    def test_base_types_default_to_english(self, authenticated_client_alice, alice):
         """
         Test that base types default to English.
 
@@ -143,7 +125,7 @@ class TestPointTypesLanguagePreference:
             creation_language="en",
             type_choice="base",
             owner=None,
-            visibility="public"
+            visibility="public",
         )
 
         # Get the point type

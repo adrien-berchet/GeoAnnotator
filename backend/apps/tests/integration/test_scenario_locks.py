@@ -10,11 +10,12 @@ Acceptance Criteria: FR-069 to FR-073
 """
 
 import time
-import pytest
 from datetime import datetime
 from datetime import timedelta
-from django.utils import timezone
+
+import pytest
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -31,9 +32,7 @@ class TestScenario8EditingLocks:
         self.client = APIClient()
 
         # Create and authenticate Alice
-        self.alice = User.objects.create_user(
-            email="alice@example.com", password="SecurePass123"
-        )
+        self.alice = User.objects.create_user(email="alice@example.com", password="SecurePass123")
         alice_login = self.client.post(
             reverse("authentication:login"),
             {"email": "alice@example.com", "password": "SecurePass123"},
@@ -42,9 +41,7 @@ class TestScenario8EditingLocks:
         self.alice_token = alice_login.data["access"]
 
         # Create and authenticate Bob
-        self.bob = User.objects.create_user(
-            email="bob@example.com", password="SecurePass456"
-        )
+        self.bob = User.objects.create_user(email="bob@example.com", password="SecurePass456")
         bob_login = self.client.post(
             reverse("authentication:login"),
             {"email": "bob@example.com", "password": "SecurePass456"},
@@ -78,7 +75,9 @@ class TestScenario8EditingLocks:
 
         # Bob accepts share
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.bob_token}")
-        accept_url = reverse("global_sharing:accept", kwargs={"token": share_response.data["invitation_token"]})
+        accept_url = reverse(
+            "global_sharing:accept", kwargs={"token": share_response.data["invitation_token"]}
+        )
         self.client.post(accept_url)
 
         self.point_url = reverse("points:detail", kwargs={"pk": self.point_id})
@@ -128,7 +127,9 @@ class TestScenario8EditingLocks:
 
         # Then
         assert response.status_code == status.HTTP_409_CONFLICT
-        assert "POINT_LOCKED" in str(response.data).upper() or "locked" in str(response.data).lower()
+        assert (
+            "POINT_LOCKED" in str(response.data).upper() or "locked" in str(response.data).lower()
+        )
         # Should indicate who holds the lock
         assert "alice" in str(response.data).lower()
 
@@ -142,25 +143,18 @@ class TestScenario8EditingLocks:
         """
         # Given - Alice acquires lock
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.alice_token}")
-        lock_response = self.client.post(self.lock_url)
-        original_acquired_at = lock_response.data["acquired_at"]
+        self.client.post(self.lock_url)
 
         # Wait a moment to ensure time difference
         time.sleep(1)
 
         # When - Alice edits the point
-        edit_response = self.client.patch(
-            self.point_url,
-            {"title": "Updated Title"},
-            format="json"
-        )
+        edit_response = self.client.patch(self.point_url, {"title": "Updated Title"}, format="json")
 
         # Then
         assert edit_response.status_code == status.HTTP_200_OK
         assert edit_response.data["title"] == "Updated Title"
 
-        # Lock should be refreshed
-        updated_acquired_at = edit_response.data["editing_lock"]["acquired_at"]
         # New acquired_at should be later than original
         # (In a real test, we'd compare timestamps precisely)
         assert "acquired_at" in edit_response.data["editing_lock"]
@@ -227,11 +221,7 @@ class TestScenario8EditingLocks:
         assert lock_response.status_code == status.HTTP_200_OK
 
         # Step 2: Alice edits point
-        edit_response = self.client.patch(
-            self.point_url,
-            {"title": "Alice's Edit"},
-            format="json"
-        )
+        edit_response = self.client.patch(self.point_url, {"title": "Alice's Edit"}, format="json")
         assert edit_response.status_code == status.HTTP_200_OK
 
         # Step 3: Bob cannot acquire lock
@@ -265,9 +255,7 @@ class TestScenario8EditingLocks:
         # When - Bob attempts to edit without lock
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.bob_token}")
         bob_edit_response = self.client.patch(
-            self.point_url,
-            {"title": "Bob's Forbidden Edit"},
-            format="json"
+            self.point_url, {"title": "Bob's Forbidden Edit"}, format="json"
         )
 
         # Then

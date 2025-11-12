@@ -13,10 +13,9 @@ Tests cover:
 - GET /api/v1/annotations/{id}/download - Download file
 """
 
-import io
 import pytest
-from django.urls import reverse
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -40,37 +39,27 @@ class TestAnnotationsContract:
     def authenticated_user(self, api_client):
         """Create and authenticate a user with a GPS point."""
         # Register user
-        register_url = reverse('authentication:register')
-        register_data = {
-            'email': 'test@example.com',
-            'password': 'SecurePass123'
-        }
-        response = api_client.post(register_url, register_data, format='json')
-        access_token = response.data['access']
-        user = response.data['user']
+        register_url = reverse("authentication:register")
+        register_data = {"email": "test@example.com", "password": "SecurePass123"}
+        response = api_client.post(register_url, register_data, format="json")
+        access_token = response.data["access"]
+        user = response.data["user"]
 
         # Set authentication
-        api_client.credentials(HTTP_AUTHORIZATION=f'Bearer {access_token}')
+        api_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access_token}")
 
         # Create a GPS point
-        point_url = reverse('points:list')
-        point_data = {
-            'title': 'Test Point',
-            'latitude': 37.7749,
-            'longitude': -122.4194
-        }
-        point_response = api_client.post(point_url, point_data, format='json')
-        point_id = point_response.data['id']
+        point_url = reverse("points:list")
+        point_data = {"title": "Test Point", "latitude": 37.7749, "longitude": -122.4194}
+        point_response = api_client.post(point_url, point_data, format="json")
+        point_id = point_response.data["id"]
 
         return api_client, user, point_id
 
     @pytest.fixture
     def text_annotation_data(self):
         """Valid text annotation payload."""
-        return {
-            'type': 'text',
-            'text_content': '<p>Beautiful sunset 🌅</p>'
-        }
+        return {"type": "text", "text_content": "<p>Beautiful sunset 🌅</p>"}
 
     # T023: POST /points/{id}/annotations - Create text annotation
     def test_create_text_annotation_success(self, authenticated_user, text_annotation_data):
@@ -84,19 +73,19 @@ class TestAnnotationsContract:
         - file is null
         """
         api_client, user, point_id = authenticated_user
-        url = reverse('annotations:list', kwargs={'point_id': point_id})
-        response = api_client.post(url, text_annotation_data, format='json')
+        url = reverse("annotations:list", kwargs={"point_id": point_id})
+        response = api_client.post(url, text_annotation_data, format="json")
 
         assert response.status_code == status.HTTP_201_CREATED
 
         # Validate response structure
         annotation = response.data
-        assert 'id' in annotation
-        assert annotation['gps_point_id'] == point_id
-        assert annotation['type'] == 'text'
-        assert annotation['text_content'] == text_annotation_data['text_content']
-        assert 'created_at' in annotation
-        assert annotation['file'] is None
+        assert "id" in annotation
+        assert annotation["gps_point_id"] == point_id
+        assert annotation["type"] == "text"
+        assert annotation["text_content"] == text_annotation_data["text_content"]
+        assert "created_at" in annotation
+        assert annotation["file"] is None
 
     def test_create_file_annotation_success(self, authenticated_user):
         """
@@ -111,37 +100,32 @@ class TestAnnotationsContract:
         api_client, user, point_id = authenticated_user
 
         # Create test image file
-        image_content = b'fake-image-content'
+        image_content = b"fake-image-content"
         uploaded_file = SimpleUploadedFile(
-            "test_image.jpg",
-            image_content,
-            content_type="image/jpeg"
+            "test_image.jpg", image_content, content_type="image/jpeg"
         )
 
-        url = reverse('annotations:list', kwargs={'point_id': point_id})
-        data = {
-            'type': 'image',
-            'file': uploaded_file
-        }
-        response = api_client.post(url, data, format='multipart')
+        url = reverse("annotations:list", kwargs={"point_id": point_id})
+        data = {"type": "image", "file": uploaded_file}
+        response = api_client.post(url, data, format="multipart")
 
         assert response.status_code == status.HTTP_201_CREATED
 
         # Validate response structure
         annotation = response.data
-        assert 'id' in annotation
-        assert annotation['gps_point_id'] == point_id
-        assert annotation['type'] == 'image'
-        assert annotation['text_content'] is None
+        assert "id" in annotation
+        assert annotation["gps_point_id"] == point_id
+        assert annotation["type"] == "image"
+        assert annotation["text_content"] is None
 
         # Validate file metadata
-        assert annotation['file'] is not None
-        file_meta = annotation['file']
-        assert 'url' in file_meta
-        assert file_meta['file_name'] == 'test_image.jpg'
-        assert file_meta['file_size'] == len(image_content)
-        assert file_meta['mime_type'] == 'image/jpeg'
-        assert file_meta['can_preview'] is True
+        assert annotation["file"] is not None
+        file_meta = annotation["file"]
+        assert "url" in file_meta
+        assert file_meta["file_name"] == "test_image.jpg"
+        assert file_meta["file_size"] == len(image_content)
+        assert file_meta["mime_type"] == "image/jpeg"
+        assert file_meta["can_preview"] is True
 
     def test_create_annotation_file_too_large(self, authenticated_user):
         """
@@ -154,22 +138,28 @@ class TestAnnotationsContract:
         """
         api_client, user, point_id = authenticated_user
 
-        url = reverse('annotations:list', kwargs={'point_id': point_id})
+        url = reverse("annotations:list", kwargs={"point_id": point_id})
 
         # Mock a large file (we can't create 1GB in memory)
         # This test will validate the error response structure
         # Actual implementation will check Content-Length header
         data = {
-            'type': 'file',
-            'file': SimpleUploadedFile("large.bin", b'data', content_type="application/octet-stream")
+            "type": "file",
+            "file": SimpleUploadedFile(
+                "large.bin", b"data", content_type="application/octet-stream"
+            ),
         }
 
         # For now, we expect this to pass (file is small)
         # Full implementation will add size validation
-        response = api_client.post(url, data, format='multipart')
+        response = api_client.post(url, data, format="multipart")
 
         # Placeholder assertion - will be updated with actual size validation
-        assert response.status_code in [status.HTTP_201_CREATED, status.HTTP_400_BAD_REQUEST, status.HTTP_413_REQUEST_ENTITY_TOO_LARGE]
+        assert response.status_code in [
+            status.HTTP_201_CREATED,
+            status.HTTP_400_BAD_REQUEST,
+            status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+        ]
 
     def test_create_annotation_quota_exceeded(self, authenticated_user):
         """
@@ -196,11 +186,11 @@ class TestAnnotationsContract:
         api_client, user, point_id = authenticated_user
 
         # Create annotation first
-        create_url = reverse('annotations:list', kwargs={'point_id': point_id})
-        api_client.post(create_url, text_annotation_data, format='json')
+        create_url = reverse("annotations:list", kwargs={"point_id": point_id})
+        api_client.post(create_url, text_annotation_data, format="json")
 
         # List annotations
-        list_url = reverse('annotations:list', kwargs={'point_id': point_id})
+        list_url = reverse("annotations:list", kwargs={"point_id": point_id})
         response = api_client.get(list_url)
 
         assert response.status_code == status.HTTP_200_OK
@@ -209,10 +199,10 @@ class TestAnnotationsContract:
 
         # Validate annotation structure
         annotation = response.data[0]
-        assert 'id' in annotation
-        assert 'gps_point_id' in annotation
-        assert 'type' in annotation
-        assert 'created_at' in annotation
+        assert "id" in annotation
+        assert "gps_point_id" in annotation
+        assert "type" in annotation
+        assert "created_at" in annotation
 
     def test_list_annotations_with_type_filter(self, authenticated_user, text_annotation_data):
         """
@@ -224,15 +214,15 @@ class TestAnnotationsContract:
         api_client, user, point_id = authenticated_user
 
         # Create text annotation
-        create_url = reverse('annotations:list', kwargs={'point_id': point_id})
-        api_client.post(create_url, text_annotation_data, format='json')
+        create_url = reverse("annotations:list", kwargs={"point_id": point_id})
+        api_client.post(create_url, text_annotation_data, format="json")
 
         # List with type filter
-        list_url = reverse('annotations:list', kwargs={'point_id': point_id})
-        response = api_client.get(list_url, {'type': 'text'})
+        list_url = reverse("annotations:list", kwargs={"point_id": point_id})
+        response = api_client.get(list_url, {"type": "text"})
 
         assert response.status_code == status.HTTP_200_OK
-        assert all(ann['type'] == 'text' for ann in response.data)
+        assert all(ann["type"] == "text" for ann in response.data)
 
     # T025: GET /points/{id}/annotations/{id} - Get annotation details
     def test_get_annotation_success(self, authenticated_user, text_annotation_data):
@@ -246,20 +236,19 @@ class TestAnnotationsContract:
         api_client, user, point_id = authenticated_user
 
         # Create annotation
-        create_url = reverse('annotations:list', kwargs={'point_id': point_id})
-        create_response = api_client.post(create_url, text_annotation_data, format='json')
-        annotation_id = create_response.data['id']
+        create_url = reverse("annotations:list", kwargs={"point_id": point_id})
+        create_response = api_client.post(create_url, text_annotation_data, format="json")
+        annotation_id = create_response.data["id"]
 
         # Get annotation
         detail_url = reverse(
-            'annotations:detail',
-            kwargs={'point_id': point_id, 'pk': annotation_id}
+            "annotations:detail", kwargs={"point_id": point_id, "pk": annotation_id}
         )
         response = api_client.get(detail_url)
 
         assert response.status_code == status.HTTP_200_OK
-        assert response.data['id'] == annotation_id
-        assert response.data['text_content'] == text_annotation_data['text_content']
+        assert response.data["id"] == annotation_id
+        assert response.data["text_content"] == text_annotation_data["text_content"]
 
     def test_get_annotation_not_found(self, authenticated_user):
         """
@@ -271,8 +260,8 @@ class TestAnnotationsContract:
         api_client, user, point_id = authenticated_user
 
         url = reverse(
-            'annotations:detail',
-            kwargs={'point_id': point_id, 'pk': '00000000-0000-0000-0000-000000000000'}
+            "annotations:detail",
+            kwargs={"point_id": point_id, "pk": "00000000-0000-0000-0000-000000000000"},
         )
         response = api_client.get(url)
 
@@ -290,20 +279,19 @@ class TestAnnotationsContract:
         api_client, user, point_id = authenticated_user
 
         # Create annotation
-        create_url = reverse('annotations:list', kwargs={'point_id': point_id})
-        create_response = api_client.post(create_url, text_annotation_data, format='json')
-        annotation_id = create_response.data['id']
+        create_url = reverse("annotations:list", kwargs={"point_id": point_id})
+        create_response = api_client.post(create_url, text_annotation_data, format="json")
+        annotation_id = create_response.data["id"]
 
         # Update annotation
         update_url = reverse(
-            'annotations:detail',
-            kwargs={'point_id': point_id, 'pk': annotation_id}
+            "annotations:detail", kwargs={"point_id": point_id, "pk": annotation_id}
         )
-        update_data = {'text_content': '<p>Updated content 🎉</p>'}
-        response = api_client.put(update_url, update_data, format='json')
+        update_data = {"text_content": "<p>Updated content 🎉</p>"}
+        response = api_client.put(update_url, update_data, format="json")
 
         assert response.status_code == status.HTTP_200_OK
-        assert response.data['text_content'] == update_data['text_content']
+        assert response.data["text_content"] == update_data["text_content"]
 
     def test_update_file_annotation_fails(self, authenticated_user):
         """
@@ -317,24 +305,23 @@ class TestAnnotationsContract:
         api_client, user, point_id = authenticated_user
 
         # Create file annotation
-        create_url = reverse('annotations:list', kwargs={'point_id': point_id})
+        create_url = reverse("annotations:list", kwargs={"point_id": point_id})
         file_data = {
-            'type': 'image',
-            'file': SimpleUploadedFile("test.jpg", b'data', content_type="image/jpeg")
+            "type": "image",
+            "file": SimpleUploadedFile("test.jpg", b"data", content_type="image/jpeg"),
         }
-        create_response = api_client.post(create_url, file_data, format='multipart')
-        annotation_id = create_response.data['id']
+        create_response = api_client.post(create_url, file_data, format="multipart")
+        annotation_id = create_response.data["id"]
 
         # Try to update
         update_url = reverse(
-            'annotations:detail',
-            kwargs={'point_id': point_id, 'pk': annotation_id}
+            "annotations:detail", kwargs={"point_id": point_id, "pk": annotation_id}
         )
-        update_data = {'text_content': 'Cannot update files'}
-        response = api_client.put(update_url, update_data, format='json')
+        update_data = {"text_content": "Cannot update files"}
+        response = api_client.put(update_url, update_data, format="json")
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert response.data['error'] == 'INVALID_OPERATION'
+        assert response.data["error"] == "INVALID_OPERATION"
 
     # T027: DELETE /points/{id}/annotations/{id} - Delete annotation
     def test_delete_annotation_success(self, authenticated_user, text_annotation_data):
@@ -349,14 +336,13 @@ class TestAnnotationsContract:
         api_client, user, point_id = authenticated_user
 
         # Create annotation
-        create_url = reverse('annotations:list', kwargs={'point_id': point_id})
-        create_response = api_client.post(create_url, text_annotation_data, format='json')
-        annotation_id = create_response.data['id']
+        create_url = reverse("annotations:list", kwargs={"point_id": point_id})
+        create_response = api_client.post(create_url, text_annotation_data, format="json")
+        annotation_id = create_response.data["id"]
 
         # Delete annotation
         delete_url = reverse(
-            'annotations:detail',
-            kwargs={'point_id': point_id, 'pk': annotation_id}
+            "annotations:detail", kwargs={"point_id": point_id, "pk": annotation_id}
         )
         response = api_client.delete(delete_url)
 
@@ -366,7 +352,9 @@ class TestAnnotationsContract:
         get_response = api_client.get(delete_url)
         assert get_response.status_code == status.HTTP_404_NOT_FOUND
 
-    def test_delete_annotation_forbidden(self, api_client, authenticated_user, text_annotation_data):
+    def test_delete_annotation_forbidden(
+        self, api_client, authenticated_user, text_annotation_data
+    ):
         """
         Test deleting annotation without edit permission.
 
@@ -376,20 +364,19 @@ class TestAnnotationsContract:
         """
         # Create annotation as user1
         client1, user1, point_id = authenticated_user
-        create_url = reverse('annotations:list', kwargs={'point_id': point_id})
-        create_response = client1.post(create_url, text_annotation_data, format='json')
-        annotation_id = create_response.data['id']
+        create_url = reverse("annotations:list", kwargs={"point_id": point_id})
+        create_response = client1.post(create_url, text_annotation_data, format="json")
+        annotation_id = create_response.data["id"]
 
         # Try to delete as user2
         client2 = APIClient()
-        register_url = reverse('authentication:register')
-        register_data = {'email': 'user2@example.com', 'password': 'SecurePass123'}
-        register_response = client2.post(register_url, register_data, format='json')
-        client2.credentials(HTTP_AUTHORIZATION=f'Bearer {register_response.data["access"]}')
+        register_url = reverse("authentication:register")
+        register_data = {"email": "user2@example.com", "password": "SecurePass123"}
+        register_response = client2.post(register_url, register_data, format="json")
+        client2.credentials(HTTP_AUTHORIZATION=f"Bearer {register_response.data['access']}")
 
         delete_url = reverse(
-            'annotations:detail',
-            kwargs={'point_id': point_id, 'pk': annotation_id}
+            "annotations:detail", kwargs={"point_id": point_id, "pk": annotation_id}
         )
         response = client2.delete(delete_url)
 
@@ -409,26 +396,30 @@ class TestAnnotationsContract:
         api_client, user, point_id = authenticated_user
 
         # Create file annotation
-        create_url = reverse('annotations:list', kwargs={'point_id': point_id})
-        file_content = b'test-file-content'
+        create_url = reverse("annotations:list", kwargs={"point_id": point_id})
+        file_content = b"test-file-content"
         file_data = {
-            'type': 'document',
-            'file': SimpleUploadedFile("document.pdf", file_content, content_type="application/pdf")
+            "type": "document",
+            "file": SimpleUploadedFile(
+                "document.pdf", file_content, content_type="application/pdf"
+            ),
         }
-        create_response = api_client.post(create_url, file_data, format='multipart')
-        annotation_id = create_response.data['id']
+        create_response = api_client.post(create_url, file_data, format="multipart")
+        annotation_id = create_response.data["id"]
 
         # Download file
-        download_url = reverse('annotations:download', kwargs={'point_id': point_id, 'pk': annotation_id})
+        download_url = reverse(
+            "annotations:download", kwargs={"point_id": point_id, "pk": annotation_id}
+        )
         response = api_client.get(download_url)
 
         # Accept both 200 (local storage) and 302 (S3 redirect)
         assert response.status_code in [status.HTTP_200_OK, status.HTTP_302_FOUND]
 
         if response.status_code == status.HTTP_200_OK:
-            assert response['Content-Type'] == 'application/pdf'
-            assert 'Content-Disposition' in response
-            assert 'document.pdf' in response['Content-Disposition']
+            assert response["Content-Type"] == "application/pdf"
+            assert "Content-Disposition" in response
+            assert "document.pdf" in response["Content-Disposition"]
 
     def test_download_text_annotation_fails(self, authenticated_user, text_annotation_data):
         """
@@ -441,12 +432,14 @@ class TestAnnotationsContract:
         api_client, user, point_id = authenticated_user
 
         # Create text annotation
-        create_url = reverse('annotations:list', kwargs={'point_id': point_id})
-        create_response = api_client.post(create_url, text_annotation_data, format='json')
-        annotation_id = create_response.data['id']
+        create_url = reverse("annotations:list", kwargs={"point_id": point_id})
+        create_response = api_client.post(create_url, text_annotation_data, format="json")
+        annotation_id = create_response.data["id"]
 
         # Try to download
-        download_url = reverse('annotations:download', kwargs={'point_id': point_id, 'pk': annotation_id})
+        download_url = reverse(
+            "annotations:download", kwargs={"point_id": point_id, "pk": annotation_id}
+        )
         response = api_client.get(download_url)
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST

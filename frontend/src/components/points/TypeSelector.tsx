@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
-import { getPointTypes } from '../../api/types';
-import type { PointType } from '../../types/point';
-import { getErrorMessage } from '../../api/client';
-import { getPointTypeName } from '../../utils/pointTypeUtils';
-import { useLanguage } from '../../contexts/LanguageContext';
-import './TypeSelector.css';
+import { useState, useEffect, useRef } from "react";
+import { getPointTypes } from "../../api/types";
+import type { PointType } from "../../types/point";
+import { getErrorMessage } from "../../api/client";
+import { getPointTypeName } from "../../utils/pointTypeUtils";
+import { useLanguage } from "../../contexts/LanguageContext";
+import "./TypeSelector.css";
 
 interface TypeSelectorProps {
   value?: string;
@@ -20,7 +20,7 @@ export default function TypeSelector({
   onChange,
   disabled = false,
   required = false,
-  label = 'Point Type',
+  label = "Point Type",
   helpText,
 }: TypeSelectorProps) {
   const { language } = useLanguage();
@@ -30,27 +30,6 @@ export default function TypeSelector({
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    loadTypes();
-  }, []);
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isOpen]);
-
   const loadTypes = async () => {
     try {
       setLoading(true);
@@ -59,8 +38,8 @@ export default function TypeSelector({
 
       // Ensure data is an array
       if (!Array.isArray(data)) {
-        console.error('getPointTypes returned non-array:', data);
-        setError('Invalid response format from server');
+        console.error("getPointTypes returned non-array:", data);
+        setError("Invalid response format from server");
         setTypes([]);
         return;
       }
@@ -72,13 +51,38 @@ export default function TypeSelector({
         onChange(data[0].id);
       }
     } catch (err) {
-      console.error('Error loading types:', err);
+      console.error("Error loading types:", err);
       setError(getErrorMessage(err));
       setTypes([]);
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadTypes();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen]);
 
   if (loading) {
     return (
@@ -100,7 +104,7 @@ export default function TypeSelector({
     );
   }
 
-  const selectedType = types.find(t => t.id === value);
+  const selectedType = types.find((t) => t.id === value);
 
   const handleSelect = (typeId: string) => {
     onChange(typeId);
@@ -117,7 +121,7 @@ export default function TypeSelector({
       <div className="type-selector-wrapper">
         <button
           type="button"
-          className={`type-selector-button ${isOpen ? 'open' : ''}`}
+          className={`type-selector-button ${isOpen ? "open" : ""}`}
           onClick={() => !disabled && setIsOpen(!isOpen)}
           disabled={disabled}
           aria-haspopup="listbox"
@@ -125,13 +129,18 @@ export default function TypeSelector({
         >
           {selectedType ? (
             <span className="type-selector-selected">
-              {selectedType.icon && selectedType.icon !== '/icons/default.svg' ? (
-                selectedType.icon.startsWith('http') || selectedType.icon.startsWith('/') || selectedType.icon.startsWith('data:') ? (
+              {selectedType.icon &&
+              selectedType.icon !== "/icons/default.svg" ? (
+                selectedType.icon.startsWith("http") ||
+                selectedType.icon.startsWith("/") ||
+                selectedType.icon.startsWith("data:") ? (
                   <img
                     src={selectedType.icon}
                     alt=""
                     className="type-icon"
-                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                    }}
                   />
                 ) : (
                   <span className="type-icon-emoji">{selectedType.icon}</span>
@@ -149,39 +158,44 @@ export default function TypeSelector({
 
         {isOpen && (
           <ul className="type-selector-dropdown" role="listbox">
-            {Array.isArray(types) && types.map((type) => (
-              <li
-                key={type.id}
-                className={`type-selector-option ${value === type.id ? 'selected' : ''}`}
-                onClick={() => handleSelect(type.id)}
-                role="option"
-                aria-selected={value === type.id}
-              >
-                {type.icon && type.icon !== '/icons/default.svg' ? (
-                  type.icon.startsWith('http') || type.icon.startsWith('/') || type.icon.startsWith('data:') ? (
-                    <img
-                      src={type.icon}
-                      alt=""
-                      className="type-icon"
-                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                    />
+            {Array.isArray(types) &&
+              types.map((type) => (
+                <li
+                  key={type.id}
+                  className={`type-selector-option ${value === type.id ? "selected" : ""}`}
+                  onClick={() => handleSelect(type.id)}
+                  role="option"
+                  aria-selected={value === type.id}
+                >
+                  {type.icon && type.icon !== "/icons/default.svg" ? (
+                    type.icon.startsWith("http") ||
+                    type.icon.startsWith("/") ||
+                    type.icon.startsWith("data:") ? (
+                      <img
+                        src={type.icon}
+                        alt=""
+                        className="type-icon"
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                        }}
+                      />
+                    ) : (
+                      <span className="type-icon-emoji">{type.icon}</span>
+                    )
                   ) : (
-                    <span className="type-icon-emoji">{type.icon}</span>
-                  )
-                ) : (
-                  <span className="type-icon-emoji">📍</span>
-                )}
-                <span className="type-name">{getPointTypeName(type, language)}</span>
-                {!type.owner && <span className="type-badge">(Base)</span>}
-              </li>
-            ))}
+                    <span className="type-icon-emoji">📍</span>
+                  )}
+                  <span className="type-name">
+                    {getPointTypeName(type, language)}
+                  </span>
+                  {!type.owner && <span className="type-badge">(Base)</span>}
+                </li>
+              ))}
           </ul>
         )}
       </div>
 
-      {helpText && (
-        <small className="type-selector-help">{helpText}</small>
-      )}
+      {helpText && <small className="type-selector-help">{helpText}</small>}
     </div>
   );
 }

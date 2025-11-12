@@ -2,10 +2,14 @@
  * Theme context and provider for managing application theme
  */
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { getSettings, updateSettings } from '@/api/settings';
-import { useAuth } from '@/hooks/useAuth';
-import type { ThemeMode, ResolvedTheme, ThemeContextValue } from '@/types/settings';
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { getSettings, updateSettings } from "@/api/settings";
+import { useAuth } from "@/hooks/useAuth";
+import type {
+  ThemeMode,
+  ResolvedTheme,
+  ThemeContextValue,
+} from "@/types/settings";
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
@@ -13,10 +17,11 @@ const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
  * Hook to access theme context
  * @throws Error if used outside ThemeProvider
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function useTheme(): ThemeContextValue {
   const context = useContext(ThemeContext);
   if (!context) {
-    throw new Error('useTheme must be used within a ThemeProvider');
+    throw new Error("useTheme must be used within a ThemeProvider");
   }
   return context;
 }
@@ -30,19 +35,23 @@ interface ThemeProviderProps {
  * Provider component for theme management
  * Loads theme from backend on mount and persists changes
  */
-export function ThemeProvider({ children, initialTheme = 'auto' }: ThemeProviderProps) {
+export function ThemeProvider({
+  children,
+  initialTheme = "auto",
+}: ThemeProviderProps) {
   const { user } = useAuth();
   const [themeMode, setThemeModeState] = useState<ThemeMode>(initialTheme);
   const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>(() => {
     try {
-      if (initialTheme === 'auto') {
-        return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
-          ? 'dark'
-          : 'light';
+      if (initialTheme === "auto") {
+        return window.matchMedia &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "light";
       }
       return initialTheme as ResolvedTheme;
-    } catch (e) {
-      return 'light';
+    } catch {
+      return "light";
     }
   });
   const [isLoading, setIsLoading] = useState(true);
@@ -59,7 +68,7 @@ export function ThemeProvider({ children, initialTheme = 'auto' }: ThemeProvider
         const settings = await getSettings();
         setThemeModeState(settings.theme_mode);
       } catch (error) {
-        console.error('Failed to load theme from backend:', error);
+        console.error("Failed to load theme from backend:", error);
         // Fallback to default or initialTheme
         setThemeModeState(initialTheme);
       } finally {
@@ -73,9 +82,11 @@ export function ThemeProvider({ children, initialTheme = 'auto' }: ThemeProvider
   // Resolve theme based on system preference
   useEffect(() => {
     const updateResolvedTheme = () => {
-      if (themeMode === 'auto') {
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        setResolvedTheme(prefersDark ? 'dark' : 'light');
+      if (themeMode === "auto") {
+        const prefersDark = window.matchMedia(
+          "(prefers-color-scheme: dark)",
+        ).matches;
+        setResolvedTheme(prefersDark ? "dark" : "light");
       } else {
         setResolvedTheme(themeMode);
       }
@@ -84,20 +95,20 @@ export function ThemeProvider({ children, initialTheme = 'auto' }: ThemeProvider
     updateResolvedTheme();
 
     // Listen for system theme changes
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
     const handler = () => {
-      if (themeMode === 'auto') {
+      if (themeMode === "auto") {
         updateResolvedTheme();
       }
     };
 
-    mediaQuery.addEventListener('change', handler);
-    return () => mediaQuery.removeEventListener('change', handler);
+    mediaQuery.addEventListener("change", handler);
+    return () => mediaQuery.removeEventListener("change", handler);
   }, [themeMode]);
 
   // Apply theme to document
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', resolvedTheme);
+    document.documentElement.setAttribute("data-theme", resolvedTheme);
   }, [resolvedTheme]);
 
   /**
@@ -112,7 +123,7 @@ export function ThemeProvider({ children, initialTheme = 'auto' }: ThemeProvider
       try {
         await updateSettings({ theme_mode: mode });
       } catch (error) {
-        console.error('Failed to persist theme to backend:', error);
+        console.error("Failed to persist theme to backend:", error);
         // UI already updated, so we don't revert on error
         // This provides optimistic updates for better UX
       }
@@ -126,5 +137,7 @@ export function ThemeProvider({ children, initialTheme = 'auto' }: ThemeProvider
     isLoading,
   };
 
-  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
+  return (
+    <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
+  );
 }

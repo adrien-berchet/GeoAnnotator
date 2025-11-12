@@ -36,7 +36,12 @@ body {
 
 /* === TYPOGRAPHY === */
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   margin: 0;
   font-weight: var(--font-weight-semibold);
   line-height: var(--line-height-tight);
@@ -60,7 +65,8 @@ h4 {
   font-size: var(--font-size-lg);
 }
 
-h5, h6 {
+h5,
+h6 {
   font-size: var(--font-size-base);
 }
 
@@ -135,7 +141,7 @@ pre {
   color: var(--color-primary-dark);
 }
 
-[data-theme='dark'] ::selection {
+[data-theme="dark"] ::selection {
   background: var(--color-primary-dark);
   color: var(--color-primary-light);
 }

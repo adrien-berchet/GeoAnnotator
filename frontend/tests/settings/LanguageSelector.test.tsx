@@ -1,68 +1,103 @@
 /**
  * Tests for LanguageSelector component.
  *
- * Tests language selection UI (currently English only).
+ * Tests language selection UI (English and French).
  */
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import LanguageSelector from '@/components/settings/LanguageSelector';
+import { describe, it, expect, vi } from "vitest";
+import { screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { renderWithProviders } from "@/test/test-utils";
+import LanguageSelector from "@/components/settings/LanguageSelector";
 
-describe('LanguageSelector Component', () => {
-  it('should render English option', () => {
+describe("LanguageSelector Component", () => {
+  it("should render English and French options", () => {
     const mockOnChange = vi.fn();
 
-    render(<LanguageSelector value="en" onChange={mockOnChange} />);
+    renderWithProviders(
+      <LanguageSelector value="en" onChange={mockOnChange} />,
+    );
 
     expect(screen.getByText(/english/i)).toBeInTheDocument();
+    expect(screen.getByText(/french/i)).toBeInTheDocument();
   });
 
-  it('should display as disabled/read-only', () => {
+  it("should highlight selected language", () => {
     const mockOnChange = vi.fn();
 
-    render(<LanguageSelector value="en" onChange={mockOnChange} />);
+    renderWithProviders(
+      <LanguageSelector value="en" onChange={mockOnChange} />,
+    );
 
-    const languageOption = screen.getByRole('radio', { name: /english language/i });
-    expect(languageOption).toHaveAttribute('aria-disabled', 'true');
-    expect(languageOption).toHaveClass('disabled');
+    const englishOption = screen.getByRole("radio", {
+      name: /english language/i,
+    });
+    expect(englishOption).toHaveAttribute("aria-checked", "true");
+
+    const frenchOption = screen.getByRole("radio", {
+      name: /french language/i,
+    });
+    expect(frenchOption).toHaveAttribute("aria-checked", "false");
   });
 
-  it('should show "More languages coming soon" message', () => {
+  it("should call onChange when different language is selected", async () => {
+    const mockOnChange = vi.fn();
+    const user = userEvent.setup();
+
+    renderWithProviders(
+      <LanguageSelector value="en" onChange={mockOnChange} />,
+    );
+
+    const frenchOption = screen.getByRole("radio", {
+      name: /french language/i,
+    });
+    await user.click(frenchOption);
+
+    expect(mockOnChange).toHaveBeenCalledWith("fr");
+    expect(mockOnChange).toHaveBeenCalledTimes(1);
+  });
+
+  it("should have accessible labels", () => {
     const mockOnChange = vi.fn();
 
-    render(<LanguageSelector value="en" onChange={mockOnChange} />);
+    renderWithProviders(
+      <LanguageSelector value="en" onChange={mockOnChange} />,
+    );
 
     expect(
-      screen.getByText(/more languages coming soon/i)
+      screen.getByRole("radio", { name: /english language/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("radio", { name: /french language/i }),
     ).toBeInTheDocument();
   });
 
-  it('should have accessible label', () => {
+  it("should show check mark on selected option", () => {
     const mockOnChange = vi.fn();
 
-    render(<LanguageSelector value="en" onChange={mockOnChange} />);
+    renderWithProviders(
+      <LanguageSelector value="fr" onChange={mockOnChange} />,
+    );
 
-    expect(screen.getByRole('radio', { name: /english language/i })).toBeInTheDocument();
+    const frenchOption = screen.getByRole("radio", {
+      name: /french language/i,
+    });
+    expect(frenchOption).toHaveTextContent("✓");
   });
 
-  it('should not call onChange when disabled', async () => {
+  it("should support keyboard navigation", async () => {
     const mockOnChange = vi.fn();
+    const user = userEvent.setup();
 
-    render(<LanguageSelector value="en" onChange={mockOnChange} />);
+    renderWithProviders(
+      <LanguageSelector value="en" onChange={mockOnChange} />,
+    );
 
-    const languageOption = screen.getByRole('radio', { name: /english language/i });
+    const frenchOption = screen.getByRole("radio", {
+      name: /french language/i,
+    });
+    frenchOption.focus();
+    await user.keyboard("{Enter}");
 
-    // Component is disabled and onChange shouldn't be called
-    expect(languageOption).toHaveAttribute('aria-disabled', 'true');
-    expect(mockOnChange).not.toHaveBeenCalled();
-  });
-
-  it('should display info icon or tooltip', () => {
-    const mockOnChange = vi.fn();
-
-    render(<LanguageSelector value="en" onChange={mockOnChange} />);
-
-    // Check for info icon with aria-label
-    const infoIcon = screen.getByLabelText(/only language available/i);
-    expect(infoIcon).toBeInTheDocument();
+    expect(mockOnChange).toHaveBeenCalledWith("fr");
   });
 });

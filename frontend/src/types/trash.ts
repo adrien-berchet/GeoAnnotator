@@ -2,8 +2,8 @@
  * Trash types for soft-deleted points and annotations.
  */
 
-import type { GPSPoint } from './point';
-import type { Annotation } from './annotation';
+import type { GPSPoint } from "./point";
+import type { Annotation } from "./annotation";
 
 export interface User {
   id: string;
@@ -13,8 +13,8 @@ export interface User {
 export interface Share {
   id: string;
   recipient_email: string;
-  permission: 'view' | 'edit' | 'transfer';
-  status: 'pending' | 'accepted';
+  permission: "view" | "edit" | "transfer";
+  status: "pending" | "accepted";
   is_active: boolean;
   created_at: string;
 }

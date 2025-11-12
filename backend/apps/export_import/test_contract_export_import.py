@@ -14,11 +14,46 @@ Tests cover:
 
 import io
 import json
+
 import pytest
-from django.urls import reverse
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
+
+
+@pytest.fixture
+def api_client():
+    """Create API client for tests."""
+    return APIClient()
+
+
+@pytest.fixture
+def authenticated_user_with_points(api_client):
+    """Create user with GPS points."""
+    # Register and authenticate
+    register_url = reverse("authentication:register")
+    register_data = {"email": "test@example.com", "password": "SecurePass123"}
+    response = api_client.post(register_url, register_data, format="json")
+    access_token = response.data["access"]
+    user = response.data["user"]
+
+    api_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access_token}")
+
+    # Create GPS points
+    point_url = reverse("points:list")
+    point_ids = []
+    for i in range(3):
+        point_data = {
+            "title": f"Test Point {i + 1}",
+            "latitude": 37.7749 + (i * 0.01),
+            "longitude": -122.4194 + (i * 0.01),
+            "tags": ["test", f"point{i + 1}"],
+        }
+        point_response = api_client.post(point_url, point_data, format="json")
+        point_ids.append(point_response.data["id"])
+
+    return api_client, user, point_ids
 
 
 @pytest.mark.django_db
@@ -29,41 +64,6 @@ class TestExportImportContract:
 
     These tests validate request/response schemas match the OpenAPI spec.
     """
-
-    @pytest.fixture
-    def api_client(self):
-        """Create API client for tests."""
-        return APIClient()
-
-    @pytest.fixture
-    def authenticated_user_with_points(self, api_client):
-        """Create user with GPS points."""
-        # Register and authenticate
-        register_url = reverse('authentication:register')
-        register_data = {
-            'email': 'test@example.com',
-            'password': 'SecurePass123'
-        }
-        response = api_client.post(register_url, register_data, format='json')
-        access_token = response.data['access']
-        user = response.data['user']
-
-        api_client.credentials(HTTP_AUTHORIZATION=f'Bearer {access_token}')
-
-        # Create GPS points
-        point_url = reverse('points:list')
-        point_ids = []
-        for i in range(3):
-            point_data = {
-                'title': f'Test Point {i+1}',
-                'latitude': 37.7749 + (i * 0.01),
-                'longitude': -122.4194 + (i * 0.01),
-                'tags': ['test', f'point{i+1}']
-            }
-            point_response = api_client.post(point_url, point_data, format='json')
-            point_ids.append(point_response.data['id'])
-
-        return api_client, user, point_ids
 
     # T036: POST /export - Export GPS points
     def test_export_geojson_success(self, authenticated_user_with_points):
@@ -78,24 +78,27 @@ class TestExportImportContract:
         """
         api_client, user, point_ids = authenticated_user_with_points
 
-        url = reverse('export_import:export')
+        url = reverse("export_import:export")
         export_data = {
-            'format': 'geojson',
-            'point_ids': point_ids[:2],  # Export first 2 points
-            'include_annotations': False
+            "format": "geojson",
+            "point_ids": point_ids[:2],  # Export first 2 points
+            "include_annotations": False,
         }
-        response = api_client.post(url, export_data, format='json')
+        response = api_client.post(url, export_data, format="json")
 
         assert response.status_code == status.HTTP_200_OK
-        assert 'application/geo+json' in response['Content-Type'] or 'application/json' in response['Content-Type']
-        assert 'Content-Disposition' in response
-        assert 'geoannotator_export' in response['Content-Disposition']
+        assert (
+            "application/geo+json" in response["Content-Type"]
+            or "application/json" in response["Content-Type"]
+        )
+        assert "Content-Disposition" in response
+        assert "geoannotator_export" in response["Content-Disposition"]
 
         # Validate GeoJSON structure
-        data = response.json() if hasattr(response, 'json') else json.loads(response.content)
-        assert data['type'] == 'FeatureCollection'
-        assert 'features' in data
-        assert len(data['features']) == 2
+        data = response.json() if hasattr(response, "json") else json.loads(response.content)
+        assert data["type"] == "FeatureCollection"
+        assert "features" in data
+        assert len(data["features"]) == 2
 
     def test_export_gpx_success(self, authenticated_user_with_points):
         """
@@ -108,15 +111,13 @@ class TestExportImportContract:
         """
         api_client, user, point_ids = authenticated_user_with_points
 
-        url = reverse('export_import:export')
-        export_data = {
-            'format': 'gpx'
-        }
-        response = api_client.post(url, export_data, format='json')
+        url = reverse("export_import:export")
+        export_data = {"format": "gpx"}
+        response = api_client.post(url, export_data, format="json")
 
         assert response.status_code == status.HTTP_200_OK
-        assert 'xml' in response['Content-Type'].lower()
-        assert 'Content-Disposition' in response
+        assert "xml" in response["Content-Type"].lower()
+        assert "Content-Disposition" in response
 
     def test_export_csv_success(self, authenticated_user_with_points):
         """
@@ -129,20 +130,18 @@ class TestExportImportContract:
         """
         api_client, user, point_ids = authenticated_user_with_points
 
-        url = reverse('export_import:export')
-        export_data = {
-            'format': 'csv'
-        }
-        response = api_client.post(url, export_data, format='json')
+        url = reverse("export_import:export")
+        export_data = {"format": "csv"}
+        response = api_client.post(url, export_data, format="json")
 
         assert response.status_code == status.HTTP_200_OK
-        assert 'text/csv' in response['Content-Type']
+        assert "text/csv" in response["Content-Type"]
 
         # Validate CSV headers
-        content = response.content.decode('utf-8')
-        assert 'latitude' in content.lower()
-        assert 'longitude' in content.lower()
-        assert 'title' in content.lower()
+        content = response.content.decode("utf-8")
+        assert "latitude" in content.lower()
+        assert "longitude" in content.lower()
+        assert "title" in content.lower()
 
     def test_export_zip_with_annotations(self, authenticated_user_with_points):
         """
@@ -155,15 +154,13 @@ class TestExportImportContract:
         """
         api_client, user, point_ids = authenticated_user_with_points
 
-        url = reverse('export_import:export')
-        export_data = {
-            'format': 'zip'
-        }
-        response = api_client.post(url, export_data, format='json')
+        url = reverse("export_import:export")
+        export_data = {"format": "zip"}
+        response = api_client.post(url, export_data, format="json")
 
         assert response.status_code == status.HTTP_200_OK
-        assert 'application/zip' in response['Content-Type']
-        assert '.zip' in response['Content-Disposition']
+        assert "application/zip" in response["Content-Type"]
+        assert ".zip" in response["Content-Disposition"]
 
     def test_export_no_points_found(self, authenticated_user_with_points):
         """
@@ -175,15 +172,12 @@ class TestExportImportContract:
         """
         api_client, user, _ = authenticated_user_with_points
 
-        url = reverse('export_import:export')
-        export_data = {
-            'format': 'geojson',
-            'point_ids': ['00000000-0000-0000-0000-000000000000']
-        }
-        response = api_client.post(url, export_data, format='json')
+        url = reverse("export_import:export")
+        export_data = {"format": "geojson", "point_ids": ["00000000-0000-0000-0000-000000000000"]}
+        response = api_client.post(url, export_data, format="json")
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
-        assert response.data['error'] == 'NO_POINTS_FOUND'
+        assert response.data["error"] == "NO_POINTS_FOUND"
 
     # T037: POST /import - Import GPS points
     def test_import_geojson_success(self, authenticated_user_with_points):
@@ -203,58 +197,41 @@ class TestExportImportContract:
             "features": [
                 {
                     "type": "Feature",
-                    "geometry": {
-                        "type": "Point",
-                        "coordinates": [-122.45, 37.80]
-                    },
-                    "properties": {
-                        "title": "Imported Point 1",
-                        "description": "Test import"
-                    }
+                    "geometry": {"type": "Point", "coordinates": [-122.45, 37.80]},
+                    "properties": {"title": "Imported Point 1", "description": "Test import"},
                 },
                 {
                     "type": "Feature",
-                    "geometry": {
-                        "type": "Point",
-                        "coordinates": [-122.46, 37.81]
-                    },
-                    "properties": {
-                        "title": "Imported Point 2"
-                    }
-                }
-            ]
+                    "geometry": {"type": "Point", "coordinates": [-122.46, 37.81]},
+                    "properties": {"title": "Imported Point 2"},
+                },
+            ],
         }
 
-        geojson_content = json.dumps(geojson_data).encode('utf-8')
+        geojson_content = json.dumps(geojson_data).encode("utf-8")
         uploaded_file = SimpleUploadedFile(
-            "points.geojson",
-            geojson_content,
-            content_type="application/geo+json"
+            "points.geojson", geojson_content, content_type="application/geo+json"
         )
 
-        url = reverse('export_import:import')
-        data = {
-            'format': 'geojson',
-            'file': uploaded_file,
-            'merge_strategy': 'create_new'
-        }
-        response = api_client.post(url, data, format='multipart')
+        url = reverse("export_import:import")
+        data = {"format": "geojson", "file": uploaded_file, "merge_strategy": "create_new"}
+        response = api_client.post(url, data, format="multipart")
 
         assert response.status_code == status.HTTP_200_OK
 
         # Validate import result structure
         result = response.data
-        assert 'total_points' in result
-        assert 'imported_points' in result
-        assert 'skipped_points' in result
-        assert 'failed_points' in result
-        assert 'errors' in result
-        assert 'created_point_ids' in result
+        assert "total_points" in result
+        assert "imported_points" in result
+        assert "skipped_points" in result
+        assert "failed_points" in result
+        assert "errors" in result
+        assert "created_point_ids" in result
 
-        assert result['total_points'] == 2
-        assert result['imported_points'] == 2
-        assert result['failed_points'] == 0
-        assert len(result['created_point_ids']) == 2
+        assert result["total_points"] == 2
+        assert result["imported_points"] == 2
+        assert result["failed_points"] == 0
+        assert len(result["created_point_ids"]) == 2
 
     def test_import_csv_success(self, authenticated_user_with_points):
         """
@@ -273,22 +250,16 @@ class TestExportImportContract:
 """
 
         uploaded_file = SimpleUploadedFile(
-            "points.csv",
-            csv_content.encode('utf-8'),
-            content_type="text/csv"
+            "points.csv", csv_content.encode("utf-8"), content_type="text/csv"
         )
 
-        url = reverse('export_import:import')
-        data = {
-            'format': 'csv',
-            'file': uploaded_file,
-            'merge_strategy': 'create_new'
-        }
-        response = api_client.post(url, data, format='multipart')
+        url = reverse("export_import:import")
+        data = {"format": "csv", "file": uploaded_file, "merge_strategy": "create_new"}
+        response = api_client.post(url, data, format="multipart")
 
         assert response.status_code == status.HTTP_200_OK
-        assert response.data['total_points'] == 2
-        assert response.data['imported_points'] == 2
+        assert response.data["total_points"] == 2
+        assert response.data["imported_points"] == 2
 
     def test_import_validation_errors(self, authenticated_user_with_points):
         """
@@ -309,39 +280,32 @@ class TestExportImportContract:
                     "type": "Feature",
                     "geometry": {
                         "type": "Point",
-                        "coordinates": [-200, 100]  # Invalid: lon > 180, lat > 90
+                        "coordinates": [-200, 100],  # Invalid: lon > 180, lat > 90
                     },
-                    "properties": {
-                        "title": "Invalid Point"
-                    }
+                    "properties": {"title": "Invalid Point"},
                 }
-            ]
+            ],
         }
 
-        geojson_content = json.dumps(geojson_data).encode('utf-8')
+        geojson_content = json.dumps(geojson_data).encode("utf-8")
         uploaded_file = SimpleUploadedFile(
-            "invalid.geojson",
-            geojson_content,
-            content_type="application/geo+json"
+            "invalid.geojson", geojson_content, content_type="application/geo+json"
         )
 
-        url = reverse('export_import:import')
-        data = {
-            'format': 'geojson',
-            'file': uploaded_file
-        }
-        response = api_client.post(url, data, format='multipart')
+        url = reverse("export_import:import")
+        data = {"format": "geojson", "file": uploaded_file}
+        response = api_client.post(url, data, format="multipart")
 
         # Should either be 200 with errors or 400 for invalid file
         assert response.status_code in [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST]
 
         if response.status_code == status.HTTP_200_OK:
-            assert response.data['failed_points'] > 0
-            assert len(response.data['errors']) > 0
-            error = response.data['errors'][0]
-            assert 'line_number' in error
-            assert 'error' in error
-            assert 'message' in error
+            assert response.data["failed_points"] > 0
+            assert len(response.data["errors"]) > 0
+            error = response.data["errors"][0]
+            assert "line_number" in error
+            assert "error" in error
+            assert "message" in error
 
     def test_import_invalid_format(self, authenticated_user_with_points):
         """
@@ -355,20 +319,15 @@ class TestExportImportContract:
 
         # Invalid JSON
         uploaded_file = SimpleUploadedFile(
-            "invalid.geojson",
-            b"not valid json{",
-            content_type="application/geo+json"
+            "invalid.geojson", b"not valid json{", content_type="application/geo+json"
         )
 
-        url = reverse('export_import:import')
-        data = {
-            'format': 'geojson',
-            'file': uploaded_file
-        }
-        response = api_client.post(url, data, format='multipart')
+        url = reverse("export_import:import")
+        data = {"format": "geojson", "file": uploaded_file}
+        response = api_client.post(url, data, format="multipart")
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert response.data['error'] == 'INVALID_FORMAT'
+        assert response.data["error"] == "INVALID_FORMAT"
 
 
 @pytest.mark.django_db
@@ -390,29 +349,22 @@ class TestTrashContract:
     def authenticated_user_with_trashed_point(self, api_client):
         """Create user with a trashed GPS point."""
         # Register and authenticate
-        register_url = reverse('authentication:register')
-        register_data = {
-            'email': 'test@example.com',
-            'password': 'SecurePass123'
-        }
-        response = api_client.post(register_url, register_data, format='json')
-        access_token = response.data['access']
-        user = response.data['user']
+        register_url = reverse("authentication:register")
+        register_data = {"email": "test@example.com", "password": "SecurePass123"}
+        response = api_client.post(register_url, register_data, format="json")
+        access_token = response.data["access"]
+        user = response.data["user"]
 
-        api_client.credentials(HTTP_AUTHORIZATION=f'Bearer {access_token}')
+        api_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access_token}")
 
         # Create and delete a GPS point
-        point_url = reverse('points:list')
-        point_data = {
-            'title': 'Point to Delete',
-            'latitude': 37.7749,
-            'longitude': -122.4194
-        }
-        point_response = api_client.post(point_url, point_data, format='json')
-        point_id = point_response.data['id']
+        point_url = reverse("points:list")
+        point_data = {"title": "Point to Delete", "latitude": 37.7749, "longitude": -122.4194}
+        point_response = api_client.post(point_url, point_data, format="json")
+        point_id = point_response.data["id"]
 
         # Delete point (soft delete)
-        delete_url = reverse('points:detail', kwargs={'pk': point_id})
+        delete_url = reverse("points:detail", kwargs={"pk": point_id})
         api_client.delete(delete_url)
 
         return api_client, user, point_id
@@ -429,7 +381,7 @@ class TestTrashContract:
         """
         api_client, user, point_id = authenticated_user_with_trashed_point
 
-        url = reverse('trash:points-list')
+        url = reverse("trash:points-list")
         response = api_client.get(url)
 
         assert response.status_code == status.HTTP_200_OK
@@ -441,15 +393,15 @@ class TestTrashContract:
 
         # Validate trash item structure
         item = results[0]
-        assert 'id' in item
-        assert 'gps_point' in item
-        assert item['gps_point']['id'] == point_id
-        assert 'deleted_by' in item
-        assert item['deleted_by']['id'] == user['id']
-        assert 'deleted_at' in item
-        assert 'permanent_deletion_at' in item
-        assert 'days_remaining' in item
-        assert item['days_remaining'] <= 30
+        assert "id" in item
+        assert "gps_point" in item
+        assert item["gps_point"]["id"] == point_id
+        assert "deleted_by" in item
+        assert item["deleted_by"]["id"] == user["id"]
+        assert "deleted_at" in item
+        assert "permanent_deletion_at" in item
+        assert "days_remaining" in item
+        assert item["days_remaining"] <= 30
 
     # T039: POST /trash/{id}/restore - Restore point from trash
     def test_restore_point_success(self, authenticated_user_with_trashed_point):
@@ -463,16 +415,16 @@ class TestTrashContract:
         """
         api_client, user, point_id = authenticated_user_with_trashed_point
 
-        url = reverse('trash:points-restore', kwargs={'pk': point_id})
+        url = reverse("trash:points-restore", kwargs={"pk": point_id})
         response = api_client.post(url)
 
         assert response.status_code == status.HTTP_200_OK
-        assert 'id' in response.data
-        assert response.data['id'] == point_id
-        assert 'title' in response.data
+        assert "id" in response.data
+        assert response.data["id"] == point_id
+        assert "title" in response.data
 
         # Verify point is accessible
-        point_url = reverse('points:detail', kwargs={'pk': point_id})
+        point_url = reverse("points:detail", kwargs={"pk": point_id})
         get_response = api_client.get(point_url)
         assert get_response.status_code == status.HTTP_200_OK
 
@@ -485,7 +437,7 @@ class TestTrashContract:
         """
         api_client, user, _ = authenticated_user_with_trashed_point
 
-        url = reverse('trash:points-restore', kwargs={'pk': '00000000-0000-0000-0000-000000000000'})
+        url = reverse("trash:points-restore", kwargs={"pk": "00000000-0000-0000-0000-000000000000"})
         response = api_client.post(url)
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -501,17 +453,19 @@ class TestTrashContract:
         """
         api_client, user, point_id = authenticated_user_with_trashed_point
 
-        url = reverse('trash:points-permanent', kwargs={'pk': point_id})
+        url = reverse("trash:points-permanent", kwargs={"pk": point_id})
         response = api_client.delete(url)
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
         # Verify point cannot be restored
-        restore_url = reverse('trash:points-restore', kwargs={'pk': point_id})
+        restore_url = reverse("trash:points-restore", kwargs={"pk": point_id})
         restore_response = api_client.post(restore_url)
         assert restore_response.status_code == status.HTTP_404_NOT_FOUND
 
-    def test_permanently_delete_point_forbidden(self, api_client, authenticated_user_with_trashed_point):
+    def test_permanently_delete_point_forbidden(
+        self, api_client, authenticated_user_with_trashed_point
+    ):
         """
         Test permanently deleting point as non-owner.
 
@@ -522,13 +476,13 @@ class TestTrashContract:
 
         # Create second user
         client2 = APIClient()
-        register_url = reverse('authentication:register')
-        register_data = {'email': 'user2@example.com', 'password': 'SecurePass123'}
-        register_response = client2.post(register_url, register_data, format='json')
-        client2.credentials(HTTP_AUTHORIZATION=f'Bearer {register_response.data["access"]}')
+        register_url = reverse("authentication:register")
+        register_data = {"email": "user2@example.com", "password": "SecurePass123"}
+        register_response = client2.post(register_url, register_data, format="json")
+        client2.credentials(HTTP_AUTHORIZATION=f"Bearer {register_response.data['access']}")
 
         # Try to permanently delete as user2
-        url = reverse('trash:points-permanent', kwargs={'pk': point_id})
+        url = reverse("trash:points-permanent", kwargs={"pk": point_id})
         response = client2.delete(url)
 
         assert response.status_code in [status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND]
@@ -546,7 +500,7 @@ class TestTrashContract:
         api_client, user, _ = authenticated_user_with_points
 
         # Create KML content
-        kml_content = '''<?xml version="1.0" encoding="UTF-8"?>
+        kml_content = """<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
   <Document>
     <Placemark>
@@ -563,28 +517,34 @@ class TestTrashContract:
       </Point>
     </Placemark>
   </Document>
-</kml>'''
+</kml>"""
 
         kml_file = SimpleUploadedFile(
-            'test_import.kml',
-            kml_content.encode('utf-8'),
-            content_type='application/vnd.google-earth.kml+xml'
+            "test_import.kml",
+            kml_content.encode("utf-8"),
+            content_type="application/vnd.google-earth.kml+xml",
         )
 
-        url = reverse('export_import:import')
-        import_data = {
-            'format': 'kml',
-            'file': kml_file,
-            'merge_strategy': 'create_new'
-        }
-        response = api_client.post(url, import_data, format='multipart')
+        url = reverse("export_import:import")
+        import_data = {"format": "kml", "file": kml_file, "merge_strategy": "create_new"}
+        response = api_client.post(url, import_data, format="multipart")
+
+        # Debug: show errors if import failed
+        if (
+            response.data.get("imported_points", 0) == 0
+            and response.data.get("failed_points", 0) > 0
+        ):
+            print("\n=== Import Errors ===")
+            for err in response.data.get("errors", []):
+                print(f"Line {err.get('line_number')}: {err.get('error')} - {err.get('message')}")
+            print("====================\n")
 
         assert response.status_code == status.HTTP_200_OK
-        assert 'total_points' in response.data
-        assert 'imported_points' in response.data
-        assert response.data['total_points'] == 2
-        assert response.data['imported_points'] == 2
-        assert len(response.data['created_point_ids']) == 2
+        assert "total_points" in response.data
+        assert "imported_points" in response.data
+        assert response.data["total_points"] == 2
+        assert response.data["imported_points"] == 2
+        assert len(response.data["created_point_ids"]) == 2
 
     # T042: POST /import - Import KML with merge strategy skip
     def test_import_kml_skip_duplicates(self, authenticated_user_with_points):
@@ -598,7 +558,7 @@ class TestTrashContract:
         api_client, user, point_ids = authenticated_user_with_points
 
         # Create KML with point at same location as existing point
-        kml_content = '''<?xml version="1.0" encoding="UTF-8"?>
+        kml_content = """<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
   <Document>
     <Placemark>
@@ -608,21 +568,17 @@ class TestTrashContract:
       </Point>
     </Placemark>
   </Document>
-</kml>'''
+</kml>"""
 
-        kml_file = SimpleUploadedFile('test.kml', kml_content.encode('utf-8'))
+        kml_file = SimpleUploadedFile("test.kml", kml_content.encode("utf-8"))
 
-        url = reverse('export_import:import')
-        import_data = {
-            'format': 'kml',
-            'file': kml_file,
-            'merge_strategy': 'skip'
-        }
-        response = api_client.post(url, import_data, format='multipart')
+        url = reverse("export_import:import")
+        import_data = {"format": "kml", "file": kml_file, "merge_strategy": "skip"}
+        response = api_client.post(url, import_data, format="multipart")
 
         assert response.status_code == status.HTTP_200_OK
-        assert response.data['total_points'] == 1
-        assert response.data['skipped_points'] == 1
+        assert response.data["total_points"] == 1
+        assert response.data["skipped_points"] == 1
 
     # T043: POST /import - Import KML with merge strategy replace
     def test_import_kml_replace_existing(self, authenticated_user_with_points):
@@ -636,7 +592,7 @@ class TestTrashContract:
         api_client, user, point_ids = authenticated_user_with_points
 
         # Create KML with point at same location as existing point
-        kml_content = '''<?xml version="1.0" encoding="UTF-8"?>
+        kml_content = """<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
   <Document>
     <Placemark>
@@ -647,21 +603,17 @@ class TestTrashContract:
       </Point>
     </Placemark>
   </Document>
-</kml>'''
+</kml>"""
 
-        kml_file = SimpleUploadedFile('test.kml', kml_content.encode('utf-8'))
+        kml_file = SimpleUploadedFile("test.kml", kml_content.encode("utf-8"))
 
-        url = reverse('export_import:import')
-        import_data = {
-            'format': 'kml',
-            'file': kml_file,
-            'merge_strategy': 'replace'
-        }
-        response = api_client.post(url, import_data, format='multipart')
+        url = reverse("export_import:import")
+        import_data = {"format": "kml", "file": kml_file, "merge_strategy": "replace"}
+        response = api_client.post(url, import_data, format="multipart")
 
         assert response.status_code == status.HTTP_200_OK
-        assert response.data['total_points'] == 1
-        assert response.data['imported_points'] == 1
+        assert response.data["total_points"] == 1
+        assert response.data["imported_points"] == 1
 
     # T044: POST /import - Import ZIP file with annotations
     def test_import_zip_success(self, authenticated_user_with_points):
@@ -676,48 +628,39 @@ class TestTrashContract:
 
         # Create a simple ZIP file with GeoJSON
         import zipfile
+
         zip_buffer = io.BytesIO()
 
-        geojson_content = json.dumps({
-            'type': 'FeatureCollection',
-            'features': [
-                {
-                    'type': 'Feature',
-                    'id': 'test-point-1',
-                    'geometry': {
-                        'type': 'Point',
-                        'coordinates': [-122.7, 38.0]
-                    },
-                    'properties': {
-                        'title': 'ZIP Test Point',
-                        'description': 'Test from ZIP'
+        geojson_content = json.dumps(
+            {
+                "type": "FeatureCollection",
+                "features": [
+                    {
+                        "type": "Feature",
+                        "id": "test-point-1",
+                        "geometry": {"type": "Point", "coordinates": [-122.7, 38.0]},
+                        "properties": {"title": "ZIP Test Point", "description": "Test from ZIP"},
                     }
-                }
-            ]
-        })
+                ],
+            }
+        )
 
-        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zf:
-            zf.writestr('points.geojson', geojson_content)
+        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
+            zf.writestr("points.geojson", geojson_content)
             # Add a test annotation file
-            zf.writestr('annotations/test-point-1/ann1_test.txt', 'Test annotation content')
+            zf.writestr("annotations/test-point-1/ann1_test.txt", "Test annotation content")
 
         zip_buffer.seek(0)
 
         zip_file = SimpleUploadedFile(
-            'test_import.zip',
-            zip_buffer.read(),
-            content_type='application/zip'
+            "test_import.zip", zip_buffer.read(), content_type="application/zip"
         )
 
-        url = reverse('export_import:import')
-        import_data = {
-            'format': 'zip',
-            'file': zip_file,
-            'merge_strategy': 'create_new'
-        }
-        response = api_client.post(url, import_data, format='multipart')
+        url = reverse("export_import:import")
+        import_data = {"format": "zip", "file": zip_file, "merge_strategy": "create_new"}
+        response = api_client.post(url, import_data, format="multipart")
 
         assert response.status_code == status.HTTP_200_OK
-        assert 'total_points' in response.data
-        assert response.data['total_points'] == 1
-        assert response.data['imported_points'] == 1
+        assert "total_points" in response.data
+        assert response.data["total_points"] == 1
+        assert response.data["imported_points"] == 1

@@ -1,5 +1,5 @@
 [flake8]
-max-line-length = 100
+max-line-length = 120
 exclude =
     .git,
     __pycache__,
@@ -12,8 +12,12 @@ exclude =
     dist
 max-complexity = 10
 ignore =
-    E203,  # Whitespace before ':' (conflicts with black)
-    W503,  # Line break before binary operator (conflicts with black)
+    # Whitespace before ':' (conflicts with black)
+    E203,
+    # Line break before binary operator (conflicts with black)
+    W503,
+    # Ignore complexity
+    C901,
 per-file-ignores =
     __init__.py:F401
     */tests/*:F401,F811

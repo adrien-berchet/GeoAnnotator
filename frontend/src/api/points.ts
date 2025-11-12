@@ -2,8 +2,14 @@
  * Points API calls.
  */
 
-import { apiClient } from './client';
-import type { GPSPoint, CreatePointData, UpdatePointData, PointsFilter, Tag } from '../types/point';
+import { apiClient } from "./client";
+import type {
+  GPSPoint,
+  CreatePointData,
+  UpdatePointData,
+  PointsFilter,
+  Tag,
+} from "../types/point";
 
 /**
  * Paginated response from API.
@@ -22,22 +28,27 @@ export async function getPoints(filters?: PointsFilter): Promise<GPSPoint[]> {
   const params = new URLSearchParams();
 
   if (filters?.bbox) {
-    params.append('bbox', `${filters.bbox.min_lon},${filters.bbox.min_lat},${filters.bbox.max_lon},${filters.bbox.max_lat}`);
+    params.append(
+      "bbox",
+      `${filters.bbox.min_lon},${filters.bbox.min_lat},${filters.bbox.max_lon},${filters.bbox.max_lat}`,
+    );
   }
 
   if (filters?.tags && filters.tags.length > 0) {
-    params.append('tags', filters.tags.join(','));
+    params.append("tags", filters.tags.join(","));
   }
 
   if (filters?.search) {
-    params.append('search', filters.search);
+    params.append("search", filters.search);
   }
 
   if (filters?.is_public !== undefined) {
-    params.append('is_public', filters.is_public.toString());
+    params.append("is_public", filters.is_public.toString());
   }
 
-  const response = await apiClient.get<PaginatedResponse<GPSPoint>>(`/points/?${params.toString()}`);
+  const response = await apiClient.get<PaginatedResponse<GPSPoint>>(
+    `/points/?${params.toString()}`,
+  );
   return response.data.results;
 }
 
@@ -53,14 +64,17 @@ export async function getPoint(id: string): Promise<GPSPoint> {
  * Create new point.
  */
 export async function createPoint(data: CreatePointData): Promise<GPSPoint> {
-  const response = await apiClient.post<GPSPoint>('/points/', data);
+  const response = await apiClient.post<GPSPoint>("/points/", data);
   return response.data;
 }
 
 /**
  * Update point.
  */
-export async function updatePoint(id: string, data: UpdatePointData): Promise<GPSPoint> {
+export async function updatePoint(
+  id: string,
+  data: UpdatePointData,
+): Promise<GPSPoint> {
   const response = await apiClient.put<GPSPoint>(`/points/${id}/`, data);
   return response.data;
 }
@@ -99,7 +113,7 @@ export async function releaseLock(id: string): Promise<void> {
  * Get all tags.
  */
 export async function getTags(): Promise<Tag[]> {
-  const response = await apiClient.get<Tag[]>('/tags/');
+  const response = await apiClient.get<Tag[]>("/tags/");
   return response.data;
 }
 
@@ -115,7 +129,7 @@ export async function searchTags(query: string): Promise<Tag[]> {
  * Create a new tag.
  */
 export async function createTag(name: string): Promise<Tag> {
-  const response = await apiClient.post<Tag>('/tags/', { name });
+  const response = await apiClient.post<Tag>("/tags/", { name });
   return response.data;
 }
 
@@ -137,7 +151,11 @@ export async function deleteTag(id: string): Promise<void> {
 /**
  * Search points by tags.
  */
-export async function searchPointsByTags(tagNames: string[]): Promise<GPSPoint[]> {
-  const response = await apiClient.post<GPSPoint[]>('/points/search/tags/', { tags: tagNames });
+export async function searchPointsByTags(
+  tagNames: string[],
+): Promise<GPSPoint[]> {
+  const response = await apiClient.post<GPSPoint[]>("/points/search/tags/", {
+    tags: tagNames,
+  });
   return response.data;
 }

@@ -2,22 +2,22 @@
  * Export/Import and Trash API calls.
  */
 
-import { apiClient } from './client';
+import { apiClient } from "./client";
 
 /**
  * Export format type.
  */
-export type ExportFormat = 'geojson' | 'gpx' | 'kml' | 'csv' | 'zip';
+export type ExportFormat = "geojson" | "gpx" | "kml" | "csv" | "zip";
 
 /**
  * Import format type.
  */
-export type ImportFormat = 'geojson' | 'gpx' | 'csv' | 'kml' | 'zip';
+export type ImportFormat = "geojson" | "gpx" | "csv" | "kml" | "zip";
 
 /**
  * Merge strategy for imports.
  */
-export type MergeStrategy = 'create_new' | 'skip' | 'replace';
+export type MergeStrategy = "create_new" | "skip" | "replace";
 
 /**
  * Export request data.
@@ -67,8 +67,8 @@ export interface TrashItem {
  * Export points.
  */
 export async function exportPoints(data: ExportRequestData): Promise<Blob> {
-  const response = await apiClient.post('/export/', data, {
-    responseType: 'blob',
+  const response = await apiClient.post("/export/", data, {
+    responseType: "blob",
   });
   return response.data;
 }
@@ -79,16 +79,16 @@ export async function exportPoints(data: ExportRequestData): Promise<Blob> {
 export async function importPoints(
   file: File,
   format: ImportFormat,
-  mergeStrategy: MergeStrategy = 'create_new'
+  mergeStrategy: MergeStrategy = "create_new",
 ): Promise<ImportResult> {
   const formData = new FormData();
-  formData.append('file', file);
-  formData.append('format', format);
-  formData.append('merge_strategy', mergeStrategy);
+  formData.append("file", file);
+  formData.append("format", format);
+  formData.append("merge_strategy", mergeStrategy);
 
-  const response = await apiClient.post<ImportResult>('/import/', formData, {
+  const response = await apiClient.post<ImportResult>("/import/", formData, {
     headers: {
-      'Content-Type': 'multipart/form-data',
+      "Content-Type": "multipart/form-data",
     },
   });
 
@@ -109,7 +109,7 @@ interface PaginatedResponse<T> {
  * Get trash items.
  */
 export async function getTrash(): Promise<TrashItem[]> {
-  const response = await apiClient.get<PaginatedResponse<TrashItem>>('/trash/');
+  const response = await apiClient.get<PaginatedResponse<TrashItem>>("/trash/");
   return response.data.results;
 }
 
@@ -131,5 +131,5 @@ export async function permanentlyDelete(trashId: string): Promise<void> {
  * Empty trash (delete all).
  */
 export async function emptyTrash(): Promise<void> {
-  await apiClient.delete('/trash/empty/');
+  await apiClient.delete("/trash/empty/");
 }

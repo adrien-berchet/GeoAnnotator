@@ -7,11 +7,12 @@ Tests cover:
 - Point creation with valid coordinates
 - Point creation with invalid coordinates
 """
+
 import pytest
 from django.contrib.auth import get_user_model
-from apps.points.models import GPSPoint
 from django.contrib.gis.geos import Point
-from django.core.exceptions import ValidationError
+
+from apps.points.models import GPSPoint
 
 User = get_user_model()
 
@@ -23,10 +24,7 @@ class TestCoordinateValidation:
     @pytest.fixture
     def user(self):
         """Create test user."""
-        return User.objects.create_user(
-            email='test@example.com',
-            password='TestPass123'
-        )
+        return User.objects.create_user(email="test@example.com", password="TestPass123")
 
     def test_valid_coordinates(self, user):
         """Test that valid coordinates are accepted."""
@@ -41,15 +39,13 @@ class TestCoordinateValidation:
 
         for lat, lon in valid_coords:
             point = GPSPoint(
-                title='Valid Point',
+                title="Valid Point",
                 location=Point(lon, lat),  # Note: Point(lon, lat) not (lat, lon)
-                owner=user
+                owner=user,
             )
             point.full_clean()  # Should not raise
             point.save()
             assert point.id is not None
-
-
 
     def test_boundary_coordinates(self, user):
         """Test that boundary coordinates are accepted."""
@@ -66,11 +62,7 @@ class TestCoordinateValidation:
         ]
 
         for lat, lon in boundary_coords:
-            point = GPSPoint(
-                title='Boundary Point',
-                location=Point(lon, lat),
-                owner=user
-            )
+            point = GPSPoint(title="Boundary Point", location=Point(lon, lat), owner=user)
             point.full_clean()
             point.save()
             assert point.id is not None
@@ -78,11 +70,7 @@ class TestCoordinateValidation:
     def test_point_location_retrieval(self, user):
         """Test that coordinates can be retrieved correctly."""
         lat, lon = 37.7749, -122.4194  # San Francisco
-        point = GPSPoint.objects.create(
-            title='SF Point',
-            location=Point(lon, lat),
-            owner=user
-        )
+        point = GPSPoint.objects.create(title="SF Point", location=Point(lon, lat), owner=user)
 
         # Retrieve and check
         retrieved = GPSPoint.objects.get(id=point.id)

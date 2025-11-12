@@ -1,7 +1,9 @@
 """
 Settings app serializers.
 """
+
 from rest_framework import serializers
+
 from .models import UserPreferences
 
 
@@ -17,20 +19,20 @@ class UserPreferencesSerializer(serializers.ModelSerializer):
     """
 
     # Expose 'theme' as 'theme_mode' in the API
-    theme_mode = serializers.CharField(source='theme', max_length=10)
+    theme_mode = serializers.CharField(source="theme", max_length=10)
 
     class Meta:
         model = UserPreferences
         fields = [
-            'id',
-            'language',
-            'theme_mode',
-            'export_format',
-            'default_map_type',
-            'created_at',
-            'updated_at'
+            "id",
+            "language",
+            "theme_mode",
+            "export_format",
+            "default_map_type",
+            "created_at",
+            "updated_at",
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        read_only_fields = ["id", "created_at", "updated_at"]
 
     def validate_theme_mode(self, value):
         """Validate theme_mode field."""

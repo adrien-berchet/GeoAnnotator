@@ -13,7 +13,7 @@ export interface FileMetadata {
 export interface Annotation {
   id: string;
   gps_point_id: string;
-  type: 'text' | 'image' | 'document' | 'file';
+  type: "text" | "image" | "document" | "file";
   text_content: string | null;
   file: FileMetadata | null;
   order: number;

@@ -4,12 +4,12 @@
  * Modal for sharing GPS points with other users.
  */
 
-import { useState } from 'react';
-import type { FormEvent } from 'react';
-import { createShare } from '../../api/sharing';
-import { getErrorMessage } from '../../api/client';
-import { PermissionSelector } from './PermissionSelector';
-import type { Permission } from '../../types/sharing';
+import { useState } from "react";
+import type { FormEvent } from "react";
+import { createShare } from "../../api/sharing";
+import { getErrorMessage } from "../../api/client";
+import { PermissionSelector } from "./PermissionSelector";
+import type { Permission } from "../../types/sharing";
 
 interface ShareModalProps {
   pointId: string;
@@ -21,9 +21,9 @@ interface ShareModalProps {
  * Share modal component.
  */
 export function ShareModal({ pointId, onClose, onSuccess }: ShareModalProps) {
-  const [email, setEmail] = useState('');
-  const [permission, setPermission] = useState<Permission>('view');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [permission, setPermission] = useState<Permission>("view");
+  const [error, setError] = useState("");
   const [isSharing, setIsSharing] = useState(false);
 
   /**
@@ -39,16 +39,16 @@ export function ShareModal({ pointId, onClose, onSuccess }: ShareModalProps) {
    */
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
 
     // Validate email
     if (!email.trim()) {
-      setError('Email is required');
+      setError("Email is required");
       return;
     }
 
     if (!isValidEmail(email)) {
-      setError('Invalid email format');
+      setError("Invalid email format");
       return;
     }
 
@@ -61,8 +61,8 @@ export function ShareModal({ pointId, onClose, onSuccess }: ShareModalProps) {
       });
 
       // Reset form
-      setEmail('');
-      setPermission('view');
+      setEmail("");
+      setPermission("view");
 
       if (onSuccess) {
         onSuccess();
@@ -145,12 +145,8 @@ export function ShareModal({ pointId, onClose, onSuccess }: ShareModalProps) {
             >
               Cancel
             </button>
-            <button
-              type="submit"
-              className="btn-primary"
-              disabled={isSharing}
-            >
-              {isSharing ? 'Sharing...' : 'Share Point'}
+            <button type="submit" className="btn-primary" disabled={isSharing}>
+              {isSharing ? "Sharing..." : "Share Point"}
             </button>
           </div>
         </form>

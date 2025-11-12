@@ -2,9 +2,9 @@
  * Export settings component for selecting data export format
  */
 
-import { useLanguage } from '@/contexts/LanguageContext';
-import type { ExportFormat } from '@/types/settings';
-import './ExportSettings.css';
+import { useLanguage } from "@/contexts/LanguageContext";
+import type { ExportFormat } from "@/types/settings";
+import "./ExportSettings.css";
 
 interface ExportSettingsProps {
   value: ExportFormat;
@@ -16,31 +16,35 @@ const formatOptions: Array<{
   icon: string;
 }> = [
   {
-    value: 'geojson',
-    icon: '🗺️',
+    value: "geojson",
+    icon: "🗺️",
   },
   {
-    value: 'kml',
-    icon: '🌍',
+    value: "kml",
+    icon: "🌍",
   },
   {
-    value: 'csv',
-    icon: '📊',
+    value: "csv",
+    icon: "📊",
   },
 ];
 
 function ExportSettings({ value, onChange }: ExportSettingsProps) {
   const { t } = useLanguage();
   return (
-    <div className="export-settings" role="radiogroup" aria-label={t('settings.defaultExportFormat', 'Export format selection')}>
+    <div
+      className="export-settings"
+      role="radiogroup"
+      aria-label={t("settings.defaultExportFormat", "Export format selection")}
+    >
       {formatOptions.map((option) => {
         const isSelected = value === option.value;
         const label = t(`exportFormat.${option.value}`, option.value);
-        const description = t(`exportFormat.${option.value}Desc`, '');
+        const description = t(`exportFormat.${option.value}Desc`, "");
         return (
           <label
             key={option.value}
-            className={`export-option ${isSelected ? 'selected' : ''}`}
+            className={`export-option ${isSelected ? "selected" : ""}`}
           >
             <input
               type="radio"

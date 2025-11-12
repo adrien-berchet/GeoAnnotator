@@ -2,10 +2,10 @@
  * Internationalization utility functions
  */
 
-import en from '@/assets/i18n/en.json';
-import fr from '@/assets/i18n/fr.json';
+import en from "@/assets/i18n/en.json";
+import fr from "@/assets/i18n/fr.json";
 
-export type Language = 'en' | 'fr';
+export type Language = "en" | "fr";
 export type TranslationKey = string;
 
 interface Translations {
@@ -17,17 +17,19 @@ const translations: Record<Language, Translations> = {
   fr,
 };
 
-const SUPPORTED_LANGUAGES: Language[] = ['en', 'fr'];
-const DEFAULT_LANGUAGE: Language = 'en';
-const STORAGE_KEY = 'user_language';
+const SUPPORTED_LANGUAGES: Language[] = ["en", "fr"];
+const DEFAULT_LANGUAGE: Language = "en";
+const STORAGE_KEY = "user_language";
 
 /**
  * Get the browser's preferred language
  * @returns The browser language code or default language
  */
 export function getBrowserLanguage(): Language {
-  const browserLang = navigator.language.split('-')[0] as Language;
-  return SUPPORTED_LANGUAGES.includes(browserLang) ? browserLang : DEFAULT_LANGUAGE;
+  const browserLang = navigator.language.split("-")[0] as Language;
+  return SUPPORTED_LANGUAGES.includes(browserLang)
+    ? browserLang
+    : DEFAULT_LANGUAGE;
 }
 
 /**
@@ -56,7 +58,10 @@ export function storeLanguage(language: Language): void {
  */
 export function getInitialLanguage(backendLanguage?: string): Language {
   // Priority: 1. Backend preference (if authenticated), 2. localStorage, 3. Browser language
-  if (backendLanguage && SUPPORTED_LANGUAGES.includes(backendLanguage as Language)) {
+  if (
+    backendLanguage &&
+    SUPPORTED_LANGUAGES.includes(backendLanguage as Language)
+  ) {
     return backendLanguage as Language;
   }
 
@@ -78,13 +83,14 @@ export function getInitialLanguage(backendLanguage?: string): Language {
 export function translate(
   language: Language,
   key: TranslationKey,
-  fallback?: string
+  fallback?: string,
 ): string {
-  const keys = key.split('.');
-  let current: Translations | string = translations[language] || translations[DEFAULT_LANGUAGE];
+  const keys = key.split(".");
+  let current: Translations | string =
+    translations[language] || translations[DEFAULT_LANGUAGE];
 
   for (const k of keys) {
-    if (typeof current === 'object' && k in current) {
+    if (typeof current === "object" && k in current) {
       current = current[k];
     } else {
       // Fallback to English if key not found in selected language
@@ -96,7 +102,7 @@ export function translate(
     }
   }
 
-  return typeof current === 'string' ? current : (fallback || key);
+  return typeof current === "string" ? current : fallback || key;
 }
 
 /**

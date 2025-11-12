@@ -2,22 +2,33 @@
  * Annotations API calls.
  */
 
-import { apiClient } from './client';
-import type { Annotation, CreateTextAnnotationData, UpdateTextAnnotationData } from '../types/annotation';
+import { apiClient } from "./client";
+import type {
+  Annotation,
+  CreateTextAnnotationData,
+  UpdateTextAnnotationData,
+} from "../types/annotation";
 
 /**
  * Get all annotations for a point.
  */
 export async function getAnnotations(pointId: string): Promise<Annotation[]> {
-  const response = await apiClient.get<Annotation[]>(`/points/${pointId}/annotations/`);
+  const response = await apiClient.get<Annotation[]>(
+    `/points/${pointId}/annotations/`,
+  );
   return response.data;
 }
 
 /**
  * Get annotation by ID.
  */
-export async function getAnnotation(pointId: string, annotationId: string): Promise<Annotation> {
-  const response = await apiClient.get<Annotation>(`/points/${pointId}/annotations/${annotationId}/`);
+export async function getAnnotation(
+  pointId: string,
+  annotationId: string,
+): Promise<Annotation> {
+  const response = await apiClient.get<Annotation>(
+    `/points/${pointId}/annotations/${annotationId}/`,
+  );
   return response.data;
 }
 
@@ -26,12 +37,15 @@ export async function getAnnotation(pointId: string, annotationId: string): Prom
  */
 export async function createTextAnnotation(
   pointId: string,
-  data: CreateTextAnnotationData
+  data: CreateTextAnnotationData,
 ): Promise<Annotation> {
-  const response = await apiClient.post<Annotation>(`/points/${pointId}/annotations/`, {
-    type: 'text',
-    ...data,
-  });
+  const response = await apiClient.post<Annotation>(
+    `/points/${pointId}/annotations/`,
+    {
+      type: "text",
+      ...data,
+    },
+  );
   return response.data;
 }
 
@@ -41,17 +55,21 @@ export async function createTextAnnotation(
 export async function createFileAnnotation(
   pointId: string,
   file: File,
-  type: 'image' | 'document' | 'file'
+  type: "image" | "document" | "file",
 ): Promise<Annotation> {
   const formData = new FormData();
-  formData.append('file', file);
-  formData.append('type', type);
+  formData.append("file", file);
+  formData.append("type", type);
 
-  const response = await apiClient.post<Annotation>(`/points/${pointId}/annotations/`, formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
+  const response = await apiClient.post<Annotation>(
+    `/points/${pointId}/annotations/`,
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
     },
-  });
+  );
 
   return response.data;
 }
@@ -62,11 +80,11 @@ export async function createFileAnnotation(
 export async function updateTextAnnotation(
   pointId: string,
   annotationId: string,
-  data: UpdateTextAnnotationData
+  data: UpdateTextAnnotationData,
 ): Promise<Annotation> {
   const response = await apiClient.put<Annotation>(
     `/points/${pointId}/annotations/${annotationId}/`,
-    data
+    data,
   );
   return response.data;
 }
@@ -74,17 +92,26 @@ export async function updateTextAnnotation(
 /**
  * Delete annotation.
  */
-export async function deleteAnnotation(pointId: string, annotationId: string): Promise<void> {
+export async function deleteAnnotation(
+  pointId: string,
+  annotationId: string,
+): Promise<void> {
   await apiClient.delete(`/points/${pointId}/annotations/${annotationId}/`);
 }
 
 /**
  * Download annotation file.
  */
-export async function downloadAnnotation(pointId: string, annotationId: string): Promise<Blob> {
-  const response = await apiClient.get(`/points/${pointId}/annotations/${annotationId}/download/`, {
-    responseType: 'blob',
-  });
+export async function downloadAnnotation(
+  pointId: string,
+  annotationId: string,
+): Promise<Blob> {
+  const response = await apiClient.get(
+    `/points/${pointId}/annotations/${annotationId}/download/`,
+    {
+      responseType: "blob",
+    },
+  );
   return response.data;
 }
 
@@ -100,7 +127,7 @@ export function getPreviewUrl(annotationId: string): string {
  */
 export async function reorderAnnotations(
   pointId: string,
-  annotations: Array<{ id: string; order: number }>
+  annotations: Array<{ id: string; order: number }>,
 ): Promise<void> {
   await apiClient.post(`/points/${pointId}/annotations/reorder/`, {
     annotations,

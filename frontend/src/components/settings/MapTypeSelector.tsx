@@ -2,9 +2,9 @@
  * Map type selector component for settings
  */
 
-import { useLanguage } from '@/contexts/LanguageContext';
-import type { MapType } from '@/types/settings';
-import './MapTypeSelector.css';
+import { useLanguage } from "@/contexts/LanguageContext";
+import type { MapType } from "@/types/settings";
+import "./MapTypeSelector.css";
 
 interface MapTypeSelectorProps {
   value: MapType;
@@ -15,23 +15,30 @@ const MAP_TYPE_OPTIONS: Array<{
   value: MapType;
   icon: string;
 }> = [
-  { value: 'osm', icon: '🗺️' },
-  { value: 'satellite', icon: '🛰️' },
-  { value: 'topo', icon: '⛰️' },
-  { value: 'cycle', icon: '🚴' },
+  { value: "osm", icon: "🗺️" },
+  { value: "satellite", icon: "🛰️" },
+  { value: "topo", icon: "⛰️" },
+  { value: "cycle", icon: "🚴" },
 ];
 
-export default function MapTypeSelector({ value, onChange }: MapTypeSelectorProps) {
+export default function MapTypeSelector({
+  value,
+  onChange,
+}: MapTypeSelectorProps) {
   const { t } = useLanguage();
 
   return (
-    <div className="map-type-selector" role="radiogroup" aria-label={t('settings.defaultMapType', 'Default Map Type')}>
+    <div
+      className="map-type-selector"
+      role="radiogroup"
+      aria-label={t("settings.defaultMapType", "Default Map Type")}
+    >
       {MAP_TYPE_OPTIONS.map((option) => {
         const isSelected = value === option.value;
         return (
           <label
             key={option.value}
-            className={`map-type-option ${isSelected ? 'selected' : ''}`}
+            className={`map-type-option ${isSelected ? "selected" : ""}`}
           >
             <input
               type="radio"
@@ -46,7 +53,9 @@ export default function MapTypeSelector({ value, onChange }: MapTypeSelectorProp
               <span className="map-type-icon" aria-hidden="true">
                 {option.icon}
               </span>
-              <span className="map-type-label">{t(`mapType.${option.value}`, option.value)}</span>
+              <span className="map-type-label">
+                {t(`mapType.${option.value}`, option.value)}
+              </span>
             </div>
           </label>
         );

@@ -249,7 +249,7 @@
 .preview-text pre {
   white-space: pre-wrap;
   word-wrap: break-word;
-  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  font-family: "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", monospace;
   font-size: 0.875rem;
   line-height: 1.6;
   color: var(--color-text-primary);
@@ -358,7 +358,7 @@
 }
 
 /* Dark mode */
-[data-theme='dark'] {
+[data-theme="dark"] {
   .annotation-preview-modal {
     background: var(--color-bg-primary);
   }
