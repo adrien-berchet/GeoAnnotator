@@ -12,6 +12,14 @@ from django.db import models
 from django.utils import timezone
 
 
+class ActiveShareManager(models.Manager):
+    """Manager that returns only active shares (is_active=True)."""
+
+    def get_queryset(self):
+        """Return queryset filtered to only active shares."""
+        return super().get_queryset().filter(is_active=True)
+
+
 class Share(models.Model):
     """
     Sharing relationship between a point owner and a recipient.
@@ -102,6 +110,10 @@ class Share(models.Model):
     )
 
     created_at = models.DateTimeField(auto_now_add=True, help_text="Share creation timestamp")
+
+    # Managers
+    objects = models.Manager()  # Default manager (includes inactive shares)
+    active = ActiveShareManager()  # Manager for active shares only
 
     class Meta:
         db_table = "shares"
