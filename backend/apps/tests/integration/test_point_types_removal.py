@@ -15,9 +15,7 @@ from apps.points.models import PointType
 class TestPointTypesTranslationRemoval:
     """Integration tests for translation removal constraints."""
 
-    def test_prevent_removal_of_last_translation(
-        self, authenticated_client_alice, alice
-    ):
+    def test_prevent_removal_of_last_translation(self, authenticated_client_alice, alice):
         """
         Test that removing the last translation is prevented.
 
@@ -32,17 +30,13 @@ class TestPointTypesTranslationRemoval:
             creation_language="en",
             type_choice="custom",
             owner=alice,
-            visibility="private"
+            visibility="private",
         )
 
         # Try to remove all translations
         url = reverse("point-types:detail", args=[point_type.id])
-        update_payload = {
-            "names": {}
-        }
-        response = authenticated_client_alice.patch(
-            url, update_payload, format="json"
-        )
+        update_payload = {"names": {}}
+        response = authenticated_client_alice.patch(url, update_payload, format="json")
 
         # Should fail with 400
         assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -64,17 +58,13 @@ class TestPointTypesTranslationRemoval:
             creation_language="en",
             type_choice="custom",
             owner=alice,
-            visibility="private"
+            visibility="private",
         )
 
         # Remove French (keep English)
         url = reverse("point-types:detail", args=[point_type.id])
-        update_payload = {
-            "names": {"en": "Beach"}
-        }
-        response = authenticated_client_alice.patch(
-            url, update_payload, format="json"
-        )
+        update_payload = {"names": {"en": "Beach"}}
+        response = authenticated_client_alice.patch(url, update_payload, format="json")
 
         # Should succeed
         assert response.status_code == status.HTTP_200_OK
@@ -99,26 +89,20 @@ class TestPointTypesTranslationRemoval:
             creation_language="en",
             type_choice="custom",
             owner=alice,
-            visibility="private"
+            visibility="private",
         )
 
         # Replace with French only
         url = reverse("point-types:detail", args=[point_type.id])
-        update_payload = {
-            "names": {"fr": "Canyon"}
-        }
-        response = authenticated_client_alice.patch(
-            url, update_payload, format="json"
-        )
+        update_payload = {"names": {"fr": "Canyon"}}
+        response = authenticated_client_alice.patch(url, update_payload, format="json")
 
         # Should succeed (one translation still exists)
         assert response.status_code == status.HTTP_200_OK
         assert len(response.data["names"]) == 1
         assert "fr" in response.data["names"]
 
-    def test_can_remove_multiple_but_keep_at_least_one(
-        self, authenticated_client_alice, alice
-    ):
+    def test_can_remove_multiple_but_keep_at_least_one(self, authenticated_client_alice, alice):
         """
         Test that removing multiple translations is OK if at least one remains.
 
@@ -129,29 +113,17 @@ class TestPointTypesTranslationRemoval:
         """
         # Create a point type with four translations
         point_type = PointType.objects.create(
-            names={
-                "en": "Island",
-                "fr": "Île",
-                "es": "Isla",
-                "de": "Insel"
-            },
+            names={"en": "Island", "fr": "Île", "es": "Isla", "de": "Insel"},
             creation_language="en",
             type_choice="custom",
             owner=alice,
-            visibility="private"
+            visibility="private",
         )
 
         # Remove French and Spanish, keep English and German
         url = reverse("point-types:detail", args=[point_type.id])
-        update_payload = {
-            "names": {
-                "en": "Island",
-                "de": "Insel"
-            }
-        }
-        response = authenticated_client_alice.patch(
-            url, update_payload, format="json"
-        )
+        update_payload = {"names": {"en": "Island", "de": "Insel"}}
+        response = authenticated_client_alice.patch(url, update_payload, format="json")
 
         # Should succeed
         assert response.status_code == status.HTTP_200_OK
@@ -161,9 +133,7 @@ class TestPointTypesTranslationRemoval:
         assert "fr" not in response.data["names"]
         assert "es" not in response.data["names"]
 
-    def test_validation_error_message_for_empty_names(
-        self, authenticated_client_alice, alice
-    ):
+    def test_validation_error_message_for_empty_names(self, authenticated_client_alice, alice):
         """
         Test that a clear error message is returned when trying to remove all names.
 
@@ -178,25 +148,19 @@ class TestPointTypesTranslationRemoval:
             creation_language="en",
             type_choice="custom",
             owner=alice,
-            visibility="private"
+            visibility="private",
         )
 
         # Try to remove all translations
         url = reverse("point-types:detail", args=[point_type.id])
-        update_payload = {
-            "names": {}
-        }
-        response = authenticated_client_alice.patch(
-            url, update_payload, format="json"
-        )
+        update_payload = {"names": {}}
+        response = authenticated_client_alice.patch(url, update_payload, format="json")
 
         # Should fail with clear error message
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "names" in response.data or "error" in response.data
 
-    def test_creation_requires_at_least_one_translation(
-        self, authenticated_client_alice
-    ):
+    def test_creation_requires_at_least_one_translation(self, authenticated_client_alice):
         """
         Test that creating a point type with no translations is prevented.
 
@@ -205,11 +169,7 @@ class TestPointTypesTranslationRemoval:
         2. Verify validation error
         """
         url = reverse("point-types:list")
-        payload = {
-            "names": {},
-            "creation_language": "en",
-            "visibility": "private"
-        }
+        payload = {"names": {}, "creation_language": "en", "visibility": "private"}
         response = authenticated_client_alice.post(url, payload, format="json")
 
         # Should fail

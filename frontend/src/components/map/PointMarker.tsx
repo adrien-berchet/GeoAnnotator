@@ -4,13 +4,13 @@
  * Displays GPS point as a marker on the map with custom icon and popup.
  */
 
-import { Marker, Popup } from 'react-leaflet';
-import { DivIcon } from 'leaflet';
-import { Link } from 'react-router-dom';
-import type { GPSPoint } from '../../types/point';
-import { getPointTypeName } from '../../utils/pointTypeUtils';
-import { useLanguage } from '../../contexts/LanguageContext';
-import './PointMarker.css';
+import { Marker, Popup } from "react-leaflet";
+import { DivIcon } from "leaflet";
+import { Link } from "react-router-dom";
+import type { GPSPoint } from "../../types/point";
+import { getPointTypeName } from "../../utils/pointTypeUtils";
+import { useLanguage } from "../../contexts/LanguageContext";
+import "./PointMarker.css";
 
 interface PointMarkerProps {
   point: GPSPoint;
@@ -22,26 +22,33 @@ interface PointMarkerProps {
  */
 const createMarkerIcon = (point: GPSPoint, typeName: string) => {
   // Always use custom marker with either icon or emoji
-  const hasCustomIcon = point.type?.icon && point.type.icon !== '/icons/default.svg';
-  const isUrlIcon = hasCustomIcon && point.type && (point.type.icon.startsWith('http') || point.type.icon.startsWith('/') || point.type.icon.startsWith('data:'));
+  const hasCustomIcon =
+    point.type?.icon && point.type.icon !== "/icons/default.svg";
+  const isUrlIcon =
+    hasCustomIcon &&
+    point.type &&
+    (point.type.icon.startsWith("http") ||
+      point.type.icon.startsWith("/") ||
+      point.type.icon.startsWith("data:"));
 
   return new DivIcon({
     html: `
       <div class="custom-marker">
         <div class="marker-icon-container">
-          ${hasCustomIcon
-            ? (isUrlIcon && point.type)
-              ? `<img src="${point.type.icon}" alt="${typeName}" class="marker-type-icon" />`
-              : point.type
-                ? `<span class="marker-type-emoji">${point.type.icon}</span>`
-                : ''
-            : '<span class="marker-type-emoji">📍</span>'
+          ${
+            hasCustomIcon
+              ? isUrlIcon && point.type
+                ? `<img src="${point.type.icon}" alt="${typeName}" class="marker-type-icon" />`
+                : point.type
+                  ? `<span class="marker-type-emoji">${point.type.icon}</span>`
+                  : ""
+              : '<span class="marker-type-emoji">📍</span>'
           }
         </div>
         <div class="marker-crosshair"></div>
       </div>
     `,
-    className: 'custom-marker-wrapper',
+    className: "custom-marker-wrapper",
     iconSize: [40, 40],
     iconAnchor: [20, 40],
     popupAnchor: [0, -40],
@@ -53,7 +60,9 @@ const createMarkerIcon = (point: GPSPoint, typeName: string) => {
  */
 export function PointMarker({ point, onClick }: PointMarkerProps) {
   const { language } = useLanguage();
-  const typeName = point.type ? getPointTypeName(point.type, language) : 'Point';
+  const typeName = point.type
+    ? getPointTypeName(point.type, language)
+    : "Point";
   const icon = createMarkerIcon(point, typeName);
 
   const handleClick = () => {
@@ -77,13 +86,19 @@ export function PointMarker({ point, onClick }: PointMarkerProps) {
             <h3>{point.title}</h3>
             {point.type && (
               <div className="point-popup-type">
-                {point.type.icon && point.type.icon !== '/icons/default.svg' && (
-                  point.type.icon.startsWith('http') || point.type.icon.startsWith('/') || point.type.icon.startsWith('data:') ? (
-                    <img src={point.type.icon} alt="" className="type-icon-small" />
+                {point.type.icon &&
+                  point.type.icon !== "/icons/default.svg" &&
+                  (point.type.icon.startsWith("http") ||
+                  point.type.icon.startsWith("/") ||
+                  point.type.icon.startsWith("data:") ? (
+                    <img
+                      src={point.type.icon}
+                      alt=""
+                      className="type-icon-small"
+                    />
                   ) : (
                     <span className="type-icon-emoji">{point.type.icon}</span>
-                  )
-                )}
+                  ))}
                 <span className="type-name">{typeName}</span>
               </div>
             )}
@@ -113,7 +128,8 @@ export function PointMarker({ point, onClick }: PointMarkerProps) {
             {/* Stats */}
             <div className="point-popup-stats">
               <span className="point-popup-stats-item">
-                📝 {point.annotation_count} annotation{point.annotation_count !== 1 ? 's' : ''}
+                📝 {point.annotation_count} annotation
+                {point.annotation_count !== 1 ? "s" : ""}
               </span>
               {point.is_public && (
                 <span className="point-popup-badge-public">Public</span>

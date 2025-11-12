@@ -4,16 +4,16 @@
  * Displays all user's points in a list/grid view with search and filters.
  */
 
-import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { getPoints, searchPointsByTags, getTags } from '../api/points';
-import { getPointTypes } from '../api/types';
-import { getErrorMessage } from '../api/client';
-import { LoadingSpinner } from '../components/common/LoadingSpinner';
-import { FilterPanel } from '../components/common/FilterPanel';
-import { useLanguage } from '../contexts/LanguageContext';
-import type { GPSPoint, Tag, PointType } from '../types/point';
-import './PointsListPage.css';
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { getPoints, searchPointsByTags, getTags } from "../api/points";
+import { getPointTypes } from "../api/types";
+import { getErrorMessage } from "../api/client";
+import { LoadingSpinner } from "../components/common/LoadingSpinner";
+import { FilterPanel } from "../components/common/FilterPanel";
+import { useLanguage } from "../contexts/LanguageContext";
+import type { GPSPoint, Tag, PointType } from "../types/point";
+import "./PointsListPage.css";
 
 export function PointsListPage() {
   const { t, language } = useLanguage();
@@ -22,17 +22,17 @@ export function PointsListPage() {
   const [availableTypes, setAvailableTypes] = useState<PointType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [searchParams, setSearchParams] = useSearchParams();
-  const [searchInput, setSearchInput] = useState('');
+  const [searchInput, setSearchInput] = useState("");
   const [selectedTagNames, setSelectedTagNames] = useState<string[]>([]);
   const [selectedTypeIds, setSelectedTypeIds] = useState<string[]>([]);
   const navigate = useNavigate();
 
-  const searchQuery = searchParams.get('search') || '';
-  const tagsFilter = searchParams.get('tags') || '';
-  const typesFilter = searchParams.get('types') || '';
-  const isFilterPanelOpen = searchParams.get('filterOpen') === 'true';
+  const searchQuery = searchParams.get("search") || "";
+  const tagsFilter = searchParams.get("tags") || "";
+  const typesFilter = searchParams.get("types") || "";
+  const isFilterPanelOpen = searchParams.get("filterOpen") === "true";
 
   useEffect(() => {
     loadTags();
@@ -46,7 +46,7 @@ export function PointsListPage() {
   useEffect(() => {
     // Sync selectedTagNames with URL params
     if (tagsFilter) {
-      setSelectedTagNames(tagsFilter.split(',').map(t => t.trim()));
+      setSelectedTagNames(tagsFilter.split(",").map((t) => t.trim()));
     } else {
       setSelectedTagNames([]);
     }
@@ -55,7 +55,7 @@ export function PointsListPage() {
   useEffect(() => {
     // Sync selectedTypeIds with URL params
     if (typesFilter) {
-      setSelectedTypeIds(typesFilter.split(',').map(t => t.trim()));
+      setSelectedTypeIds(typesFilter.split(",").map((t) => t.trim()));
     } else {
       setSelectedTypeIds([]);
     }
@@ -71,7 +71,7 @@ export function PointsListPage() {
       const tags = await getTags();
       setAvailableTags(tags);
     } catch (err) {
-      console.error('Error loading tags:', err);
+      console.error("Error loading tags:", err);
     }
   };
 
@@ -80,20 +80,20 @@ export function PointsListPage() {
       const types = await getPointTypes();
       setAvailableTypes(types);
     } catch (err) {
-      console.error('Error loading types:', err);
+      console.error("Error loading types:", err);
     }
   };
 
   const loadPoints = async () => {
     setIsLoading(true);
-    setError('');
+    setError("");
 
     try {
       let data: GPSPoint[];
 
       if (tagsFilter) {
         // Filter by tags using the dedicated endpoint
-        const tagNames = tagsFilter.split(',').map(t => t.trim());
+        const tagNames = tagsFilter.split(",").map((t) => t.trim());
         data = await searchPointsByTags(tagNames);
       } else if (searchQuery) {
         // Search by text
@@ -106,9 +106,9 @@ export function PointsListPage() {
 
       // Apply type filter client-side
       if (typesFilter) {
-        const typeIds = typesFilter.split(',').map(t => t.trim());
-        data = data.filter(point =>
-          point.type && typeIds.includes(point.type.id)
+        const typeIds = typesFilter.split(",").map((t) => t.trim());
+        data = data.filter(
+          (point) => point.type && typeIds.includes(point.type.id),
         );
       }
 
@@ -128,14 +128,14 @@ export function PointsListPage() {
     } else {
       // Si la recherche est vide, enlever le paramètre
       const newParams = new URLSearchParams(searchParams);
-      newParams.delete('search');
+      newParams.delete("search");
       setSearchParams(newParams);
     }
   };
 
   const handleOpenFilterPanel = () => {
     const newParams = new URLSearchParams(searchParams);
-    newParams.set('filterOpen', 'true');
+    newParams.set("filterOpen", "true");
     setSearchParams(newParams);
   };
 
@@ -145,83 +145,88 @@ export function PointsListPage() {
 
   const handleCloseFilterPanel = () => {
     const newParams = new URLSearchParams(searchParams);
-    newParams.delete('filterOpen');
+    newParams.delete("filterOpen");
     setSearchParams(newParams);
   };
 
   const handleToggleTag = (tagName: string) => {
     const newSelectedTags = selectedTagNames.includes(tagName)
-      ? selectedTagNames.filter(t => t !== tagName)
+      ? selectedTagNames.filter((t) => t !== tagName)
       : [...selectedTagNames, tagName];
 
     const newParams = new URLSearchParams(searchParams);
 
     if (newSelectedTags.length > 0) {
-      newParams.set('tags', newSelectedTags.join(','));
+      newParams.set("tags", newSelectedTags.join(","));
     } else {
-      newParams.delete('tags');
+      newParams.delete("tags");
     }
 
     // Keep types filter if present
     if (selectedTypeIds.length > 0) {
-      newParams.set('types', selectedTypeIds.join(','));
+      newParams.set("types", selectedTypeIds.join(","));
     }
 
     // Garder le panneau ouvert
-    newParams.set('filterOpen', 'true');
+    newParams.set("filterOpen", "true");
 
     setSearchParams(newParams);
   };
 
   const handleToggleType = (typeId: string) => {
     const newSelectedTypes = selectedTypeIds.includes(typeId)
-      ? selectedTypeIds.filter(t => t !== typeId)
+      ? selectedTypeIds.filter((t) => t !== typeId)
       : [...selectedTypeIds, typeId];
 
     const newParams = new URLSearchParams(searchParams);
 
     if (newSelectedTypes.length > 0) {
-      newParams.set('types', newSelectedTypes.join(','));
+      newParams.set("types", newSelectedTypes.join(","));
     } else {
-      newParams.delete('types');
+      newParams.delete("types");
     }
 
     // Keep tags filter if present
     if (selectedTagNames.length > 0) {
-      newParams.set('tags', selectedTagNames.join(','));
+      newParams.set("tags", selectedTagNames.join(","));
     }
 
     // Garder le panneau ouvert
-    newParams.set('filterOpen', 'true');
+    newParams.set("filterOpen", "true");
 
     setSearchParams(newParams);
   };
 
   const clearFilters = () => {
     setSearchParams({});
-    setSearchInput('');
+    setSearchInput("");
   };
 
   const formatDate = (dateString: string) => {
-    const locale = t('common.locale', 'en-US');
+    const locale = t("common.locale", "en-US");
     return new Date(dateString).toLocaleDateString(locale, {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
   if (isInitialLoad) {
-    return <LoadingSpinner size="large" message={t('points.loadingPoints', 'Loading points...')} />;
+    return (
+      <LoadingSpinner
+        size="large"
+        message={t("points.loadingPoints", "Loading points...")}
+      />
+    );
   }
 
   if (error) {
     return (
       <div className="error-container">
-        <h2>{t('points.errorLoading', 'Error loading points')}</h2>
+        <h2>{t("points.errorLoading", "Error loading points")}</h2>
         <p>{error}</p>
         <button onClick={loadPoints} className="btn-primary">
-          {t('common.retry', 'Retry')}
+          {t("common.retry", "Retry")}
         </button>
       </div>
     );
@@ -230,7 +235,7 @@ export function PointsListPage() {
   return (
     <div className="points-list-page">
       <div className="points-list-header">
-        <h1>{t('nav.points', 'Points')}</h1>
+        <h1>{t("nav.points", "Points")}</h1>
 
         {/* Search and Filters */}
         <div className="filters-container">
@@ -239,15 +244,22 @@ export function PointsListPage() {
             <input
               type="text"
               className="search-input"
-              placeholder={t('points.searchPlaceholder', 'Search points by title or description...')}
+              placeholder={t(
+                "points.searchPlaceholder",
+                "Search points by title or description...",
+              )}
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
             />
             <button type="submit" className="search-button">
-              🔍 {t('common.search', 'Search')}
+              🔍 {t("common.search", "Search")}
             </button>
             {searchQuery && (
-              <button type="button" onClick={clearFilters} className="clear-button">
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="clear-button"
+              >
                 ✕
               </button>
             )}
@@ -257,11 +269,13 @@ export function PointsListPage() {
           {(availableTags.length > 0 || availableTypes.length > 0) && (
             <button
               type="button"
-              className={`filter-toggle-button ${isFilterPanelOpen ? 'active' : ''}`}
+              className={`filter-toggle-button ${isFilterPanelOpen ? "active" : ""}`}
               onClick={handleOpenFilterPanel}
-              title={t('points.filterByTagsTypes', 'Filter by tags and types')}
+              title={t("points.filterByTagsTypes", "Filter by tags and types")}
             >
-              🔍 {t('common.filter', 'Filters')} {(selectedTagNames.length + selectedTypeIds.length) > 0 && `(${selectedTagNames.length + selectedTypeIds.length})`}
+              🔍 {t("common.filter", "Filters")}{" "}
+              {selectedTagNames.length + selectedTypeIds.length > 0 &&
+                `(${selectedTagNames.length + selectedTypeIds.length})`}
               {isLoading && <span className="loading-indicator">⟳</span>}
             </button>
           )}
@@ -285,40 +299,54 @@ export function PointsListPage() {
           <div className="results-info">
             {searchQuery && (
               <span>
-                {t('common.search', 'Search')}: <strong>"{searchQuery}"</strong>
+                {t("common.search", "Search")}: <strong>"{searchQuery}"</strong>
               </span>
             )}
             {tagsFilter && (
               <span>
-                {t('nav.tags', 'Tags')}: <strong>{tagsFilter}</strong>
+                {t("nav.tags", "Tags")}: <strong>{tagsFilter}</strong>
               </span>
             )}
             {typesFilter && (
               <span>
-                {t('points.typeFilter', 'Type Filter')}: <strong>{t('points.active', 'Active')}</strong>
+                {t("points.typeFilter", "Type Filter")}:{" "}
+                <strong>{t("points.active", "Active")}</strong>
               </span>
             )}
             <span className="results-count">
-              {points.length} {points.length === 1 ? t('points.result', 'result') : t('points.results', 'results')}
+              {points.length}{" "}
+              {points.length === 1
+                ? t("points.result", "result")
+                : t("points.results", "results")}
             </span>
             <button onClick={clearFilters} className="clear-filters-link">
-              {t('points.clearAllFilters', 'Clear all filters')}
+              {t("points.clearAllFilters", "Clear all filters")}
             </button>
           </div>
         )}
 
         <div className="points-list-stats">
-          <span>{points.length} {points.length !== 1 ? t('map.points', 'points') : t('map.point', 'point')}</span>
+          <span>
+            {points.length}{" "}
+            {points.length !== 1
+              ? t("map.points", "points")
+              : t("map.point", "point")}
+          </span>
         </div>
       </div>
 
       {points.length === 0 ? (
         <div className="empty-state">
           <div className="empty-state-icon">📍</div>
-          <h2>{t('points.noPoints', 'No points yet')}</h2>
-          <p>{t('points.noPointsDesc', 'Click on the map to create your first GPS point')}</p>
-          <button onClick={() => navigate('/')} className="btn-primary">
-            {t('points.goToMap', 'Go to Map')}
+          <h2>{t("points.noPoints", "No points yet")}</h2>
+          <p>
+            {t(
+              "points.noPointsDesc",
+              "Click on the map to create your first GPS point",
+            )}
+          </p>
+          <button onClick={() => navigate("/")} className="btn-primary">
+            {t("points.goToMap", "Go to Map")}
           </button>
         </div>
       ) : (
@@ -330,7 +358,9 @@ export function PointsListPage() {
               onClick={() => navigate(`/points/${point.id}`)}
             >
               <div className="point-card-header">
-                <h3 className="point-card-title">{point.title || 'Untitled Point'}</h3>
+                <h3 className="point-card-title">
+                  {point.title || "Untitled Point"}
+                </h3>
                 {point.is_public && (
                   <span className="point-badge public">🌐 Public</span>
                 )}
@@ -342,7 +372,9 @@ export function PointsListPage() {
 
               {point.type && (
                 <div className="point-card-type">
-                  🏷️ {point.type.names[language] || point.type.names[point.type.creation_language]}
+                  🏷️{" "}
+                  {point.type.names[language] ||
+                    point.type.names[point.type.creation_language]}
                 </div>
               )}
 
@@ -373,7 +405,8 @@ export function PointsListPage() {
                 </span>
                 {point.annotation_count !== undefined && (
                   <span className="point-card-annotations">
-                    📝 {point.annotation_count} annotation{point.annotation_count !== 1 ? 's' : ''}
+                    📝 {point.annotation_count} annotation
+                    {point.annotation_count !== 1 ? "s" : ""}
                   </span>
                 )}
               </div>

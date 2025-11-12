@@ -4,22 +4,18 @@ Annotation model for GeoAnnotator.
 Handles text notes and file attachments for GPS points.
 """
 
-import uuid
 import os
-from django.conf import settings
+import uuid
+
+from django.core.validators import MaxValueValidator
+from django.core.validators import MinValueValidator
 from django.db import models
-from django.core.validators import MinValueValidator, MaxValueValidator
 
 
 def annotation_file_path(instance, filename):
     """Generate upload path for annotation files."""
     # Upload to: annotations/<point_id>/<annotation_id>/<filename>
-    return os.path.join(
-        'annotations',
-        str(instance.gps_point.id),
-        str(instance.id),
-        filename
-    )
+    return os.path.join("annotations", str(instance.gps_point.id), str(instance.id), filename)
 
 
 class Annotation(models.Model):
@@ -34,34 +30,32 @@ class Annotation(models.Model):
     """
 
     # Annotation type choices
-    TYPE_TEXT = 'text'
-    TYPE_IMAGE = 'image'
-    TYPE_DOCUMENT = 'document'
-    TYPE_FILE = 'file'
+    TYPE_TEXT = "text"
+    TYPE_IMAGE = "image"
+    TYPE_DOCUMENT = "document"
+    TYPE_FILE = "file"
 
     TYPE_CHOICES = [
-        (TYPE_TEXT, 'Text'),
-        (TYPE_IMAGE, 'Image'),
-        (TYPE_DOCUMENT, 'Document'),
-        (TYPE_FILE, 'File'),
+        (TYPE_TEXT, "Text"),
+        (TYPE_IMAGE, "Image"),
+        (TYPE_DOCUMENT, "Document"),
+        (TYPE_FILE, "File"),
     ]
 
     # MIME type sets
-    IMAGE_MIME_TYPES = {
-        'image/jpeg', 'image/png', 'image/tiff', 'image/gif'
-    }
+    IMAGE_MIME_TYPES = {"image/jpeg", "image/png", "image/tiff", "image/gif"}
 
     DOCUMENT_MIME_TYPES = {
-        'application/pdf',
-        'application/vnd.oasis.opendocument.text',
-        'application/vnd.oasis.opendocument.spreadsheet',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'application/msword',
-        'application/vnd.ms-excel',
+        "application/pdf",
+        "application/vnd.oasis.opendocument.text",
+        "application/vnd.oasis.opendocument.spreadsheet",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "application/msword",
+        "application/vnd.ms-excel",
     }
 
-    PREVIEWABLE_MIME_TYPES = IMAGE_MIME_TYPES | {'application/pdf'}
+    PREVIEWABLE_MIME_TYPES = IMAGE_MIME_TYPES | {"application/pdf"}
 
     # Max file size: 1GB
     MAX_FILE_SIZE = 1 * 1024 * 1024 * 1024
@@ -70,28 +64,26 @@ class Annotation(models.Model):
         primary_key=True,
         default=uuid.uuid4,
         editable=False,
-        help_text="Unique annotation identifier"
+        help_text="Unique annotation identifier",
     )
 
     gps_point = models.ForeignKey(
-        'points.GPSPoint',
+        "points.GPSPoint",
         on_delete=models.CASCADE,
-        related_name='annotations',
-        help_text="Associated GPS point"
+        related_name="annotations",
+        help_text="Associated GPS point",
     )
 
     type = models.CharField(
         max_length=20,
         choices=TYPE_CHOICES,
         db_index=True,
-        help_text="Annotation type (text/image/document/file)"
+        help_text="Annotation type (text/image/document/file)",
     )
 
     # Text annotation fields
     text_content = models.TextField(
-        blank=True,
-        null=True,
-        help_text="Rich text HTML (only for text type)"
+        blank=True, null=True, help_text="Rich text HTML (only for text type)"
     )
 
     # File annotation fields
@@ -100,56 +92,41 @@ class Annotation(models.Model):
         blank=True,
         null=True,
         max_length=500,
-        help_text="File upload (only for non-text types)"
+        help_text="File upload (only for non-text types)",
     )
 
-    file_name = models.CharField(
-        max_length=255,
-        blank=True,
-        help_text="Original filename"
-    )
+    file_name = models.CharField(max_length=255, blank=True, help_text="Original filename")
 
     file_size = models.BigIntegerField(
         default=0,
-        validators=[
-            MinValueValidator(0),
-            MaxValueValidator(MAX_FILE_SIZE)
-        ],
-        help_text="File size in bytes (max 1GB)"
+        validators=[MinValueValidator(0), MaxValueValidator(MAX_FILE_SIZE)],
+        help_text="File size in bytes (max 1GB)",
     )
 
     mime_type = models.CharField(
-        max_length=100,
-        blank=True,
-        help_text="MIME type (e.g., image/jpeg)"
+        max_length=100, blank=True, help_text="MIME type (e.g., image/jpeg)"
     )
 
     can_preview = models.BooleanField(
-        default=False,
-        help_text="Preview supported (images and PDFs)"
+        default=False, help_text="Preview supported (images and PDFs)"
     )
 
     order = models.IntegerField(
-        default=0,
-        db_index=True,
-        help_text="Display order (lower values first)"
+        default=0, db_index=True, help_text="Display order (lower values first)"
     )
 
-    created_at = models.DateTimeField(
-        auto_now_add=True,
-        help_text="Upload/creation timestamp"
-    )
+    created_at = models.DateTimeField(auto_now_add=True, help_text="Upload/creation timestamp")
 
     class Meta:
-        db_table = 'annotations'
-        verbose_name = 'Annotation'
-        verbose_name_plural = 'Annotations'
+        db_table = "annotations"
+        verbose_name = "Annotation"
+        verbose_name_plural = "Annotations"
         indexes = [
-            models.Index(fields=['gps_point'], name='idx_annotation_point'),
-            models.Index(fields=['type'], name='idx_annotation_type'),
-            models.Index(fields=['gps_point', 'order'], name='idx_annotation_point_order'),
+            models.Index(fields=["gps_point"], name="idx_annotation_point"),
+            models.Index(fields=["type"], name="idx_annotation_type"),
+            models.Index(fields=["gps_point", "order"], name="idx_annotation_point_order"),
         ]
-        ordering = ['order', '-created_at']
+        ordering = ["order", "-created_at"]
 
     def clean(self):
         """Validate annotation type constraints."""
@@ -191,6 +168,7 @@ class Annotation(models.Model):
                 # If we can't check existence (e.g., S3 403), try to delete anyway
                 # If file doesn't exist, delete will fail silently in most storage backends
                 import logging
+
                 logger = logging.getLogger(__name__)
                 logger.warning(f"Could not check file existence, attempting direct deletion: {e}")
                 try:
@@ -216,7 +194,7 @@ class Annotation(models.Model):
 
     def __str__(self):
         if self.type == self.TYPE_TEXT:
-            preview = self.text_content[:50] if self.text_content else ''
+            preview = self.text_content[:50] if self.text_content else ""
             return f"Text: {preview}..."
         else:
             return f"{self.type.capitalize()}: {self.file_name}"

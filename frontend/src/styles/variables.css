@@ -70,14 +70,14 @@
   --color-link-hover: #535bf2;
 
   /* === SPACING === */
-  --spacing-xs: 0.25rem;   /* 4px */
-  --spacing-sm: 0.5rem;    /* 8px */
-  --spacing-md: 0.75rem;   /* 12px */
-  --spacing-lg: 1rem;      /* 16px */
-  --spacing-xl: 1.5rem;    /* 24px */
-  --spacing-2xl: 2rem;     /* 32px */
-  --spacing-3xl: 3rem;     /* 48px */
-  --spacing-4xl: 4rem;     /* 64px */
+  --spacing-xs: 0.25rem; /* 4px */
+  --spacing-sm: 0.5rem; /* 8px */
+  --spacing-md: 0.75rem; /* 12px */
+  --spacing-lg: 1rem; /* 16px */
+  --spacing-xl: 1.5rem; /* 24px */
+  --spacing-2xl: 2rem; /* 32px */
+  --spacing-3xl: 3rem; /* 48px */
+  --spacing-4xl: 4rem; /* 64px */
 
   /* === BORDER RADIUS === */
   --radius-xs: 2px;
@@ -101,15 +101,17 @@
 
   /* === TYPOGRAPHY === */
   --font-family-base: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  --font-family-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  --font-family-mono:
+    "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New",
+    monospace;
 
-  --font-size-xs: 0.75rem;   /* 12px */
-  --font-size-sm: 0.875rem;  /* 14px */
-  --font-size-base: 1rem;    /* 16px */
-  --font-size-lg: 1.125rem;  /* 18px */
-  --font-size-xl: 1.25rem;   /* 20px */
-  --font-size-2xl: 1.5rem;   /* 24px */
-  --font-size-3xl: 2rem;     /* 32px */
+  --font-size-xs: 0.75rem; /* 12px */
+  --font-size-sm: 0.875rem; /* 14px */
+  --font-size-base: 1rem; /* 16px */
+  --font-size-lg: 1.125rem; /* 18px */
+  --font-size-xl: 1.25rem; /* 20px */
+  --font-size-2xl: 1.5rem; /* 24px */
+  --font-size-3xl: 2rem; /* 32px */
 
   --font-weight-normal: 400;
   --font-weight-medium: 500;
@@ -140,7 +142,7 @@
 }
 
 /* Dark Mode Variables - Controlled by data-theme attribute */
-[data-theme='dark'] {
+[data-theme="dark"] {
   /* Background Colors */
   --color-bg-primary: #2d3748;
   --color-bg-secondary: #1a202c;

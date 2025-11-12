@@ -4,7 +4,7 @@
  * Provides mock functions and utilities for testing components that use React Router hooks.
  */
 
-import { vi } from 'vitest';
+import { vi } from "vitest";
 
 /**
  * Creates a mock navigate function for testing.
@@ -26,6 +26,8 @@ export const createMockNavigate = () => {
  * }));
  * ```
  */
-export const mockUseNavigate = (navigateFn: ReturnType<typeof createMockNavigate>) => {
+export const mockUseNavigate = (
+  navigateFn: ReturnType<typeof createMockNavigate>,
+) => {
   return () => navigateFn;
 };

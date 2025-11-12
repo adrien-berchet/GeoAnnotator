@@ -11,14 +11,14 @@
  * - Default icon fallback
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { renderWithProviders } from '@/test/test-utils';
-import PointTypeManagementPage from '../../pages/PointTypeManagementPage';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { renderWithProviders } from "@/test/test-utils";
+import PointTypeManagementPage from "../../pages/PointTypeManagementPage";
 
 // Mock API types
-vi.mock('../../api/types', () => ({
+vi.mock("../../api/types", () => ({
   getPointTypes: vi.fn(),
   createPointType: vi.fn(),
   updatePointType: vi.fn(),
@@ -30,96 +30,96 @@ vi.mock('../../api/types', () => ({
 
 const mockTypes = [
   {
-    id: 'default-type-id',
-    type: 'base' as const,
-    names: { en: 'Point', fr: 'Point' },
-    creation_language: 'en',
-    icon: '/icons/default.svg',
+    id: "default-type-id",
+    type: "base" as const,
+    names: { en: "Point", fr: "Point" },
+    creation_language: "en",
+    icon: "/icons/default.svg",
     order: 0,
     owner: null,
-    visibility: 'public' as const,
-    status: 'active' as const,
-    created_at: '2025-01-01T00:00:00Z',
-    updated_at: '2025-01-01T00:00:00Z',
+    visibility: "public" as const,
+    status: "active" as const,
+    created_at: "2025-01-01T00:00:00Z",
+    updated_at: "2025-01-01T00:00:00Z",
   },
   {
-    id: 'type-1',
-    type: 'custom' as const,
-    names: { en: 'Restaurant', fr: 'Restaurant' },
-    creation_language: 'en',
-    icon: '/icons/restaurant.svg',
+    id: "type-1",
+    type: "custom" as const,
+    names: { en: "Restaurant", fr: "Restaurant" },
+    creation_language: "en",
+    icon: "/icons/restaurant.svg",
     order: 1,
-    owner: { id: 'user1', email: 'test@example.com' },
-    visibility: 'private' as const,
-    status: 'active' as const,
-    created_at: '2025-01-01T00:00:00Z',
-    updated_at: '2025-01-01T00:00:00Z',
+    owner: { id: "user1", email: "test@example.com" },
+    visibility: "private" as const,
+    status: "active" as const,
+    created_at: "2025-01-01T00:00:00Z",
+    updated_at: "2025-01-01T00:00:00Z",
   },
   {
-    id: 'type-2',
-    type: 'custom' as const,
-    names: { en: 'Museum', fr: 'Musée' },
-    creation_language: 'en',
-    icon: '/icons/museum.svg',
+    id: "type-2",
+    type: "custom" as const,
+    names: { en: "Museum", fr: "Musée" },
+    creation_language: "en",
+    icon: "/icons/museum.svg",
     order: 2,
-    owner: { id: 'user1', email: 'test@example.com' },
-    visibility: 'private' as const,
-    status: 'active' as const,
-    created_at: '2025-01-01T00:00:00Z',
-    updated_at: '2025-01-01T00:00:00Z',
+    owner: { id: "user1", email: "test@example.com" },
+    visibility: "private" as const,
+    status: "active" as const,
+    created_at: "2025-01-01T00:00:00Z",
+    updated_at: "2025-01-01T00:00:00Z",
   },
   {
-    id: 'type-3',
-    type: 'custom' as const,
-    names: { en: 'Park', fr: 'Parc' },
-    creation_language: 'en',
-    icon: '/icons/park.svg',
+    id: "type-3",
+    type: "custom" as const,
+    names: { en: "Park", fr: "Parc" },
+    creation_language: "en",
+    icon: "/icons/park.svg",
     order: 3,
-    owner: { id: 'user1', email: 'test@example.com' },
-    visibility: 'private' as const,
-    status: 'active' as const,
-    created_at: '2025-01-01T00:00:00Z',
-    updated_at: '2025-01-01T00:00:00Z',
-  }
+    owner: { id: "user1", email: "test@example.com" },
+    visibility: "private" as const,
+    status: "active" as const,
+    created_at: "2025-01-01T00:00:00Z",
+    updated_at: "2025-01-01T00:00:00Z",
+  },
 ];
 
-describe('Type Management Integration Tests', () => {
+describe("Type Management Integration Tests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  describe('Creating Types', () => {
-    it('should create a new type successfully', async () => {
+  describe("Creating Types", () => {
+    it("should create a new type successfully", async () => {
       const user = userEvent.setup();
-      const typesApi = await import('../../api/types');
+      const typesApi = await import("../../api/types");
 
       // Mock GET for listing types
       vi.mocked(typesApi.getPointTypes).mockResolvedValue(mockTypes);
 
       // Mock POST for creating type
       vi.mocked(typesApi.createPointType).mockResolvedValue({
-        id: 'type-4',
-        type: 'custom',
-        names: { en: 'Café' },
-        creation_language: 'en',
-        icon: '/icons/cafe.svg',
+        id: "type-4",
+        type: "custom",
+        names: { en: "Café" },
+        creation_language: "en",
+        icon: "/icons/cafe.svg",
         order: 4,
-        owner: { id: 'user1', email: 'test@example.com' },
-        visibility: 'private',
-        status: 'active',
-        created_at: '2025-01-01T00:00:00Z',
-        updated_at: '2025-01-01T00:00:00Z',
+        owner: { id: "user1", email: "test@example.com" },
+        visibility: "private",
+        status: "active",
+        created_at: "2025-01-01T00:00:00Z",
+        updated_at: "2025-01-01T00:00:00Z",
       });
 
       renderWithProviders(<PointTypeManagementPage />);
 
       // Wait for types to load
       await waitFor(() => {
-        expect(screen.getByText('Restaurant')).toBeInTheDocument();
+        expect(screen.getByText("Restaurant")).toBeInTheDocument();
       });
 
       // Click "Add New Type" button to show the form
-      const addButton = screen.getByRole('button', { name: /add new type/i });
+      const addButton = screen.getByRole("button", { name: /add new type/i });
       await user.click(addButton);
 
       // Wait for form to appear
@@ -129,48 +129,50 @@ describe('Type Management Integration Tests', () => {
 
       // Fill in type name in the translation input
       const nameInput = screen.getByPlaceholderText(/type name/i);
-      await user.type(nameInput, 'Café');
+      await user.type(nameInput, "Café");
 
       // Submit form
-      const createButton = screen.getByRole('button', { name: /^create type$/i });
+      const createButton = screen.getByRole("button", {
+        name: /^create type$/i,
+      });
       await user.click(createButton);
 
       // Verify API was called
       await waitFor(() => {
         expect(typesApi.createPointType).toHaveBeenCalledWith(
           expect.objectContaining({
-            names: expect.objectContaining({ en: 'Café' })
-          })
+            names: expect.objectContaining({ en: "Café" }),
+          }),
         );
       });
     });
 
-    it('should use default icon when no icon specified', async () => {
+    it("should use default icon when no icon specified", async () => {
       const user = userEvent.setup();
-      const typesApi = await import('../../api/types');
+      const typesApi = await import("../../api/types");
 
       vi.mocked(typesApi.getPointTypes).mockResolvedValue(mockTypes);
       vi.mocked(typesApi.createPointType).mockResolvedValue({
-        id: 'type-4',
-        type: 'custom',
-        names: { en: 'Generic' },
-        creation_language: 'en',
-        icon: '/icons/default.svg',
+        id: "type-4",
+        type: "custom",
+        names: { en: "Generic" },
+        creation_language: "en",
+        icon: "/icons/default.svg",
         order: 4,
-        owner: { id: 'user1', email: 'test@example.com' },
-        visibility: 'private',
-        status: 'active',
-        created_at: '2025-01-01T00:00:00Z',
-        updated_at: '2025-01-01T00:00:00Z',
+        owner: { id: "user1", email: "test@example.com" },
+        visibility: "private",
+        status: "active",
+        created_at: "2025-01-01T00:00:00Z",
+        updated_at: "2025-01-01T00:00:00Z",
       });
 
       renderWithProviders(<PointTypeManagementPage />);
 
       await waitFor(() => {
-        expect(screen.getByText('Restaurant')).toBeInTheDocument();
+        expect(screen.getByText("Restaurant")).toBeInTheDocument();
       });
 
-      const addButton = screen.getByRole('button', { name: /add new type/i });
+      const addButton = screen.getByRole("button", { name: /add new type/i });
       await user.click(addButton);
 
       // Wait for form to appear
@@ -179,45 +181,47 @@ describe('Type Management Integration Tests', () => {
       });
 
       const nameInput = screen.getByPlaceholderText(/type name/i);
-      await user.type(nameInput, 'Generic');
+      await user.type(nameInput, "Generic");
 
       // Don't fill icon field
 
-      const createButton = screen.getByRole('button', { name: /^create type$/i });
+      const createButton = screen.getByRole("button", {
+        name: /^create type$/i,
+      });
       await user.click(createButton);
 
       // Verify the API was called without icon (it should be omitted or default)
       await waitFor(() => {
         expect(typesApi.createPointType).toHaveBeenCalledWith(
           expect.objectContaining({
-            names: expect.objectContaining({ en: 'Generic' })
-          })
+            names: expect.objectContaining({ en: "Generic" }),
+          }),
         );
       });
     });
 
-    it('should show error when creating duplicate type name', async () => {
+    it("should show error when creating duplicate type name", async () => {
       const user = userEvent.setup();
-      const typesApi = await import('../../api/types');
+      const typesApi = await import("../../api/types");
 
       vi.mocked(typesApi.getPointTypes).mockResolvedValue(mockTypes);
       vi.mocked(typesApi.createPointType).mockRejectedValue({
         response: {
           status: 400,
           data: {
-            error: 'VALIDATION_ERROR',
-            message: 'Type with this name already exists',
-          }
-        }
+            error: "VALIDATION_ERROR",
+            message: "Type with this name already exists",
+          },
+        },
       });
 
       renderWithProviders(<PointTypeManagementPage />);
 
       await waitFor(() => {
-        expect(screen.getByText('Restaurant')).toBeInTheDocument();
+        expect(screen.getByText("Restaurant")).toBeInTheDocument();
       });
 
-      const addButton = screen.getByRole('button', { name: /add new type/i });
+      const addButton = screen.getByRole("button", { name: /add new type/i });
       await user.click(addButton);
 
       // Wait for form to appear
@@ -226,42 +230,44 @@ describe('Type Management Integration Tests', () => {
       });
 
       const nameInput = screen.getByPlaceholderText(/type name/i);
-      await user.type(nameInput, 'Restaurant'); // Duplicate
+      await user.type(nameInput, "Restaurant"); // Duplicate
 
-      const createButton = screen.getByRole('button', { name: /^create type$/i });
+      const createButton = screen.getByRole("button", {
+        name: /^create type$/i,
+      });
       await user.click(createButton);
 
       // Verify an error message is shown (the exact message depends on error parsing)
       await waitFor(() => {
-        const errorElement = screen.getByRole('alert');
+        const errorElement = screen.getByRole("alert");
         expect(errorElement).toBeInTheDocument();
         // Should show some error message
         expect(errorElement.textContent).toBeTruthy();
       });
     });
 
-    it('should show error when exceeding 1000 type limit', async () => {
+    it("should show error when exceeding 1000 type limit", async () => {
       const user = userEvent.setup();
-      const typesApi = await import('../../api/types');
+      const typesApi = await import("../../api/types");
 
       vi.mocked(typesApi.getPointTypes).mockResolvedValue(mockTypes);
       vi.mocked(typesApi.createPointType).mockRejectedValue({
         response: {
           status: 400,
           data: {
-            error: 'VALIDATION_ERROR',
-            message: 'You have reached the maximum of 1000 types',
-          }
-        }
+            error: "VALIDATION_ERROR",
+            message: "You have reached the maximum of 1000 types",
+          },
+        },
       });
 
       renderWithProviders(<PointTypeManagementPage />);
 
       await waitFor(() => {
-        expect(screen.getByText('Restaurant')).toBeInTheDocument();
+        expect(screen.getByText("Restaurant")).toBeInTheDocument();
       });
 
-      const addButton = screen.getByRole('button', { name: /add new type/i });
+      const addButton = screen.getByRole("button", { name: /add new type/i });
       await user.click(addButton);
 
       // Wait for form to appear
@@ -270,14 +276,16 @@ describe('Type Management Integration Tests', () => {
       });
 
       const nameInput = screen.getByPlaceholderText(/type name/i);
-      await user.type(nameInput, 'NewType');
+      await user.type(nameInput, "NewType");
 
-      const createButton = screen.getByRole('button', { name: /^create type$/i });
+      const createButton = screen.getByRole("button", {
+        name: /^create type$/i,
+      });
       await user.click(createButton);
 
       // Verify an error message is shown (the exact message depends on error parsing)
       await waitFor(() => {
-        const errorElement = screen.getByRole('alert');
+        const errorElement = screen.getByRole("alert");
         expect(errorElement).toBeInTheDocument();
         // Should contain either the mocked message or a generic error
         expect(errorElement.textContent).toMatch(/(1000|error|unknown)/i);
@@ -285,26 +293,28 @@ describe('Type Management Integration Tests', () => {
     });
   });
 
-  describe('Editing Types', () => {
-    it('should edit an existing type successfully', async () => {
+  describe("Editing Types", () => {
+    it("should edit an existing type successfully", async () => {
       const user = userEvent.setup();
-      const typesApi = await import('../../api/types');
+      const typesApi = await import("../../api/types");
 
       vi.mocked(typesApi.getPointTypes).mockResolvedValue(mockTypes);
       vi.mocked(typesApi.updatePointType).mockResolvedValue({
         ...mockTypes[1],
-        names: { en: 'Fine Dining', fr: 'Restaurant' },
-        icon: '/icons/fine-dining.svg'
+        names: { en: "Fine Dining", fr: "Restaurant" },
+        icon: "/icons/fine-dining.svg",
       });
 
       renderWithProviders(<PointTypeManagementPage />);
 
       await waitFor(() => {
-        expect(screen.getByText('Restaurant')).toBeInTheDocument();
+        expect(screen.getByText("Restaurant")).toBeInTheDocument();
       });
 
       // Click edit button for Restaurant type
-      const editButton = screen.getByRole('button', { name: /edit restaurant/i });
+      const editButton = screen.getByRole("button", {
+        name: /edit restaurant/i,
+      });
       await user.click(editButton);
 
       // Wait for edit form to appear
@@ -314,42 +324,44 @@ describe('Type Management Integration Tests', () => {
 
       // Update name in the translation input - there may be multiple, get the one with value
       const nameInputs = screen.getAllByPlaceholderText(/type name/i);
-      const editNameInput = nameInputs.find(input => (input as HTMLInputElement).value === 'Restaurant');
+      const editNameInput = nameInputs.find(
+        (input) => (input as HTMLInputElement).value === "Restaurant",
+      );
       expect(editNameInput).toBeDefined();
 
       await user.clear(editNameInput!);
-      await user.type(editNameInput!, 'Fine Dining');
+      await user.type(editNameInput!, "Fine Dining");
 
       // Update icon
       const iconInputs = screen.getAllByPlaceholderText(/emoji.*url/i);
       const editIconInput = iconInputs[iconInputs.length - 1]; // Get the edit form input
       await user.clear(editIconInput);
-      await user.type(editIconInput, '/icons/fine-dining.svg');
+      await user.type(editIconInput, "/icons/fine-dining.svg");
 
       // Save changes
-      const saveButton = screen.getByRole('button', { name: /^save$/i });
+      const saveButton = screen.getByRole("button", { name: /^save$/i });
       await user.click(saveButton);
 
       // Verify API was called
       await waitFor(() => {
         expect(typesApi.updatePointType).toHaveBeenCalledWith(
-          'type-1',
+          "type-1",
           expect.objectContaining({
-            names: expect.objectContaining({ en: 'Fine Dining' }),
-            icon: '/icons/fine-dining.svg'
-          })
+            names: expect.objectContaining({ en: "Fine Dining" }),
+            icon: "/icons/fine-dining.svg",
+          }),
         );
       });
     });
   });
 
-  describe('Deleting Types', () => {
-    it('should delete a type successfully', async () => {
+  describe("Deleting Types", () => {
+    it("should delete a type successfully", async () => {
       const user = userEvent.setup();
-      const typesApi = await import('../../api/types');
+      const typesApi = await import("../../api/types");
 
       // Mock window.confirm to auto-confirm
-      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+      const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
 
       vi.mocked(typesApi.getPointTypes).mockResolvedValue(mockTypes);
       vi.mocked(typesApi.deletePointType).mockResolvedValue();
@@ -357,61 +369,72 @@ describe('Type Management Integration Tests', () => {
       renderWithProviders(<PointTypeManagementPage />);
 
       await waitFor(() => {
-        expect(screen.getByText('Restaurant')).toBeInTheDocument();
+        expect(screen.getByText("Restaurant")).toBeInTheDocument();
       });
 
       // Click delete button for Restaurant type
-      const deleteButton = screen.getByRole('button', { name: /delete restaurant/i });
+      const deleteButton = screen.getByRole("button", {
+        name: /delete restaurant/i,
+      });
       await user.click(deleteButton);
 
       // Verify confirm was called with appropriate message
       expect(confirmSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Restaurant')
+        expect.stringContaining("Restaurant"),
       );
 
       // Verify API was called
       await waitFor(() => {
-        expect(typesApi.deletePointType).toHaveBeenCalledWith('type-1');
+        expect(typesApi.deletePointType).toHaveBeenCalledWith("type-1");
       });
 
       confirmSpy.mockRestore();
     });
 
-    it('should show warning that points will switch to default type', async () => {
-      const typesApi = await import('../../api/types');
+    it("should show warning that points will switch to default type", async () => {
+      const typesApi = await import("../../api/types");
 
       vi.mocked(typesApi.getPointTypes).mockResolvedValue(mockTypes);
 
       renderWithProviders(<PointTypeManagementPage />);
 
       await waitFor(() => {
-        expect(screen.getByText('Restaurant')).toBeInTheDocument();
+        expect(screen.getByText("Restaurant")).toBeInTheDocument();
       });
 
       // The warning is in the info box at the bottom of the page
-      expect(screen.getByText(/deleting a type will switch all associated points/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/deleting a type will switch all associated points/i),
+      ).toBeInTheDocument();
     });
   });
 
-  describe('Reordering Types', () => {
-    it('should reorder types successfully using move buttons', async () => {
+  describe("Reordering Types", () => {
+    it("should reorder types successfully using move buttons", async () => {
       const user = userEvent.setup();
-      const typesApi = await import('../../api/types');
+      const typesApi = await import("../../api/types");
 
       vi.mocked(typesApi.getPointTypes).mockResolvedValue(mockTypes);
-      vi.mocked(typesApi.reorderPointTypes).mockResolvedValue({ success: true, updated: 4 });
+      vi.mocked(typesApi.reorderPointTypes).mockResolvedValue({
+        success: true,
+        updated: 4,
+      });
 
       renderWithProviders(<PointTypeManagementPage />);
 
       await waitFor(() => {
-        expect(screen.getByText('Restaurant')).toBeInTheDocument();
+        expect(screen.getByText("Restaurant")).toBeInTheDocument();
       });
 
       // Find all "Move down" buttons
-      const moveDownButtons = screen.getAllByRole('button', { name: /move down/i });
+      const moveDownButtons = screen.getAllByRole("button", {
+        name: /move down/i,
+      });
 
       // Click the first non-disabled "Move down" button
-      const firstMoveDown = moveDownButtons.find(btn => !(btn as HTMLButtonElement).disabled);
+      const firstMoveDown = moveDownButtons.find(
+        (btn) => !(btn as HTMLButtonElement).disabled,
+      );
       expect(firstMoveDown).toBeInTheDocument();
 
       if (firstMoveDown) {
@@ -425,61 +448,61 @@ describe('Type Management Integration Tests', () => {
     });
   });
 
-  describe('Type List Display', () => {
-    it('should display types in order', async () => {
-      const typesApi = await import('../../api/types');
+  describe("Type List Display", () => {
+    it("should display types in order", async () => {
+      const typesApi = await import("../../api/types");
 
       vi.mocked(typesApi.getPointTypes).mockResolvedValue(mockTypes);
 
       renderWithProviders(<PointTypeManagementPage />);
 
       await waitFor(() => {
-        expect(screen.getByText('Restaurant')).toBeInTheDocument();
+        expect(screen.getByText("Restaurant")).toBeInTheDocument();
       });
 
-      const typeRows = screen.getAllByRole('row').slice(1); // Skip header row
+      const typeRows = screen.getAllByRole("row").slice(1); // Skip header row
 
       // First row is the default/base type "Point" (order: 0)
-      expect(typeRows[0]).toHaveTextContent('Point');
+      expect(typeRows[0]).toHaveTextContent("Point");
       // Then the custom types
-      expect(typeRows[1]).toHaveTextContent('Restaurant');
-      expect(typeRows[2]).toHaveTextContent('Museum');
-      expect(typeRows[3]).toHaveTextContent('Park');
+      expect(typeRows[1]).toHaveTextContent("Restaurant");
+      expect(typeRows[2]).toHaveTextContent("Museum");
+      expect(typeRows[3]).toHaveTextContent("Park");
     });
 
-    it('should display icons for each type', async () => {
-      const typesApi = await import('../../api/types');
+    it("should display icons for each type", async () => {
+      const typesApi = await import("../../api/types");
 
       vi.mocked(typesApi.getPointTypes).mockResolvedValue(mockTypes);
 
       renderWithProviders(<PointTypeManagementPage />);
 
       await waitFor(() => {
-        expect(screen.getByText('Restaurant')).toBeInTheDocument();
+        expect(screen.getByText("Restaurant")).toBeInTheDocument();
       });
 
       // Icons have alt="" so they have role "presentation", not "img"
       // Check for presentation role or just verify the icon elements exist
-      const icons = screen.getAllByRole('presentation');
+      const icons = screen.getAllByRole("presentation");
       expect(icons.length).toBeGreaterThanOrEqual(3);
     });
   });
 
-  describe('Accessibility', () => {
-    it('should be keyboard navigable', async () => {
+  describe("Accessibility", () => {
+    it("should be keyboard navigable", async () => {
       const user = userEvent.setup();
-      const typesApi = await import('../../api/types');
+      const typesApi = await import("../../api/types");
 
       vi.mocked(typesApi.getPointTypes).mockResolvedValue(mockTypes);
 
       renderWithProviders(<PointTypeManagementPage />);
 
       await waitFor(() => {
-        expect(screen.getByText('Restaurant')).toBeInTheDocument();
+        expect(screen.getByText("Restaurant")).toBeInTheDocument();
       });
 
       // The first focusable element should be the "Add New Type" button
-      const addButton = screen.getByRole('button', { name: /add new type/i });
+      const addButton = screen.getByRole("button", { name: /add new type/i });
       expect(addButton).toBeInTheDocument();
 
       // Tab to focus it
@@ -487,26 +510,26 @@ describe('Type Management Integration Tests', () => {
       expect(addButton).toHaveFocus();
     });
 
-    it('should have proper ARIA labels', async () => {
-      const typesApi = await import('../../api/types');
+    it("should have proper ARIA labels", async () => {
+      const typesApi = await import("../../api/types");
 
       vi.mocked(typesApi.getPointTypes).mockResolvedValue(mockTypes);
 
       renderWithProviders(<PointTypeManagementPage />);
 
       await waitFor(() => {
-        expect(screen.getByText('Restaurant')).toBeInTheDocument();
+        expect(screen.getByText("Restaurant")).toBeInTheDocument();
       });
 
       // Verify ARIA labels exist on interactive buttons
-      const addButton = screen.getByRole('button', { name: /add new type/i });
-      expect(addButton).toHaveAttribute('aria-label');
+      const addButton = screen.getByRole("button", { name: /add new type/i });
+      expect(addButton).toHaveAttribute("aria-label");
 
       // Check move buttons have aria-labels
-      const moveUpButtons = screen.getAllByRole('button', { name: /move up/i });
+      const moveUpButtons = screen.getAllByRole("button", { name: /move up/i });
       expect(moveUpButtons.length).toBeGreaterThan(0);
-      moveUpButtons.forEach(btn => {
-        expect(btn).toHaveAttribute('aria-label');
+      moveUpButtons.forEach((btn) => {
+        expect(btn).toHaveAttribute("aria-label");
       });
     });
   });

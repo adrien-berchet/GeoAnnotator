@@ -4,17 +4,16 @@ Annotations services.
 Handles file uploads, storage quota management, and preview generation.
 """
 
-import os
 import mimetypes
-from pathlib import Path
-from django.conf import settings
+from io import BytesIO
+
 from django.core.files.uploadedfile import UploadedFile
 from django.db import models as db_models
 from PIL import Image
-from io import BytesIO
+
+from apps.authentication.models import User
 
 from .models import Annotation
-from apps.authentication.models import User
 
 
 class StorageQuotaService:
@@ -119,14 +118,16 @@ class StorageQuotaService:
             dict: Quota information including usage, limit, remaining, percentage
         """
         storage_remaining = user.storage_limit - user.storage_used
-        usage_percentage = (user.storage_used / user.storage_limit * 100) if user.storage_limit > 0 else 0
+        usage_percentage = (
+            (user.storage_used / user.storage_limit * 100) if user.storage_limit > 0 else 0
+        )
 
         return {
-            'storage_used': user.storage_used,
-            'storage_limit': user.storage_limit,
-            'storage_remaining': storage_remaining,
-            'usage_percentage': round(usage_percentage, 2),
-            'is_warning': StorageQuotaService.is_quota_warning(user)
+            "storage_used": user.storage_used,
+            "storage_limit": user.storage_limit,
+            "storage_remaining": storage_remaining,
+            "usage_percentage": round(usage_percentage, 2),
+            "is_warning": StorageQuotaService.is_quota_warning(user),
         }
 
 
@@ -138,32 +139,32 @@ class FileUploadService:
 
     # Allowed MIME types
     ALLOWED_IMAGE_TYPES = {
-        'image/jpeg',
-        'image/png',
-        'image/gif',
-        'image/webp',
-        'image/bmp',
-        'image/tiff',
+        "image/jpeg",
+        "image/png",
+        "image/gif",
+        "image/webp",
+        "image/bmp",
+        "image/tiff",
     }
 
     ALLOWED_DOCUMENT_TYPES = {
-        'application/pdf',
-        'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'application/vnd.ms-excel',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'application/vnd.ms-powerpoint',
-        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-        'text/plain',
-        'text/csv',
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/vnd.ms-excel",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "application/vnd.ms-powerpoint",
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        "text/plain",
+        "text/csv",
     }
 
     DISALLOWED_TYPES = {
-        'application/x-executable',
-        'application/x-sharedlib',
-        'application/x-sh',
-        'application/x-python-code',
-        'application/javascript',
+        "application/x-executable",
+        "application/x-sharedlib",
+        "application/x-sh",
+        "application/x-python-code",
+        "application/javascript",
     }
 
     @staticmethod
@@ -186,8 +187,8 @@ class FileUploadService:
         # Check file size
         if uploaded_file.size > FileUploadService.MAX_FILE_SIZE:
             return {
-                'valid': False,
-                'error': f'File size ({uploaded_file.size} bytes) exceeds maximum (1GB)',
+                "valid": False,
+                "error": f"File size ({uploaded_file.size} bytes) exceeds maximum (1GB)",
             }
 
         # Detect MIME type
@@ -198,28 +199,28 @@ class FileUploadService:
         # Check for disallowed types
         if mime_type in FileUploadService.DISALLOWED_TYPES:
             return {
-                'valid': False,
-                'error': f'File type {mime_type} is not allowed',
+                "valid": False,
+                "error": f"File type {mime_type} is not allowed",
             }
 
         # Type-specific validation
-        if annotation_type == 'image':
+        if annotation_type == "image":
             if mime_type not in FileUploadService.ALLOWED_IMAGE_TYPES:
                 return {
-                    'valid': False,
-                    'error': f'Invalid image type: {mime_type}',
+                    "valid": False,
+                    "error": f"Invalid image type: {mime_type}",
                 }
-        elif annotation_type == 'document':
+        elif annotation_type == "document":
             if mime_type not in FileUploadService.ALLOWED_DOCUMENT_TYPES:
                 return {
-                    'valid': False,
-                    'error': f'Invalid document type: {mime_type}',
+                    "valid": False,
+                    "error": f"Invalid document type: {mime_type}",
                 }
 
         return {
-            'valid': True,
-            'mime_type': mime_type,
-            'file_size': uploaded_file.size,
+            "valid": True,
+            "mime_type": mime_type,
+            "file_size": uploaded_file.size,
         }
 
     @staticmethod
@@ -233,10 +234,7 @@ class FileUploadService:
         Returns:
             bool: True if previewable
         """
-        previewable_types = (
-            FileUploadService.ALLOWED_IMAGE_TYPES |
-            {'application/pdf'}
-        )
+        previewable_types = FileUploadService.ALLOWED_IMAGE_TYPES | {"application/pdf"}
         return mime_type in previewable_types
 
 
@@ -270,7 +268,7 @@ class ImagePreviewService:
 
         # Save to BytesIO
         output = BytesIO()
-        img_format = img.format or 'JPEG'
+        img_format = img.format or "JPEG"
         img.save(output, format=img_format, quality=85)
         output.seek(0)
 
@@ -310,13 +308,16 @@ class AnnotationService:
             Annotation object
         """
         # Get max order for this point and increment
-        max_order = Annotation.objects.filter(
-            gps_point_id=gps_point_id
-        ).aggregate(db_models.Max('order'))['order__max'] or -1
+        max_order = (
+            Annotation.objects.filter(gps_point_id=gps_point_id).aggregate(db_models.Max("order"))[
+                "order__max"
+            ]
+            or -1
+        )
 
         return Annotation.objects.create(
             gps_point_id=gps_point_id,
-            type='text',
+            type="text",
             text_content=text_content,
             order=max_order + 1,
         )
@@ -345,11 +346,11 @@ class AnnotationService:
         """
         # Validate file
         validation = FileUploadService.validate_file(uploaded_file, annotation_type)
-        if not validation['valid']:
-            raise ValueError(validation['error'])
+        if not validation["valid"]:
+            raise ValueError(validation["error"])
 
         # Check quota
-        if not StorageQuotaService.check_quota(user, validation['file_size']):
+        if not StorageQuotaService.check_quota(user, validation["file_size"]):
             raise ValueError(
                 f"Insufficient storage quota. "
                 f"Required: {validation['file_size']} bytes, "
@@ -357,9 +358,12 @@ class AnnotationService:
             )
 
         # Get max order for this point and increment
-        max_order = Annotation.objects.filter(
-            gps_point_id=gps_point_id
-        ).aggregate(db_models.Max('order'))['order__max'] or -1
+        max_order = (
+            Annotation.objects.filter(gps_point_id=gps_point_id).aggregate(db_models.Max("order"))[
+                "order__max"
+            ]
+            or -1
+        )
 
         # Create annotation
         annotation = Annotation.objects.create(
@@ -367,8 +371,8 @@ class AnnotationService:
             type=annotation_type,
             file=uploaded_file,
             file_name=uploaded_file.name,
-            file_size=validation['file_size'],
-            mime_type=validation['mime_type'],
+            file_size=validation["file_size"],
+            mime_type=validation["mime_type"],
             order=max_order + 1,
         )
 
@@ -410,7 +414,7 @@ class AnnotationService:
             user: User (for quota management)
         """
         # Check if annotation is in trash
-        is_in_trash = hasattr(annotation, 'trash_entry') and annotation.trash_entry
+        is_in_trash = hasattr(annotation, "trash_entry") and annotation.trash_entry
 
         # Reclaim quota if file attached AND not in trash
         # (if in trash, quota was already reclaimed on soft delete)
@@ -439,8 +443,8 @@ class AnnotationService:
         Raises:
             ValueError: If annotation is not text type
         """
-        if annotation.type != 'text':
-            raise ValueError('Can only update text content for text annotations')
+        if annotation.type != "text":
+            raise ValueError("Can only update text content for text annotations")
 
         annotation.text_content = text_content
         annotation.save()

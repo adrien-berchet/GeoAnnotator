@@ -155,7 +155,7 @@
 /* Dark mode géré automatiquement par les variables CSS */
 
 /* Dark mode backdrop plus sombre */
-[data-theme='dark'] {
+[data-theme="dark"] {
   .create-point-backdrop {
     background: rgba(0, 0, 0, 0.7);
   }

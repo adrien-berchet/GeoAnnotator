@@ -55,7 +55,9 @@
   justify-content: center;
   color: #666;
   border-radius: 4px;
-  transition: background-color 0.2s, color 0.2s;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
 }
 
 .notification-close:hover {
@@ -64,41 +66,41 @@
 }
 
 .notification-close:focus {
-  outline: 2px solid #4285F4;
+  outline: 2px solid #4285f4;
   outline-offset: 2px;
 }
 
 /* Type-specific styles */
 .notification-success {
-  border-left-color: #4CAF50;
+  border-left-color: #4caf50;
 }
 
 .notification-success .notification-icon {
-  color: #4CAF50;
+  color: #4caf50;
 }
 
 .notification-error {
-  border-left-color: #F44336;
+  border-left-color: #f44336;
 }
 
 .notification-error .notification-icon {
-  color: #F44336;
+  color: #f44336;
 }
 
 .notification-warning {
-  border-left-color: #FF9800;
+  border-left-color: #ff9800;
 }
 
 .notification-warning .notification-icon {
-  color: #FF9800;
+  color: #ff9800;
 }
 
 .notification-info {
-  border-left-color: #2196F3;
+  border-left-color: #2196f3;
 }
 
 .notification-info .notification-icon {
-  color: #2196F3;
+  color: #2196f3;
 }
 
 /* Mobile responsiveness */

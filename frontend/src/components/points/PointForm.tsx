@@ -4,12 +4,12 @@
  * Form for editing GPS point with title, description, tags, and visibility.
  */
 
-import { useState } from 'react';
-import type { FormEvent } from 'react';
-import { updatePoint } from '../../api/points';
-import { searchTags } from '../../api/points';
-import { getErrorMessage } from '../../api/client';
-import type { GPSPoint, UpdatePointData } from '../../types/point';
+import { useState } from "react";
+import type { FormEvent } from "react";
+import { updatePoint } from "../../api/points";
+import { searchTags } from "../../api/points";
+import { getErrorMessage } from "../../api/client";
+import type { GPSPoint, UpdatePointData } from "../../types/point";
 
 interface PointFormProps {
   point: GPSPoint;
@@ -22,10 +22,10 @@ interface PointFormProps {
  */
 export function PointForm({ point, onSuccess, onCancel }: PointFormProps) {
   const [title, setTitle] = useState(point.title);
-  const [description, setDescription] = useState(point.description || '');
-  const [tags, setTags] = useState(point.tags.map(t => t.name).join(', '));
+  const [description, setDescription] = useState(point.description || "");
+  const [tags, setTags] = useState(point.tags.map((t) => t.name).join(", "));
   const [isPublic, setIsPublic] = useState(point.is_public);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   // Tag autocomplete
@@ -39,15 +39,15 @@ export function PointForm({ point, onSuccess, onCancel }: PointFormProps) {
     setTags(value);
 
     // Get the last tag being typed
-    const lastTag = value.split(',').pop()?.trim() || '';
+    const lastTag = value.split(",").pop()?.trim() || "";
 
     if (lastTag.length >= 2) {
       try {
         const results = await searchTags(lastTag);
-        setTagSuggestions(results.map(t => t.name));
+        setTagSuggestions(results.map((t) => t.name));
         setShowSuggestions(true);
       } catch (err) {
-        console.error('Error searching tags:', err);
+        console.error("Error searching tags:", err);
       }
     } else {
       setShowSuggestions(false);
@@ -58,9 +58,9 @@ export function PointForm({ point, onSuccess, onCancel }: PointFormProps) {
    * Handle tag suggestion click.
    */
   const handleSuggestionClick = (suggestion: string) => {
-    const tagList = tags.split(',').map(t => t.trim());
+    const tagList = tags.split(",").map((t) => t.trim());
     tagList[tagList.length - 1] = suggestion;
-    setTags(tagList.join(', ') + ', ');
+    setTags(tagList.join(", ") + ", ");
     setShowSuggestions(false);
   };
 
@@ -69,16 +69,16 @@ export function PointForm({ point, onSuccess, onCancel }: PointFormProps) {
    */
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
 
     // Validate title
     if (!title.trim()) {
-      setError('Title is required');
+      setError("Title is required");
       return;
     }
 
     if (title.length > 255) {
-      setError('Title must be 255 characters or less');
+      setError("Title must be 255 characters or less");
       return;
     }
 
@@ -87,9 +87,9 @@ export function PointForm({ point, onSuccess, onCancel }: PointFormProps) {
     try {
       // Parse tags
       const tagList = tags
-        .split(',')
-        .map(tag => tag.trim())
-        .filter(tag => tag.length > 0);
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter((tag) => tag.length > 0);
 
       // Update point
       const updateData: UpdatePointData = {
@@ -210,12 +210,8 @@ export function PointForm({ point, onSuccess, onCancel }: PointFormProps) {
           >
             Cancel
           </button>
-          <button
-            type="submit"
-            className="btn-primary"
-            disabled={isLoading}
-          >
-            {isLoading ? 'Saving...' : 'Save Changes'}
+          <button type="submit" className="btn-primary" disabled={isLoading}>
+            {isLoading ? "Saving..." : "Save Changes"}
           </button>
         </div>
       </form>

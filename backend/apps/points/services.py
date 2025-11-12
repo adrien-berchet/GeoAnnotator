@@ -5,13 +5,17 @@ Handles editing locks, spatial queries, and point management logic.
 """
 
 from datetime import timedelta
-from django.utils import timezone
+
 from django.contrib.gis.geos import Point as GeoPoint
 from django.contrib.gis.measure import D
 from django.db.models import Q
+from django.utils import timezone
 
-from .models import GPSPoint, Tag, PointType
 from apps.authentication.models import User
+
+from .models import GPSPoint
+from .models import PointType
+from .models import Tag
 
 
 class EditingLockService:
@@ -115,11 +119,10 @@ class EditingLockService:
             return None
 
         return {
-            'locked_by': point.editing_lock_user,
-            'acquired_at': point.editing_lock_acquired_at,
-            'expires_at': point.editing_lock_acquired_at + timedelta(
-                minutes=EditingLockService.LOCK_DURATION_MINUTES
-            ),
+            "locked_by": point.editing_lock_user,
+            "acquired_at": point.editing_lock_acquired_at,
+            "expires_at": point.editing_lock_acquired_at
+            + timedelta(minutes=EditingLockService.LOCK_DURATION_MINUTES),
         }
 
     @staticmethod
@@ -279,7 +282,7 @@ class PointService:
         if point.editing_lock_user:
             point.editing_lock_user = None
             point.editing_lock_acquired_at = None
-            point.save(update_fields=['editing_lock_user', 'editing_lock_acquired_at'])
+            point.save(update_fields=["editing_lock_user", "editing_lock_acquired_at"])
 
         # Create trash entry
         Trash.objects.create(
@@ -289,6 +292,7 @@ class PointService:
 
         # Deactivate shares
         from apps.sharing.models import Share
+
         Share.objects.filter(gps_point=point).update(is_active=False)
 
     @staticmethod
@@ -318,19 +322,15 @@ class PointService:
         bbox = Polygon.from_bbox((min_lon, min_lat, max_lon, max_lat))
 
         # Base query: points within bbox and not trashed
-        query = GPSPoint.objects.filter(
-            location__within=bbox
-        ).exclude(
-            trash_entry__isnull=False
-        )
+        query = GPSPoint.objects.filter(location__within=bbox).exclude(trash_entry__isnull=False)
 
         if user and user.is_authenticated:
             # Show owned, shared, or public points
-            from apps.sharing.models import Share
+
             query = query.filter(
-                Q(owner=user) |
-                Q(shares__recipient_user=user, shares__is_active=True) |
-                Q(is_public=True)
+                Q(owner=user)
+                | Q(shares__recipient_user=user, shares__is_active=True)
+                | Q(is_public=True)
             ).distinct()
         else:
             # Show only public points
@@ -362,23 +362,21 @@ class PointService:
         # Base query: points within radius and not trashed
         query = GPSPoint.objects.filter(
             location__distance_lte=(location, D(m=radius_meters))
-        ).exclude(
-            trash_entry__isnull=False
-        )
+        ).exclude(trash_entry__isnull=False)
 
         if user and user.is_authenticated:
             # Show owned, shared, or public points
-            from apps.sharing.models import Share
+
             query = query.filter(
-                Q(owner=user) |
-                Q(shares__recipient_user=user, shares__is_active=True) |
-                Q(is_public=True)
+                Q(owner=user)
+                | Q(shares__recipient_user=user, shares__is_active=True)
+                | Q(is_public=True)
             ).distinct()
         else:
             # Show only public points
             query = query.filter(is_public=True)
 
-        return query.order_by('location__distance')
+        return query.order_by("location__distance")
 
     @staticmethod
     def search_points_by_tags(
@@ -401,17 +399,15 @@ class PointService:
             tag_queries |= Q(tags__name__iexact=tag_name)
 
         # Base query: points with any of the tags and not trashed
-        query = GPSPoint.objects.filter(tag_queries).exclude(
-            trash_entry__isnull=False
-        )
+        query = GPSPoint.objects.filter(tag_queries).exclude(trash_entry__isnull=False)
 
         if user and user.is_authenticated:
             # Show owned, shared, or public points
-            from apps.sharing.models import Share
+
             query = query.filter(
-                Q(owner=user) |
-                Q(shares__recipient_user=user, shares__is_active=True) |
-                Q(is_public=True)
+                Q(owner=user)
+                | Q(shares__recipient_user=user, shares__is_active=True)
+                | Q(is_public=True)
             ).distinct()
         else:
             # Show only public points
@@ -436,19 +432,16 @@ class PointService:
         """
         # Base query: text search in title/description and not trashed
         query = GPSPoint.objects.filter(
-            Q(title__icontains=search_text) |
-            Q(description__icontains=search_text)
-        ).exclude(
-            trash_entry__isnull=False
-        )
+            Q(title__icontains=search_text) | Q(description__icontains=search_text)
+        ).exclude(trash_entry__isnull=False)
 
         if user and user.is_authenticated:
             # Show owned, shared, or public points
-            from apps.sharing.models import Share
+
             query = query.filter(
-                Q(owner=user) |
-                Q(shares__recipient_user=user, shares__is_active=True) |
-                Q(is_public=True)
+                Q(owner=user)
+                | Q(shares__recipient_user=user, shares__is_active=True)
+                | Q(is_public=True)
             ).distinct()
         else:
             # Show only public points

@@ -4,7 +4,7 @@
  * Displays all annotations for a point with preview and actions.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import {
   DndContext,
   closestCenter,
@@ -12,21 +12,25 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-} from '@dnd-kit/core';
-import type { DragEndEvent } from '@dnd-kit/core';
+} from "@dnd-kit/core";
+import type { DragEndEvent } from "@dnd-kit/core";
 import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { deleteAnnotation, downloadAnnotation, reorderAnnotations } from '../../api/annotations';
-import { getErrorMessage } from '../../api/client';
-import type { Annotation } from '../../types/annotation';
-import { AnnotationPreview } from './AnnotationPreview';
-import { SortableAnnotationItem } from './SortableAnnotationItem';
-import { useLanguage } from '../../contexts/LanguageContext';
-import './AnnotationsList.css';
+} from "@dnd-kit/sortable";
+import {
+  deleteAnnotation,
+  downloadAnnotation,
+  reorderAnnotations,
+} from "../../api/annotations";
+import { getErrorMessage } from "../../api/client";
+import type { Annotation } from "../../types/annotation";
+import { AnnotationPreview } from "./AnnotationPreview";
+import { SortableAnnotationItem } from "./SortableAnnotationItem";
+import { useLanguage } from "../../contexts/LanguageContext";
+import "./AnnotationsList.css";
 
 interface AnnotationsListProps {
   pointId: string;
@@ -44,17 +48,25 @@ export function AnnotationsList({
   onAnnotationsReordered,
 }: AnnotationsListProps) {
   const { t } = useLanguage();
-  console.log('🚀 AnnotationsList component loaded for point:', pointId);
-  console.log('📥 Received annotations:', annotations);
-  console.log('📊 Trashed annotations:', annotations.filter(a => a.is_trashed));
+  console.log("🚀 AnnotationsList component loaded for point:", pointId);
+  console.log("📥 Received annotations:", annotations);
+  console.log(
+    "📊 Trashed annotations:",
+    annotations.filter((a) => a.is_trashed),
+  );
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
-  const [previewAnnotation, setPreviewAnnotation] = useState<Annotation | null>(null);
+  const [previewAnnotation, setPreviewAnnotation] = useState<Annotation | null>(
+    null,
+  );
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [error, setError] = useState('');
-  const [imageBlobUrls, setImageBlobUrls] = useState<Record<string, string>>({});
-  const [localAnnotations, setLocalAnnotations] = useState<Annotation[]>(annotations);
+  const [error, setError] = useState("");
+  const [imageBlobUrls, setImageBlobUrls] = useState<Record<string, string>>(
+    {},
+  );
+  const [localAnnotations, setLocalAnnotations] =
+    useState<Annotation[]>(annotations);
   const [isReorderMode, setIsReorderMode] = useState(false);
 
   // Sync local annotations with props
@@ -67,13 +79,15 @@ export function AnnotationsList({
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
 
   // Load images as blob URLs for authenticated preview
   useEffect(() => {
     const loadImages = async () => {
-      const imageAnnotations = annotations.filter(a => a.type === 'image' && a.file);
+      const imageAnnotations = annotations.filter(
+        (a) => a.type === "image" && a.file,
+      );
       const blobUrls: Record<string, string> = {};
 
       for (const annotation of imageAnnotations) {
@@ -93,7 +107,7 @@ export function AnnotationsList({
 
     // Cleanup blob URLs on unmount or when annotations change
     return () => {
-      Object.values(imageBlobUrls).forEach(url => {
+      Object.values(imageBlobUrls).forEach((url) => {
         window.URL.revokeObjectURL(url);
       });
     };
@@ -118,18 +132,22 @@ export function AnnotationsList({
     const reordered = arrayMove(localAnnotations, oldIndex, newIndex);
 
     // Update order property for each annotation
-    const reorderedWithOrder = reordered.map((annotation: Annotation, index: number) => ({
-      ...annotation,
-      order: index,
-    }));
+    const reorderedWithOrder = reordered.map(
+      (annotation: Annotation, index: number) => ({
+        ...annotation,
+        order: index,
+      }),
+    );
 
     setLocalAnnotations(reorderedWithOrder);
 
     // Update order numbers and save to server
-    const updates = reorderedWithOrder.map((annotation: Annotation, index: number) => ({
-      id: annotation.id,
-      order: index,
-    }));
+    const updates = reorderedWithOrder.map(
+      (annotation: Annotation, index: number) => ({
+        id: annotation.id,
+        order: index,
+      }),
+    );
 
     try {
       await reorderAnnotations(pointId, updates);
@@ -138,7 +156,7 @@ export function AnnotationsList({
         onAnnotationsReordered(reorderedWithOrder);
       }
     } catch (err) {
-      console.error('Failed to save order:', err);
+      console.error("Failed to save order:", err);
       setError(getErrorMessage(err));
       // Revert on error
       setLocalAnnotations(annotations);
@@ -146,28 +164,43 @@ export function AnnotationsList({
   };
 
   const handleDelete = async (annotationId: string) => {
-    if (!confirm(t('annotations.confirmDelete', 'Are you sure you want to delete this annotation?'))) {
+    if (
+      !confirm(
+        t(
+          "annotations.confirmDelete",
+          "Are you sure you want to delete this annotation?",
+        ),
+      )
+    ) {
       return;
     }
 
-    console.log('🗑️ Deleting annotation:', annotationId);
+    console.log("🗑️ Deleting annotation:", annotationId);
     setDeletingId(annotationId);
-    setError('');
+    setError("");
 
     try {
       await deleteAnnotation(pointId, annotationId);
-      console.log('✅ Annotation deleted successfully');
+      console.log("✅ Annotation deleted successfully");
 
       // IMPORTANT: Ne pas retirer l'annotation, juste notifier le parent
       // Le parent devra recharger les annotations pour voir l'état "trashed"
       onAnnotationDeleted(annotationId);
     } catch (err) {
       const errorMsg = getErrorMessage(err);
-      console.error('❌ Delete error:', errorMsg);
+      console.error("❌ Delete error:", errorMsg);
 
       // Check if already in trash
-      if (errorMsg.includes('ALREADY_IN_TRASH') || errorMsg.includes('already in trash')) {
-        setError(t('annotations.alreadyInTrash', 'This annotation is already in the trash. Please use the restore button to recover it.'));
+      if (
+        errorMsg.includes("ALREADY_IN_TRASH") ||
+        errorMsg.includes("already in trash")
+      ) {
+        setError(
+          t(
+            "annotations.alreadyInTrash",
+            "This annotation is already in the trash. Please use the restore button to recover it.",
+          ),
+        );
       } else {
         setError(errorMsg);
       }
@@ -178,7 +211,7 @@ export function AnnotationsList({
 
   const handleDownload = async (annotation: Annotation) => {
     setDownloadingId(annotation.id);
-    setError('');
+    setError("");
 
     try {
       const blob = await downloadAnnotation(pointId, annotation.id);
@@ -187,9 +220,9 @@ export function AnnotationsList({
       const url = window.URL.createObjectURL(blob);
 
       // Create a temporary link and trigger download
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
-      link.download = annotation.file?.file_name || 'download';
+      link.download = annotation.file?.file_name || "download";
       document.body.appendChild(link);
       link.click();
 
@@ -204,13 +237,13 @@ export function AnnotationsList({
   };
 
   const formatDate = (dateString: string) => {
-    const locale = t('common.locale', 'en-US');
+    const locale = t("common.locale", "en-US");
     return new Date(dateString).toLocaleDateString(locale, {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -224,8 +257,13 @@ export function AnnotationsList({
     return (
       <div className="annotations-empty">
         <div className="empty-icon">📝</div>
-        <p>{t('annotations.noAnnotationsYet', 'No annotations yet')}</p>
-        <p className="empty-hint">{t('annotations.addFirstAnnotation', 'Add your first annotation above')}</p>
+        <p>{t("annotations.noAnnotationsYet", "No annotations yet")}</p>
+        <p className="empty-hint">
+          {t(
+            "annotations.addFirstAnnotation",
+            "Add your first annotation above",
+          )}
+        </p>
       </div>
     );
   }
@@ -238,13 +276,24 @@ export function AnnotationsList({
       <div className="annotations-toolbar">
         <button
           onClick={() => setIsReorderMode(!isReorderMode)}
-          className={`reorder-toggle-button ${isReorderMode ? 'active' : ''}`}
-          title={isReorderMode ? t('annotations.exitReorderMode', 'Exit reorder mode') : t('annotations.reorderAnnotations', 'Reorder annotations')}
+          className={`reorder-toggle-button ${isReorderMode ? "active" : ""}`}
+          title={
+            isReorderMode
+              ? t("annotations.exitReorderMode", "Exit reorder mode")
+              : t("annotations.reorderAnnotations", "Reorder annotations")
+          }
         >
-          {isReorderMode ? `✓ ${t('annotations.doneReordering', 'Done reordering')}` : `↕️ ${t('annotations.reorder', 'Reorder')}`}
+          {isReorderMode
+            ? `✓ ${t("annotations.doneReordering", "Done reordering")}`
+            : `↕️ ${t("annotations.reorder", "Reorder")}`}
         </button>
         {isReorderMode && (
-          <span className="reorder-hint">{t('annotations.reorderHint', 'Drag and drop to reorder annotations')}</span>
+          <span className="reorder-hint">
+            {t(
+              "annotations.reorderHint",
+              "Drag and drop to reorder annotations",
+            )}
+          </span>
         )}
       </div>
 

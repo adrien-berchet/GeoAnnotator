@@ -13,9 +13,7 @@ from rest_framework import status
 class TestGetPointTypeContract:
     """Contract tests for retrieving a single point type."""
 
-    def test_get_point_type_returns_200_with_object(
-        self, authenticated_client_alice
-    ):
+    def test_get_point_type_returns_200_with_object(self, authenticated_client_alice):
         """
         Test that GET /api/point-types/{id}/ returns 200 with object.
 
@@ -25,14 +23,8 @@ class TestGetPointTypeContract:
         """
         # First create a point type
         url_list = reverse("point-types:list")
-        payload = {
-            "names": {"en": "Forest"},
-            "creation_language": "en",
-            "visibility": "private"
-        }
-        create_response = authenticated_client_alice.post(
-            url_list, payload, format="json"
-        )
+        payload = {"names": {"en": "Forest"}, "creation_language": "en", "visibility": "private"}
+        create_response = authenticated_client_alice.post(url_list, payload, format="json")
         point_type_id = create_response.data["id"]
 
         # Now get the point type
@@ -42,9 +34,7 @@ class TestGetPointTypeContract:
         assert response.status_code == status.HTTP_200_OK
         assert isinstance(response.data, dict)
 
-    def test_get_point_type_response_schema(
-        self, authenticated_client_alice
-    ):
+    def test_get_point_type_response_schema(self, authenticated_client_alice):
         """
         Test that retrieved point type has the correct schema.
 
@@ -61,11 +51,9 @@ class TestGetPointTypeContract:
         payload = {
             "names": {"en": "River", "fr": "Rivière"},
             "creation_language": "en",
-            "visibility": "public"
+            "visibility": "public",
         }
-        create_response = authenticated_client_alice.post(
-            url_list, payload, format="json"
-        )
+        create_response = authenticated_client_alice.post(url_list, payload, format="json")
         point_type_id = create_response.data["id"]
 
         # Now get the point type
@@ -90,9 +78,7 @@ class TestGetPointTypeContract:
         assert response.data["creation_language"] == "en"
         assert response.data["visibility"] == "public"
 
-    def test_get_point_type_not_found(
-        self, authenticated_client_alice
-    ):
+    def test_get_point_type_not_found(self, authenticated_client_alice):
         """Test that getting a non-existent point type returns 404."""
         url = reverse("point-types:detail", args=["00000000-0000-0000-0000-000000000000"])
         response = authenticated_client_alice.get(url)

@@ -1,7 +1,7 @@
-import { Outlet } from 'react-router-dom'
-import { ErrorBoundary } from './components/common/ErrorBoundary'
-import { Navbar } from './components/layout/Navbar'
-import './App.css'
+import { Outlet } from "react-router-dom";
+import { ErrorBoundary } from "./components/common/ErrorBoundary";
+import { Navbar } from "./components/layout/Navbar";
+import "./App.css";
 
 /**
  * Main application component.
@@ -17,7 +17,7 @@ function App() {
         </main>
       </div>
     </ErrorBoundary>
-  )
+  );
 }
 
-export default App
+export default App;

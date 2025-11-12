@@ -6,11 +6,13 @@ Handles soft-deleted points and annotations with 30-day retention and restoratio
 
 from rest_framework import serializers
 
-from apps.points.serializers import GPSPointListSerializer
 from apps.annotations.serializers import AnnotationSerializer
 from apps.authentication.serializers import UserSerializer
+from apps.points.serializers import GPSPointListSerializer
 from apps.sharing.serializers import ShareSerializer
-from .models import Trash, AnnotationTrash
+
+from .models import AnnotationTrash
+from .models import Trash
 
 
 class TrashSerializer(serializers.ModelSerializer):
@@ -20,6 +22,7 @@ class TrashSerializer(serializers.ModelSerializer):
     Includes nested point, deletion info, days remaining, annotations, and shares.
     Matches OpenAPI schema: Trash
     """
+
     gps_point = GPSPointListSerializer(read_only=True)
     deleted_by = UserSerializer(read_only=True)
     days_remaining = serializers.SerializerMethodField()
@@ -48,26 +51,26 @@ class TrashSerializer(serializers.ModelSerializer):
     class Meta:
         model = Trash
         fields = [
-            'id',
-            'gps_point',
-            'deleted_by',
-            'deleted_at',
-            'permanent_deletion_at',
-            'days_remaining',
-            'is_expired',
-            'annotations',
-            'shares',
+            "id",
+            "gps_point",
+            "deleted_by",
+            "deleted_at",
+            "permanent_deletion_at",
+            "days_remaining",
+            "is_expired",
+            "annotations",
+            "shares",
         ]
         read_only_fields = [
-            'id',
-            'gps_point',
-            'deleted_by',
-            'deleted_at',
-            'permanent_deletion_at',
-            'days_remaining',
-            'is_expired',
-            'annotations',
-            'shares',
+            "id",
+            "gps_point",
+            "deleted_by",
+            "deleted_at",
+            "permanent_deletion_at",
+            "days_remaining",
+            "is_expired",
+            "annotations",
+            "shares",
         ]
 
 
@@ -87,19 +90,23 @@ class RestoreTrashSerializer(serializers.Serializer):
 
         # Check if expired
         if trash.is_expired:
-            raise serializers.ValidationError({
-                'error': 'PERMANENTLY_DELETED',
-                'message': 'This point has been permanently deleted (>30 days).',
-            })
+            raise serializers.ValidationError(
+                {
+                    "error": "PERMANENTLY_DELETED",
+                    "message": "This point has been permanently deleted (>30 days).",
+                }
+            )
 
         # Check user has permission (must be owner or original deleter)
-        user = self.context['request'].user
+        user = self.context["request"].user
 
         if trash.gps_point.owner != user and trash.deleted_by != user:
-            raise serializers.ValidationError({
-                'error': 'ACCESS_DENIED',
-                'message': 'You do not have permission to restore this point.',
-            })
+            raise serializers.ValidationError(
+                {
+                    "error": "ACCESS_DENIED",
+                    "message": "You do not have permission to restore this point.",
+                }
+            )
 
         return attrs
 
@@ -125,14 +132,16 @@ class DeletePermanentlySerializer(serializers.Serializer):
         Validate user has permission to permanently delete.
         """
         trash = self.instance
-        user = self.context['request'].user
+        user = self.context["request"].user
 
         # Only owner can permanently delete
         if trash.gps_point.owner != user:
-            raise serializers.ValidationError({
-                'error': 'ACCESS_DENIED',
-                'message': 'Only the point owner can permanently delete.',
-            })
+            raise serializers.ValidationError(
+                {
+                    "error": "ACCESS_DENIED",
+                    "message": "Only the point owner can permanently delete.",
+                }
+            )
 
         return attrs
 
@@ -162,12 +171,12 @@ class EmptyTrashSerializer(serializers.Serializer):
         """
         Count items to be deleted.
         """
-        user = self.context['request'].user
+        user = self.context["request"].user
 
         # Get all trash items for user
         trash_items = Trash.objects.filter(gps_point__owner=user)
-        self.context['trash_items'] = trash_items
-        self.context['count'] = trash_items.count()
+        self.context["trash_items"] = trash_items
+        self.context["count"] = trash_items.count()
 
         return attrs
 
@@ -175,13 +184,13 @@ class EmptyTrashSerializer(serializers.Serializer):
         """
         Permanently delete all trash items.
         """
-        trash_items = self.context['trash_items']
+        trash_items = self.context["trash_items"]
 
         # Delete all points (cascades to annotations, shares, trash)
         for trash in trash_items:
             trash.gps_point.delete()
 
-        return {'deleted_count': self.context['count']}
+        return {"deleted_count": self.context["count"]}
 
 
 class AnnotationTrashSerializer(serializers.ModelSerializer):
@@ -190,6 +199,7 @@ class AnnotationTrashSerializer(serializers.ModelSerializer):
 
     Includes nested annotation, associated point, deletion info, and days remaining.
     """
+
     annotation = AnnotationSerializer(read_only=True)
     gps_point = serializers.SerializerMethodField()
     deleted_by = UserSerializer(read_only=True)
@@ -211,24 +221,24 @@ class AnnotationTrashSerializer(serializers.ModelSerializer):
     class Meta:
         model = AnnotationTrash
         fields = [
-            'id',
-            'annotation',
-            'gps_point',
-            'deleted_by',
-            'deleted_at',
-            'permanent_deletion_at',
-            'days_remaining',
-            'is_expired',
+            "id",
+            "annotation",
+            "gps_point",
+            "deleted_by",
+            "deleted_at",
+            "permanent_deletion_at",
+            "days_remaining",
+            "is_expired",
         ]
         read_only_fields = [
-            'id',
-            'annotation',
-            'gps_point',
-            'deleted_by',
-            'deleted_at',
-            'permanent_deletion_at',
-            'days_remaining',
-            'is_expired',
+            "id",
+            "annotation",
+            "gps_point",
+            "deleted_by",
+            "deleted_at",
+            "permanent_deletion_at",
+            "days_remaining",
+            "is_expired",
         ]
 
 
@@ -247,20 +257,24 @@ class RestoreAnnotationTrashSerializer(serializers.Serializer):
 
         # Check if expired
         if annotation_trash.is_expired:
-            raise serializers.ValidationError({
-                'error': 'PERMANENTLY_DELETED',
-                'message': 'This annotation has been permanently deleted (>30 days).',
-            })
+            raise serializers.ValidationError(
+                {
+                    "error": "PERMANENTLY_DELETED",
+                    "message": "This annotation has been permanently deleted (>30 days).",
+                }
+            )
 
         # Check user has permission (must be point owner or original deleter)
-        user = self.context['request'].user
+        user = self.context["request"].user
         point_owner = annotation_trash.annotation.gps_point.owner
 
         if point_owner != user and annotation_trash.deleted_by != user:
-            raise serializers.ValidationError({
-                'error': 'ACCESS_DENIED',
-                'message': 'You do not have permission to restore this annotation.',
-            })
+            raise serializers.ValidationError(
+                {
+                    "error": "ACCESS_DENIED",
+                    "message": "You do not have permission to restore this annotation.",
+                }
+            )
 
         return attrs
 
@@ -285,14 +299,16 @@ class DeleteAnnotationPermanentlySerializer(serializers.Serializer):
         Validate user has permission to permanently delete.
         """
         annotation_trash = self.instance
-        user = self.context['request'].user
+        user = self.context["request"].user
 
         # Only point owner can permanently delete
         if annotation_trash.annotation.gps_point.owner != user:
-            raise serializers.ValidationError({
-                'error': 'ACCESS_DENIED',
-                'message': 'Only the point owner can permanently delete.',
-            })
+            raise serializers.ValidationError(
+                {
+                    "error": "ACCESS_DENIED",
+                    "message": "Only the point owner can permanently delete.",
+                }
+            )
 
         return attrs
 
@@ -321,14 +337,12 @@ class EmptyAnnotationTrashSerializer(serializers.Serializer):
         """
         Count items to be deleted.
         """
-        user = self.context['request'].user
+        user = self.context["request"].user
 
         # Get all annotation trash items for user's points
-        annotation_trash_items = AnnotationTrash.objects.filter(
-            annotation__gps_point__owner=user
-        )
-        self.context['annotation_trash_items'] = annotation_trash_items
-        self.context['count'] = annotation_trash_items.count()
+        annotation_trash_items = AnnotationTrash.objects.filter(annotation__gps_point__owner=user)
+        self.context["annotation_trash_items"] = annotation_trash_items
+        self.context["count"] = annotation_trash_items.count()
 
         return attrs
 
@@ -336,10 +350,10 @@ class EmptyAnnotationTrashSerializer(serializers.Serializer):
         """
         Permanently delete all annotation trash items.
         """
-        annotation_trash_items = self.context['annotation_trash_items']
+        annotation_trash_items = self.context["annotation_trash_items"]
 
         # Delete all annotations (cascades)
         for annotation_trash in annotation_trash_items:
             annotation_trash.annotation.delete()
 
-        return {'deleted_count': self.context['count']}
+        return {"deleted_count": self.context["count"]}

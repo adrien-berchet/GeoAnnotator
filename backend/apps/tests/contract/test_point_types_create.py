@@ -13,9 +13,7 @@ from rest_framework import status
 class TestCreatePointTypeContract:
     """Contract tests for creating point types."""
 
-    def test_create_point_type_returns_201_with_object(
-        self, authenticated_client_alice
-    ):
+    def test_create_point_type_returns_201_with_object(self, authenticated_client_alice):
         """
         Test that POST /api/point-types/ returns 201 with created object.
 
@@ -25,19 +23,13 @@ class TestCreatePointTypeContract:
         - Request: names (map), creation_language (string), visibility (string)
         """
         url = reverse("point-types:list")
-        payload = {
-            "names": {"en": "Tree"},
-            "creation_language": "en",
-            "visibility": "private"
-        }
+        payload = {"names": {"en": "Tree"}, "creation_language": "en", "visibility": "private"}
         response = authenticated_client_alice.post(url, payload, format="json")
 
         assert response.status_code == status.HTTP_201_CREATED
         assert isinstance(response.data, dict)
 
-    def test_create_point_type_response_schema(
-        self, authenticated_client_alice
-    ):
+    def test_create_point_type_response_schema(self, authenticated_client_alice):
         """
         Test that created point type has the correct schema.
 
@@ -50,11 +42,7 @@ class TestCreatePointTypeContract:
         - visibility: string matching request
         """
         url = reverse("point-types:list")
-        payload = {
-            "names": {"en": "Landmark"},
-            "creation_language": "en",
-            "visibility": "public"
-        }
+        payload = {"names": {"en": "Landmark"}, "creation_language": "en", "visibility": "public"}
         response = authenticated_client_alice.post(url, payload, format="json")
 
         assert response.status_code == status.HTTP_201_CREATED
@@ -75,18 +63,13 @@ class TestCreatePointTypeContract:
         assert response.data["owner"] is not None
         assert response.data["visibility"] == "public"
 
-    def test_create_point_type_with_multiple_translations(
-        self, authenticated_client_alice
-    ):
+    def test_create_point_type_with_multiple_translations(self, authenticated_client_alice):
         """Test creating a point type with multiple language translations."""
         url = reverse("point-types:list")
         payload = {
-            "names": {
-                "en": "Mountain",
-                "fr": "Montagne"
-            },
+            "names": {"en": "Mountain", "fr": "Montagne"},
             "creation_language": "en",
-            "visibility": "private"
+            "visibility": "private",
         }
         response = authenticated_client_alice.post(url, payload, format="json")
 
@@ -97,38 +80,23 @@ class TestCreatePointTypeContract:
     def test_create_point_type_requires_authentication(self, api_client):
         """Test that creating a point type requires authentication."""
         url = reverse("point-types:list")
-        payload = {
-            "names": {"en": "Tree"},
-            "creation_language": "en",
-            "visibility": "private"
-        }
+        payload = {"names": {"en": "Tree"}, "creation_language": "en", "visibility": "private"}
         response = api_client.post(url, payload, format="json")
 
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-    def test_create_point_type_requires_names(
-        self, authenticated_client_alice
-    ):
+    def test_create_point_type_requires_names(self, authenticated_client_alice):
         """Test that names field is required."""
         url = reverse("point-types:list")
-        payload = {
-            "creation_language": "en",
-            "visibility": "private"
-        }
+        payload = {"creation_language": "en", "visibility": "private"}
         response = authenticated_client_alice.post(url, payload, format="json")
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
-    def test_create_point_type_requires_at_least_one_name(
-        self, authenticated_client_alice
-    ):
+    def test_create_point_type_requires_at_least_one_name(self, authenticated_client_alice):
         """Test that at least one name is required."""
         url = reverse("point-types:list")
-        payload = {
-            "names": {},
-            "creation_language": "en",
-            "visibility": "private"
-        }
+        payload = {"names": {}, "creation_language": "en", "visibility": "private"}
         response = authenticated_client_alice.post(url, payload, format="json")
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST

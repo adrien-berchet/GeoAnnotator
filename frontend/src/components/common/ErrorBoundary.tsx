@@ -4,8 +4,8 @@
  * Catches errors and displays user-friendly error message.
  */
 
-import { Component } from 'react';
-import type { ReactNode } from 'react';
+import { Component } from "react";
+import type { ReactNode } from "react";
 
 interface Props {
   children: ReactNode;
@@ -37,7 +37,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
-    console.error('Error caught by ErrorBoundary:', error, errorInfo);
+    console.error("Error caught by ErrorBoundary:", error, errorInfo);
   }
 
   handleReset = (): void => {
@@ -58,7 +58,8 @@ export class ErrorBoundary extends Component<Props, State> {
           <div className="error-boundary-content">
             <h1>Oops! Something went wrong</h1>
             <p>
-              We're sorry, but something unexpected happened. Please try refreshing the page.
+              We're sorry, but something unexpected happened. Please try
+              refreshing the page.
             </p>
             {this.state.error && (
               <details className="error-details">
@@ -74,10 +75,7 @@ export class ErrorBoundary extends Component<Props, State> {
               >
                 Refresh Page
               </button>
-              <button
-                onClick={this.handleReset}
-                className="btn-secondary"
-              >
+              <button onClick={this.handleReset} className="btn-secondary">
                 Try Again
               </button>
             </div>

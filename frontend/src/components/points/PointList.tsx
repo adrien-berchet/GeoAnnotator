@@ -4,12 +4,12 @@
  * Displays list of GPS points with pagination, filters, and search.
  */
 
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { getPoints } from '../../api/points';
-import { getErrorMessage } from '../../api/client';
-import { LoadingSpinner } from '../common/LoadingSpinner';
-import type { GPSPoint, PointsFilter } from '../../types/point';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { getPoints } from "../../api/points";
+import { getErrorMessage } from "../../api/client";
+import { LoadingSpinner } from "../common/LoadingSpinner";
+import type { GPSPoint, PointsFilter } from "../../types/point";
 
 interface PointListProps {
   filter?: PointsFilter;
@@ -23,7 +23,7 @@ export function PointList({ filter, onPointSelect }: PointListProps) {
   const navigate = useNavigate();
   const [points, setPoints] = useState<GPSPoint[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   /**
    * Load points on mount or filter change.
@@ -37,7 +37,7 @@ export function PointList({ filter, onPointSelect }: PointListProps) {
    */
   const loadPoints = async () => {
     setIsLoading(true);
-    setError('');
+    setError("");
 
     try {
       const data = await getPoints(filter);
@@ -65,10 +65,10 @@ export function PointList({ filter, onPointSelect }: PointListProps) {
    */
   const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
@@ -92,7 +92,9 @@ export function PointList({ filter, onPointSelect }: PointListProps) {
       <div className="empty-state">
         <p>No points found</p>
         <p className="text-muted">
-          {filter ? 'Try adjusting your filters' : 'Create your first point by clicking on the map'}
+          {filter
+            ? "Try adjusting your filters"
+            : "Create your first point by clicking on the map"}
         </p>
       </div>
     );
@@ -112,8 +114,15 @@ export function PointList({ filter, onPointSelect }: PointListProps) {
                 <img
                   src={point.type.icon}
                   alt=""
-                  style={{ width: '16px', height: '16px', marginRight: '6px', verticalAlign: 'middle' }}
-                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                  style={{
+                    width: "16px",
+                    height: "16px",
+                    marginRight: "6px",
+                    verticalAlign: "middle",
+                  }}
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                  }}
                 />
               )}
               {point.title}
@@ -127,7 +136,9 @@ export function PointList({ filter, onPointSelect }: PointListProps) {
             <div
               className="point-list-description"
               dangerouslySetInnerHTML={{
-                __html: point.description.substring(0, 150) + (point.description.length > 150 ? '...' : ''),
+                __html:
+                  point.description.substring(0, 150) +
+                  (point.description.length > 150 ? "..." : ""),
               }}
             />
           )}
@@ -146,7 +157,8 @@ export function PointList({ filter, onPointSelect }: PointListProps) {
 
             <div className="point-list-info">
               <span className="point-list-annotations">
-                {point.annotation_count} annotation{point.annotation_count !== 1 ? 's' : ''}
+                {point.annotation_count} annotation
+                {point.annotation_count !== 1 ? "s" : ""}
               </span>
               <span className="point-list-date">
                 {formatDate(point.created_at)}
@@ -155,7 +167,9 @@ export function PointList({ filter, onPointSelect }: PointListProps) {
           </div>
 
           <div className="point-list-location">
-            <span>📍 {point.latitude.toFixed(6)}, {point.longitude.toFixed(6)}</span>
+            <span>
+              📍 {point.latitude.toFixed(6)}, {point.longitude.toFixed(6)}
+            </span>
           </div>
         </div>
       ))}

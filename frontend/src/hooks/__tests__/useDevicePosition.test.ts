@@ -4,9 +4,13 @@
  * Tests device position tracking, error handling, and geolocation API integration.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, waitFor } from '@testing-library/react';
-import { useDevicePosition, GeolocationErrorType, getGeolocationErrorMessage } from '../useDevicePosition';
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { renderHook, waitFor } from "@testing-library/react";
+import {
+  useDevicePosition,
+  GeolocationErrorType,
+  getGeolocationErrorMessage,
+} from "../useDevicePosition";
 
 // Mock geolocation
 const mockGeolocation = {
@@ -15,9 +19,9 @@ const mockGeolocation = {
   clearWatch: vi.fn(),
 };
 
-describe('useDevicePosition', () => {
+describe("useDevicePosition", () => {
   beforeEach(() => {
-    Object.defineProperty(global.navigator, 'geolocation', {
+    Object.defineProperty(global.navigator, "geolocation", {
       value: mockGeolocation,
       writable: true,
       configurable: true,
@@ -30,8 +34,8 @@ describe('useDevicePosition', () => {
     vi.clearAllMocks();
   });
 
-  describe('Position Tracking', () => {
-    it('should return null position initially', () => {
+  describe("Position Tracking", () => {
+    it("should return null position initially", () => {
       mockGeolocation.watchPosition.mockReturnValue(1);
 
       const { result } = renderHook(() => useDevicePosition());
@@ -40,7 +44,7 @@ describe('useDevicePosition', () => {
       expect(result.current.isLoading).toBe(true);
     });
 
-    it('should update position when geolocation succeeds', async () => {
+    it("should update position when geolocation succeeds", async () => {
       const mockPosition = {
         coords: {
           latitude: 48.8566,
@@ -72,7 +76,7 @@ describe('useDevicePosition', () => {
       expect(result.current.error).toBeNull();
     });
 
-    it('should request high accuracy position', () => {
+    it("should request high accuracy position", () => {
       mockGeolocation.watchPosition.mockReturnValue(1);
 
       renderHook(() => useDevicePosition());
@@ -84,11 +88,11 @@ describe('useDevicePosition', () => {
           enableHighAccuracy: true,
           timeout: 10000,
           maximumAge: 0,
-        })
+        }),
       );
     });
 
-    it('should cleanup watch on unmount', () => {
+    it("should cleanup watch on unmount", () => {
       const watchId = 123;
       mockGeolocation.watchPosition.mockReturnValue(watchId);
 
@@ -100,18 +104,20 @@ describe('useDevicePosition', () => {
     });
   });
 
-  describe('Error Handling', () => {
-    it('should handle permission denied error', async () => {
-      mockGeolocation.watchPosition.mockImplementation((_successCallback, errorCallback) => {
-        errorCallback({
-          code: 1,
-          message: 'User denied Geolocation',
-          PERMISSION_DENIED: 1,
-          POSITION_UNAVAILABLE: 2,
-          TIMEOUT: 3,
-        });
-        return 1;
-      });
+  describe("Error Handling", () => {
+    it("should handle permission denied error", async () => {
+      mockGeolocation.watchPosition.mockImplementation(
+        (_successCallback, errorCallback) => {
+          errorCallback({
+            code: 1,
+            message: "User denied Geolocation",
+            PERMISSION_DENIED: 1,
+            POSITION_UNAVAILABLE: 2,
+            TIMEOUT: 3,
+          });
+          return 1;
+        },
+      );
 
       const { result } = renderHook(() => useDevicePosition());
 
@@ -119,22 +125,26 @@ describe('useDevicePosition', () => {
         expect(result.current.error).not.toBeNull();
       });
 
-      expect(result.current.error?.code).toBe(GeolocationErrorType.PERMISSION_DENIED);
+      expect(result.current.error?.code).toBe(
+        GeolocationErrorType.PERMISSION_DENIED,
+      );
       expect(result.current.position).toBeNull();
       expect(result.current.isLoading).toBe(false);
     });
 
-    it('should handle position unavailable error', async () => {
-      mockGeolocation.watchPosition.mockImplementation((_successCallback, errorCallback) => {
-        errorCallback({
-          code: 2,
-          message: 'Position unavailable',
-          PERMISSION_DENIED: 1,
-          POSITION_UNAVAILABLE: 2,
-          TIMEOUT: 3,
-        });
-        return 1;
-      });
+    it("should handle position unavailable error", async () => {
+      mockGeolocation.watchPosition.mockImplementation(
+        (_successCallback, errorCallback) => {
+          errorCallback({
+            code: 2,
+            message: "Position unavailable",
+            PERMISSION_DENIED: 1,
+            POSITION_UNAVAILABLE: 2,
+            TIMEOUT: 3,
+          });
+          return 1;
+        },
+      );
 
       const { result } = renderHook(() => useDevicePosition());
 
@@ -142,20 +152,24 @@ describe('useDevicePosition', () => {
         expect(result.current.error).not.toBeNull();
       });
 
-      expect(result.current.error?.code).toBe(GeolocationErrorType.POSITION_UNAVAILABLE);
+      expect(result.current.error?.code).toBe(
+        GeolocationErrorType.POSITION_UNAVAILABLE,
+      );
     });
 
-    it('should handle timeout error', async () => {
-      mockGeolocation.watchPosition.mockImplementation((_successCallback, errorCallback) => {
-        errorCallback({
-          code: 3,
-          message: 'Timeout',
-          PERMISSION_DENIED: 1,
-          POSITION_UNAVAILABLE: 2,
-          TIMEOUT: 3,
-        });
-        return 1;
-      });
+    it("should handle timeout error", async () => {
+      mockGeolocation.watchPosition.mockImplementation(
+        (_successCallback, errorCallback) => {
+          errorCallback({
+            code: 3,
+            message: "Timeout",
+            PERMISSION_DENIED: 1,
+            POSITION_UNAVAILABLE: 2,
+            TIMEOUT: 3,
+          });
+          return 1;
+        },
+      );
 
       const { result } = renderHook(() => useDevicePosition());
 
@@ -166,8 +180,8 @@ describe('useDevicePosition', () => {
       expect(result.current.error?.code).toBe(GeolocationErrorType.TIMEOUT);
     });
 
-    it('should handle unsupported geolocation', async () => {
-      Object.defineProperty(global.navigator, 'geolocation', {
+    it("should handle unsupported geolocation", async () => {
+      Object.defineProperty(global.navigator, "geolocation", {
         value: undefined,
         writable: true,
         configurable: true,
@@ -179,70 +193,72 @@ describe('useDevicePosition', () => {
         expect(result.current.error).not.toBeNull();
       });
 
-      expect(result.current.error?.code).toBe(GeolocationErrorType.NOT_SUPPORTED);
+      expect(result.current.error?.code).toBe(
+        GeolocationErrorType.NOT_SUPPORTED,
+      );
       expect(result.current.isLoading).toBe(false);
     });
   });
 
-  describe('getGeolocationErrorMessage', () => {
-    it('should return empty string for null error', () => {
-      expect(getGeolocationErrorMessage(null)).toBe('');
+  describe("getGeolocationErrorMessage", () => {
+    it("should return empty string for null error", () => {
+      expect(getGeolocationErrorMessage(null)).toBe("");
     });
 
-    it('should return permission denied message', () => {
+    it("should return permission denied message", () => {
       const error = {
         code: GeolocationErrorType.PERMISSION_DENIED,
-        message: 'Permission denied',
+        message: "Permission denied",
       };
 
       const message = getGeolocationErrorMessage(error);
 
-      expect(message).toContain('denied');
-      expect(message).toContain('location permissions');
+      expect(message).toContain("denied");
+      expect(message).toContain("location permissions");
     });
 
-    it('should return position unavailable message', () => {
+    it("should return position unavailable message", () => {
       const error = {
         code: GeolocationErrorType.POSITION_UNAVAILABLE,
-        message: 'Position unavailable',
+        message: "Position unavailable",
       };
 
       const message = getGeolocationErrorMessage(error);
 
-      expect(message).toContain('Unable to determine location');
+      expect(message).toContain("Unable to determine location");
     });
 
-    it('should return timeout message', () => {
+    it("should return timeout message", () => {
       const error = {
         code: GeolocationErrorType.TIMEOUT,
-        message: 'Timeout',
+        message: "Timeout",
       };
 
       const message = getGeolocationErrorMessage(error);
 
-      expect(message).toContain('timed out');
+      expect(message).toContain("timed out");
     });
 
-    it('should return not supported message', () => {
+    it("should return not supported message", () => {
       const error = {
         code: GeolocationErrorType.NOT_SUPPORTED,
-        message: 'Not supported',
+        message: "Not supported",
       };
 
       const message = getGeolocationErrorMessage(error);
 
-      expect(message).toContain('not supported');
+      expect(message).toContain("not supported");
     });
 
-    it('should return default message for unknown error code', () => {
+    it("should return default message for unknown error code", () => {
       const error = {
         code: 999 as any,
-        message: 'Unknown error',
+        message: "Unknown error",
       };
 
       const message = getGeolocationErrorMessage(error);
 
-      expect(message).toContain('unknown error');
+      expect(message).toContain("unknown error");
     });
   });
 });

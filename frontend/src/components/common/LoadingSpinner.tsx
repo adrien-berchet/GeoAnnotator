@@ -5,18 +5,21 @@
  */
 
 interface LoadingSpinnerProps {
-  size?: 'small' | 'medium' | 'large';
+  size?: "small" | "medium" | "large";
   message?: string;
 }
 
 /**
  * Loading spinner component.
  */
-export function LoadingSpinner({ size = 'medium', message }: LoadingSpinnerProps) {
+export function LoadingSpinner({
+  size = "medium",
+  message,
+}: LoadingSpinnerProps) {
   const sizeClasses = {
-    small: 'spinner-small',
-    medium: 'spinner-medium',
-    large: 'spinner-large',
+    small: "spinner-small",
+    medium: "spinner-medium",
+    large: "spinner-large",
   };
 
   return (

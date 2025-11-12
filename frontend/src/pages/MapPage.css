@@ -82,7 +82,9 @@
     top: calc(var(--navbar-height) + 0.5rem);
     right: 0.5rem;
     left: 0.5rem;
-    transition: opacity 0.3s, transform 0.3s;
+    transition:
+      opacity 0.3s,
+      transform 0.3s;
   }
 
   .map-controls.closed {

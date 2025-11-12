@@ -11,15 +11,17 @@ Acceptance Criteria: FR-056 to FR-062
 - Shares deactivation on trash
 """
 
-import pytest
 from datetime import timedelta
-from django.utils import timezone
+
+import pytest
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
 
 from apps.authentication.models import User
 from apps.points.models import GPSPoint
+from apps.sharing.models import Share
 from apps.trash.models import Trash
 
 
@@ -32,9 +34,7 @@ class TestScenario6TrashRestoration:
         self.client = APIClient()
 
         # Create and authenticate Alice
-        self.alice = User.objects.create_user(
-            email="alice@example.com", password="SecurePass123"
-        )
+        self.alice = User.objects.create_user(email="alice@example.com", password="SecurePass123")
         login_response = self.client.post(
             reverse("authentication:login"),
             {"email": "alice@example.com", "password": "SecurePass123"},
@@ -105,8 +105,7 @@ class TestScenario6TrashRestoration:
 
         # Find the trashed point
         trashed_point = next(
-            (item for item in response.data if item["gps_point"]["id"] == self.point_id),
-            None
+            (item for item in response.data if item["gps_point"]["id"] == self.point_id), None
         )
         assert trashed_point is not None
         assert trashed_point["days_remaining"] == 29
@@ -236,7 +235,10 @@ class TestScenario6TrashRestoration:
 
         # Then
         assert response.status_code == status.HTTP_410_GONE
-        assert "PERMANENTLY_DELETED" in str(response.data).upper() or "expired" in str(response.data).lower()
+        assert (
+            "PERMANENTLY_DELETED" in str(response.data).upper()
+            or "expired" in str(response.data).lower()
+        )
 
     def test_complete_trash_lifecycle(self):
         """
@@ -284,9 +286,7 @@ class TestScenario6TrashRestoration:
         - When restored, shares become is_active=true again
         """
         # Given - Share the point with Bob
-        bob = User.objects.create_user(
-            email="bob@example.com", password="SecurePass456"
-        )
+        User.objects.create_user(email="bob@example.com", password="SecurePass456")
 
         shares_url = reverse("sharing:list", kwargs={"point_id": self.point_id})
         share_response = self.client.post(
@@ -304,7 +304,6 @@ class TestScenario6TrashRestoration:
         self.client.delete(point_url)
 
         # Then - Share should be deactivated
-        from apps.sharing.models import Share
         share = Share.objects.get(id=share_id)
         assert share.is_active is False
 

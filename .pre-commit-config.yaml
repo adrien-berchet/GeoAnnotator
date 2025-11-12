@@ -4,21 +4,30 @@
 repos:
   # Python hooks
   - repo: https://github.com/psf/black
-    rev: 23.12.1
+    rev: 25.11.0
     hooks:
       - id: black
         language_version: python3.11
         files: ^backend/
 
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: v0.14.4
+    hooks:
+      # Run the linter.
+      - id: ruff-check
+        args: [--fix, --exit-non-zero-on-fix]
+      # Run the formatter.
+      - id: ruff-format
+
   - repo: https://github.com/pycqa/flake8
-    rev: 7.0.0
+    rev: 7.3.0
     hooks:
       - id: flake8
         files: ^backend/
         args: ['--config=backend/.flake8']
 
   - repo: https://github.com/pycqa/isort
-    rev: 5.13.2
+    rev: 7.0.0
     hooks:
       - id: isort
         files: ^backend/
@@ -33,15 +42,16 @@ repos:
         types_or: [javascript, jsx, ts, tsx, json, css]
 
   - repo: https://github.com/pre-commit/mirrors-eslint
-    rev: v9.0.0-beta.0
+    rev: v9.39.1
     hooks:
       - id: eslint
         files: ^frontend/.*\.[jt]sx?$
         types: [file]
+        args: ['--config', 'frontend/eslint.config.js', '--fix']
 
   # General hooks
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: v6.0.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
@@ -51,10 +61,11 @@ repos:
       - id: check-json
       - id: check-merge-conflict
       - id: detect-private-key
+      - id: debug-statements
 
   # Django-specific
   - repo: https://github.com/adamchainz/django-upgrade
-    rev: 1.15.0
+    rev: 1.29.1
     hooks:
       - id: django-upgrade
         args: ['--target-version=4.2']

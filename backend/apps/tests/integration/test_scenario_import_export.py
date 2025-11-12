@@ -10,15 +10,14 @@ Acceptance Criteria: FR-046 to FR-055
 - Bundle export with annotations
 """
 
-import io
 import json
+
 import pytest
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
 from apps.authentication.models import User
-from apps.points.models import GPSPoint
 
 
 @pytest.mark.django_db
@@ -30,9 +29,7 @@ class TestScenario5ImportExport:
         self.client = APIClient()
 
         # Create and authenticate Alice
-        self.alice = User.objects.create_user(
-            email="alice@example.com", password="SecurePass123"
-        )
+        self.alice = User.objects.create_user(email="alice@example.com", password="SecurePass123")
         login_response = self.client.post(
             reverse("authentication:login"),
             {"email": "alice@example.com", "password": "SecurePass123"},
@@ -119,9 +116,11 @@ class TestScenario5ImportExport:
 
         # Then
         assert response.status_code == status.HTTP_200_OK
-        assert "application/gpx+xml" in response.get("Content-Type", "") or \
-               "text/xml" in response.get("Content-Type", "") or \
-               "application/xml" in response.get("Content-Type", "")
+        assert (
+            "application/gpx+xml" in response.get("Content-Type", "")
+            or "text/xml" in response.get("Content-Type", "")
+            or "application/xml" in response.get("Content-Type", "")
+        )
 
         # Verify GPX structure
         content = response.content.decode("utf-8")
@@ -165,34 +164,29 @@ class TestScenario5ImportExport:
             "features": [
                 {
                     "type": "Feature",
-                    "geometry": {
-                        "type": "Point",
-                        "coordinates": [-122.6765, 45.5231]
-                    },
+                    "geometry": {"type": "Point", "coordinates": [-122.6765, 45.5231]},
                     "properties": {
                         "title": "Imported Point 1",
                         "description": "Test import",
-                    }
+                    },
                 },
                 {
                     "type": "Feature",
-                    "geometry": {
-                        "type": "Point",
-                        "coordinates": [-122.7095, 45.5195]
-                    },
+                    "geometry": {"type": "Point", "coordinates": [-122.7095, 45.5195]},
                     "properties": {
                         "title": "Imported Point 2",
                         "description": "Another import",
-                    }
-                }
-            ]
+                    },
+                },
+            ],
         }
 
         from django.core.files.uploadedfile import SimpleUploadedFile
+
         geojson_file = SimpleUploadedFile(
             "exported_points.geojson",
             json.dumps(geojson_content).encode("utf-8"),
-            content_type="application/geo+json"
+            content_type="application/geo+json",
         )
 
         # When
@@ -229,10 +223,9 @@ class TestScenario5ImportExport:
 45.5195,,"Missing Lon","No longitude","""
 
         from django.core.files.uploadedfile import SimpleUploadedFile
+
         csv_file = SimpleUploadedFile(
-            "points_with_errors.csv",
-            csv_content.encode("utf-8"),
-            content_type="text/csv"
+            "points_with_errors.csv", csv_content.encode("utf-8"), content_type="text/csv"
         )
 
         # When
@@ -268,15 +261,12 @@ class TestScenario5ImportExport:
             "features": [
                 {
                     "type": "Feature",
-                    "geometry": {
-                        "type": "Point",
-                        "coordinates": [-122.6000, 45.5000]
-                    },
+                    "geometry": {"type": "Point", "coordinates": [-122.6000, 45.5000]},
                     "properties": {
                         "title": "Existing Point",
-                    }
+                    },
                 }
-            ]
+            ],
         }
 
         from django.core.files.uploadedfile import SimpleUploadedFile
@@ -285,7 +275,7 @@ class TestScenario5ImportExport:
         file1 = SimpleUploadedFile(
             "first_import.geojson",
             json.dumps(existing_point).encode("utf-8"),
-            content_type="application/geo+json"
+            content_type="application/geo+json",
         )
 
         self.client.post(
@@ -302,7 +292,7 @@ class TestScenario5ImportExport:
         file2 = SimpleUploadedFile(
             "duplicate_import.geojson",
             json.dumps(existing_point).encode("utf-8"),
-            content_type="application/geo+json"
+            content_type="application/geo+json",
         )
 
         # When
@@ -338,9 +328,7 @@ class TestScenario5ImportExport:
         from django.core.files.uploadedfile import SimpleUploadedFile
 
         imported_file = SimpleUploadedFile(
-            "reimport.geojson",
-            export_response.content,
-            content_type="application/geo+json"
+            "reimport.geojson", export_response.content, content_type="application/geo+json"
         )
 
         import_response = self.client.post(

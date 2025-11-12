@@ -306,20 +306,20 @@
 
 /* Dark mode mobile */
 @media (max-width: 968px) {
-  [data-theme='dark'] .mobile-menu-toggle {
+  [data-theme="dark"] .mobile-menu-toggle {
     color: #f7fafc;
   }
 
-  [data-theme='dark'] .mobile-menu-toggle:hover {
+  [data-theme="dark"] .mobile-menu-toggle:hover {
     color: #63b3ed;
   }
 
-  [data-theme='dark'] .navbar-links {
+  [data-theme="dark"] .navbar-links {
     background: #1a202c;
     border-bottom-color: #2d3748;
   }
 
-  [data-theme='dark'] .user-menu-dropdown {
+  [data-theme="dark"] .user-menu-dropdown {
     border-top-color: #4a5568;
   }
 }

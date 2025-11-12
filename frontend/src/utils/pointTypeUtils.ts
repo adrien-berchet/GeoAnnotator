@@ -2,7 +2,7 @@
  * Utility functions for point types.
  */
 
-import type { PointType } from '../types/point';
+import type { PointType } from "../types/point";
 
 /**
  * Get the name of a point type in the specified language with fallback logic.
@@ -17,9 +17,12 @@ import type { PointType } from '../types/point';
  * @param languageCode - The preferred language code (default: 'en')
  * @returns The name in the best available language
  */
-export function getPointTypeName(pointType: PointType, languageCode: string = 'en'): string {
+export function getPointTypeName(
+  pointType: PointType,
+  languageCode: string = "en",
+): string {
   if (!pointType.names || Object.keys(pointType.names).length === 0) {
-    return 'Unnamed';
+    return "Unnamed";
   }
 
   // Try requested language
@@ -28,18 +31,21 @@ export function getPointTypeName(pointType: PointType, languageCode: string = 'e
   }
 
   // Fallback to English
-  if (pointType.names['en']) {
-    return pointType.names['en'];
+  if (pointType.names["en"]) {
+    return pointType.names["en"];
   }
 
   // Fallback to creation language
-  if (pointType.creation_language && pointType.names[pointType.creation_language]) {
+  if (
+    pointType.creation_language &&
+    pointType.names[pointType.creation_language]
+  ) {
     return pointType.names[pointType.creation_language];
   }
 
   // Fallback to first available name
   const firstLanguage = Object.keys(pointType.names)[0];
-  return pointType.names[firstLanguage] || 'Unnamed';
+  return pointType.names[firstLanguage] || "Unnamed";
 }
 
 /**
@@ -62,7 +68,10 @@ export function getAvailableLanguages(pointType: PointType): string[] {
  * @param languageCode - The language code to check
  * @returns True if translation exists
  */
-export function hasTranslation(pointType: PointType, languageCode: string): boolean {
+export function hasTranslation(
+  pointType: PointType,
+  languageCode: string,
+): boolean {
   return !!(pointType.names && pointType.names[languageCode]);
 }
 
@@ -74,7 +83,7 @@ export function hasTranslation(pointType: PointType, languageCode: string): bool
  */
 export function validateNames(names: Record<string, string>): string | null {
   if (!names || Object.keys(names).length === 0) {
-    return 'At least one translation is required';
+    return "At least one translation is required";
   }
 
   // Check that all values are non-empty strings

@@ -45,7 +45,7 @@
 }
 
 /* Dark mode support */
-[data-theme='dark'] .language-option {
+[data-theme="dark"] .language-option {
   --border-color: #374151;
   --background-color: #1f2937;
   --selected-background: #1e3a8a;

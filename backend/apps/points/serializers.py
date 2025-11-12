@@ -6,12 +6,15 @@ Handles GPS points, tags, editing locks, and spatial data.
 
 from django.conf import settings
 from django.contrib.gis.geos import Point
+from django.db.models import Q
 from rest_framework import serializers
-from rest_framework_gis.serializers import GeoFeatureModelSerializer
 
 from apps.authentication.models import User
-from apps.authentication.serializers import UserSerializer
-from .models import GPSPoint, Tag, PointType
+
+from .models import GPSPoint
+from .models import PointType
+from .models import Tag
+from .models import UserTypeOrder
 
 
 class UserSummarySerializer(serializers.ModelSerializer):
@@ -21,10 +24,11 @@ class UserSummarySerializer(serializers.ModelSerializer):
     Only includes id and email (lighter than full UserSerializer).
     Matches OpenAPI schema: UserSummary
     """
+
     class Meta:
         model = User
-        fields = ['id', 'email']
-        read_only_fields = ['id', 'email']
+        fields = ["id", "email"]
+        read_only_fields = ["id", "email"]
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -34,12 +38,13 @@ class TagSerializer(serializers.ModelSerializer):
     Simple name-only serialization with owner information.
     Matches OpenAPI schema: Tag
     """
+
     owner = UserSummarySerializer(read_only=True)
 
     class Meta:
         model = Tag
-        fields = ['id', 'name', 'owner', 'created_at']
-        read_only_fields = ['id', 'owner', 'created_at']
+        fields = ["id", "name", "owner", "created_at"]
+        read_only_fields = ["id", "owner", "created_at"]
 
 
 class PointTypeSerializer(serializers.ModelSerializer):
@@ -48,21 +53,33 @@ class PointTypeSerializer(serializers.ModelSerializer):
 
     Includes full details with JSON names field for multilingual support.
     """
+
     owner = UserSummarySerializer(read_only=True)
-    type = serializers.CharField(source='type_choice', read_only=True)
+    type = serializers.CharField(source="type_choice", read_only=True)
 
     class Meta:
         model = PointType
         fields = [
-            'id', 'type', 'names', 'creation_language', 'icon', 'order',
-            'owner', 'visibility', 'status', 'created_at', 'updated_at'
+            "id",
+            "type",
+            "names",
+            "creation_language",
+            "icon",
+            "order",
+            "owner",
+            "visibility",
+            "status",
+            "created_at",
+            "updated_at",
         ]
-        read_only_fields = ['id', 'type', 'owner', 'status', 'created_at', 'updated_at']
+        read_only_fields = ["id", "type", "owner", "status", "created_at", "updated_at"]
 
     def validate_names(self, value):
         """Validate names field."""
         if not isinstance(value, dict):
-            raise serializers.ValidationError("Names must be a dictionary mapping language codes to names.")
+            raise serializers.ValidationError(
+                "Names must be a dictionary mapping language codes to names."
+            )
 
         if len(value) == 0:
             raise serializers.ValidationError("At least one translation must be provided.")
@@ -85,64 +102,64 @@ class PointTypeSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         """Cross-field validation."""
         # Check that creation_language has a corresponding name
-        if 'names' in attrs and 'creation_language' in attrs:
-            if attrs['creation_language'] not in attrs['names']:
-                raise serializers.ValidationError({
-                    'creation_language': f"Creation language '{attrs['creation_language']}' must have a corresponding name."
-                })
+        if "names" in attrs and "creation_language" in attrs:
+            if attrs["creation_language"] not in attrs["names"]:
+                raise serializers.ValidationError(
+                    {
+                        "creation_language": (
+                            f"Creation language '{attrs['creation_language']}' must have a "
+                            "corresponding name."
+                        )
+                    }
+                )
 
         # Validate duplicate names for updates
-        if 'names' in attrs:
-            user = self.context['request'].user
-            names = attrs['names']
+        if "names" in attrs:
+            user = self.context["request"].user
+            names = attrs["names"]
 
             # Check if another type with these names already exists for this user
-            existing_query = PointType.objects.filter(
-                owner=user,
-                names=names,
-                status='active'
-            )
+            existing_query = PointType.objects.filter(owner=user, names=names, status="active")
 
             # Exclude current instance if this is an update
             if self.instance:
                 existing_query = existing_query.exclude(pk=self.instance.pk)
 
             if existing_query.exists():
-                raise serializers.ValidationError({
-                    'names': 'A point type with these names already exists.'
-                })
+                raise serializers.ValidationError(
+                    {"names": "A point type with these names already exists."}
+                )
 
         return attrs
 
     def create(self, validated_data):
         """Create a new point type for the authenticated user."""
-        user = self.context['request'].user
-        validated_data['owner'] = user
-        validated_data['type_choice'] = 'custom'
+        user = self.context["request"].user
+        validated_data["owner"] = user
+        validated_data["type_choice"] = "custom"
 
         # Set default icon if not provided
-        if 'icon' not in validated_data or not validated_data['icon']:
-            validated_data['icon'] = '📍'
+        if "icon" not in validated_data or not validated_data["icon"]:
+            validated_data["icon"] = "📍"
 
         # Auto-assign order if not provided
-        if 'order' not in validated_data:
+        if "order" not in validated_data:
             from django.db.models import Q
+
             max_order = PointType.objects.filter(
-                Q(owner=user) | Q(owner__isnull=True),
-                status='active'
-            ).aggregate(
-                max_order=serializers.models.Max('order')
-            )['max_order']
-            validated_data['order'] = (max_order or 0) + 1
+                Q(owner=user) | Q(owner__isnull=True), status="active"
+            ).aggregate(max_order=serializers.models.Max("order"))["max_order"]
+            validated_data["order"] = (max_order or 0) + 1
 
         # Get creation language from user preferences
-        if 'creation_language' not in validated_data:
+        if "creation_language" not in validated_data:
             from apps.settings.models import UserPreferences
+
             try:
                 prefs = UserPreferences.objects.get(user=user)
-                validated_data['creation_language'] = prefs.language
+                validated_data["creation_language"] = prefs.language
             except UserPreferences.DoesNotExist:
-                validated_data['creation_language'] = 'en'
+                validated_data["creation_language"] = "en"
 
         return super().create(validated_data)
 
@@ -152,10 +169,8 @@ class CreatePointTypeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PointType
-        fields = ['names', 'creation_language', 'icon', 'order', 'visibility']
-        extra_kwargs = {
-            'names': {'required': True}
-        }
+        fields = ["names", "creation_language", "icon", "order", "visibility"]
+        extra_kwargs = {"names": {"required": True}}
 
     def validate_names(self, value):
         """Validate names field."""
@@ -169,65 +184,61 @@ class CreatePointTypeSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         """Validate the entire serializer data."""
-        user = self.context['request'].user
-        names = attrs.get('names')
+        user = self.context["request"].user
+        names = attrs.get("names")
 
         if names:
             existing_type = PointType.objects.filter(
-                owner=user,
-                names=names,
-                status='active'
+                owner=user, names=names, status="active"
             ).exists()
 
             if existing_type:
-                raise serializers.ValidationError({
-                    'names': 'A point type with these names already exists.'
-                })
+                raise serializers.ValidationError(
+                    {"names": "A point type with these names already exists."}
+                )
 
         # Validate max types per user
-        active_types_count = PointType.objects.filter(
-            owner=user,
-            status='active'
-        ).count()
+        active_types_count = PointType.objects.filter(owner=user, status="active").count()
 
         if active_types_count >= settings.MAX_POINT_TYPES_PER_USER:
-            raise serializers.ValidationError({
-                'names': (
-                    'You have reached the maximum of '
-                    f'{settings.MAX_POINT_TYPES_PER_USER} point types. '
-                    'Please delete some types before creating new ones.'
-                )
-            })
+            raise serializers.ValidationError(
+                {
+                    "names": (
+                        "You have reached the maximum of "
+                        f"{settings.MAX_POINT_TYPES_PER_USER} point types. "
+                        "Please delete some types before creating new ones."
+                    )
+                }
+            )
 
         return attrs
 
     def create(self, validated_data):
         """Create with user from context and defaults."""
-        user = self.context['request'].user
-        validated_data['owner'] = user
-        validated_data['type_choice'] = 'custom'
+        user = self.context["request"].user
+        validated_data["owner"] = user
+        validated_data["type_choice"] = "custom"
 
-        if 'icon' not in validated_data or not validated_data['icon']:
-            validated_data['icon'] = '📍'
+        if "icon" not in validated_data or not validated_data["icon"]:
+            validated_data["icon"] = "📍"
 
-        if 'order' not in validated_data:
+        if "order" not in validated_data:
             from django.db.models import Q
+
             max_order = PointType.objects.filter(
-                Q(owner=user) | Q(owner__isnull=True),
-                status='active'
-            ).aggregate(
-                max_order=serializers.models.Max('order')
-            )['max_order']
-            validated_data['order'] = (max_order or 0) + 1
+                Q(owner=user) | Q(owner__isnull=True), status="active"
+            ).aggregate(max_order=serializers.models.Max("order"))["max_order"]
+            validated_data["order"] = (max_order or 0) + 1
 
         # Get creation language from user preferences if not provided
-        if 'creation_language' not in validated_data:
+        if "creation_language" not in validated_data:
             from apps.settings.models import UserPreferences
+
             try:
                 prefs = UserPreferences.objects.get(user=user)
-                validated_data['creation_language'] = prefs.language
+                validated_data["creation_language"] = prefs.language
             except UserPreferences.DoesNotExist:
-                validated_data['creation_language'] = 'en'
+                validated_data["creation_language"] = "en"
 
         return PointType.objects.create(**validated_data)
 
@@ -237,49 +248,42 @@ class PointTypeReorderSerializer(serializers.Serializer):
 
     order = serializers.ListField(
         child=serializers.DictField(child=serializers.CharField()),
-        help_text="List of {id, order} objects"
+        help_text="List of {id, order} objects",
     )
 
     def validate_order(self, value):
         """Validate that all IDs exist and are accessible to the user."""
-        from django.db.models import Q
-        user = self.context['request'].user
-        type_ids = [item['id'] for item in value]
+
+        user = self.context["request"].user
+        type_ids = [item["id"] for item in value]
 
         # Check all types exist and are accessible (user's types OR base types)
         accessible_types = PointType.objects.filter(
-            Q(id__in=type_ids),
-            Q(owner=user) | Q(owner__isnull=True),
-            status='active'
-        ).values_list('id', flat=True)
+            Q(id__in=type_ids), Q(owner=user) | Q(owner__isnull=True), status="active"
+        ).values_list("id", flat=True)
 
-        accessible_types_str = set(str(tid) for tid in accessible_types)
+        accessible_types_str = {str(tid) for tid in accessible_types}
         provided_ids = set(type_ids)
 
         if accessible_types_str != provided_ids:
             invalid_ids = provided_ids - accessible_types_str
-            raise serializers.ValidationError(
-                f"Invalid or inaccessible type IDs: {invalid_ids}"
-            )
+            raise serializers.ValidationError(f"Invalid or inaccessible type IDs: {invalid_ids}")
 
         return value
 
     def save(self):
         """Save user-specific custom order for all types."""
-        from .models import UserTypeOrder
 
-        user = self.context['request'].user
-        order_data = self.validated_data['order']
+        user = self.context["request"].user
+        order_data = self.validated_data["order"]
 
         # Create or update UserTypeOrder for each type
         for item in order_data:
             UserTypeOrder.objects.update_or_create(
-                user=user,
-                type_id=item['id'],
-                defaults={'order': int(item['order'])}
+                user=user, type_id=item["id"], defaults={"order": int(item["order"])}
             )
 
-        return {'success': True, 'updated': len(order_data)}
+        return {"success": True, "updated": len(order_data)}
 
 
 class EditingLockSerializer(serializers.Serializer):
@@ -289,14 +293,16 @@ class EditingLockSerializer(serializers.Serializer):
     Shows who is editing and when lock expires.
     Matches OpenAPI schema: EditingLock
     """
-    locked_by = UserSummarySerializer(source='editing_lock_user', read_only=True)
-    acquired_at = serializers.DateTimeField(source='editing_lock_acquired_at', read_only=True)
+
+    locked_by = UserSummarySerializer(source="editing_lock_user", read_only=True)
+    acquired_at = serializers.DateTimeField(source="editing_lock_acquired_at", read_only=True)
     expires_at = serializers.SerializerMethodField()
 
     def get_expires_at(self, obj):
         """Calculate lock expiration (acquired_at + 15 minutes)."""
         if obj.editing_lock_acquired_at:
             from datetime import timedelta
+
             return obj.editing_lock_acquired_at + timedelta(minutes=15)
         return None
 
@@ -308,6 +314,7 @@ class GPSPointSerializer(serializers.ModelSerializer):
     Includes nested owner, tags, editing lock, and permission level.
     Matches OpenAPI schema: GPSPoint
     """
+
     # lat/lon for input and output
     latitude = serializers.SerializerMethodField()
     longitude = serializers.SerializerMethodField()
@@ -326,27 +333,27 @@ class GPSPointSerializer(serializers.ModelSerializer):
     class Meta:
         model = GPSPoint
         fields = [
-            'id',
-            'title',
-            'description',
-            'location',
-            'latitude',
-            'longitude',
-            'owner',
-            'type',
-            'tags',
-            'is_public',
-            'created_at',
-            'updated_at',
-            'editing_lock',
-            'permission',
-            'annotation_count',
+            "id",
+            "title",
+            "description",
+            "location",
+            "latitude",
+            "longitude",
+            "owner",
+            "type",
+            "tags",
+            "is_public",
+            "created_at",
+            "updated_at",
+            "editing_lock",
+            "permission",
+            "annotation_count",
         ]
         read_only_fields = [
-            'id',
-            'owner',
-            'created_at',
-            'updated_at',
+            "id",
+            "owner",
+            "created_at",
+            "updated_at",
         ]
 
     def get_latitude(self, obj):
@@ -365,8 +372,8 @@ class GPSPointSerializer(serializers.ModelSerializer):
         """Convert PostGIS Point to GeoJSON format."""
         if obj.location:
             return {
-                'type': 'Point',
-                'coordinates': [obj.location.x, obj.location.y]  # [longitude, latitude]
+                "type": "Point",
+                "coordinates": [obj.location.x, obj.location.y],  # [longitude, latitude]
             }
         return None
 
@@ -388,17 +395,18 @@ class GPSPointSerializer(serializers.ModelSerializer):
 
         Returns: 'owner', 'transfer', 'edit', or 'view'
         """
-        user = self.context.get('request').user if self.context.get('request') else None
+        user = self.context.get("request").user if self.context.get("request") else None
 
         if not user or not user.is_authenticated:
-            return 'view' if obj.is_public else None
+            return "view" if obj.is_public else None
 
         # Owner has full permissions
         if obj.owner == user:
-            return 'owner'
+            return "owner"
 
         # Check share permissions
         from apps.sharing.models import Share
+
         share = Share.objects.filter(gps_point=obj, recipient_user=user, is_active=True).first()
 
         if share:
@@ -406,7 +414,7 @@ class GPSPointSerializer(serializers.ModelSerializer):
 
         # Public points are view-only
         if obj.is_public:
-            return 'view'
+            return "view"
 
         return None
 
@@ -421,14 +429,14 @@ class GPSPointSerializer(serializers.ModelSerializer):
 
         Converts lat/lon to PostGIS Point and sets owner.
         """
-        latitude = validated_data.pop('latitude')
-        longitude = validated_data.pop('longitude')
+        latitude = validated_data.pop("latitude")
+        longitude = validated_data.pop("longitude")
 
         # Create PostGIS Point (longitude, latitude - note the order!)
-        validated_data['location'] = Point(longitude, latitude, srid=4326)
+        validated_data["location"] = Point(longitude, latitude, srid=4326)
 
         # Set owner from request user
-        validated_data['owner'] = self.context['request'].user
+        validated_data["owner"] = self.context["request"].user
 
         return super().create(validated_data)
 
@@ -436,8 +444,8 @@ class GPSPointSerializer(serializers.ModelSerializer):
         """
         Update GPS point, including location if lat/lon changed.
         """
-        latitude = validated_data.pop('latitude', None)
-        longitude = validated_data.pop('longitude', None)
+        latitude = validated_data.pop("latitude", None)
+        longitude = validated_data.pop("longitude", None)
 
         if latitude is not None and longitude is not None:
             instance.location = Point(longitude, latitude, srid=4326)
@@ -452,6 +460,7 @@ class CreateGPSPointSerializer(serializers.ModelSerializer):
     Accepts latitude/longitude, type_id, and tag names (auto-creates tags).
     Matches OpenAPI schema: CreateGPSPointRequest
     """
+
     latitude = serializers.FloatField(min_value=-90, max_value=90)
     longitude = serializers.FloatField(min_value=-180, max_value=180)
     type_id = serializers.UUIDField(required=False, allow_null=True)
@@ -463,57 +472,52 @@ class CreateGPSPointSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = GPSPoint
-        fields = ['title', 'description', 'latitude', 'longitude', 'type_id', 'tags', 'is_public']
+        fields = ["title", "description", "latitude", "longitude", "type_id", "tags", "is_public"]
 
     def validate_type_id(self, value):
         """Validate that type exists and belongs to user or is a base type."""
         if not value:
             return None
 
-        user = self.context['request'].user
+        user = self.context["request"].user
 
         try:
-            point_type = PointType.objects.get(id=value, status='active')
+            point_type = PointType.objects.get(id=value, status="active")
 
             # Type must belong to user or be a base type (owner=None)
             if point_type.owner is not None and point_type.owner != user:
-                raise serializers.ValidationError(
-                    "You can only use your own types or base types."
-                )
+                raise serializers.ValidationError("You can only use your own types or base types.")
 
             return point_type
         except PointType.DoesNotExist:
-            raise serializers.ValidationError("Point type not found or has been deleted.")
+            raise serializers.ValidationError("Point type not found or has been deleted.") from None
 
     def create(self, validated_data):
         """
         Create GPS point with auto-created tags and type.
         """
-        tag_names = validated_data.pop('tags', [])
-        latitude = validated_data.pop('latitude')
-        longitude = validated_data.pop('longitude')
-        point_type = validated_data.pop('type_id', None)
+        tag_names = validated_data.pop("tags", [])
+        latitude = validated_data.pop("latitude")
+        longitude = validated_data.pop("longitude")
+        point_type = validated_data.pop("type_id", None)
 
         # Create PostGIS Point
-        validated_data['location'] = Point(longitude, latitude, srid=4326)
-        validated_data['owner'] = self.context['request'].user
+        validated_data["location"] = Point(longitude, latitude, srid=4326)
+        validated_data["owner"] = self.context["request"].user
 
         # Set default type if not provided
         if not point_type:
             point_type = PointType.get_default_type()
 
-        validated_data['type'] = point_type
+        validated_data["type"] = point_type
 
         # Create point
         point = GPSPoint.objects.create(**validated_data)
 
         # Create/get tags and associate
-        user = self.context['request'].user
+        user = self.context["request"].user
         for tag_name in tag_names:
-            tag, _ = Tag.objects.get_or_create(
-                name=tag_name.lower().strip(),
-                owner=user
-            )
+            tag, _ = Tag.objects.get_or_create(name=tag_name.lower().strip(), owner=user)
             point.tags.add(tag)
 
         return point
@@ -526,6 +530,7 @@ class UpdateGPSPointSerializer(serializers.ModelSerializer):
     Allows partial updates with optional tag and type replacement.
     Matches OpenAPI schema: UpdateGPSPointRequest
     """
+
     latitude = serializers.FloatField(min_value=-90, max_value=90, required=False)
     longitude = serializers.FloatField(min_value=-180, max_value=180, required=False)
     type_id = serializers.UUIDField(required=False, allow_null=True)
@@ -537,35 +542,33 @@ class UpdateGPSPointSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = GPSPoint
-        fields = ['title', 'description', 'latitude', 'longitude', 'type_id', 'tags', 'is_public']
+        fields = ["title", "description", "latitude", "longitude", "type_id", "tags", "is_public"]
 
     def validate_type_id(self, value):
         """Validate that type exists and belongs to user or is a base type."""
         if not value:
             return None
 
-        user = self.context['request'].user
+        user = self.context["request"].user
 
         try:
-            point_type = PointType.objects.get(id=value, status='active')
+            point_type = PointType.objects.get(id=value, status="active")
 
             if point_type.owner is not None and point_type.owner != user:
-                raise serializers.ValidationError(
-                    "You can only use your own types or base types."
-                )
+                raise serializers.ValidationError("You can only use your own types or base types.")
 
             return point_type
         except PointType.DoesNotExist:
-            raise serializers.ValidationError("Point type not found or has been deleted.")
+            raise serializers.ValidationError("Point type not found or has been deleted.") from None
 
     def update(self, instance, validated_data):
         """
         Update GPS point with optional location, type, and tag changes.
         """
-        tag_names = validated_data.pop('tags', None)
-        latitude = validated_data.pop('latitude', None)
-        longitude = validated_data.pop('longitude', None)
-        point_type = validated_data.pop('type_id', None)
+        tag_names = validated_data.pop("tags", None)
+        latitude = validated_data.pop("latitude", None)
+        longitude = validated_data.pop("longitude", None)
+        point_type = validated_data.pop("type_id", None)
 
         # Update location if both lat/lon provided
         if latitude is not None and longitude is not None:
@@ -584,12 +587,9 @@ class UpdateGPSPointSerializer(serializers.ModelSerializer):
         # Update tags if provided
         if tag_names is not None:
             instance.tags.clear()
-            user = self.context['request'].user
+            user = self.context["request"].user
             for tag_name in tag_names:
-                tag, _ = Tag.objects.get_or_create(
-                    name=tag_name.lower().strip(),
-                    owner=user
-                )
+                tag, _ = Tag.objects.get_or_create(name=tag_name.lower().strip(), owner=user)
                 instance.tags.add(tag)
 
         return instance
@@ -601,8 +601,9 @@ class GPSPointListSerializer(serializers.ModelSerializer):
 
     Excludes heavy fields like description and editing lock.
     """
-    latitude = serializers.FloatField(source='location.y', read_only=True)
-    longitude = serializers.FloatField(source='location.x', read_only=True)
+
+    latitude = serializers.FloatField(source="location.y", read_only=True)
+    longitude = serializers.FloatField(source="location.x", read_only=True)
     owner = UserSummarySerializer(read_only=True)
     type = PointTypeSerializer(read_only=True)
     tags = TagSerializer(many=True, read_only=True)
@@ -612,38 +613,39 @@ class GPSPointListSerializer(serializers.ModelSerializer):
     class Meta:
         model = GPSPoint
         fields = [
-            'id',
-            'title',
-            'latitude',
-            'longitude',
-            'owner',
-            'type',
-            'tags',
-            'is_public',
-            'created_at',
-            'updated_at',
-            'permission',
-            'annotation_count',
+            "id",
+            "title",
+            "latitude",
+            "longitude",
+            "owner",
+            "type",
+            "tags",
+            "is_public",
+            "created_at",
+            "updated_at",
+            "permission",
+            "annotation_count",
         ]
 
     def get_permission(self, obj):
         """Determine current user's permission level."""
-        user = self.context.get('request').user if self.context.get('request') else None
+        user = self.context.get("request").user if self.context.get("request") else None
 
         if not user or not user.is_authenticated:
-            return 'view' if obj.is_public else None
+            return "view" if obj.is_public else None
 
         if obj.owner == user:
-            return 'owner'
+            return "owner"
 
         from apps.sharing.models import Share
+
         share = Share.objects.filter(gps_point=obj, recipient_user=user, is_active=True).first()
 
         if share:
             return share.permission_level
 
         if obj.is_public:
-            return 'view'
+            return "view"
 
         return None
 

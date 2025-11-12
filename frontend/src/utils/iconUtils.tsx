@@ -12,7 +12,9 @@
  */
 export function isImageIcon(icon: string): boolean {
   if (!icon) return false;
-  return icon.startsWith('http') || icon.startsWith('/') || icon.startsWith('data:');
+  return (
+    icon.startsWith("http") || icon.startsWith("/") || icon.startsWith("data:")
+  );
 }
 
 /**
@@ -25,10 +27,10 @@ export function isImageIcon(icon: string): boolean {
  */
 export function renderIcon(
   icon: string | undefined,
-  className: string = 'type-icon',
-  alt: string = ''
+  className: string = "type-icon",
+  alt: string = "",
 ) {
-  if (!icon || icon === '/icons/default.svg') {
+  if (!icon || icon === "/icons/default.svg") {
     return <span className={`${className}-emoji`}>📍</span>;
   }
 
@@ -40,7 +42,7 @@ export function renderIcon(
         className={className}
         onError={(e) => {
           // Fallback to placeholder on error
-          e.currentTarget.style.display = 'none';
+          e.currentTarget.style.display = "none";
         }}
       />
     );

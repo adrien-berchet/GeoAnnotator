@@ -2,7 +2,7 @@
  * Sharing API calls.
  */
 
-import { apiClient } from './client';
+import { apiClient } from "./client";
 
 /**
  * Share types.
@@ -22,7 +22,7 @@ export interface Share {
     id: string;
     email: string;
   } | null;
-  permission_level: 'view' | 'edit' | 'transfer';
+  permission_level: "view" | "edit" | "transfer";
   is_active: boolean;
   invitation_token: string;
   invitation_sent_at: string | null;
@@ -32,11 +32,11 @@ export interface Share {
 
 export interface CreateShareData {
   recipient_email: string;
-  permission_level: 'view' | 'edit' | 'transfer';
+  permission_level: "view" | "edit" | "transfer";
 }
 
 export interface UpdateShareData {
-  permission_level: 'view' | 'edit' | 'transfer';
+  permission_level: "view" | "edit" | "transfer";
 }
 
 /**
@@ -50,8 +50,14 @@ export async function getPointShares(pointId: string): Promise<Share[]> {
 /**
  * Create share for a point.
  */
-export async function createShare(pointId: string, data: CreateShareData): Promise<Share> {
-  const response = await apiClient.post<Share>(`/points/${pointId}/sharing/`, data);
+export async function createShare(
+  pointId: string,
+  data: CreateShareData,
+): Promise<Share> {
+  const response = await apiClient.post<Share>(
+    `/points/${pointId}/sharing/`,
+    data,
+  );
   return response.data;
 }
 
@@ -66,7 +72,10 @@ export async function getShare(shareId: string): Promise<Share> {
 /**
  * Update share permissions.
  */
-export async function updateShare(shareId: string, data: UpdateShareData): Promise<Share> {
+export async function updateShare(
+  shareId: string,
+  data: UpdateShareData,
+): Promise<Share> {
   const response = await apiClient.patch<Share>(`/sharing/${shareId}/`, data);
   return response.data;
 }
@@ -90,6 +99,6 @@ export async function acceptShare(token: string): Promise<Share> {
  * Get received shares (shares where current user is recipient).
  */
 export async function getReceivedShares(): Promise<Share[]> {
-  const response = await apiClient.get<Share[]>('/sharing/received/');
+  const response = await apiClient.get<Share[]>("/sharing/received/");
   return response.data;
 }

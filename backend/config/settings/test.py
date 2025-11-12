@@ -4,17 +4,19 @@ Test settings for GeoAnnotator.
 Settings optimized for running tests in CI and locally.
 """
 
+import os
+
 from .base import *
 
 # Disable debug for more realistic testing
 DEBUG = False
 
 # Required for tests
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ["*"]
 
 # Use simple password hashers for faster tests
 PASSWORD_HASHERS = [
-    'django.contrib.auth.hashers.MD5PasswordHasher',
+    "django.contrib.auth.hashers.MD5PasswordHasher",
 ]
 
 # Use filesystem storage for tests
@@ -31,16 +33,16 @@ STORAGES = {
 AWS_STORAGE_BUCKET_NAME = None
 
 # Email backend for tests (in-memory)
-EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
+EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 
 # Simplify middleware for tests
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
 ]
 
 # Disable CORS checks in tests
@@ -48,20 +50,20 @@ CORS_ALLOW_ALL_ORIGINS = True
 
 # Minimal logging for tests
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': True,
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
+    "version": 1,
+    "disable_existing_loggers": True,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
         },
     },
-    'loggers': {
-        'django': {
-            'handlers': ['console'],
-            'level': 'ERROR',
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": "ERROR",
         },
     },
 }
 
 # Use a faster SECRET_KEY for tests
-SECRET_KEY = os.environ.get('SECRET_KEY', 'test-secret-key-for-ci-and-local-tests')
+SECRET_KEY = os.environ.get("SECRET_KEY", "test-secret-key-for-ci-and-local-tests")

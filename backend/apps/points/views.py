@@ -1,28 +1,45 @@
 """
 GPS Point views for CRUD operations and spatial search.
 """
-from datetime import timedelta
+
 import os
 import uuid as uuid_lib
-import requests
+from datetime import timedelta
 from io import BytesIO
+
+import requests
+from django.conf import settings
 from django.core.files.base import ContentFile
-from rest_framework import viewsets, status
+from django.core.files.storage import default_storage
+from django.db.models import F
+from django.db.models import IntegerField
+from django.db.models import OuterRef
+from django.db.models import Q
+from django.db.models import Subquery
+from django.db.models.functions import Coalesce
+from rest_framework import status
+from rest_framework import viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import NotFound
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
-from django.db.models import Q
-from django.core.files.storage import default_storage
-from django.conf import settings
 
-from .models import GPSPoint, PointType, Tag
-from .serializers import (
-    GPSPointSerializer, CreateGPSPointSerializer, UpdateGPSPointSerializer,
-    PointTypeSerializer, CreatePointTypeSerializer, PointTypeReorderSerializer
-)
-from .services import PointService, EditingLockService
 from apps.sharing.services import PermissionService
+
+from .models import GPSPoint
+from .models import PointType
+from .models import Tag
+from .models import UserTypeOrder
+from .serializers import CreateGPSPointSerializer
+from .serializers import CreatePointTypeSerializer
+from .serializers import GPSPointSerializer
+from .serializers import PointTypeReorderSerializer
+from .serializers import PointTypeSerializer
+from .serializers import UpdateGPSPointSerializer
+from .services import EditingLockService
+from .services import PointService
 
 
 class GPSPointViewSet(viewsets.ModelViewSet):
@@ -43,12 +60,13 @@ class GPSPointViewSet(viewsets.ModelViewSet):
     - POST /api/points/{id}/release-lock/ - Release editing lock
     - GET /api/points/{id}/lock-status/ - Get lock status
     """
+
     permission_classes = [IsAuthenticated]
 
     def get_serializer_class(self):
-        if self.action == 'create':
+        if self.action == "create":
             return CreateGPSPointSerializer
-        elif self.action in ['update', 'partial_update']:
+        elif self.action in ["update", "partial_update"]:
             return UpdateGPSPointSerializer
         return GPSPointSerializer
 
@@ -58,35 +76,35 @@ class GPSPointViewSet(viewsets.ModelViewSet):
         queryset = PermissionService.get_accessible_points(user, include_public=True)
 
         # Apply search filter if provided
-        search_query = self.request.query_params.get('search', None)
+        search_query = self.request.query_params.get("search", None)
         if search_query:
             queryset = queryset.filter(
-                Q(title__icontains=search_query) |
-                Q(description__icontains=search_query) |
-                Q(tags__name__icontains=search_query)
+                Q(title__icontains=search_query)
+                | Q(description__icontains=search_query)
+                | Q(tags__name__icontains=search_query)
             ).distinct()
 
         return queryset
 
     def create(self, request):
         """Create new GPS point."""
-        serializer = CreateGPSPointSerializer(data=request.data, context={'request': request})
+        serializer = CreateGPSPointSerializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
 
         # Create point via service
         point = PointService.create_point(
-            title=serializer.validated_data['title'],
-            latitude=serializer.validated_data['latitude'],
-            longitude=serializer.validated_data['longitude'],
+            title=serializer.validated_data["title"],
+            latitude=serializer.validated_data["latitude"],
+            longitude=serializer.validated_data["longitude"],
             owner=request.user,
-            description=serializer.validated_data.get('description', ''),
-            is_public=serializer.validated_data.get('is_public', False),
-            tags=serializer.validated_data.get('tags', []),
-            point_type=serializer.validated_data.get('type_id')
+            description=serializer.validated_data.get("description", ""),
+            is_public=serializer.validated_data.get("is_public", False),
+            tags=serializer.validated_data.get("tags", []),
+            point_type=serializer.validated_data.get("type_id"),
         )
 
         # Return created point
-        response_serializer = GPSPointSerializer(point, context={'request': request})
+        response_serializer = GPSPointSerializer(point, context={"request": request})
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
     def retrieve(self, request, pk=None):
@@ -95,18 +113,18 @@ class GPSPointViewSet(viewsets.ModelViewSet):
         try:
             point = GPSPoint.objects.get(pk=pk)
         except GPSPoint.DoesNotExist:
-            raise NotFound('Point not found')
+            raise NotFound("Point not found") from None
 
         # Check if point is trashed
-        if hasattr(point, 'trash_entry') and point.trash_entry:
-            raise NotFound('Point not found')
+        if hasattr(point, "trash_entry") and point.trash_entry:
+            raise NotFound("Point not found")
 
         # Check view permission
         # Return 404 instead of 403 to not reveal existence of private points
         if not PermissionService.can_view(point, request.user):
-            raise NotFound('Point not found')
+            raise NotFound("Point not found")
 
-        serializer = GPSPointSerializer(point, context={'request': request})
+        serializer = GPSPointSerializer(point, context={"request": request})
         return Response(serializer.data)
 
     def update(self, request, pk=None, partial=False):
@@ -115,35 +133,39 @@ class GPSPointViewSet(viewsets.ModelViewSet):
         try:
             point = GPSPoint.objects.get(pk=pk)
         except GPSPoint.DoesNotExist:
-            raise NotFound('Point not found')
+            raise NotFound("Point not found") from None
 
         # Check edit permission
         if not PermissionService.can_edit(point, request.user):
-            raise PermissionDenied('You do not have permission to edit this point')
+            raise PermissionDenied("You do not have permission to edit this point")
 
         # Check if point is locked by another user
         if EditingLockService.is_locked(point) and point.editing_lock_user != request.user:
             lock_info = EditingLockService.get_lock_info(point)
             return Response(
                 {
-                    'error': 'Point is currently locked by another user',
-                    'locked_by': lock_info['locked_by'].email if lock_info else None,
-                    'lock_expires_at': lock_info['lock_expires_at'].isoformat() if lock_info and lock_info.get('lock_expires_at') else None
+                    "error": "Point is currently locked by another user",
+                    "locked_by": lock_info["locked_by"].email if lock_info else None,
+                    "lock_expires_at": (
+                        lock_info["lock_expires_at"].isoformat()
+                        if lock_info and lock_info.get("lock_expires_at")
+                        else None
+                    ),
                 },
-                status=status.HTTP_409_CONFLICT
+                status=status.HTTP_409_CONFLICT,
             )
 
-        serializer = UpdateGPSPointSerializer(data=request.data, partial=partial, context={'request': request})
+        serializer = UpdateGPSPointSerializer(
+            data=request.data, partial=partial, context={"request": request}
+        )
         serializer.is_valid(raise_exception=True)
 
         # Update via service (handles locking)
         updated_point = PointService.update_point(
-            point=point,
-            user=request.user,
-            **serializer.validated_data
+            point=point, user=request.user, **serializer.validated_data
         )
 
-        response_serializer = GPSPointSerializer(updated_point, context={'request': request})
+        response_serializer = GPSPointSerializer(updated_point, context={"request": request})
         return Response(response_serializer.data)
 
     def partial_update(self, request, pk=None):
@@ -156,29 +178,29 @@ class GPSPointViewSet(viewsets.ModelViewSet):
         try:
             point = GPSPoint.objects.get(pk=pk)
         except GPSPoint.DoesNotExist:
-            raise NotFound('Point not found')
+            raise NotFound("Point not found") from None
 
         # Check if owner (only owner can delete)
         if not PermissionService.is_owner(point, request.user):
-            raise PermissionDenied('Only the owner can delete this point')
+            raise PermissionDenied("Only the owner can delete this point")
 
         # Delete via service (moves to trash)
         PointService.delete_point(point, request.user)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @action(detail=False, methods=['post'], url_path='search/bbox')
+    @action(detail=False, methods=["post"], url_path="search/bbox")
     def search_bbox(self, request):
         """Search points within bounding box."""
-        min_lon = request.data.get('min_longitude')
-        min_lat = request.data.get('min_latitude')
-        max_lon = request.data.get('max_longitude')
-        max_lat = request.data.get('max_latitude')
+        min_lon = request.data.get("min_longitude")
+        min_lat = request.data.get("min_latitude")
+        max_lon = request.data.get("max_longitude")
+        max_lat = request.data.get("max_latitude")
 
         if None in [min_lon, min_lat, max_lon, max_lat]:
             return Response(
-                {'error': 'Missing required parameters: min/max latitude/longitude'},
-                status=status.HTTP_400_BAD_REQUEST
+                {"error": "Missing required parameters: min/max latitude/longitude"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         try:
@@ -187,25 +209,25 @@ class GPSPointViewSet(viewsets.ModelViewSet):
                 min_lat=float(min_lat),
                 max_lon=float(max_lon),
                 max_lat=float(max_lat),
-                user=request.user
+                user=request.user,
             )
 
-            serializer = GPSPointSerializer(points, many=True, context={'request': request})
+            serializer = GPSPointSerializer(points, many=True, context={"request": request})
             return Response(serializer.data)
         except ValueError as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=False, methods=['post'], url_path='search/nearby')
+    @action(detail=False, methods=["post"], url_path="search/nearby")
     def search_nearby(self, request):
         """Search points within radius."""
-        lat = request.data.get('latitude')
-        lon = request.data.get('longitude')
-        radius = request.data.get('radius_meters', 1000)  # Default 1km
+        lat = request.data.get("latitude")
+        lon = request.data.get("longitude")
+        radius = request.data.get("radius_meters", 1000)  # Default 1km
 
         if lat is None or lon is None:
             return Response(
-                {'error': 'Missing required parameters: latitude, longitude'},
-                status=status.HTTP_400_BAD_REQUEST
+                {"error": "Missing required parameters: latitude, longitude"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         try:
@@ -213,63 +235,52 @@ class GPSPointViewSet(viewsets.ModelViewSet):
                 latitude=float(lat),
                 longitude=float(lon),
                 radius_meters=float(radius),
-                user=request.user
+                user=request.user,
             )
 
-            serializer = GPSPointSerializer(points, many=True, context={'request': request})
+            serializer = GPSPointSerializer(points, many=True, context={"request": request})
             return Response(serializer.data)
         except ValueError as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=False, methods=['post'], url_path='search/tags')
+    @action(detail=False, methods=["post"], url_path="search/tags")
     def search_tags(self, request):
         """Search points by tags."""
-        tag_names = request.data.get('tags', [])
+        tag_names = request.data.get("tags", [])
 
         if not tag_names or not isinstance(tag_names, list):
             return Response(
-                {'error': 'Tags must be a non-empty array'},
-                status=status.HTTP_400_BAD_REQUEST
+                {"error": "Tags must be a non-empty array"}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        points = PointService.search_points_by_tags(
-            tag_names=tag_names,
-            user=request.user
-        )
+        points = PointService.search_points_by_tags(tag_names=tag_names, user=request.user)
 
-        serializer = GPSPointSerializer(points, many=True, context={'request': request})
+        serializer = GPSPointSerializer(points, many=True, context={"request": request})
         return Response(serializer.data)
 
-    @action(detail=False, methods=['get'], url_path='search/text')
+    @action(detail=False, methods=["get"], url_path="search/text")
     def search_text(self, request):
         """Full-text search in title/description."""
-        search_text = request.query_params.get('q', '')
+        search_text = request.query_params.get("q", "")
 
         if not search_text:
             return Response(
-                {'error': 'Query parameter "q" is required'},
-                status=status.HTTP_400_BAD_REQUEST
+                {"error": 'Query parameter "q" is required'}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        points = PointService.search_points_by_text(
-            search_text=search_text,
-            user=request.user
-        )
+        points = PointService.search_points_by_text(search_text=search_text, user=request.user)
 
-        serializer = GPSPointSerializer(points, many=True, context={'request': request})
+        serializer = GPSPointSerializer(points, many=True, context={"request": request})
         return Response(serializer.data)
 
-    @action(detail=True, methods=['post'], url_path='lock')
+    @action(detail=True, methods=["post"], url_path="lock")
     def acquire_lock(self, request, pk=None):
         """Acquire editing lock on point."""
         point = self.get_object()
 
         # Check edit permission
         if not PermissionService.can_edit(point, request.user):
-            return Response(
-                {'error': 'Permission denied'},
-                status=status.HTTP_403_FORBIDDEN
-            )
+            return Response({"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
 
         # Acquire lock
         lock_acquired = EditingLockService.acquire_lock(point, request.user)
@@ -278,26 +289,31 @@ class GPSPointViewSet(viewsets.ModelViewSet):
             lock_info = EditingLockService.get_lock_info(point)
             return Response(
                 {
-                    'error': 'Point is currently locked',
-                    'locked_by': lock_info['locked_by'].email if lock_info else None,
-                    'lock_expires_at': lock_info['lock_expires_at'].isoformat() if lock_info and lock_info.get('lock_expires_at') else None
+                    "error": "Point is currently locked",
+                    "locked_by": lock_info["locked_by"].email if lock_info else None,
+                    "lock_expires_at": (
+                        lock_info["lock_expires_at"].isoformat()
+                        if lock_info and lock_info.get("lock_expires_at")
+                        else None
+                    ),
                 },
-                status=status.HTTP_409_CONFLICT
+                status=status.HTTP_409_CONFLICT,
             )
 
         # Calculate lock expiry time
-        lock_expires_at = point.editing_lock_acquired_at + timedelta(minutes=EditingLockService.LOCK_DURATION_MINUTES)
+        lock_expires_at = point.editing_lock_acquired_at + timedelta(
+            minutes=EditingLockService.LOCK_DURATION_MINUTES
+        )
 
-        return Response({
-            'locked_by': {
-                'id': str(request.user.id),
-                'email': request.user.email
-            },
-            'acquired_at': point.editing_lock_acquired_at.isoformat(),
-            'expires_at': lock_expires_at.isoformat()
-        })
+        return Response(
+            {
+                "locked_by": {"id": str(request.user.id), "email": request.user.email},
+                "acquired_at": point.editing_lock_acquired_at.isoformat(),
+                "expires_at": lock_expires_at.isoformat(),
+            }
+        )
 
-    @action(detail=True, methods=['delete'], url_path='lock')
+    @action(detail=True, methods=["delete"], url_path="lock")
     def release_lock(self, request, pk=None):
         """Release editing lock on point."""
         point = self.get_object()
@@ -308,8 +324,8 @@ class GPSPointViewSet(viewsets.ModelViewSet):
             # Check if user is owner (can force-release)
             if point.owner != request.user:
                 return Response(
-                    {'error': 'You cannot release a lock held by another user'},
-                    status=status.HTTP_403_FORBIDDEN
+                    {"error": "You cannot release a lock held by another user"},
+                    status=status.HTTP_403_FORBIDDEN,
                 )
             # Owner can force-release
             point.editing_lock_user = None
@@ -321,7 +337,7 @@ class GPSPointViewSet(viewsets.ModelViewSet):
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @action(detail=True, methods=['get'], url_path='lock-status')
+    @action(detail=True, methods=["get"], url_path="lock-status")
     def lock_status(self, request, pk=None):
         """Get current lock status."""
         point = self.get_object()
@@ -330,13 +346,15 @@ class GPSPointViewSet(viewsets.ModelViewSet):
 
         if is_locked:
             lock_info = EditingLockService.get_lock_info(point)
-            return Response({
-                'is_locked': True,
-                'locked_by': lock_info['locked_by'].email,
-                'lock_expires_at': lock_info['lock_expires_at'].isoformat()
-            })
+            return Response(
+                {
+                    "is_locked": True,
+                    "locked_by": lock_info["locked_by"].email,
+                    "lock_expires_at": lock_info["lock_expires_at"].isoformat(),
+                }
+            )
 
-        return Response({'is_locked': False})
+        return Response({"is_locked": False})
 
 
 class TagViewSet(viewsets.ModelViewSet):
@@ -352,10 +370,11 @@ class TagViewSet(viewsets.ModelViewSet):
     - PUT/PATCH /api/tags/{id}/ - Update tag
     - DELETE /api/tags/{id}/ - Delete tag
     """
+
     from .models import Tag
     from .serializers import TagSerializer
 
-    queryset = Tag.objects.all().order_by('name')
+    queryset = Tag.objects.all().order_by("name")
     serializer_class = TagSerializer
     permission_classes = [IsAuthenticated]
     pagination_class = None  # Disable pagination for tags
@@ -363,8 +382,8 @@ class TagViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """Filter tags by current user and search query if provided."""
         # Filter by current user
-        queryset = Tag.objects.filter(owner=self.request.user).order_by('name')
-        search = self.request.query_params.get('search', None)
+        queryset = Tag.objects.filter(owner=self.request.user).order_by("name")
+        search = self.request.query_params.get("search", None)
 
         if search:
             queryset = queryset.filter(name__istartswith=search)
@@ -388,10 +407,10 @@ class TagViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
         except IntegrityError:
             # Handle duplicate tag name for this user
-            tag_name = request.data.get('name', '')
+            tag_name = request.data.get("name", "")
             return Response(
-                {'name': [f'You already have a tag with name "{tag_name}".']},
-                status=status.HTTP_400_BAD_REQUEST
+                {"name": [f'You already have a tag with name "{tag_name}".']},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
     def destroy(self, request, *args, **kwargs):
@@ -417,14 +436,15 @@ class PointTypeViewSet(viewsets.ModelViewSet):
     - DELETE /api/point-types/{id}/ - Delete point type (soft delete, switches points to default)
     - POST /api/point-types/reorder/ - Reorder point types
     """
+
     permission_classes = [IsAuthenticated]
     serializer_class = PointTypeSerializer
     pagination_class = None  # Disable pagination - users need to see all their types
 
     def get_serializer_class(self):
-        if self.action == 'create':
+        if self.action == "create":
             return CreatePointTypeSerializer
-        elif self.action == 'reorder':
+        elif self.action == "reorder":
             return PointTypeReorderSerializer
         return PointTypeSerializer
 
@@ -438,73 +458,67 @@ class PointTypeViewSet(viewsets.ModelViewSet):
 
         Ordered by user's custom order if available, otherwise by default order.
         """
-        from django.db.models import OuterRef, Subquery, IntegerField, F
-        from django.db.models.functions import Coalesce
-        from .models import UserTypeOrder
 
         user = self.request.user
 
         # Subquery to get user's custom order (avoids JOIN that creates duplicates)
-        user_order_subquery = UserTypeOrder.objects.filter(
-            user=user,
-            type=OuterRef('pk')
-        ).values('order')[:1]
+        user_order_subquery = UserTypeOrder.objects.filter(user=user, type=OuterRef("pk")).values(
+            "order"
+        )[:1]
 
         # Get user's types and base types, exclude deleted
-        queryset = PointType.objects.filter(
-            Q(owner=user) | Q(owner__isnull=True),
-            status='active'
-        ).annotate(
-            # Get user's custom order if exists, otherwise use type's default order
-            custom_order=Coalesce(
-                Subquery(user_order_subquery, output_field=IntegerField()),
-                F('order'),
-                output_field=IntegerField()
+        queryset = (
+            PointType.objects.filter(Q(owner=user) | Q(owner__isnull=True), status="active")
+            .annotate(
+                # Get user's custom order if exists, otherwise use type's default order
+                custom_order=Coalesce(
+                    Subquery(user_order_subquery, output_field=IntegerField()),
+                    F("order"),
+                    output_field=IntegerField(),
+                )
             )
-        ).order_by('custom_order', 'created_at')
+            .order_by("custom_order", "created_at")
+        )
 
         return queryset
 
     def create(self, request):
         """Create new point type for the authenticated user."""
-        serializer = self.get_serializer(data=request.data, context={'request': request})
+        serializer = self.get_serializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         point_type = serializer.save()
 
         # Return full serialization
-        response_serializer = PointTypeSerializer(point_type, context={'request': request})
+        response_serializer = PointTypeSerializer(point_type, context={"request": request})
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
     def retrieve(self, request, pk=None):
         """Get point type detail."""
         try:
-            point_type = PointType.objects.get(pk=pk, status='active')
+            point_type = PointType.objects.get(pk=pk, status="active")
         except PointType.DoesNotExist:
-            raise NotFound('Point type not found')
+            raise NotFound("Point type not found") from None
 
         # Check permission: user must own the type or it's a base type
         if point_type.owner is not None and point_type.owner != request.user:
-            raise NotFound('Point type not found')
+            raise NotFound("Point type not found")
 
-        serializer = PointTypeSerializer(point_type, context={'request': request})
+        serializer = PointTypeSerializer(point_type, context={"request": request})
         return Response(serializer.data)
 
     def partial_update(self, request, pk=None):
         """Update point type (partial update only)."""
         try:
-            point_type = PointType.objects.get(pk=pk, status='active')
+            point_type = PointType.objects.get(pk=pk, status="active")
         except PointType.DoesNotExist:
-            raise NotFound('Point type not found')
+            raise NotFound("Point type not found") from None
 
         # Check permission: user must own the type
         if point_type.owner != request.user:
-            raise NotFound('Point type not found')
+            raise NotFound("Point type not found")
 
         serializer = PointTypeSerializer(
-            point_type,
-            data=request.data,
-            partial=True,
-            context={'request': request}
+            point_type, data=request.data, partial=True, context={"request": request}
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -518,48 +532,45 @@ class PointTypeViewSet(viewsets.ModelViewSet):
         Switches all associated points to the default 'Point' type.
         """
         try:
-            point_type = PointType.objects.get(pk=pk, status='active')
+            point_type = PointType.objects.get(pk=pk, status="active")
         except PointType.DoesNotExist:
-            raise NotFound('Point type not found')
+            raise NotFound("Point type not found") from None
 
         # Check permission: user must own the type
         if point_type.owner != request.user:
-            raise NotFound('Point type not found')
+            raise NotFound("Point type not found")
 
         # Get or create default type
         default_type, _ = PointType.objects.get_or_create(
-            names={'en': 'Point'},
+            names={"en": "Point"},
             owner=None,
-            type_choice='base',
-            defaults={'icon': '📍', 'order': 0, 'creation_language': 'en', 'visibility': 'public'}
+            type_choice="base",
+            defaults={"icon": "📍", "order": 0, "creation_language": "en", "visibility": "public"},
         )
 
         # Switch all points with this type to default
         GPSPoint.objects.filter(type=point_type).update(type=default_type)
 
         # Soft delete the type
-        point_type.status = 'deleted'
+        point_type.status = "deleted"
         point_type.save()
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @action(detail=False, methods=['post'])
+    @action(detail=False, methods=["post"])
     def reorder(self, request):
         """
         Reorder point types.
 
         Expects: {"order": [{"id": "uuid", "order": 1}, ...]}
         """
-        serializer = PointTypeReorderSerializer(
-            data=request.data,
-            context={'request': request}
-        )
+        serializer = PointTypeReorderSerializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         result = serializer.save()
 
         return Response(result, status=status.HTTP_200_OK)
 
-    @action(detail=False, methods=['post'], url_path='upload-icon')
+    @action(detail=False, methods=["post"], url_path="upload-icon")
     def upload_icon(self, request):
         """
         Upload an icon file or fetch from URL.
@@ -570,12 +581,12 @@ class PointTypeViewSet(viewsets.ModelViewSet):
 
         Returns: {"icon_url": "http://localhost:8000/media/point_type_icons/..."}
         """
-        allowed_extensions = ['.svg', '.png', '.jpg', '.jpeg']
+        allowed_extensions = [".svg", ".png", ".jpg", ".jpeg"]
         max_size = 1 * 1024 * 1024  # 1MB
 
         # Check if this is a URL download request
-        if 'url' in request.data and request.data['url']:
-            external_url = request.data['url']
+        if "url" in request.data and request.data["url"]:
+            external_url = request.data["url"]
 
             try:
                 # Download the file from the URL
@@ -583,24 +594,27 @@ class PointTypeViewSet(viewsets.ModelViewSet):
                 response.raise_for_status()
 
                 # Check content type
-                content_type = response.headers.get('content-type', '')
-                if not any(ct in content_type.lower() for ct in ['image/svg', 'image/png', 'image/jpeg', 'image/jpg']):
-                    raise ValidationError({
-                        'url': f'Invalid content type: {content_type}. Must be SVG, PNG, or JPEG.'
-                    })
+                content_type = response.headers.get("content-type", "")
+                if not any(
+                    ct in content_type.lower()
+                    for ct in ["image/svg", "image/png", "image/jpeg", "image/jpg"]
+                ):
+                    raise ValidationError(
+                        {"url": f"Invalid content type: {content_type}. Must be SVG, PNG, or JPEG."}
+                    )
 
                 # Get file extension from content-type or URL
-                if 'svg' in content_type:
-                    file_ext = '.svg'
-                elif 'png' in content_type:
-                    file_ext = '.png'
-                elif 'jpeg' in content_type or 'jpg' in content_type:
-                    file_ext = '.jpg'
+                if "svg" in content_type:
+                    file_ext = ".svg"
+                elif "png" in content_type:
+                    file_ext = ".png"
+                elif "jpeg" in content_type or "jpg" in content_type:
+                    file_ext = ".jpg"
                 else:
                     # Try to get from URL
                     file_ext = os.path.splitext(external_url)[1].lower()
                     if file_ext not in allowed_extensions:
-                        file_ext = '.svg'  # Default to SVG
+                        file_ext = ".svg"  # Default to SVG
 
                 # Read content
                 content = BytesIO()
@@ -608,58 +622,54 @@ class PointTypeViewSet(viewsets.ModelViewSet):
                 for chunk in response.iter_content(chunk_size=8192):
                     total_size += len(chunk)
                     if total_size > max_size:
-                        raise ValidationError({
-                            'url': f'File too large. Maximum size is {max_size / 1024 / 1024}MB'
-                        })
+                        raise ValidationError(
+                            {"url": f"File too large. Maximum size is {max_size / 1024 / 1024}MB"}
+                        )
                     content.write(chunk)
 
                 content.seek(0)
 
                 # Generate unique filename
                 unique_filename = f"{uuid_lib.uuid4()}{file_ext}"
-                file_path = os.path.join('point_type_icons', unique_filename)
+                file_path = os.path.join("point_type_icons", unique_filename)
 
                 # Save file
                 saved_path = default_storage.save(file_path, ContentFile(content.read()))
 
             except requests.RequestException as e:
-                raise ValidationError({
-                    'url': f'Failed to download icon: {str(e)}'
-                })
+                raise ValidationError({"url": f"Failed to download icon: {str(e)}"}) from None
 
         # Handle file upload
-        elif 'file' in request.FILES:
-            uploaded_file = request.FILES['file']
+        elif "file" in request.FILES:
+            uploaded_file = request.FILES["file"]
 
             # Validate file type (SVG, PNG, JPG)
             file_ext = os.path.splitext(uploaded_file.name)[1].lower()
 
             if file_ext not in allowed_extensions:
-                raise ValidationError({
-                    'file': f'Invalid file type. Allowed types: {", ".join(allowed_extensions)}'
-                })
+                raise ValidationError(
+                    {"file": f"Invalid file type. Allowed types: {', '.join(allowed_extensions)}"}
+                )
 
             # Validate file size (max 1MB)
             if uploaded_file.size > max_size:
-                raise ValidationError({
-                    'file': f'File too large. Maximum size is {max_size / 1024 / 1024}MB'
-                })
+                raise ValidationError(
+                    {"file": f"File too large. Maximum size is {max_size / 1024 / 1024}MB"}
+                )
 
             # Generate unique filename
             unique_filename = f"{uuid_lib.uuid4()}{file_ext}"
-            file_path = os.path.join('point_type_icons', unique_filename)
+            file_path = os.path.join("point_type_icons", unique_filename)
 
             # Save file
             saved_path = default_storage.save(file_path, uploaded_file)
 
         else:
-            raise ValidationError({'error': 'Either file or url must be provided'})
+            raise ValidationError({"error": "Either file or url must be provided"})
 
         # Build full URL with request host
-        request_host = request.build_absolute_uri('/').rstrip('/')
-        media_url = settings.MEDIA_URL.lstrip('/')
+        request_host = request.build_absolute_uri("/").rstrip("/")
+        media_url = settings.MEDIA_URL.lstrip("/")
         icon_url = f"{request_host}/{media_url}{saved_path}"
 
-        return Response({
-            'icon_url': icon_url
-        }, status=status.HTTP_201_CREATED)
+        return Response({"icon_url": icon_url}, status=status.HTTP_201_CREATED)

@@ -9,7 +9,7 @@ export interface Tag {
 
 export interface PointType {
   id: string;
-  type: 'base' | 'custom';
+  type: "base" | "custom";
   names: Record<string, string>; // Map of language_code to name
   creation_language: string;
   icon: string;
@@ -18,8 +18,8 @@ export interface PointType {
     id: string;
     email: string;
   } | null;
-  visibility: 'public' | 'private';
-  status: 'active' | 'deleted';
+  visibility: "public" | "private";
+  status: "active" | "deleted";
   created_at: string;
   updated_at: string;
 }
@@ -72,14 +72,14 @@ export interface CreatePointTypeData {
   creation_language?: string;
   icon?: string;
   order?: number;
-  visibility?: 'public' | 'private';
+  visibility?: "public" | "private";
 }
 
 export interface UpdatePointTypeData {
   names?: Record<string, string>;
   icon?: string;
   order?: number;
-  visibility?: 'public' | 'private';
+  visibility?: "public" | "private";
 }
 
 export interface ReorderTypeData {

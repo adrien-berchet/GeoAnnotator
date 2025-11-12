@@ -33,8 +33,8 @@
  * ```
  */
 
-import { visit } from 'unist-util-visit';
-import type { Element, Root } from 'hast';
+import { visit } from "unist-util-visit";
+import type { Element, Root } from "hast";
 
 /**
  * Rehype plugin that adds security attributes to all anchor elements.
@@ -68,15 +68,15 @@ import type { Element, Root } from 'hast';
  */
 export function rehypeExternalLinks() {
   return (tree: Root) => {
-    visit(tree, 'element', (node: Element) => {
-      if (node.tagName === 'a' && node.properties) {
+    visit(tree, "element", (node: Element) => {
+      if (node.tagName === "a" && node.properties) {
         // Add target="_blank" to open in new tab
-        node.properties.target = '_blank';
+        node.properties.target = "_blank";
 
         // Add security attributes to prevent tabnapping
         // - noopener: Prevents access to window.opener
         // - noreferrer: Prevents sending HTTP Referer header
-        node.properties.rel = 'noopener noreferrer';
+        node.properties.rel = "noopener noreferrer";
       }
     });
   };

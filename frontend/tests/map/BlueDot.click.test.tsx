@@ -5,13 +5,13 @@
  * and passes the onClick callback to the Marker component.
  */
 
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { BlueDot } from '../../src/components/map/BlueDot';
+import { describe, it, expect, vi } from "vitest";
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { BlueDot } from "../../src/components/map/BlueDot";
 
 // Mock react-leaflet components
-vi.mock('react-leaflet', () => ({
+vi.mock("react-leaflet", () => ({
   Marker: ({ children, eventHandlers }: any) => (
     <div data-testid="marker" onClick={eventHandlers?.click}>
       {children}
@@ -26,8 +26,8 @@ vi.mock('react-leaflet', () => ({
   }),
 }));
 
-describe('BlueDot Click Functionality', () => {
-  it('should call onClick handler when blue dot is clicked', async () => {
+describe("BlueDot Click Functionality", () => {
+  it("should call onClick handler when blue dot is clicked", async () => {
     const user = userEvent.setup();
     const mockOnClick = vi.fn();
     const mockPosition = {
@@ -40,13 +40,13 @@ describe('BlueDot Click Functionality', () => {
 
     render(<BlueDot position={mockPosition} onClick={mockOnClick} />);
 
-    const marker = screen.getByTestId('marker');
+    const marker = screen.getByTestId("marker");
     await user.click(marker);
 
     expect(mockOnClick).toHaveBeenCalledTimes(1);
   });
 
-  it('should pass correct position data to marker', () => {
+  it("should pass correct position data to marker", () => {
     const mockOnClick = vi.fn();
     const mockPosition = {
       latitude: 48.8566,
@@ -59,11 +59,11 @@ describe('BlueDot Click Functionality', () => {
     render(<BlueDot position={mockPosition} onClick={mockOnClick} />);
 
     // Verify marker is rendered (which means position was valid)
-    expect(screen.getByTestId('marker')).toBeDefined();
-    expect(screen.getByTestId('circle')).toBeDefined();
+    expect(screen.getByTestId("marker")).toBeDefined();
+    expect(screen.getByTestId("circle")).toBeDefined();
   });
 
-  it('should render accuracy circle', () => {
+  it("should render accuracy circle", () => {
     const mockOnClick = vi.fn();
     const mockPosition = {
       latitude: 48.8566,
@@ -76,6 +76,6 @@ describe('BlueDot Click Functionality', () => {
     render(<BlueDot position={mockPosition} onClick={mockOnClick} />);
 
     // Accuracy circle should be rendered
-    expect(screen.getByTestId('circle')).toBeDefined();
+    expect(screen.getByTestId("circle")).toBeDefined();
   });
 });

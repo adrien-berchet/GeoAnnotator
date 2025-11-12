@@ -33,17 +33,21 @@
  * ```
  */
 
-import { useState, useEffect } from 'react';
-import MDEditor from '@uiw/react-md-editor';
-import rehypeSanitize from 'rehype-sanitize';
-import { getAnnotations, downloadAnnotation, deleteAnnotation } from '../../api/annotations';
-import { getErrorMessage } from '../../api/client';
-import { LoadingSpinner } from '../common/LoadingSpinner';
-import { TrashedAnnotationBanner } from './TrashedAnnotationBanner';
-import { useColorMode } from '../../hooks/useColorMode';
-import { rehypeExternalLinks } from '../../utils/rehypeExternalLinks';
-import type { Annotation } from '../../types/annotation';
-import './AnnotationListTrashed.css';
+import { useState, useEffect } from "react";
+import MDEditor from "@uiw/react-md-editor";
+import rehypeSanitize from "rehype-sanitize";
+import {
+  getAnnotations,
+  downloadAnnotation,
+  deleteAnnotation,
+} from "../../api/annotations";
+import { getErrorMessage } from "../../api/client";
+import { LoadingSpinner } from "../common/LoadingSpinner";
+import { TrashedAnnotationBanner } from "./TrashedAnnotationBanner";
+import { useColorMode } from "../../hooks/useColorMode";
+import { rehypeExternalLinks } from "../../utils/rehypeExternalLinks";
+import type { Annotation } from "../../types/annotation";
+import "./AnnotationListTrashed.css";
 
 /**
  * Props for the AnnotationList component.
@@ -80,12 +84,15 @@ interface AnnotationListProps {
  * @param {AnnotationListProps} props - Component props
  * @returns {JSX.Element} The rendered annotation list
  */
-export function AnnotationList({ pointId, onAnnotationDeleted }: AnnotationListProps) {
-  console.log('🚀 AnnotationList component loaded for point:', pointId);
+export function AnnotationList({
+  pointId,
+  onAnnotationDeleted,
+}: AnnotationListProps) {
+  console.log("🚀 AnnotationList component loaded for point:", pointId);
 
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const colorMode = useColorMode();
 
@@ -94,12 +101,15 @@ export function AnnotationList({ pointId, onAnnotationDeleted }: AnnotationListP
    */
   const loadAnnotations = async () => {
     setIsLoading(true);
-    setError('');
+    setError("");
 
     try {
       const data = await getAnnotations(pointId);
-      console.log('📥 Loaded annotations:', data);
-      console.log('📊 Trashed annotations:', data.filter(a => a.is_trashed));
+      console.log("📥 Loaded annotations:", data);
+      console.log(
+        "📊 Trashed annotations:",
+        data.filter((a) => a.is_trashed),
+      );
       setAnnotations(data);
     } catch (err) {
       setError(getErrorMessage(err));
@@ -123,30 +133,35 @@ export function AnnotationList({ pointId, onAnnotationDeleted }: AnnotationListP
    * Handle annotation deletion.
    */
   const handleDelete = async (annotationId: string) => {
-    if (!confirm('Are you sure you want to delete this annotation?')) {
+    if (!confirm("Are you sure you want to delete this annotation?")) {
       return;
     }
 
-    console.log('🗑️ Deleting annotation:', annotationId);
+    console.log("🗑️ Deleting annotation:", annotationId);
     setDeletingId(annotationId);
 
     try {
       await deleteAnnotation(pointId, annotationId);
-      console.log('✅ Annotation deleted, reloading...');
+      console.log("✅ Annotation deleted, reloading...");
 
       // Reload annotations to show the deleted one as trashed
       await loadAnnotations();
-      console.log('✅ Annotations reloaded');
+      console.log("✅ Annotations reloaded");
 
       if (onAnnotationDeleted) {
         onAnnotationDeleted();
       }
     } catch (err) {
       const errorMsg = getErrorMessage(err);
-      console.error('❌ Delete error:', errorMsg);
+      console.error("❌ Delete error:", errorMsg);
       // Check if already in trash
-      if (errorMsg.includes('ALREADY_IN_TRASH') || errorMsg.includes('already in trash')) {
-        alert('This annotation is already in the trash. Please use the restore button to recover it.');
+      if (
+        errorMsg.includes("ALREADY_IN_TRASH") ||
+        errorMsg.includes("already in trash")
+      ) {
+        alert(
+          "This annotation is already in the trash. Please use the restore button to recover it.",
+        );
       } else {
         alert(`Delete error: ${errorMsg}`);
       }
@@ -159,9 +174,9 @@ export function AnnotationList({ pointId, onAnnotationDeleted }: AnnotationListP
    * Format file size.
    */
   const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return '0 B';
+    if (bytes === 0) return "0 B";
     const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const sizes = ["B", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
   };
@@ -170,12 +185,12 @@ export function AnnotationList({ pointId, onAnnotationDeleted }: AnnotationListP
    * Format date.
    */
   const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -183,21 +198,24 @@ export function AnnotationList({ pointId, onAnnotationDeleted }: AnnotationListP
    * Get annotation icon based on type.
    */
   const getAnnotationIcon = (annotation: Annotation): string => {
-    if (annotation.type === 'text') {
-      return '📝';
+    if (annotation.type === "text") {
+      return "📝";
     }
-    if (annotation.type === 'image') {
-      return '🖼️';
+    if (annotation.type === "image") {
+      return "🖼️";
     }
-    if (annotation.type === 'document') {
-      return '📄';
+    if (annotation.type === "document") {
+      return "📄";
     }
-    return '📎';
+    return "📎";
   };
 
   // Load annotations on mount
   useEffect(() => {
-    console.log('⚡ useEffect triggered - Loading annotations for point:', pointId);
+    console.log(
+      "⚡ useEffect triggered - Loading annotations for point:",
+      pointId,
+    );
     loadAnnotations();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pointId]);
@@ -233,76 +251,84 @@ export function AnnotationList({ pointId, onAnnotationDeleted }: AnnotationListP
       <h3>Annotations ({annotations.length})</h3>
 
       <div className="annotations-grid">
-        {annotations.map(annotation => {
+        {annotations.map((annotation) => {
           console.log(`🔍 Rendering annotation ${annotation.id.slice(0, 8)}:`, {
             is_trashed: annotation.is_trashed,
             trash_days_remaining: annotation.trash_days_remaining,
           });
 
           return (
-          <div key={annotation.id} className={`annotation-card ${annotation.is_trashed ? 'trashed' : ''}`}>
-            {annotation.is_trashed && (
-              <TrashedAnnotationBanner
-                annotation={annotation}
-                onRestore={loadAnnotations}
-              />
-            )}
-
-            <div className="annotation-header">
-              <span className="annotation-icon">
-                {getAnnotationIcon(annotation)}
-              </span>
-              <div className="annotation-info">
-                <h4>
-                  {annotation.type === 'text' ? 'Text Note' : annotation.file?.file_name || 'Untitled'}
-                </h4>
-                <span className="annotation-type">
-                  {annotation.type}
-                  {annotation.is_trashed && ' (Dans la corbeille)'}
-                </span>
-              </div>
-            </div>
-
-            {annotation.type === 'text' && annotation.text_content && (
-              <div className="annotation-description" data-color-mode={colorMode}>
-                <MDEditor.Markdown
-                  source={annotation.text_content}
-                  rehypePlugins={[rehypeSanitize, rehypeExternalLinks]}
+            <div
+              key={annotation.id}
+              className={`annotation-card ${annotation.is_trashed ? "trashed" : ""}`}
+            >
+              {annotation.is_trashed && (
+                <TrashedAnnotationBanner
+                  annotation={annotation}
+                  onRestore={loadAnnotations}
                 />
-              </div>
-            )}
+              )}
 
-            <div className="annotation-meta">
-              <span className="annotation-date">
-                {formatDate(annotation.created_at)}
-              </span>
-              {annotation.file?.file_size && (
-                <span className="annotation-size">
-                  {formatFileSize(annotation.file.file_size)}
+              <div className="annotation-header">
+                <span className="annotation-icon">
+                  {getAnnotationIcon(annotation)}
                 </span>
+                <div className="annotation-info">
+                  <h4>
+                    {annotation.type === "text"
+                      ? "Text Note"
+                      : annotation.file?.file_name || "Untitled"}
+                  </h4>
+                  <span className="annotation-type">
+                    {annotation.type}
+                    {annotation.is_trashed && " (Dans la corbeille)"}
+                  </span>
+                </div>
+              </div>
+
+              {annotation.type === "text" && annotation.text_content && (
+                <div
+                  className="annotation-description"
+                  data-color-mode={colorMode}
+                >
+                  <MDEditor.Markdown
+                    source={annotation.text_content}
+                    rehypePlugins={[rehypeSanitize, rehypeExternalLinks]}
+                  />
+                </div>
+              )}
+
+              <div className="annotation-meta">
+                <span className="annotation-date">
+                  {formatDate(annotation.created_at)}
+                </span>
+                {annotation.file?.file_size && (
+                  <span className="annotation-size">
+                    {formatFileSize(annotation.file.file_size)}
+                  </span>
+                )}
+              </div>
+
+              {!annotation.is_trashed && (
+                <div className="annotation-actions">
+                  {annotation.file && (
+                    <button
+                      onClick={() => handleDownload(annotation)}
+                      className="btn btn-secondary btn-sm"
+                    >
+                      Download
+                    </button>
+                  )}
+                  <button
+                    onClick={() => handleDelete(annotation.id)}
+                    disabled={deletingId === annotation.id}
+                    className="btn btn-danger btn-sm"
+                  >
+                    {deletingId === annotation.id ? "Deleting..." : "Delete"}
+                  </button>
+                </div>
               )}
             </div>
-
-            {!annotation.is_trashed && (
-              <div className="annotation-actions">
-                {annotation.file && (
-                  <button
-                    onClick={() => handleDownload(annotation)}
-                    className="btn btn-secondary btn-sm"
-                  >
-                    Download
-                  </button>
-                )}
-                <button
-                  onClick={() => handleDelete(annotation.id)}
-                  disabled={deletingId === annotation.id}
-                  className="btn btn-danger btn-sm"
-                >
-                  {deletingId === annotation.id ? 'Deleting...' : 'Delete'}
-                </button>
-              </div>
-            )}
-          </div>
           );
         })}
       </div>

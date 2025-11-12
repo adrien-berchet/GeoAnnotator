@@ -20,26 +20,27 @@ class UserSerializer(serializers.ModelSerializer):
     Includes storage quota information (read-only).
     Matches OpenAPI schema: User
     """
+
     email = serializers.EmailField(read_only=True)
     storage_percentage = serializers.FloatField(read_only=True)
 
     class Meta:
         model = User
         fields = [
-            'id',
-            'email',
-            'date_joined',
-            'storage_used',
-            'storage_limit',
-            'storage_percentage',
+            "id",
+            "email",
+            "date_joined",
+            "storage_used",
+            "storage_limit",
+            "storage_percentage",
         ]
         read_only_fields = [
-            'id',
-            'email',
-            'date_joined',
-            'storage_used',
-            'storage_limit',
-            'storage_percentage',
+            "id",
+            "email",
+            "date_joined",
+            "storage_used",
+            "storage_limit",
+            "storage_percentage",
         ]
 
 
@@ -50,17 +51,18 @@ class RegisterSerializer(serializers.ModelSerializer):
     Validates password strength (min 8 chars, uppercase, lowercase, numbers).
     Matches OpenAPI schema: RegisterRequest
     """
+
     password = serializers.CharField(
         write_only=True,
         required=True,
         validators=[validate_password],
-        style={'input_type': 'password'},
+        style={"input_type": "password"},
         min_length=8,
     )
 
     class Meta:
         model = User
-        fields = ['email', 'password']
+        fields = ["email", "password"]
 
     def validate_password(self, value):
         """
@@ -75,9 +77,7 @@ class RegisterSerializer(serializers.ModelSerializer):
                 "Password must contain at least one lowercase letter."
             )
         if not any(char.isdigit() for char in value):
-            raise serializers.ValidationError(
-                "Password must contain at least one number."
-            )
+            raise serializers.ValidationError("Password must contain at least one number.")
         return value
 
     def create(self, validated_data):
@@ -85,8 +85,8 @@ class RegisterSerializer(serializers.ModelSerializer):
         Create user with hashed password and default storage quota (2GB).
         """
         user = User.objects.create_user(
-            email=validated_data['email'],
-            password=validated_data['password'],
+            email=validated_data["email"],
+            password=validated_data["password"],
         )
         return user
 
@@ -98,22 +98,23 @@ class LoginSerializer(serializers.Serializer):
     Validates credentials and returns JWT tokens.
     Matches OpenAPI schema: LoginRequest
     """
+
     email = serializers.EmailField(required=True)
     password = serializers.CharField(
         write_only=True,
         required=True,
-        style={'input_type': 'password'},
+        style={"input_type": "password"},
     )
 
     def validate(self, attrs):
         """
         Validate email and password, authenticate user.
         """
-        email = attrs.get('email')
-        password = attrs.get('password')
+        email = attrs.get("email")
+        password = attrs.get("password")
 
         user = authenticate(
-            request=self.context.get('request'),
+            request=self.context.get("request"),
             username=email,  # Our User model uses email as USERNAME_FIELD
             password=password,
         )
@@ -121,22 +122,22 @@ class LoginSerializer(serializers.Serializer):
         if user is None:
             raise AuthenticationFailed(
                 detail={
-                    'error': 'INVALID_CREDENTIALS',
-                    'message': 'Invalid email or password.',
+                    "error": "INVALID_CREDENTIALS",
+                    "message": "Invalid email or password.",
                 },
-                code='authentication_failed',
+                code="authentication_failed",
             )
 
         if not user.is_active:
             raise AuthenticationFailed(
                 detail={
-                    'error': 'ACCOUNT_DISABLED',
-                    'message': 'User account is disabled.',
+                    "error": "ACCOUNT_DISABLED",
+                    "message": "User account is disabled.",
                 },
-                code='authentication_failed',
+                code="authentication_failed",
             )
 
-        attrs['user'] = user
+        attrs["user"] = user
         return attrs
 
 
@@ -147,6 +148,7 @@ class TokenSerializer(serializers.Serializer):
     Returns access token, refresh token, and user profile.
     Matches OpenAPI schema: TokenResponse
     """
+
     access = serializers.CharField(read_only=True)
     refresh = serializers.CharField(read_only=True)
     user = UserSerializer(read_only=True)
@@ -162,9 +164,9 @@ class TokenSerializer(serializers.Serializer):
         refresh = RefreshToken.for_user(user)
 
         return {
-            'access': str(refresh.access_token),
-            'refresh': str(refresh),
-            'user': user,
+            "access": str(refresh.access_token),
+            "refresh": str(refresh),
+            "user": user,
         }
 
 
@@ -175,6 +177,7 @@ class RefreshTokenSerializer(serializers.Serializer):
     Accepts refresh token and returns new access token.
     Matches OpenAPI schema: RefreshRequest
     """
+
     refresh = serializers.CharField(required=True)
 
     def validate_refresh(self, value):
@@ -183,12 +186,12 @@ class RefreshTokenSerializer(serializers.Serializer):
         """
         try:
             RefreshToken(value)
-        except Exception as e:
+        except Exception:
             raise AuthenticationFailed(
                 detail={
-                    'error': 'INVALID_TOKEN',
-                    'message': 'Refresh token is invalid or expired.',
+                    "error": "INVALID_TOKEN",
+                    "message": "Refresh token is invalid or expired.",
                 },
-                code='token_not_valid',
-            )
+                code="token_not_valid",
+            ) from None
         return value

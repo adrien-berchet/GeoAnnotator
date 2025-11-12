@@ -4,7 +4,7 @@
  * Displays text annotations with basic formatting.
  */
 
-import type { Annotation } from '../../types/annotation';
+import type { Annotation } from "../../types/annotation";
 
 interface TextAnnotationPreviewProps {
   annotation: Annotation;
@@ -13,8 +13,10 @@ interface TextAnnotationPreviewProps {
 /**
  * Text annotation preview component.
  */
-export function TextAnnotationPreview({ annotation }: TextAnnotationPreviewProps) {
-  if (annotation.type !== 'text' || !annotation.text_content) {
+export function TextAnnotationPreview({
+  annotation,
+}: TextAnnotationPreviewProps) {
+  if (annotation.type !== "text" || !annotation.text_content) {
     return null;
   }
 
@@ -24,12 +26,12 @@ export function TextAnnotationPreview({ annotation }: TextAnnotationPreviewProps
   const formatText = (text: string): { __html: string } => {
     // Escape HTML tags for safety, then apply basic formatting
     const escaped = text
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
 
     // Convert newlines to <br>
-    const formatted = escaped.replace(/\n/g, '<br>');
+    const formatted = escaped.replace(/\n/g, "<br>");
 
     return { __html: formatted };
   };
@@ -38,12 +40,12 @@ export function TextAnnotationPreview({ annotation }: TextAnnotationPreviewProps
    * Format date.
    */
   const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 

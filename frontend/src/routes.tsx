@@ -4,20 +4,20 @@
  * Defines all routes with authentication protection.
  */
 
-import { createBrowserRouter, Navigate } from 'react-router-dom';
-import { useAuth } from './hooks/useAuth';
-import App from './App';
-import { LoginPage } from './pages/LoginPage';
-import { RegisterPage } from './pages/RegisterPage';
-import { MapPage } from './pages/MapPage';
-import { PointsListPage } from './pages/PointsListPage';
-import { PointDetailPage } from './pages/PointDetailPage';
-import { EditPointPage } from './pages/EditPointPage';
-import TagManagementPage from './pages/TagManagementPage';
-import PointTypeManagementPage from './pages/PointTypeManagementPage';
-import { TrashPage } from './pages/TrashPage';
-import { SettingsPage } from './pages/SettingsPage';
-import { ImportExportPage } from './pages/ImportExportPage';
+import { createBrowserRouter, Navigate } from "react-router-dom";
+import { useAuth } from "./hooks/useAuth";
+import App from "./App";
+import { LoginPage } from "./pages/LoginPage";
+import { RegisterPage } from "./pages/RegisterPage";
+import { MapPage } from "./pages/MapPage";
+import { PointsListPage } from "./pages/PointsListPage";
+import { PointDetailPage } from "./pages/PointDetailPage";
+import { EditPointPage } from "./pages/EditPointPage";
+import TagManagementPage from "./pages/TagManagementPage";
+import PointTypeManagementPage from "./pages/PointTypeManagementPage";
+import { TrashPage } from "./pages/TrashPage";
+import { SettingsPage } from "./pages/SettingsPage";
+import { ImportExportPage } from "./pages/ImportExportPage";
 
 // Placeholder components - to be implemented
 const ProfilePage = () => <div>Profile Page</div>;
@@ -64,7 +64,7 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
  */
 export const router = createBrowserRouter([
   {
-    path: '/',
+    path: "/",
     element: <App />,
     children: [
       // Redirect root to map or login
@@ -75,7 +75,7 @@ export const router = createBrowserRouter([
 
       // Public routes
       {
-        path: 'login',
+        path: "login",
         element: (
           <PublicRoute>
             <LoginPage />
@@ -83,7 +83,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'register',
+        path: "register",
         element: (
           <PublicRoute>
             <RegisterPage />
@@ -93,7 +93,7 @@ export const router = createBrowserRouter([
 
       // Protected routes
       {
-        path: 'map',
+        path: "map",
         element: (
           <ProtectedRoute>
             <MapPage />
@@ -101,7 +101,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'points',
+        path: "points",
         element: (
           <ProtectedRoute>
             <PointsListPage />
@@ -109,7 +109,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'points/:id',
+        path: "points/:id",
         element: (
           <ProtectedRoute>
             <PointDetailPage />
@@ -117,7 +117,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'points/:id/edit',
+        path: "points/:id/edit",
         element: (
           <ProtectedRoute>
             <EditPointPage />
@@ -125,7 +125,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'tags',
+        path: "tags",
         element: (
           <ProtectedRoute>
             <TagManagementPage />
@@ -133,7 +133,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'types',
+        path: "types",
         element: (
           <ProtectedRoute>
             <PointTypeManagementPage />
@@ -141,7 +141,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'profile',
+        path: "profile",
         element: (
           <ProtectedRoute>
             <ProfilePage />
@@ -149,7 +149,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'settings',
+        path: "settings",
         element: (
           <ProtectedRoute>
             <SettingsPage />
@@ -157,7 +157,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'shared',
+        path: "shared",
         element: (
           <ProtectedRoute>
             <SharedPointsPage />
@@ -165,7 +165,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'import-export',
+        path: "import-export",
         element: (
           <ProtectedRoute>
             <ImportExportPage />
@@ -173,7 +173,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'trash',
+        path: "trash",
         element: (
           <ProtectedRoute>
             <TrashPage />
@@ -183,13 +183,13 @@ export const router = createBrowserRouter([
 
       // Share acceptance route (public)
       {
-        path: 'shares/accept/:token',
+        path: "shares/accept/:token",
         element: <div>Accept Share Page</div>,
       },
 
       // 404 page
       {
-        path: '*',
+        path: "*",
         element: <div>404 - Page Not Found</div>,
       },
     ],

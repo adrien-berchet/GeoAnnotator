@@ -5,12 +5,13 @@ Handles point sharing, permissions, and email invitations.
 """
 
 from datetime import timedelta
+
 from django.utils import timezone
 from rest_framework import serializers
 
-from apps.points.serializers import GPSPointSerializer
 from apps.authentication.serializers import UserSerializer
 from apps.points.serializers import GPSPointListSerializer
+from apps.points.serializers import GPSPointSerializer
 from apps.sharing.models import Share
 
 
@@ -21,6 +22,7 @@ class ShareSerializer(serializers.ModelSerializer):
     Includes nested owner, recipient, point, and invitation status.
     Matches OpenAPI schema: Share
     """
+
     owner = UserSerializer(read_only=True)
     recipient_user = UserSerializer(read_only=True)
     gps_point = GPSPointListSerializer(read_only=True)
@@ -29,29 +31,29 @@ class ShareSerializer(serializers.ModelSerializer):
     class Meta:
         model = Share
         fields = [
-            'id',
-            'gps_point',
-            'owner',
-            'recipient_email',
-            'recipient_user',
-            'permission_level',
-            'invitation_token',
-            'invitation_sent_at',
-            'accepted_at',
-            'invitation_status',
-            'is_active',
-            'created_at',
+            "id",
+            "gps_point",
+            "owner",
+            "recipient_email",
+            "recipient_user",
+            "permission_level",
+            "invitation_token",
+            "invitation_sent_at",
+            "accepted_at",
+            "invitation_status",
+            "is_active",
+            "created_at",
         ]
         read_only_fields = [
-            'id',
-            'owner',
-            'recipient_user',
-            'invitation_token',
-            'invitation_sent_at',
-            'accepted_at',
-            'invitation_status',
-            'is_active',
-            'created_at',
+            "id",
+            "owner",
+            "recipient_user",
+            "invitation_token",
+            "invitation_sent_at",
+            "accepted_at",
+            "invitation_status",
+            "is_active",
+            "created_at",
         ]
 
     def get_invitation_status(self, obj):
@@ -59,15 +61,15 @@ class ShareSerializer(serializers.ModelSerializer):
         Get invitation status: pending, accepted, or expired.
         """
         if obj.accepted_at:
-            return 'accepted'
+            return "accepted"
 
         # Check if invitation expired (7 days)
         if obj.invitation_sent_at:
             expiry = obj.invitation_sent_at + timedelta(days=7)
             if timezone.now() > expiry:
-                return 'expired'
+                return "expired"
 
-        return 'pending'
+        return "pending"
 
 
 class CreateShareSerializer(serializers.ModelSerializer):
@@ -77,16 +79,16 @@ class CreateShareSerializer(serializers.ModelSerializer):
     Accepts recipient email and permission level, sends invitation.
     Matches OpenAPI schema: CreateShareRequest
     """
+
     class Meta:
         model = Share
-        fields = ['recipient_email', 'permission_level']
+        fields = ["recipient_email", "permission_level"]
 
     def validate_permission_level(self, value):
         """Validate permission level is valid."""
-        if value not in ['view', 'edit', 'transfer']:
+        if value not in ["view", "edit", "transfer"]:
             raise serializers.ValidationError(
-                f'Invalid permission level: {value}. '
-                'Must be one of: view, edit, transfer'
+                f"Invalid permission level: {value}. Must be one of: view, edit, transfer"
             )
         return value
 
@@ -99,32 +101,38 @@ class CreateShareSerializer(serializers.ModelSerializer):
 
         Note: gps_point comes from view context, not from request data
         """
-        user = self.context['request'].user
-        gps_point = self.context.get('gps_point')
+        user = self.context["request"].user
+        gps_point = self.context.get("gps_point")
         if not gps_point:
-            raise serializers.ValidationError({
-                'error': 'MISSING_POINT',
-                'gps_point': 'GPS point is required.',
-            })
+            raise serializers.ValidationError(
+                {
+                    "error": "MISSING_POINT",
+                    "gps_point": "GPS point is required.",
+                }
+            )
 
-        recipient_email = attrs['recipient_email']
+        recipient_email = attrs["recipient_email"]
 
         # Check if user has transfer permission
         point_serializer = GPSPointSerializer(gps_point, context=self.context)
         permission = point_serializer.get_permission(gps_point)
 
-        if permission not in ['transfer', 'owner']:
-            raise serializers.ValidationError({
-                'error': 'ACCESS_DENIED',
-                'owner': 'You do not have permission to share this point.',
-            })
+        if permission not in ["transfer", "owner"]:
+            raise serializers.ValidationError(
+                {
+                    "error": "ACCESS_DENIED",
+                    "owner": "You do not have permission to share this point.",
+                }
+            )
 
         # Cannot share with self
         if recipient_email == user.email:
-            raise serializers.ValidationError({
-                'error': 'SELF_SHARE',
-                'recipient_email': 'Cannot share point with yourself.',
-            })
+            raise serializers.ValidationError(
+                {
+                    "error": "SELF_SHARE",
+                    "recipient_email": "Cannot share point with yourself.",
+                }
+            )
 
         # Check for existing share
         existing_share = Share.objects.filter(
@@ -133,10 +141,12 @@ class CreateShareSerializer(serializers.ModelSerializer):
         ).first()
 
         if existing_share:
-            raise serializers.ValidationError({
-                'error': 'DUPLICATE_SHARE',
-                'recipient_email': f'Point already shared with {recipient_email}.',
-            })
+            raise serializers.ValidationError(
+                {
+                    "error": "DUPLICATE_SHARE",
+                    "recipient_email": f"Point already shared with {recipient_email}.",
+                }
+            )
 
         return attrs
 
@@ -145,9 +155,9 @@ class CreateShareSerializer(serializers.ModelSerializer):
         Create share and send invitation email.
         """
         # Set owner from request user (original owner, not sharer) and gps_point from context
-        gps_point = self.context['gps_point']
-        validated_data['gps_point'] = gps_point
-        validated_data['owner'] = gps_point.owner
+        gps_point = self.context["gps_point"]
+        validated_data["gps_point"] = gps_point
+        validated_data["owner"] = gps_point.owner
 
         # Generate invitation token (UUID auto-generated by model)
         share = super().create(validated_data)
@@ -167,33 +177,34 @@ class UpdateShareSerializer(serializers.ModelSerializer):
     Allows permission level changes only.
     Matches OpenAPI schema: UpdateShareRequest
     """
+
     class Meta:
         model = Share
-        fields = ['permission_level']
+        fields = ["permission_level"]
 
     def validate_permission_level(self, value):
         """Validate permission level is valid."""
-        if value not in ['view', 'edit', 'transfer']:
+        if value not in ["view", "edit", "transfer"]:
             raise serializers.ValidationError(
-                f'Invalid permission level: {value}. '
-                'Must be one of: view, edit, transfer'
+                f"Invalid permission level: {value}. Must be one of: view, edit, transfer"
             )
         return value
 
     def validate(self, attrs):
         """Validate user has permission to update share."""
-        user = self.context['request'].user
         share = self.instance
 
         # Only owner or users with transfer permission can update
         point_serializer = GPSPointSerializer(share.gps_point, context=self.context)
         permission = point_serializer.get_permission(share.gps_point)
 
-        if permission not in ['transfer', 'owner']:
-            raise serializers.ValidationError({
-                'error': 'ACCESS_DENIED',
-                'message': 'You do not have permission to update this share.',
-            })
+        if permission not in ["transfer", "owner"]:
+            raise serializers.ValidationError(
+                {
+                    "error": "ACCESS_DENIED",
+                    "message": "You do not have permission to update this share.",
+                }
+            )
 
         return attrs
 
@@ -205,6 +216,7 @@ class AcceptShareSerializer(serializers.Serializer):
     Validates invitation token and links share to user.
     Matches OpenAPI schema: AcceptShareRequest
     """
+
     invitation_token = serializers.UUIDField()
 
     def validate_invitation_token(self, value):
@@ -214,36 +226,42 @@ class AcceptShareSerializer(serializers.Serializer):
         try:
             share = Share.objects.get(invitation_token=value)
         except Share.DoesNotExist:
-            raise serializers.ValidationError({
-                'error': 'INVALID_TOKEN',
-                'message': 'Invalid invitation token.',
-            })
+            raise serializers.ValidationError(
+                {
+                    "error": "INVALID_TOKEN",
+                    "message": "Invalid invitation token.",
+                }
+            ) from None
 
         # Check if already accepted
         if share.accepted_at:
-            raise serializers.ValidationError({
-                'error': 'ALREADY_ACCEPTED',
-                'message': 'Invitation already accepted.',
-            })
+            raise serializers.ValidationError(
+                {
+                    "error": "ALREADY_ACCEPTED",
+                    "message": "Invitation already accepted.",
+                }
+            )
 
         # Check if expired (7 days)
         if share.invitation_sent_at:
             expiry = share.invitation_sent_at + timedelta(days=7)
             if timezone.now() > expiry:
-                raise serializers.ValidationError({
-                    'error': 'INVITATION_EXPIRED',
-                    'message': 'Invitation has expired (7 days).',
-                })
+                raise serializers.ValidationError(
+                    {
+                        "error": "INVITATION_EXPIRED",
+                        "message": "Invitation has expired (7 days).",
+                    }
+                )
 
-        self.context['share'] = share
+        self.context["share"] = share
         return value
 
     def save(self):
         """
         Accept invitation: link share to user and mark accepted.
         """
-        share = self.context['share']
-        user = self.context['request'].user
+        share = self.context["share"]
+        user = self.context["request"].user
 
         share.accept(user)
         return share

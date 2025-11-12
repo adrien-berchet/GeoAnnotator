@@ -20,7 +20,9 @@ from django.contrib.gis.geos import Point
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
-from apps.points.models import PointType, GPSPoint
+
+from apps.points.models import GPSPoint
+from apps.points.models import PointType
 
 
 @pytest.mark.django_db
@@ -42,29 +44,26 @@ class TestPointsContract:
     def authenticated_user(self, api_client):
         """Create and authenticate a user, return (client, user_data)."""
         # Register user
-        register_url = reverse('authentication:register')
-        register_data = {
-            'email': 'test@example.com',
-            'password': 'SecurePass123'
-        }
-        response = api_client.post(register_url, register_data, format='json')
-        access_token = response.data['access']
+        register_url = reverse("authentication:register")
+        register_data = {"email": "test@example.com", "password": "SecurePass123"}
+        response = api_client.post(register_url, register_data, format="json")
+        access_token = response.data["access"]
 
         # Set authentication
-        api_client.credentials(HTTP_AUTHORIZATION=f'Bearer {access_token}')
+        api_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access_token}")
 
-        return api_client, response.data['user']
+        return api_client, response.data["user"]
 
     @pytest.fixture
     def valid_point_data(self):
         """Valid GPS point creation payload."""
         return {
-            'title': 'Test Point',
-            'description': 'A test GPS point with <strong>HTML</strong> 🌲',
-            'latitude': 37.7749,
-            'longitude': -122.4194,
-            'tags': ['hiking', 'forest'],
-            'is_public': False
+            "title": "Test Point",
+            "description": "A test GPS point with <strong>HTML</strong> 🌲",
+            "latitude": 37.7749,
+            "longitude": -122.4194,
+            "tags": ["hiking", "forest"],
+            "is_public": False,
         }
 
     # T016: POST /points - Create GPS point
@@ -81,46 +80,46 @@ class TestPointsContract:
         - permission is 'owner'
         """
         api_client, user = authenticated_user
-        url = reverse('points:list')
-        response = api_client.post(url, valid_point_data, format='json')
+        url = reverse("points:list")
+        response = api_client.post(url, valid_point_data, format="json")
 
         assert response.status_code == status.HTTP_201_CREATED
 
         # Validate response structure
         point = response.data
-        assert 'id' in point
-        assert point['title'] == valid_point_data['title']
-        assert point['description'] == valid_point_data['description']
-        assert point['latitude'] == valid_point_data['latitude']
-        assert point['longitude'] == valid_point_data['longitude']
-        assert point['is_public'] == valid_point_data['is_public']
+        assert "id" in point
+        assert point["title"] == valid_point_data["title"]
+        assert point["description"] == valid_point_data["description"]
+        assert point["latitude"] == valid_point_data["latitude"]
+        assert point["longitude"] == valid_point_data["longitude"]
+        assert point["is_public"] == valid_point_data["is_public"]
 
         # Validate location GeoJSON
-        assert point['location']['type'] == 'Point'
-        assert point['location']['coordinates'] == [
-            valid_point_data['longitude'],
-            valid_point_data['latitude']
+        assert point["location"]["type"] == "Point"
+        assert point["location"]["coordinates"] == [
+            valid_point_data["longitude"],
+            valid_point_data["latitude"],
         ]
 
         # Validate owner
-        assert point['owner']['id'] == user['id']
-        assert point['owner']['email'] == user['email']
+        assert point["owner"]["id"] == user["id"]
+        assert point["owner"]["email"] == user["email"]
 
         # Validate tags
-        assert len(point['tags']) == 2
-        tag_names = [tag['name'] for tag in point['tags']]
-        assert 'hiking' in tag_names
-        assert 'forest' in tag_names
+        assert len(point["tags"]) == 2
+        tag_names = [tag["name"] for tag in point["tags"]]
+        assert "hiking" in tag_names
+        assert "forest" in tag_names
 
         # Validate timestamps
-        assert 'created_at' in point
-        assert 'updated_at' in point
+        assert "created_at" in point
+        assert "updated_at" in point
 
         # Validate permission
-        assert point['permission'] == 'owner'
+        assert point["permission"] == "owner"
 
         # Validate editing_lock is null for new point
-        assert point['editing_lock'] is None
+        assert point["editing_lock"] is None
 
     def test_create_point_validation_error(self, authenticated_user):
         """
@@ -132,21 +131,21 @@ class TestPointsContract:
         - details contains field-specific errors
         """
         api_client, _ = authenticated_user
-        url = reverse('points:list')
+        url = reverse("points:list")
         invalid_data = {
-            'title': '',  # Empty title
-            'latitude': 100,  # Invalid latitude (>90)
-            'longitude': -200  # Invalid longitude (<-180)
+            "title": "",  # Empty title
+            "latitude": 100,  # Invalid latitude (>90)
+            "longitude": -200,  # Invalid longitude (<-180)
         }
 
-        response = api_client.post(url, invalid_data, format='json')
+        response = api_client.post(url, invalid_data, format="json")
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert response.data['error'] == 'VALIDATION_ERROR'
-        assert 'details' in response.data
-        assert 'title' in response.data['details']
-        assert 'latitude' in response.data['details']
-        assert 'longitude' in response.data['details']
+        assert response.data["error"] == "VALIDATION_ERROR"
+        assert "details" in response.data
+        assert "title" in response.data["details"]
+        assert "latitude" in response.data["details"]
+        assert "longitude" in response.data["details"]
 
     def test_create_point_unauthorized(self, api_client, valid_point_data):
         """
@@ -155,8 +154,8 @@ class TestPointsContract:
         Expected:
         - Status: 401 Unauthorized
         """
-        url = reverse('points:list')
-        response = api_client.post(url, valid_point_data, format='json')
+        url = reverse("points:list")
+        response = api_client.post(url, valid_point_data, format="json")
 
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
@@ -173,27 +172,27 @@ class TestPointsContract:
         api_client, _ = authenticated_user
 
         # Create a point first
-        create_url = reverse('points:list')
-        api_client.post(create_url, valid_point_data, format='json')
+        create_url = reverse("points:list")
+        api_client.post(create_url, valid_point_data, format="json")
 
         # List points
-        list_url = reverse('points:list')
+        list_url = reverse("points:list")
         response = api_client.get(list_url)
 
         assert response.status_code == status.HTTP_200_OK
-        assert 'count' in response.data
-        assert 'results' in response.data
-        assert response.data['count'] >= 1
-        assert len(response.data['results']) >= 1
+        assert "count" in response.data
+        assert "results" in response.data
+        assert response.data["count"] >= 1
+        assert len(response.data["results"]) >= 1
 
         # Validate first point structure
-        point = response.data['results'][0]
-        assert 'id' in point
-        assert 'title' in point
-        assert 'location' in point
-        assert 'owner' in point
-        assert 'tags' in point
-        assert 'permission' in point
+        point = response.data["results"][0]
+        assert "id" in point
+        assert "title" in point
+        assert "location" in point
+        assert "owner" in point
+        assert "tags" in point
+        assert "permission" in point
 
     def test_list_points_with_bbox_filter(self, authenticated_user, valid_point_data):
         """
@@ -205,16 +204,16 @@ class TestPointsContract:
         api_client, _ = authenticated_user
 
         # Create point
-        create_url = reverse('points:list')
-        api_client.post(create_url, valid_point_data, format='json')
+        create_url = reverse("points:list")
+        api_client.post(create_url, valid_point_data, format="json")
 
         # List with bbox that includes the point
-        list_url = reverse('points:list')
-        bbox = '-123,37,-122,38'  # Includes San Francisco
-        response = api_client.get(list_url, {'bbox': bbox})
+        list_url = reverse("points:list")
+        bbox = "-123,37,-122,38"  # Includes San Francisco
+        response = api_client.get(list_url, {"bbox": bbox})
 
         assert response.status_code == status.HTTP_200_OK
-        assert response.data['count'] >= 1
+        assert response.data["count"] >= 1
 
     def test_list_points_with_tags_filter(self, authenticated_user, valid_point_data):
         """
@@ -226,15 +225,15 @@ class TestPointsContract:
         api_client, _ = authenticated_user
 
         # Create point with tags
-        create_url = reverse('points:list')
-        api_client.post(create_url, valid_point_data, format='json')
+        create_url = reverse("points:list")
+        api_client.post(create_url, valid_point_data, format="json")
 
         # List with tags filter
-        list_url = reverse('points:list')
-        response = api_client.get(list_url, {'tags': 'hiking,forest'})
+        list_url = reverse("points:list")
+        response = api_client.get(list_url, {"tags": "hiking,forest"})
 
         assert response.status_code == status.HTTP_200_OK
-        assert response.data['count'] >= 1
+        assert response.data["count"] >= 1
 
     # T018: GET /points/{id} - Get point details
     def test_get_point_success(self, authenticated_user, valid_point_data):
@@ -248,17 +247,17 @@ class TestPointsContract:
         api_client, _ = authenticated_user
 
         # Create point
-        create_url = reverse('points:list')
-        create_response = api_client.post(create_url, valid_point_data, format='json')
-        point_id = create_response.data['id']
+        create_url = reverse("points:list")
+        create_response = api_client.post(create_url, valid_point_data, format="json")
+        point_id = create_response.data["id"]
 
         # Get point
-        detail_url = reverse('points:detail', kwargs={'pk': point_id})
+        detail_url = reverse("points:detail", kwargs={"pk": point_id})
         response = api_client.get(detail_url)
 
         assert response.status_code == status.HTTP_200_OK
-        assert response.data['id'] == point_id
-        assert response.data['title'] == valid_point_data['title']
+        assert response.data["id"] == point_id
+        assert response.data["title"] == valid_point_data["title"]
 
     def test_get_point_not_found(self, authenticated_user):
         """
@@ -271,11 +270,11 @@ class TestPointsContract:
         api_client, _ = authenticated_user
 
         # Try to get non-existent point
-        url = reverse('points:detail', kwargs={'pk': '00000000-0000-0000-0000-000000000000'})
+        url = reverse("points:detail", kwargs={"pk": "00000000-0000-0000-0000-000000000000"})
         response = api_client.get(url)
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
-        assert response.data['error'] == 'POINT_NOT_FOUND'
+        assert response.data["error"] == "POINT_NOT_FOUND"
 
     def test_get_point_forbidden(self, api_client, authenticated_user, valid_point_data):
         """
@@ -287,23 +286,23 @@ class TestPointsContract:
         """
         # Create point as user1
         client1, _ = authenticated_user
-        create_url = reverse('points:list')
-        private_point_data = {**valid_point_data, 'is_public': False}
-        create_response = client1.post(create_url, private_point_data, format='json')
-        point_id = create_response.data['id']
+        create_url = reverse("points:list")
+        private_point_data = {**valid_point_data, "is_public": False}
+        create_response = client1.post(create_url, private_point_data, format="json")
+        point_id = create_response.data["id"]
 
         # Try to access as user2
         client2 = APIClient()
-        register_url = reverse('authentication:register')
-        register_data = {'email': 'user2@example.com', 'password': 'SecurePass123'}
-        register_response = client2.post(register_url, register_data, format='json')
-        client2.credentials(HTTP_AUTHORIZATION=f'Bearer {register_response.data["access"]}')
+        register_url = reverse("authentication:register")
+        register_data = {"email": "user2@example.com", "password": "SecurePass123"}
+        register_response = client2.post(register_url, register_data, format="json")
+        client2.credentials(HTTP_AUTHORIZATION=f"Bearer {register_response.data['access']}")
 
-        detail_url = reverse('points:detail', kwargs={'pk': point_id})
+        detail_url = reverse("points:detail", kwargs={"pk": point_id})
         response = client2.get(detail_url)
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
-        assert response.data['error'] == 'POINT_NOT_FOUND'
+        assert response.data["error"] == "POINT_NOT_FOUND"
 
     # T019: PUT /points/{id} - Update point
     def test_update_point_success(self, authenticated_user, valid_point_data):
@@ -319,27 +318,29 @@ class TestPointsContract:
         api_client, _ = authenticated_user
 
         # Create point
-        create_url = reverse('points:list')
-        create_response = api_client.post(create_url, valid_point_data, format='json')
-        point_id = create_response.data['id']
-        original_updated_at = create_response.data['updated_at']
+        create_url = reverse("points:list")
+        create_response = api_client.post(create_url, valid_point_data, format="json")
+        point_id = create_response.data["id"]
+        original_updated_at = create_response.data["updated_at"]
 
         # Update point
-        update_url = reverse('points:detail', kwargs={'pk': point_id})
-        update_data = {'title': 'Updated Title'}
-        response = api_client.put(update_url, update_data, format='json')
+        update_url = reverse("points:detail", kwargs={"pk": point_id})
+        update_data = {"title": "Updated Title"}
+        response = api_client.put(update_url, update_data, format="json")
 
         assert response.status_code == status.HTTP_200_OK
-        assert response.data['title'] == 'Updated Title'
-        assert response.data['updated_at'] != original_updated_at
+        assert response.data["title"] == "Updated Title"
+        assert response.data["updated_at"] != original_updated_at
 
         # Validate editing_lock was acquired
-        assert response.data['editing_lock'] is not None
-        assert 'locked_by' in response.data['editing_lock']
-        assert 'acquired_at' in response.data['editing_lock']
-        assert 'expires_at' in response.data['editing_lock']
+        assert response.data["editing_lock"] is not None
+        assert "locked_by" in response.data["editing_lock"]
+        assert "acquired_at" in response.data["editing_lock"]
+        assert "expires_at" in response.data["editing_lock"]
 
-    def test_update_point_locked_by_other_user(self, api_client, authenticated_user, valid_point_data):
+    def test_update_point_locked_by_other_user(
+        self, api_client, authenticated_user, valid_point_data
+    ):
         """
         Test updating point locked by another user.
 
@@ -350,28 +351,28 @@ class TestPointsContract:
         """
         # Create point and acquire lock as user1
         client1, _ = authenticated_user
-        create_url = reverse('points:list')
-        create_response = client1.post(create_url, valid_point_data, format='json')
-        point_id = create_response.data['id']
+        create_url = reverse("points:list")
+        create_response = client1.post(create_url, valid_point_data, format="json")
+        point_id = create_response.data["id"]
 
         # Acquire lock
-        lock_url = reverse('points:lock', kwargs={'pk': point_id})
+        lock_url = reverse("points:lock", kwargs={"pk": point_id})
         client1.post(lock_url)
 
         # Try to update as user2
         client2 = APIClient()
-        register_url = reverse('authentication:register')
-        register_data = {'email': 'user2@example.com', 'password': 'SecurePass123'}
-        register_response = client2.post(register_url, register_data, format='json')
-        client2.credentials(HTTP_AUTHORIZATION=f'Bearer {register_response.data["access"]}')
+        register_url = reverse("authentication:register")
+        register_data = {"email": "user2@example.com", "password": "SecurePass123"}
+        register_response = client2.post(register_url, register_data, format="json")
+        client2.credentials(HTTP_AUTHORIZATION=f"Bearer {register_response.data['access']}")
 
         # Share point with edit permission to user2 first
         # (This will be tested in sharing contract tests)
         # For now, assume user2 has edit permission
 
-        update_url = reverse('points:detail', kwargs={'pk': point_id})
-        update_data = {'title': 'Hacked Title'}
-        response = client2.put(update_url, update_data, format='json')
+        update_url = reverse("points:detail", kwargs={"pk": point_id})
+        update_data = {"title": "Hacked Title"}
+        response = client2.put(update_url, update_data, format="json")
 
         # Should fail with 409 or 403 depending on implementation
         assert response.status_code in [status.HTTP_409_CONFLICT, status.HTTP_403_FORBIDDEN]
@@ -388,12 +389,12 @@ class TestPointsContract:
         api_client, _ = authenticated_user
 
         # Create point
-        create_url = reverse('points:list')
-        create_response = api_client.post(create_url, valid_point_data, format='json')
-        point_id = create_response.data['id']
+        create_url = reverse("points:list")
+        create_response = api_client.post(create_url, valid_point_data, format="json")
+        point_id = create_response.data["id"]
 
         # Delete point
-        delete_url = reverse('points:detail', kwargs={'pk': point_id})
+        delete_url = reverse("points:detail", kwargs={"pk": point_id})
         response = api_client.delete(delete_url)
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
@@ -412,22 +413,22 @@ class TestPointsContract:
         """
         # Create point as user1
         client1, _ = authenticated_user
-        create_url = reverse('points:list')
-        create_response = client1.post(create_url, valid_point_data, format='json')
-        point_id = create_response.data['id']
+        create_url = reverse("points:list")
+        create_response = client1.post(create_url, valid_point_data, format="json")
+        point_id = create_response.data["id"]
 
         # Try to delete as user2
         client2 = APIClient()
-        register_url = reverse('authentication:register')
-        register_data = {'email': 'user2@example.com', 'password': 'SecurePass123'}
-        register_response = client2.post(register_url, register_data, format='json')
-        client2.credentials(HTTP_AUTHORIZATION=f'Bearer {register_response.data["access"]}')
+        register_url = reverse("authentication:register")
+        register_data = {"email": "user2@example.com", "password": "SecurePass123"}
+        register_response = client2.post(register_url, register_data, format="json")
+        client2.credentials(HTTP_AUTHORIZATION=f"Bearer {register_response.data['access']}")
 
-        delete_url = reverse('points:detail', kwargs={'pk': point_id})
+        delete_url = reverse("points:detail", kwargs={"pk": point_id})
         response = client2.delete(delete_url)
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
-        assert response.data['error'] == 'ACCESS_DENIED'
+        assert response.data["error"] == "ACCESS_DENIED"
 
     # T021: POST /points/{id}/lock - Acquire editing lock
     def test_acquire_lock_success(self, authenticated_user, valid_point_data):
@@ -442,19 +443,19 @@ class TestPointsContract:
         api_client, user = authenticated_user
 
         # Create point
-        create_url = reverse('points:list')
-        create_response = api_client.post(create_url, valid_point_data, format='json')
-        point_id = create_response.data['id']
+        create_url = reverse("points:list")
+        create_response = api_client.post(create_url, valid_point_data, format="json")
+        point_id = create_response.data["id"]
 
         # Acquire lock
-        lock_url = reverse('points:lock', kwargs={'pk': point_id})
+        lock_url = reverse("points:lock", kwargs={"pk": point_id})
         response = api_client.post(lock_url)
 
         assert response.status_code == status.HTTP_200_OK
-        assert 'locked_by' in response.data
-        assert response.data['locked_by']['id'] == user['id']
-        assert 'acquired_at' in response.data
-        assert 'expires_at' in response.data
+        assert "locked_by" in response.data
+        assert response.data["locked_by"]["id"] == user["id"]
+        assert "acquired_at" in response.data
+        assert "expires_at" in response.data
 
     def test_release_lock_success(self, authenticated_user, valid_point_data):
         """
@@ -467,11 +468,11 @@ class TestPointsContract:
         api_client, _ = authenticated_user
 
         # Create point and acquire lock
-        create_url = reverse('points:list')
-        create_response = api_client.post(create_url, valid_point_data, format='json')
-        point_id = create_response.data['id']
+        create_url = reverse("points:list")
+        create_response = api_client.post(create_url, valid_point_data, format="json")
+        point_id = create_response.data["id"]
 
-        lock_url = reverse('points:lock', kwargs={'pk': point_id})
+        lock_url = reverse("points:lock", kwargs={"pk": point_id})
         api_client.post(lock_url)
 
         # Release lock
@@ -491,11 +492,11 @@ class TestPointsContract:
         api_client, _ = authenticated_user
 
         # Create point with tags
-        create_url = reverse('points:list')
-        api_client.post(create_url, valid_point_data, format='json')
+        create_url = reverse("points:list")
+        api_client.post(create_url, valid_point_data, format="json")
 
         # List tags
-        tags_url = reverse('tags:list')
+        tags_url = reverse("tags:list")
         response = api_client.get(tags_url)
 
         assert response.status_code == status.HTTP_200_OK
@@ -504,9 +505,9 @@ class TestPointsContract:
 
         # Validate tag structure
         tag = response.data[0]
-        assert 'id' in tag
-        assert 'name' in tag
-        assert 'created_at' in tag
+        assert "id" in tag
+        assert "name" in tag
+        assert "created_at" in tag
 
     def test_list_tags_with_search(self, authenticated_user, valid_point_data):
         """
@@ -518,16 +519,16 @@ class TestPointsContract:
         api_client, _ = authenticated_user
 
         # Create point with tags
-        create_url = reverse('points:list')
-        api_client.post(create_url, valid_point_data, format='json')
+        create_url = reverse("points:list")
+        api_client.post(create_url, valid_point_data, format="json")
 
         # Search tags
-        tags_url = reverse('tags:list')
-        response = api_client.get(tags_url, {'search': 'hik'})
+        tags_url = reverse("tags:list")
+        response = api_client.get(tags_url, {"search": "hik"})
 
         assert response.status_code == status.HTTP_200_OK
         assert len(response.data) >= 1
-        assert any('hiking' in tag['name'].lower() for tag in response.data)
+        assert any("hiking" in tag["name"].lower() for tag in response.data)
 
 
 @pytest.mark.django_db
@@ -539,135 +540,114 @@ class TestPointsWithTypeContract:
     def test_create_point_with_type(self, authenticated_client_alice, alice):
         """Test creating a point with a specific type."""
         # Create point type
-        point_type = PointType.objects.create(
-            names={'en': 'Restaurant'},
-            owner=alice,
-            order=1
-        )
+        point_type = PointType.objects.create(names={"en": "Restaurant"}, owner=alice, order=1)
 
-        url = reverse('points:list')
+        url = reverse("points:list")
         data = {
-            'title': 'Best Café',
-            'latitude': 48.8566,
-            'longitude': 2.3522,
-            'type_id': str(point_type.id)
+            "title": "Best Café",
+            "latitude": 48.8566,
+            "longitude": 2.3522,
+            "type_id": str(point_type.id),
         }
 
-        response = authenticated_client_alice.post(url, data, format='json')
+        response = authenticated_client_alice.post(url, data, format="json")
 
         assert response.status_code == status.HTTP_201_CREATED
-        assert 'type' in response.data
-        assert response.data['type']['id'] == str(point_type.id)
-        assert response.data['type']['names']['en'] == 'Restaurant'
+        assert "type" in response.data
+        assert response.data["type"]["id"] == str(point_type.id)
+        assert response.data["type"]["names"]["en"] == "Restaurant"
 
     def test_create_point_without_type_uses_default(self, authenticated_client_alice):
         """Test that creating point without type assigns default type."""
         # Create default type
-        default_type = PointType.get_default_type()
+        PointType.get_default_type()
 
-        url = reverse('points:list')
-        data = {
-            'title': 'Generic Point',
-            'latitude': 48.8566,
-            'longitude': 2.3522
-        }
+        url = reverse("points:list")
+        data = {"title": "Generic Point", "latitude": 48.8566, "longitude": 2.3522}
 
-        response = authenticated_client_alice.post(url, data, format='json')
+        response = authenticated_client_alice.post(url, data, format="json")
 
         assert response.status_code == status.HTTP_201_CREATED
-        assert 'type' in response.data
+        assert "type" in response.data
 
-        assert response.data['type']['names']['en'] == 'Point'
+        assert response.data["type"]["names"]["en"] == "Point"
 
     def test_create_point_with_invalid_type(self, authenticated_client_alice):
         """Test that creating point with invalid type_id fails."""
-        url = reverse('points:list')
+        url = reverse("points:list")
         data = {
-            'title': 'Test Point',
-            'latitude': 48.8566,
-            'longitude': 2.3522,
-            'type_id': '00000000-0000-0000-0000-000000000000'
+            "title": "Test Point",
+            "latitude": 48.8566,
+            "longitude": 2.3522,
+            "type_id": "00000000-0000-0000-0000-000000000000",
         }
 
-        response = authenticated_client_alice.post(url, data, format='json')
+        response = authenticated_client_alice.post(url, data, format="json")
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert 'type_id' in str(response.data).lower() or 'type' in str(response.data).lower()
+        assert "type_id" in str(response.data).lower() or "type" in str(response.data).lower()
 
     def test_create_point_with_another_users_type(self, authenticated_client_alice, bob):
         """Test that user cannot use another user's type."""
-        bob_type = PointType.objects.create(
-            names={'en': 'BobType'},
-            owner=bob,
-            order=1
-        )
+        bob_type = PointType.objects.create(names={"en": "BobType"}, owner=bob, order=1)
 
-        url = reverse('points:list')
+        url = reverse("points:list")
         data = {
-            'title': 'Test Point',
-            'latitude': 48.8566,
-            'longitude': 2.3522,
-            'type_id': str(bob_type.id)
+            "title": "Test Point",
+            "latitude": 48.8566,
+            "longitude": 2.3522,
+            "type_id": str(bob_type.id),
         }
 
-        response = authenticated_client_alice.post(url, data, format='json')
+        response = authenticated_client_alice.post(url, data, format="json")
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_update_point_type(self, authenticated_client_alice, alice):
         """Test updating a point's type."""
-        type1 = PointType.objects.create(names={'en': 'Type1'}, owner=alice, order=1)
-        type2 = PointType.objects.create(names={'en': 'Type2'}, owner=alice, order=2)
+        type1 = PointType.objects.create(names={"en": "Type1"}, owner=alice, order=1)
+        type2 = PointType.objects.create(names={"en": "Type2"}, owner=alice, order=2)
 
         point = GPSPoint.objects.create(
-            title='Test Point',
-            location=Point(2.3522, 48.8566),
-            owner=alice,
-            type=type1
+            title="Test Point", location=Point(2.3522, 48.8566), owner=alice, type=type1
         )
 
-        url = reverse('points:detail', args=[point.id])
-        data = {'type_id': str(type2.id)}
+        url = reverse("points:detail", args=[point.id])
+        data = {"type_id": str(type2.id)}
 
-        response = authenticated_client_alice.patch(url, data, format='json')
+        response = authenticated_client_alice.patch(url, data, format="json")
 
         assert response.status_code == status.HTTP_200_OK
-        assert response.data['type']['id'] == str(type2.id)
+        assert response.data["type"]["id"] == str(type2.id)
 
     def test_list_points_includes_type(self, authenticated_client_alice, alice):
         """Test that listing points includes type information."""
-        point_type = PointType.objects.create(names={'en': 'Museum'}, owner=alice, order=1)
+        point_type = PointType.objects.create(names={"en": "Museum"}, owner=alice, order=1)
 
         GPSPoint.objects.create(
-            title='Louvre',
-            location=Point(2.3364, 48.8606),
-            owner=alice,
-            type=point_type
+            title="Louvre", location=Point(2.3364, 48.8606), owner=alice, type=point_type
         )
 
-        url = reverse('points:list')
+        url = reverse("points:list")
         response = authenticated_client_alice.get(url)
 
         assert response.status_code == status.HTTP_200_OK
-        assert len(response.data['results']) > 0
-        assert 'type' in response.data['results'][0]
-        assert response.data['results'][0]['type']['names']['en'] == 'Museum'
+        assert len(response.data["results"]) > 0
+        assert "type" in response.data["results"][0]
+        assert response.data["results"][0]["type"]["names"]["en"] == "Museum"
 
     def test_get_point_detail_includes_type(self, authenticated_client_alice, alice):
         """Test that point detail includes type information."""
-        point_type = PointType.objects.create(names={'en': 'Park'}, owner=alice, order=1)
+        point_type = PointType.objects.create(names={"en": "Park"}, owner=alice, order=1)
 
         point = GPSPoint.objects.create(
-            title='Central Park',
-            location=Point(2.3522, 48.8566),
-            owner=alice,
-            type=point_type
+            title="Central Park", location=Point(2.3522, 48.8566), owner=alice, type=point_type
         )
 
-        url = reverse('points:detail', args=[point.id])
+        url = reverse("points:detail", args=[point.id])
         response = authenticated_client_alice.get(url)
 
         assert response.status_code == status.HTTP_200_OK
-        assert 'type' in response.data
-        assert response.data['type']['id'] == str(point_type.id)
-        assert response.data['type']['names']['en'] == 'Park'
+        assert "type" in response.data
+        assert response.data["type"]["id"] == str(point_type.id)
+        assert response.data["type"]["names"]["en"] == "Park"

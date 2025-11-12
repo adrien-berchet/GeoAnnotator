@@ -4,16 +4,22 @@
  * Page for editing an existing GPS point.
  */
 
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import type { FormEvent } from 'react';
-import { getPoint, updatePoint, acquireLock, releaseLock, getTags } from '../api/points';
-import { getErrorMessage } from '../api/client';
-import { LoadingSpinner } from '../components/common/LoadingSpinner';
-import { TagSelector } from '../components/common/TagSelector';
-import TypeSelector from '../components/points/TypeSelector';
-import type { GPSPoint, Tag } from '../types/point';
-import './EditPointPage.css';
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import type { FormEvent } from "react";
+import {
+  getPoint,
+  updatePoint,
+  acquireLock,
+  releaseLock,
+  getTags,
+} from "../api/points";
+import { getErrorMessage } from "../api/client";
+import { LoadingSpinner } from "../components/common/LoadingSpinner";
+import { TagSelector } from "../components/common/TagSelector";
+import TypeSelector from "../components/points/TypeSelector";
+import type { GPSPoint, Tag } from "../types/point";
+import "./EditPointPage.css";
 
 /**
  * Edit point page component.
@@ -25,14 +31,14 @@ export function EditPointPage() {
   const [point, setPoint] = useState<GPSPoint | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [hasLock, setHasLock] = useState(false);
 
   // Form fields
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [latitude, setLatitude] = useState('');
-  const [longitude, setLongitude] = useState('');
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [latitude, setLatitude] = useState("");
+  const [longitude, setLongitude] = useState("");
   const [selectedTypeId, setSelectedTypeId] = useState<string | undefined>();
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [availableTags, setAvailableTags] = useState<Tag[]>([]);
@@ -63,7 +69,7 @@ export function EditPointPage() {
       const tags = await getTags();
       setAvailableTags(tags);
     } catch (err) {
-      console.error('Error loading tags:', err);
+      console.error("Error loading tags:", err);
     }
   };
 
@@ -74,7 +80,7 @@ export function EditPointPage() {
     if (!id) return;
 
     setIsLoading(true);
-    setError('');
+    setError("");
 
     try {
       // Load point data
@@ -83,11 +89,11 @@ export function EditPointPage() {
 
       // Initialize form fields
       setTitle(data.title);
-      setDescription(data.description || '');
+      setDescription(data.description || "");
       setLatitude(data.latitude.toString());
       setLongitude(data.longitude.toString());
       setSelectedTypeId(data.type?.id);
-      setSelectedTags(data.tags.map(t => t.name));
+      setSelectedTags(data.tags.map((t) => t.name));
       setIsPublic(data.is_public);
 
       // Try to acquire lock
@@ -96,18 +102,23 @@ export function EditPointPage() {
         // If we get here, lock was acquired successfully
         if (lockResult.locked_by) {
           setHasLock(true);
-          setError(''); // Clear any previous errors
+          setError(""); // Clear any previous errors
         }
       } catch (lockErr) {
         // Lock acquisition failed (409 conflict or other error)
         const errorMsg = getErrorMessage(lockErr);
-        console.error('Lock acquisition error:', lockErr);
+        console.error("Lock acquisition error:", lockErr);
 
         // Extract user information from error if available
         if (data.editing_lock_user) {
-          setError(`This point is currently being edited by ${data.editing_lock_user.email}. Please try again later.`);
+          setError(
+            `This point is currently being edited by ${data.editing_lock_user.email}. Please try again later.`,
+          );
         } else {
-          setError(errorMsg || 'Unable to acquire editing lock. The point may be locked by another user.');
+          setError(
+            errorMsg ||
+              "Unable to acquire editing lock. The point may be locked by another user.",
+          );
         }
         setHasLock(false);
       }
@@ -125,20 +136,20 @@ export function EditPointPage() {
     e.preventDefault();
 
     if (!id || !hasLock) {
-      setError('Cannot save: no editing lock');
+      setError("Cannot save: no editing lock");
       return;
     }
 
-    setError('');
+    setError("");
 
     // Validate title
     if (!title.trim()) {
-      setError('Title is required');
+      setError("Title is required");
       return;
     }
 
     if (title.length > 255) {
-      setError('Title must be 255 characters or less');
+      setError("Title must be 255 characters or less");
       return;
     }
 
@@ -147,12 +158,12 @@ export function EditPointPage() {
     const lng = parseFloat(longitude);
 
     if (isNaN(lat) || lat < -90 || lat > 90) {
-      setError('Latitude must be between -90 and 90');
+      setError("Latitude must be between -90 and 90");
       return;
     }
 
     if (isNaN(lng) || lng < -180 || lng > 180) {
-      setError('Longitude must be between -180 and 180');
+      setError("Longitude must be between -180 and 180");
       return;
     }
 
@@ -191,7 +202,7 @@ export function EditPointPage() {
       try {
         await releaseLock(id);
       } catch (err) {
-        console.error('Error releasing lock:', err);
+        console.error("Error releasing lock:", err);
       }
     }
     navigate(`/points/${id}`);
@@ -206,7 +217,7 @@ export function EditPointPage() {
       <div className="error-container">
         <h2>Error loading point</h2>
         <p>{error}</p>
-        <button onClick={() => navigate('/points')} className="btn-primary">
+        <button onClick={() => navigate("/points")} className="btn-primary">
           Back to Points
         </button>
       </div>
@@ -217,7 +228,7 @@ export function EditPointPage() {
     return (
       <div className="error-container">
         <h2>Point not found</h2>
-        <button onClick={() => navigate('/points')} className="btn-primary">
+        <button onClick={() => navigate("/points")} className="btn-primary">
           Back to Points
         </button>
       </div>
@@ -241,7 +252,8 @@ export function EditPointPage() {
           {point.editing_lock_user ? (
             <>
               <p>
-                This point is currently being edited by <strong>{point.editing_lock_user.email}</strong>.
+                This point is currently being edited by{" "}
+                <strong>{point.editing_lock_user.email}</strong>.
                 <br />
                 Please wait for them to finish or try again later.
               </p>
@@ -249,7 +261,7 @@ export function EditPointPage() {
                 <button
                   onClick={() => loadPoint()}
                   className="btn-secondary"
-                  style={{ marginTop: '0.5rem' }}
+                  style={{ marginTop: "0.5rem" }}
                 >
                   🔄 Try Again
                 </button>
@@ -258,14 +270,15 @@ export function EditPointPage() {
           ) : (
             <>
               <p>
-                Unable to acquire the editing lock. The point may be locked by another user.
+                Unable to acquire the editing lock. The point may be locked by
+                another user.
                 <br />
                 Changes cannot be saved until you acquire the lock.
               </p>
               <button
                 onClick={() => loadPoint()}
                 className="btn-secondary"
-                style={{ marginTop: '0.5rem' }}
+                style={{ marginTop: "0.5rem" }}
               >
                 🔄 Try Again
               </button>
@@ -395,7 +408,7 @@ export function EditPointPage() {
               className="btn-primary"
               disabled={!hasLock || isSaving}
             >
-              {isSaving ? 'Saving...' : 'Save Changes'}
+              {isSaving ? "Saving..." : "Save Changes"}
             </button>
           </div>
         </form>

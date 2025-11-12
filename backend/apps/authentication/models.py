@@ -4,11 +4,13 @@ User model extension for GeoAnnotator.
 Extends Django's built-in User model with storage quota tracking.
 """
 
-import uuid
-from django.contrib.auth.models import AbstractUser, BaseUserManager
-from django.db import models
-from django.core.validators import MinValueValidator
 import random
+import uuid
+
+from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import BaseUserManager
+from django.core.validators import MinValueValidator
+from django.db import models
 
 
 class UserManager(BaseUserManager["User"]):
@@ -27,13 +29,13 @@ class UserManager(BaseUserManager["User"]):
             User object
         """
         if not email:
-            raise ValueError('Email is required')
+            raise ValueError("Email is required")
 
         email = self.normalize_email(email)
         user = self.model(
             email=email,
-            username=email,  # Set both email and username
-            **extra_fields
+            username=email,
+            **extra_fields,  # Set both email and username
         )
         user.set_password(password)
         user.generate_verification_code()  # Generate verification code
@@ -52,10 +54,11 @@ class UserManager(BaseUserManager["User"]):
             user: User object to send the verification email to
         """
         from django.core.mail import send_mail
+
         send_mail(
-            subject='Votre code de vérification',
-            message=f'Votre code de vérification est : {user.verification_code}',
-            from_email='noreply@geoannotator.com',
+            subject="Votre code de vérification",
+            message=f"Votre code de vérification est : {user.verification_code}",
+            from_email="noreply@geoannotator.com",
             recipient_list=[user.email],
         )
 
@@ -71,13 +74,13 @@ class UserManager(BaseUserManager["User"]):
         Returns:
             User object with superuser privileges
         """
-        extra_fields.setdefault('is_staff', True)
-        extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault("is_staff", True)
+        extra_fields.setdefault("is_superuser", True)
 
-        if extra_fields.get('is_staff') is not True:
-            raise ValueError('Superuser must have is_staff=True')
-        if extra_fields.get('is_superuser') is not True:
-            raise ValueError('Superuser must have is_superuser=True')
+        if extra_fields.get("is_staff") is not True:
+            raise ValueError("Superuser must have is_staff=True")
+        if extra_fields.get("is_superuser") is not True:
+            raise ValueError("Superuser must have is_superuser=True")
 
         return self.create_user(email, password, **extra_fields)
 
@@ -97,68 +100,56 @@ class User(AbstractUser):
 
     # Override id to use UUID
     id = models.UUIDField(
-        primary_key=True,
-        default=uuid.uuid4,
-        editable=False,
-        help_text="Unique user identifier"
+        primary_key=True, default=uuid.uuid4, editable=False, help_text="Unique user identifier"
     )
 
     # Email is the primary identifier (not username)
     email = models.EmailField(
-        unique=True,
-        db_index=True,
-        help_text="User email address (used for login)"
+        unique=True, db_index=True, help_text="User email address (used for login)"
     )
 
     # Username not used for login, but required by AbstractUser
     # Set it to email automatically
-    username = models.CharField(
-        max_length=150,
-        unique=True,
-        help_text="Auto-generated from email"
-    )
+    username = models.CharField(max_length=150, unique=True, help_text="Auto-generated from email")
 
     # Storage quota fields
     storage_used = models.BigIntegerField(
         default=0,
         validators=[MinValueValidator(0)],
-        help_text="Bytes used by user's annotation files"
+        help_text="Bytes used by user's annotation files",
     )
 
     storage_limit = models.BigIntegerField(
         default=2 * 1024 * 1024 * 1024,  # 2GB default
         validators=[MinValueValidator(0)],
-        help_text="Maximum bytes allowed (default 2GB)"
+        help_text="Maximum bytes allowed (default 2GB)",
     )
 
     # Account verification fields
     is_verified = models.BooleanField(
-        default=False,
-        help_text="Indicates whether the user's email is verified."
+        default=False, help_text="Indicates whether the user's email is verified."
     )
 
     verification_code = models.CharField(
-        max_length=6,
-        blank=True,
-        help_text="Code used for email verification."
+        max_length=6, blank=True, help_text="Code used for email verification."
     )
 
     # Use email as the login field
-    USERNAME_FIELD = 'email'
+    USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []  # No additional required fields for createsuperuser
 
     # Use custom manager
     objects = UserManager()
 
     class Meta:
-        db_table = 'users'
-        verbose_name = 'User'
-        verbose_name_plural = 'Users'
+        db_table = "users"
+        verbose_name = "User"
+        verbose_name_plural = "Users"
         indexes = [
-            models.Index(fields=['email'], name='idx_user_email'),
-            models.Index(fields=['is_active'], name='idx_user_active'),
+            models.Index(fields=["email"], name="idx_user_email"),
+            models.Index(fields=["is_active"], name="idx_user_active"),
         ]
-        ordering = ['-date_joined']
+        ordering = ["-date_joined"]
 
     def save(self, *args, **kwargs):
         """Override save to auto-generate username from email."""
@@ -181,12 +172,12 @@ class User(AbstractUser):
     def add_storage_usage(self, file_size):
         """Increment storage usage (call after successful file upload)."""
         self.storage_used += file_size
-        self.save(update_fields=['storage_used'])
+        self.save(update_fields=["storage_used"])
 
     def remove_storage_usage(self, file_size):
         """Decrement storage usage (call after file deletion)."""
         self.storage_used = max(0, self.storage_used - file_size)
-        self.save(update_fields=['storage_used'])
+        self.save(update_fields=["storage_used"])
 
     def generate_verification_code(self):
         """Generate a random 6-digit verification code."""

@@ -2,13 +2,16 @@
 Simple test to verify trash models are working.
 """
 
-from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.contrib.gis.geos import Point
-from apps.points.models import GPSPoint
+from django.test import TestCase
+
 from apps.annotations.models import Annotation
-from apps.trash.models import Trash, AnnotationTrash
-from apps.trash.services import TrashService, AnnotationTrashService
+from apps.points.models import GPSPoint
+from apps.trash.models import AnnotationTrash
+from apps.trash.models import Trash
+from apps.trash.services import AnnotationTrashService
+from apps.trash.services import TrashService
 
 User = get_user_model()
 
@@ -18,10 +21,7 @@ class TrashTestCase(TestCase):
 
     def setUp(self):
         """Set up test data."""
-        self.user = User.objects.create_user(
-            email='test@trash.com',
-            password='testpassword'
-        )
+        self.user = User.objects.create_user(email="test@trash.com", password="testpassword")
 
         location = Point(2.3522, 48.8566, srid=4326)  # Paris
         self.point = GPSPoint.objects.create(
@@ -29,14 +29,11 @@ class TrashTestCase(TestCase):
             description="Test description",
             location=location,
             owner=self.user,
-            is_public=False
+            is_public=False,
         )
 
         self.annotation = Annotation.objects.create(
-            gps_point=self.point,
-            type='text',
-            text_content='<p>Test annotation</p>',
-            order=0
+            gps_point=self.point, type="text", text_content="<p>Test annotation</p>", order=0
         )
 
     def test_annotation_trash_creation(self):
@@ -108,5 +105,5 @@ class TrashTestCase(TestCase):
         stats = AnnotationTrashService.get_trash_stats(self.user)
 
         # Verify stats
-        self.assertEqual(stats['total_items'], 1)
-        self.assertGreaterEqual(stats['oldest_item_age_days'], 0)
+        self.assertEqual(stats["total_items"], 1)
+        self.assertGreaterEqual(stats["oldest_item_age_days"], 0)

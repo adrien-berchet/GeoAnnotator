@@ -2,17 +2,23 @@
  * Language context for managing application language and translations
  */
 
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import type { ReactNode } from 'react';
-import type { Language } from '@/utils/i18n';
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
+import type { ReactNode } from "react";
+import type { Language } from "@/utils/i18n";
 import {
   translate as translateUtil,
   getInitialLanguage,
   storeLanguage,
   getSupportedLanguages,
-} from '@/utils/i18n';
-import { getSettings, updateSettings } from '@/api/settings';
-import { useAuth } from '@/hooks/useAuth';
+} from "@/utils/i18n";
+import { getSettings, updateSettings } from "@/api/settings";
+import { useAuth } from "@/hooks/useAuth";
 
 interface LanguageContextType {
   language: Language;
@@ -22,7 +28,9 @@ interface LanguageContextType {
   isLoading: boolean;
 }
 
-const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
+const LanguageContext = createContext<LanguageContextType | undefined>(
+  undefined,
+);
 
 interface LanguageProviderProps {
   children: ReactNode;
@@ -30,7 +38,7 @@ interface LanguageProviderProps {
 
 export function LanguageProvider({ children }: LanguageProviderProps) {
   const { isAuthenticated } = useAuth();
-  const [language, setLanguageState] = useState<Language>('en');
+  const [language, setLanguageState] = useState<Language>("en");
   const [isLoading, setIsLoading] = useState(true);
   const supportedLanguages = getSupportedLanguages();
 
@@ -51,7 +59,7 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
           setLanguageState(initialLang);
         }
       } catch (error) {
-        console.error('Error loading language:', error);
+        console.error("Error loading language:", error);
         // Fallback to browser/localStorage language
         const initialLang = getInitialLanguage();
         setLanguageState(initialLang);
@@ -64,29 +72,35 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
   }, [isAuthenticated]);
 
   // Update language
-  const setLanguage = useCallback(async (newLanguage: Language) => {
-    try {
-      // Update local state immediately for better UX
-      setLanguageState(newLanguage);
+  const setLanguage = useCallback(
+    async (newLanguage: Language) => {
+      try {
+        // Update local state immediately for better UX
+        setLanguageState(newLanguage);
 
-      // Store in localStorage
-      storeLanguage(newLanguage);
+        // Store in localStorage
+        storeLanguage(newLanguage);
 
-      // If authenticated, also update backend
-      if (isAuthenticated) {
-        await updateSettings({ language: newLanguage });
+        // If authenticated, also update backend
+        if (isAuthenticated) {
+          await updateSettings({ language: newLanguage });
+        }
+      } catch (error) {
+        console.error("Error updating language:", error);
+        // Even if backend update fails, keep the language change in localStorage
+        // This ensures the user preference is saved locally
       }
-    } catch (error) {
-      console.error('Error updating language:', error);
-      // Even if backend update fails, keep the language change in localStorage
-      // This ensures the user preference is saved locally
-    }
-  }, [isAuthenticated]);
+    },
+    [isAuthenticated],
+  );
 
   // Translation function
-  const t = useCallback((key: string, fallback?: string) => {
-    return translateUtil(language, key, fallback);
-  }, [language]);
+  const t = useCallback(
+    (key: string, fallback?: string) => {
+      return translateUtil(language, key, fallback);
+    },
+    [language],
+  );
 
   const value: LanguageContextType = {
     language,
@@ -111,7 +125,7 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
 export function useLanguage(): LanguageContextType {
   const context = useContext(LanguageContext);
   if (context === undefined) {
-    throw new Error('useLanguage must be used within a LanguageProvider');
+    throw new Error("useLanguage must be used within a LanguageProvider");
   }
   return context;
 }

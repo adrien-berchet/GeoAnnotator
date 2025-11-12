@@ -1,20 +1,23 @@
 """
 Annotation views for managing text and file annotations.
 """
-from rest_framework import viewsets, status
+
+from django.http import FileResponse
+from django.http import Http404
+from rest_framework import status
+from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from django.http import FileResponse, Http404
 
-from .models import Annotation
-from .serializers import (
-    AnnotationSerializer,
-    CreateTextAnnotationSerializer,
-    CreateFileAnnotationSerializer,
-    UpdateTextAnnotationSerializer,
-)
-from .services import AnnotationService, ImagePreviewService
+from apps.annotations.models import Annotation
+from apps.annotations.serializers import AnnotationSerializer
+from apps.annotations.serializers import CreateFileAnnotationSerializer
+from apps.annotations.serializers import CreateTextAnnotationSerializer
+from apps.annotations.serializers import UpdateTextAnnotationSerializer
+from apps.annotations.services import AnnotationService
+from apps.annotations.services import ImagePreviewService
+from apps.points.models import GPSPoint
 from apps.sharing.services import PermissionService
 
 
@@ -30,28 +33,31 @@ class AnnotationViewSet(viewsets.ModelViewSet):
     - DELETE /api/points/{point_id}/annotations/{id}/ - Delete annotation
     - GET /api/points/{point_id}/annotations/{id}/download/ - Download file annotation
     """
+
     permission_classes = [IsAuthenticated]
     pagination_class = None  # Disable pagination for annotations
 
     def get_serializer_class(self):
-        if self.action == 'create':
+        if self.action == "create":
             # Client determines which serializer by sending type field
-            annotation_type = self.request.data.get('type')
-            if annotation_type == 'text':
+            annotation_type = self.request.data.get("type")
+            if annotation_type == "text":
                 return CreateTextAnnotationSerializer
-            elif annotation_type in ['image', 'pdf', 'document']:
+            elif annotation_type in ["image", "pdf", "document"]:
                 return CreateFileAnnotationSerializer
             return AnnotationSerializer
-        elif self.action in ['update', 'partial_update']:
+        elif self.action in ["update", "partial_update"]:
             return UpdateTextAnnotationSerializer
         return AnnotationSerializer
 
     def get_queryset(self):
         """Return annotations for the specified point."""
-        point_id = self.kwargs.get('point_id')
+        point_id = self.kwargs.get("point_id")
 
         # Check if we should include trashed annotations
-        include_trashed = self.request.query_params.get('include_trashed', 'false').lower() == 'true'
+        include_trashed = (
+            self.request.query_params.get("include_trashed", "false").lower() == "true"
+        )
 
         if point_id:
             # Annotations for a specific point
@@ -63,7 +69,7 @@ class AnnotationViewSet(viewsets.ModelViewSet):
             queryset = Annotation.objects.filter(gps_point__in=accessible_points)
 
         # Always select_related trash_entry to enable SerializerMethodFields
-        queryset = queryset.select_related('trash_entry')
+        queryset = queryset.select_related("trash_entry")
 
         # Filter out trashed annotations unless explicitly requested
         if not include_trashed:
@@ -80,33 +86,31 @@ class AnnotationViewSet(viewsets.ModelViewSet):
             point = GPSPoint.objects.get(pk=point_id)
         except GPSPoint.DoesNotExist:
             return Response(
-                {'error': 'POINT_NOT_FOUND', 'message': 'Point not found'},
-                status=status.HTTP_404_NOT_FOUND
+                {"error": "POINT_NOT_FOUND", "message": "Point not found"},
+                status=status.HTTP_404_NOT_FOUND,
             )
 
         # Check edit permission
         if not PermissionService.can_edit(point, request.user):
             return Response(
-                {'error': 'PERMISSION_DENIED', 'message': 'Permission denied'},
-                status=status.HTTP_403_FORBIDDEN
+                {"error": "PERMISSION_DENIED", "message": "Permission denied"},
+                status=status.HTTP_403_FORBIDDEN,
             )
 
-        annotation_type = request.data.get('type')
+        annotation_type = request.data.get("type")
 
-        if annotation_type == 'text':
+        if annotation_type == "text":
             serializer = CreateTextAnnotationSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
 
             # Create text annotation
             annotation = AnnotationService.create_text_annotation(
-                gps_point_id=point_id,
-                text_content=serializer.validated_data['text_content']
+                gps_point_id=point_id, text_content=serializer.validated_data["text_content"]
             )
 
-        elif annotation_type in ['image', 'document', 'file']:
+        elif annotation_type in ["image", "document", "file"]:
             serializer = CreateFileAnnotationSerializer(
-                data=request.data,
-                context={'request': request}
+                data=request.data, context={"request": request}
             )
             serializer.is_valid(raise_exception=True)
 
@@ -115,25 +119,22 @@ class AnnotationViewSet(viewsets.ModelViewSet):
                 annotation = AnnotationService.create_file_annotation(
                     gps_point_id=point_id,
                     annotation_type=annotation_type,
-                    uploaded_file=serializer.validated_data['file'],
-                    user=request.user
+                    uploaded_file=serializer.validated_data["file"],
+                    user=request.user,
                 )
             except ValueError as e:
-                return Response(
-                    {'error': str(e)},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response(
                 {
-                    'error': 'INVALID_OPERATION',
-                    'message': f'Invalid annotation type: {annotation_type}',
+                    "error": "INVALID_OPERATION",
+                    "message": f"Invalid annotation type: {annotation_type}",
                 },
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         # Return created annotation
-        response_serializer = AnnotationSerializer(annotation, context={'request': request})
+        response_serializer = AnnotationSerializer(annotation, context={"request": request})
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
     def retrieve(self, request, pk=None, point_id=None):
@@ -142,12 +143,9 @@ class AnnotationViewSet(viewsets.ModelViewSet):
 
         # Check view permission on point
         if not PermissionService.can_view(annotation.gps_point, request.user):
-            return Response(
-                {'error': 'Permission denied'},
-                status=status.HTTP_403_FORBIDDEN
-            )
+            return Response({"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
 
-        serializer = AnnotationSerializer(annotation, context={'request': request})
+        serializer = AnnotationSerializer(annotation, context={"request": request})
         return Response(serializer.data)
 
     def partial_update(self, request, pk=None, point_id=None):
@@ -156,19 +154,19 @@ class AnnotationViewSet(viewsets.ModelViewSet):
 
         # Check edit permission on point
         if not PermissionService.can_edit(annotation.gps_point, request.user):
-            return Response(
-                {'error': 'Permission denied'},
-                status=status.HTTP_403_FORBIDDEN
-            )
+            return Response({"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
 
         # Only text annotations can be updated
-        if annotation.type != 'text':
+        if annotation.type != "text":
             return Response(
                 {
-                    'error': 'INVALID_OPERATION',
-                    'message': 'File annotations cannot be updated. Delete and create a new annotation instead.'
+                    "error": "INVALID_OPERATION",
+                    "message": (
+                        "File annotations cannot be updated. Delete and create a new "
+                        "annotation instead."
+                    ),
                 },
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         serializer = UpdateTextAnnotationSerializer(data=request.data, partial=True)
@@ -176,11 +174,10 @@ class AnnotationViewSet(viewsets.ModelViewSet):
 
         # Update via service
         AnnotationService.update_text_annotation(
-            annotation=annotation,
-            text_content=serializer.validated_data['text_content']
+            annotation=annotation, text_content=serializer.validated_data["text_content"]
         )
 
-        response_serializer = AnnotationSerializer(annotation, context={'request': request})
+        response_serializer = AnnotationSerializer(annotation, context={"request": request})
         return Response(response_serializer.data)
 
     def update(self, request, pk=None, point_id=None):
@@ -192,20 +189,23 @@ class AnnotationViewSet(viewsets.ModelViewSet):
         annotation = self.get_object()
 
         # Check if already in trash
-        if hasattr(annotation, 'trash_entry') and annotation.trash_entry:
+        if hasattr(annotation, "trash_entry") and annotation.trash_entry:
             return Response(
                 {
-                    'error': 'ALREADY_IN_TRASH',
-                    'message': 'Annotation is already in trash. Use the trash endpoint to permanently delete or restore it.'
+                    "error": "ALREADY_IN_TRASH",
+                    "message": (
+                        "Annotation is already in trash. Use the trash endpoint to permanently "
+                        "delete or restore it."
+                    ),
                 },
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         # Check if owner (only owner can delete)
         if not PermissionService.is_owner(annotation.gps_point, request.user):
             return Response(
-                {'error': 'Only point owner can delete annotations'},
-                status=status.HTTP_403_FORBIDDEN
+                {"error": "Only point owner can delete annotations"},
+                status=status.HTTP_403_FORBIDDEN,
             )
 
         # Delete via service (handles quota reclaim)
@@ -213,23 +213,20 @@ class AnnotationViewSet(viewsets.ModelViewSet):
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @action(detail=True, methods=['get'])
+    @action(detail=True, methods=["get"])
     def download(self, request, pk=None, point_id=None):
         """Download file annotation."""
         annotation = self.get_object()
 
         # Check view permission
         if not PermissionService.can_view(annotation.gps_point, request.user):
-            return Response(
-                {'error': 'Permission denied'},
-                status=status.HTTP_403_FORBIDDEN
-            )
+            return Response({"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
 
         # Only file annotations can be downloaded
-        if annotation.type == 'text':
+        if annotation.type == "text":
             return Response(
-                {'error': 'Text annotations cannot be downloaded'},
-                status=status.HTTP_400_BAD_REQUEST
+                {"error": "Text annotations cannot be downloaded"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         if not annotation.file:
@@ -237,110 +234,94 @@ class AnnotationViewSet(viewsets.ModelViewSet):
 
         # Return file response
         response = FileResponse(
-            annotation.file.open('rb'),
-            content_type=annotation.mime_type or 'application/octet-stream'
+            annotation.file.open("rb"),
+            content_type=annotation.mime_type or "application/octet-stream",
         )
-        response['Content-Disposition'] = f'attachment; filename="{annotation.file_name}"'
+        response["Content-Disposition"] = f'attachment; filename="{annotation.file_name}"'
 
         return response
 
-    @action(detail=True, methods=['get'])
+    @action(detail=True, methods=["get"])
     def preview(self, request, pk=None, point_id=None):
         """Preview image annotation (resized)."""
         annotation = self.get_object()
 
         # Check view permission
         if not PermissionService.can_view(annotation.gps_point, request.user):
-            return Response(
-                {'error': 'Permission denied'},
-                status=status.HTTP_403_FORBIDDEN
-            )
+            return Response({"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
 
         # Only image annotations can be previewed
-        if annotation.type != 'image':
+        if annotation.type != "image":
             return Response(
-                {'error': 'Only image annotations can be previewed'},
-                status=status.HTTP_400_BAD_REQUEST
+                {"error": "Only image annotations can be previewed"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         if not annotation.file:
             raise Http404("File not found")
 
         # Get preview size from query params (default 1920x1080)
-        max_width = int(request.query_params.get('width', 1920))
-        max_height = int(request.query_params.get('height', 1080))
+        max_width = int(request.query_params.get("width", 1920))
+        max_height = int(request.query_params.get("height", 1080))
 
         try:
             # Generate preview
             preview_image = ImagePreviewService.generate_preview(
-                annotation.file,
-                max_width=max_width,
-                max_height=max_height
+                annotation.file, max_width=max_width, max_height=max_height
             )
 
             # Return image response
             response = FileResponse(
-                preview_image,
-                content_type=annotation.mime_type or 'image/jpeg'
+                preview_image, content_type=annotation.mime_type or "image/jpeg"
             )
             return response
 
         except Exception as e:
             return Response(
-                {'error': f'Failed to generate preview: {str(e)}'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                {"error": f"Failed to generate preview: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-    @action(detail=False, methods=['post'], url_path='reorder')
+    @action(detail=False, methods=["post"], url_path="reorder")
     def reorder(self, request, point_id=None):
         """
         Reorder annotations for a point.
 
         Expects: { "annotations": [{"id": "uuid", "order": 0}, ...] }
         """
-        from apps.points.models import GPSPoint
-
         # Get point and check permission
         try:
             point = GPSPoint.objects.get(id=point_id)
         except GPSPoint.DoesNotExist:
-            raise Http404("Point not found")
+            raise Http404("Point not found") from None
 
         if not PermissionService.can_edit(point, request.user):
-            return Response(
-                {'error': 'Permission denied'},
-                status=status.HTTP_403_FORBIDDEN
-            )
+            return Response({"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
 
         # Validate request data
-        annotation_orders = request.data.get('annotations', [])
+        annotation_orders = request.data.get("annotations", [])
         if not isinstance(annotation_orders, list):
             return Response(
-                {'error': 'annotations must be a list'},
-                status=status.HTTP_400_BAD_REQUEST
+                {"error": "annotations must be a list"}, status=status.HTTP_400_BAD_REQUEST
             )
 
         # Update orders
         updated_count = 0
         for item in annotation_orders:
-            annotation_id = item.get('id')
-            order = item.get('order')
+            annotation_id = item.get("id")
+            order = item.get("order")
 
             if annotation_id is None or order is None:
                 continue
 
             try:
-                annotation = Annotation.objects.get(
-                    id=annotation_id,
-                    gps_point=point
-                )
+                annotation = Annotation.objects.get(id=annotation_id, gps_point=point)
                 annotation.order = order
-                annotation.save(update_fields=['order'])
+                annotation.save(update_fields=["order"])
                 updated_count += 1
             except Annotation.DoesNotExist:
                 continue
 
         return Response(
-            {'message': f'Updated {updated_count} annotations'},
-            status=status.HTTP_200_OK
+            {"message": f"Updated {updated_count} annotations"}, status=status.HTTP_200_OK
         )

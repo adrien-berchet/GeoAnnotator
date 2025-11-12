@@ -2,21 +2,31 @@
  * Settings page component
  */
 
-import { useEffect, useState } from 'react';
-import { useBlocker } from 'react-router-dom';
-import ThemeSelector from '@/components/settings/ThemeSelector';
-import LanguageSelector from '@/components/settings/LanguageSelector';
-import ExportSettings from '@/components/settings/ExportSettings';
-import MapTypeSelector from '@/components/settings/MapTypeSelector';
-import { useTheme } from '@/contexts/ThemeContext';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { getSettings, updateSettings } from '@/api/settings';
-import type { UserPreferences, ThemeMode, ExportFormat, MapType } from '@/types/settings';
-import './SettingsPage.css';
+import { useEffect, useState } from "react";
+import { useBlocker } from "react-router-dom";
+import ThemeSelector from "@/components/settings/ThemeSelector";
+import LanguageSelector from "@/components/settings/LanguageSelector";
+import ExportSettings from "@/components/settings/ExportSettings";
+import MapTypeSelector from "@/components/settings/MapTypeSelector";
+import { useTheme } from "@/contexts/ThemeContext";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { getSettings, updateSettings } from "@/api/settings";
+import type {
+  UserPreferences,
+  ThemeMode,
+  ExportFormat,
+  MapType,
+} from "@/types/settings";
+import "./SettingsPage.css";
 
 export function SettingsPage() {
-  const { themeMode: contextThemeMode, setThemeMode: setContextThemeMode } = useTheme();
-  const { language: contextLanguage, setLanguage: setContextLanguage, t } = useLanguage();
+  const { themeMode: contextThemeMode, setThemeMode: setContextThemeMode } =
+    useTheme();
+  const {
+    language: contextLanguage,
+    setLanguage: setContextLanguage,
+    t,
+  } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [preferences, setPreferences] = useState<UserPreferences | null>(null);
@@ -27,13 +37,13 @@ export function SettingsPage() {
   // Form state
   const [themeMode, setThemeMode] = useState<ThemeMode>(contextThemeMode);
   const [language, setLanguage] = useState<string>(contextLanguage);
-  const [exportFormat, setExportFormat] = useState<ExportFormat>('geojson');
-  const [defaultMapType, setDefaultMapType] = useState<MapType>('osm');
+  const [exportFormat, setExportFormat] = useState<ExportFormat>("geojson");
+  const [defaultMapType, setDefaultMapType] = useState<MapType>("osm");
 
   // Block navigation when there are unsaved changes
   const blocker = useBlocker(
     ({ currentLocation, nextLocation }) =>
-      isDirty && currentLocation.pathname !== nextLocation.pathname
+      isDirty && currentLocation.pathname !== nextLocation.pathname,
   );
 
   // Load settings on mount
@@ -64,8 +74,13 @@ export function SettingsPage() {
       setDefaultMapType(data.default_map_type);
       setIsDirty(false);
     } catch (err) {
-      setError(t('settings.settingsError', 'Failed to load settings. Please try again.'));
-      console.error('Error loading settings:', err);
+      setError(
+        t(
+          "settings.settingsError",
+          "Failed to load settings. Please try again.",
+        ),
+      );
+      console.error("Error loading settings:", err);
     } finally {
       setLoading(false);
     }
@@ -81,8 +96,13 @@ export function SettingsPage() {
       // Theme is now persisted, so we don't mark as dirty for theme changes
       // But we still update the local state to show the current selection
     } catch (err) {
-      setError(t('settings.settingsError', 'Failed to update theme. Please try again.'));
-      console.error('Error updating theme:', err);
+      setError(
+        t(
+          "settings.settingsError",
+          "Failed to update theme. Please try again.",
+        ),
+      );
+      console.error("Error updating theme:", err);
     }
   };
 
@@ -92,11 +112,16 @@ export function SettingsPage() {
 
     // Apply language immediately through context (which also persists to backend/localStorage)
     try {
-      await setContextLanguage(lang as 'en' | 'fr');
+      await setContextLanguage(lang as "en" | "fr");
       // Language is now persisted, so we don't mark as dirty for language changes
     } catch (err) {
-      setError(t('settings.settingsError', 'Failed to save settings. Please try again.'));
-      console.error('Error updating language:', err);
+      setError(
+        t(
+          "settings.settingsError",
+          "Failed to save settings. Please try again.",
+        ),
+      );
+      console.error("Error updating language:", err);
     }
   };
 
@@ -124,11 +149,18 @@ export function SettingsPage() {
       });
       setPreferences(updated);
       setIsDirty(false);
-      setSuccessMessage(t('settings.settingsSaved', 'Settings saved successfully!'));
+      setSuccessMessage(
+        t("settings.settingsSaved", "Settings saved successfully!"),
+      );
       setTimeout(() => setSuccessMessage(null), 3000);
     } catch (err) {
-      setError(t('settings.settingsError', 'Failed to save settings. Please try again.'));
-      console.error('Error saving settings:', err);
+      setError(
+        t(
+          "settings.settingsError",
+          "Failed to save settings. Please try again.",
+        ),
+      );
+      console.error("Error saving settings:", err);
     } finally {
       setSaving(false);
     }
@@ -138,8 +170,14 @@ export function SettingsPage() {
     return (
       <div className="settings-page">
         <div className="settings-loading">
-          <div className="spinner" role="status" aria-label={t('settings.loadingSettings', 'Loading settings...')}>
-            <span className="visually-hidden">{t('common.loading', 'Loading...')}</span>
+          <div
+            className="spinner"
+            role="status"
+            aria-label={t("settings.loadingSettings", "Loading settings...")}
+          >
+            <span className="visually-hidden">
+              {t("common.loading", "Loading...")}
+            </span>
           </div>
         </div>
       </div>
@@ -152,7 +190,7 @@ export function SettingsPage() {
         <div className="settings-error">
           <p className="error-message">{error}</p>
           <button type="button" onClick={loadSettings} className="retry-button">
-            {t('common.retry', 'Retry')}
+            {t("common.retry", "Retry")}
           </button>
         </div>
       </div>
@@ -162,8 +200,13 @@ export function SettingsPage() {
   return (
     <div className="settings-page">
       <header className="settings-header">
-        <h1>{t('settings.title', 'Settings')}</h1>
-        <p className="settings-subtitle">{t('settings.subtitle', 'Manage your preferences and application settings')}</p>
+        <h1>{t("settings.title", "Settings")}</h1>
+        <p className="settings-subtitle">
+          {t(
+            "settings.subtitle",
+            "Manage your preferences and application settings",
+          )}
+        </p>
       </header>
 
       {successMessage && (
@@ -178,47 +221,63 @@ export function SettingsPage() {
         </div>
       )}
 
-      <form className="settings-form" data-testid="settings-form" onSubmit={(e) => e.preventDefault()}>
+      <form
+        className="settings-form"
+        data-testid="settings-form"
+        onSubmit={(e) => e.preventDefault()}
+      >
         <section className="settings-section">
-          <h2>{t('settings.appearance', 'Appearance')}</h2>
+          <h2>{t("settings.appearance", "Appearance")}</h2>
           <div className="setting-group">
             <label htmlFor="theme-selector" className="setting-label">
-              {t('settings.theme', 'Theme')}
+              {t("settings.theme", "Theme")}
             </label>
             <ThemeSelector value={themeMode} onChange={handleThemeChange} />
           </div>
         </section>
 
         <section className="settings-section">
-          <h2>{t('settings.language', 'Language')}</h2>
+          <h2>{t("settings.language", "Language")}</h2>
           <div className="setting-group">
             <label htmlFor="language-selector" className="setting-label">
-              {t('settings.interfaceLanguage', 'Interface Language')}
+              {t("settings.interfaceLanguage", "Interface Language")}
             </label>
-            <LanguageSelector value={language} onChange={handleLanguageChange} />
+            <LanguageSelector
+              value={language}
+              onChange={handleLanguageChange}
+            />
           </div>
         </section>
 
         <section className="settings-section">
-          <h2>{t('settings.dataExport', 'Data Export')}</h2>
+          <h2>{t("settings.dataExport", "Data Export")}</h2>
           <div className="setting-group">
             <label htmlFor="export-settings" className="setting-label">
-              {t('settings.defaultExportFormat', 'Default Export Format')}
+              {t("settings.defaultExportFormat", "Default Export Format")}
             </label>
-            <ExportSettings value={exportFormat} onChange={handleExportFormatChange} />
+            <ExportSettings
+              value={exportFormat}
+              onChange={handleExportFormatChange}
+            />
           </div>
         </section>
 
         <section className="settings-section">
-          <h2>{t('settings.map', 'Map')}</h2>
+          <h2>{t("settings.map", "Map")}</h2>
           <div className="setting-group">
             <label htmlFor="map-type-selector" className="setting-label">
-              {t('settings.defaultMapType', 'Default Map Type')}
+              {t("settings.defaultMapType", "Default Map Type")}
             </label>
             <p className="setting-description">
-              {t('settings.defaultMapTypeDescription', 'Choose the map type that will be used by default when opening the map page. You can still change it temporarily using the selector on the map page.')}
+              {t(
+                "settings.defaultMapTypeDescription",
+                "Choose the map type that will be used by default when opening the map page. You can still change it temporarily using the selector on the map page.",
+              )}
             </p>
-            <MapTypeSelector value={defaultMapType} onChange={handleMapTypeChange} />
+            <MapTypeSelector
+              value={defaultMapType}
+              onChange={handleMapTypeChange}
+            />
           </div>
         </section>
 
@@ -229,22 +288,29 @@ export function SettingsPage() {
             disabled={!isDirty || saving}
             className="save-button"
           >
-            {saving ? t('settings.saving', 'Saving...') : t('settings.saveChanges', 'Save Changes')}
+            {saving
+              ? t("settings.saving", "Saving...")
+              : t("settings.saveChanges", "Save Changes")}
           </button>
         </div>
       </form>
 
-      {blocker.state === 'blocked' && (
+      {blocker.state === "blocked" && (
         <div className="navigation-warning-overlay">
           <div className="navigation-warning">
-            <h3>{t('settings.unsavedChanges', 'Unsaved Changes')}</h3>
-            <p>{t('settings.unsavedChangesMessage', 'You have unsaved changes. Are you sure you want to leave?')}</p>
+            <h3>{t("settings.unsavedChanges", "Unsaved Changes")}</h3>
+            <p>
+              {t(
+                "settings.unsavedChangesMessage",
+                "You have unsaved changes. Are you sure you want to leave?",
+              )}
+            </p>
             <div className="warning-actions">
               <button type="button" onClick={() => blocker.proceed()}>
-                {t('settings.leave', 'Leave')}
+                {t("settings.leave", "Leave")}
               </button>
               <button type="button" onClick={() => blocker.reset()}>
-                {t('settings.stay', 'Stay')}
+                {t("settings.stay", "Stay")}
               </button>
             </div>
           </div>

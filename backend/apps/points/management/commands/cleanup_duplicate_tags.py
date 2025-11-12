@@ -3,19 +3,21 @@ Management command to clean up duplicate tags (case-insensitive).
 
 This command merges tags that differ only in case, keeping the lowercase version.
 """
+
 from django.core.management.base import BaseCommand
 from django.db import transaction
+
 from apps.points.models import Tag
 
 
 class Command(BaseCommand):
-    help = 'Clean up duplicate tags that differ only in case'
+    help = "Clean up duplicate tags that differ only in case"
 
     def handle(self, *args, **options):
-        self.stdout.write('Starting tag cleanup...')
+        self.stdout.write("Starting tag cleanup...")
 
         # Get all tags
-        all_tags = Tag.objects.all().order_by('name')
+        all_tags = Tag.objects.all().order_by("name")
 
         # Group tags by lowercase name
         tags_by_lower = {}
@@ -29,10 +31,10 @@ class Command(BaseCommand):
         duplicates = {name: tags for name, tags in tags_by_lower.items() if len(tags) > 1}
 
         if not duplicates:
-            self.stdout.write(self.style.SUCCESS('No duplicate tags found.'))
+            self.stdout.write(self.style.SUCCESS("No duplicate tags found."))
             return
 
-        self.stdout.write(f'Found {len(duplicates)} groups of duplicate tags:')
+        self.stdout.write(f"Found {len(duplicates)} groups of duplicate tags:")
         for name, tags in duplicates.items():
             self.stdout.write(f'  - "{name}": {[t.name for t in tags]}')
 
@@ -64,6 +66,4 @@ class Command(BaseCommand):
                     tag.delete()
                     merged_count += 1
 
-        self.stdout.write(self.style.SUCCESS(
-            f'Successfully merged {merged_count} duplicate tags.'
-        ))
+        self.stdout.write(self.style.SUCCESS(f"Successfully merged {merged_count} duplicate tags."))

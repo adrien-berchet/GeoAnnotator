@@ -13,9 +13,7 @@ from rest_framework import status
 class TestListPointTypesContract:
     """Contract tests for listing point types."""
 
-    def test_list_point_types_returns_200_with_array(
-        self, authenticated_client_alice
-    ):
+    def test_list_point_types_returns_200_with_array(self, authenticated_client_alice):
         """
         Test that GET /api/point-types/ returns 200 with an array.
 
@@ -30,9 +28,7 @@ class TestListPointTypesContract:
         assert response.status_code == status.HTTP_200_OK
         assert isinstance(response.data, list)
 
-    def test_list_point_types_response_schema(
-        self, authenticated_client_alice
-    ):
+    def test_list_point_types_response_schema(self, authenticated_client_alice):
         """
         Test that each point type in the list has the correct schema.
 

@@ -67,9 +67,7 @@ class TestScenario1AuthenticationFlow:
         - access token valid 1 hour, refresh token valid 7 days
         """
         # Given - Create user
-        user = User.objects.create_user(
-            email="alice@example.com", password="SecurePass123"
-        )
+        User.objects.create_user(email="alice@example.com", password="SecurePass123")
 
         login_data = {"email": "alice@example.com", "password": "SecurePass123"}
 
@@ -96,9 +94,7 @@ class TestScenario1AuthenticationFlow:
         - storage_percentage = (0 / 2147483648) * 100 = 0.0
         """
         # Given - Create and authenticate user
-        user = User.objects.create_user(
-            email="alice@example.com", password="SecurePass123"
-        )
+        User.objects.create_user(email="alice@example.com", password="SecurePass123")
 
         login_response = self.client.post(
             self.login_url,
@@ -126,9 +122,7 @@ class TestScenario1AuthenticationFlow:
         - Response 200 with new access token
         """
         # Given - Create user and get tokens
-        user = User.objects.create_user(
-            email="alice@example.com", password="SecurePass123"
-        )
+        User.objects.create_user(email="alice@example.com", password="SecurePass123")
 
         login_response = self.client.post(
             self.login_url,
@@ -138,9 +132,7 @@ class TestScenario1AuthenticationFlow:
         refresh_token = login_response.data["refresh"]
 
         # When
-        response = self.client.post(
-            self.refresh_url, {"refresh": refresh_token}, format="json"
-        )
+        response = self.client.post(self.refresh_url, {"refresh": refresh_token}, format="json")
 
         # Then
         assert response.status_code == status.HTTP_200_OK
@@ -158,9 +150,7 @@ class TestScenario1AuthenticationFlow:
         - Response 401 with error "INVALID_CREDENTIALS"
         """
         # Given - Create user
-        user = User.objects.create_user(
-            email="alice@example.com", password="SecurePass123"
-        )
+        User.objects.create_user(email="alice@example.com", password="SecurePass123")
 
         invalid_data = {"email": "alice@example.com", "password": "WrongPassword"}
 
