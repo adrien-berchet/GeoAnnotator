@@ -102,7 +102,7 @@ Content-Type: application/json
 - Case-insensitive uniqueness
 
 **Side Effects**:
-- Creates `AccountLog` entry with operation=PSEUDONYM_CHANGED
+- Creates `AccountLog` entry with operation=USERNAME_CHANGED
 - Updates all sharing references display text (no link changes)
 
 ---
@@ -251,7 +251,7 @@ Content-Type: application/json
 
 ---
 
-## POST /api/account/change-password/
+## POST /api/account/password-change/
 
 **Description**: Change user password (requires old password verification)
 
@@ -259,7 +259,7 @@ Content-Type: application/json
 
 **Request**:
 ```http
-POST /api/account/change-password/
+POST /api/account/password-change/
 Authorization: Bearer {jwt_token}
 Content-Type: application/json
 
@@ -518,7 +518,7 @@ Or for non-field errors:
 - PATCH /api/account/ (update pseudonym)
 - POST /api/account/change-email/ (initiate)
 - POST /api/account/confirm-email/ (confirm)
-- POST /api/account/change-password/ (update)
+- POST /api/account/password-change/ (update)
 - DELETE /api/account/ (initiate deletion)
 - POST /api/account/confirm-delete/ (confirm deletion)
 - POST /api/account/validate-pseudonym/ (validation helper)

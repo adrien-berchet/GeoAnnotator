@@ -1,7 +1,7 @@
 Confirm Email Address Change
 ===========================
 
-Hi {{ pseudonym }},
+Hi {{ username }},
 
 You requested to change your email address to {{ new_email }}.
 

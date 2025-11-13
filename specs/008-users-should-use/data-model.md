@@ -152,7 +152,7 @@ ON users_emailchangeconfirmation (expires_at) WHERE confirmed_at IS NULL;
 - `details` (JSONField, Nullable): Additional operation-specific data
 
 **Operation Types** (Enum):
-- `PSEUDONYM_CHANGED`: User updated pseudonym
+- `USERNAME_CHANGED`: User updated pseudonym
 - `EMAIL_CHANGED`: User confirmed email change
 - `PASSWORD_CHANGED`: User changed password
 - `ACCOUNT_DELETED`: User soft-deleted account

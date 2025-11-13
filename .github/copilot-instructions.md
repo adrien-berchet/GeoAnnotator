@@ -11,7 +11,7 @@ Auto-generated from all feature plans. Last updated: 2025-10-06
 - TypeScript 5.9.3 (frontend), Python 3.11+ (backend) + React 19.1.1, Vite 7.1.7, Django REST Framework, PostgreSQL (004-this-web-application)
 - PostgreSQL (user preferences stored in database table) (004-this-web-application)
 - Python 3.11+ (backend), TypeScript 5.9.3 (frontend) + Django REST Framework (backend), React 19.1.1, Vite 7.1.7 (frontend) (008-users-should-use)
-- PostgreSQL (email encryption, pseudonym uniqueness, soft delete tracking) (008-users-should-use)
+- PostgreSQL (email encryption, username uniqueness, soft delete tracking) (008-users-should-use)
 
 ## Project Structure
 ```

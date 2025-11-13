@@ -131,12 +131,12 @@ export function Navbar() {
                   onClick={() => setShowUserMenu(!showUserMenu)}
                 >
                   <span className="user-avatar">
-                    {user.pseudonym?.[0]?.toUpperCase() ||
+                    {user.username?.[0]?.toUpperCase() ||
                       user.first_name?.[0]?.toUpperCase() ||
                       user.email[0].toUpperCase()}
                   </span>
                   <span className="user-name">
-                    {user.pseudonym || user.first_name || user.email}
+                    {user.username || user.first_name || user.email}
                   </span>
                   <span className="dropdown-arrow">▼</span>
                 </button>
@@ -145,9 +145,9 @@ export function Navbar() {
                   <div className="user-menu-dropdown">
                     <div className="user-menu-header">
                       <div className="user-menu-email">
-                        {user.pseudonym && (
+                        {user.username && (
                           <div className="user-menu-pseudonym">
-                            {user.pseudonym}
+                            {user.username}
                           </div>
                         )}
                         {user.email}

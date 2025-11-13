@@ -1,6 +1,6 @@
 """
 Authentication views for user registration, login, token refresh, profile management,
-and account management (pseudonym, email, password, deletion).
+and account management (username, email, password, deletion).
 """
 
 from datetime import timedelta
@@ -10,6 +10,7 @@ from rest_framework import generics
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.decorators import permission_classes
+from rest_framework.exceptions import NotFound
 from rest_framework.permissions import AllowAny
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -24,16 +25,16 @@ from .serializers import (
     RegisterSerializer,
     UserSerializer,
     AccountSerializer,
-    PseudonymUpdateSerializer,
+    UsernameUpdateSerializer,
     EmailChangeSerializer,
     EmailConfirmSerializer,
     PasswordChangeSerializer,
     AccountDeletionConfirmSerializer,
-    PseudonymValidationSerializer,
+    UsernameValidationSerializer,
 )
 from .services import (
     AuthenticationService,
-    validate_pseudonym,
+    validate_username,
     EmailChangeTokenGenerator,
     AccountDeletionTokenGenerator,
     send_email_change_confirmation,
@@ -56,12 +57,8 @@ class RegisterView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        validated_data = serializer.validated_data
-        email = validated_data["email"]
-        password = validated_data["password"]
-
-        # Create user via service
-        user = AuthenticationService.create_user(email=email, password=password)
+        # Create user via serializer
+        user = serializer.save()
 
         # Generate tokens
         token_data = AuthenticationService.generate_tokens(user)
@@ -89,15 +86,8 @@ class LoginView(APIView):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        # Authenticate via service
-        user = AuthenticationService.authenticate_user(
-            email=serializer.validated_data["email"], password=serializer.validated_data["password"]
-        )
-
-        if not user:
-            return Response(
-                {"error": "Invalid email or password"}, status=status.HTTP_401_UNAUTHORIZED
-            )
+        # User is already authenticated by the serializer
+        user = serializer.validated_data["user"]
 
         # Generate tokens
         token_data = AuthenticationService.generate_tokens(user)
@@ -191,7 +181,8 @@ class VerifyCodeView(APIView):
             )
 
         try:
-            user = User.objects.get(email=email)
+            email_hash = User.hash_email(email)
+            user = User.objects.get(email_hash=email_hash)
         except User.DoesNotExist:
             return Response({"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND)
 
@@ -234,18 +225,22 @@ class AccountRetrieveAPIView(generics.RetrieveAPIView):
     serializer_class = AccountSerializer
 
     def get_object(self):
-        return self.request.user
+        user = self.request.user
+        # Block soft-deleted users from accessing their account
+        if hasattr(user, 'deleted_at') and user.deleted_at is not None:
+            raise NotFound("User account not found.")
+        return user
 
 
 class AccountUpdateAPIView(generics.UpdateAPIView):
     """
     PATCH /api/account/
-    Update account pseudonym.
+    Update account username.
     """
 
     permission_classes = [IsAuthenticated]
     throttle_classes = [AccountOperationThrottle]
-    serializer_class = PseudonymUpdateSerializer
+    serializer_class = UsernameUpdateSerializer
 
     def get_object(self):
         return self.request.user
@@ -255,19 +250,19 @@ class AccountUpdateAPIView(generics.UpdateAPIView):
         serializer.is_valid(raise_exception=True)
 
         user = self.get_object()
-        old_pseudonym = user.pseudonym
-        new_pseudonym = serializer.validated_data['pseudonym']
+        old_username = user.username
+        new_username = serializer.validated_data['username']
 
-        # Update pseudonym
-        user.pseudonym = new_pseudonym
-        user.save(update_fields=['pseudonym'])
+        # Update username
+        user.username = new_username
+        user.save(update_fields=['username'])
 
         # Log operation
         log_account_operation(
             user,
-            'PSEUDONYM_CHANGED',
+            'USERNAME_CHANGED',
             request,
-            details={'old_pseudonym': old_pseudonym, 'new_pseudonym': new_pseudonym}
+            details={'old_username': old_username, 'new_username': new_username}
         )
 
         # Return full account data
@@ -294,13 +289,16 @@ class EmailChangeRequestAPIView(APIView):
         # Generate token
         token = EmailChangeTokenGenerator.generate_token(user, new_email)
 
-        # Create confirmation record
+        # Create or update confirmation record
         expires_at = timezone.now() + timedelta(minutes=30)
-        EmailChangeConfirmation.objects.create(
+        EmailChangeConfirmation.objects.update_or_create(
             user=user,
-            new_email=new_email,
-            token=token,
-            expires_at=expires_at
+            defaults={
+                'new_email': new_email,
+                'token': token,
+                'expires_at': expires_at,
+                'confirmed_at': None  # Reset if updating
+            }
         )
 
         # Send confirmation email
@@ -367,9 +365,8 @@ class EmailConfirmAPIView(APIView):
         request.user.email = new_email
         request.user.save(update_fields=['email'])
 
-        # Mark confirmation as confirmed
-        confirmation.confirmed_at = timezone.now()
-        confirmation.save(update_fields=['confirmed_at'])
+        # Delete confirmation record (one-time use)
+        confirmation.delete()
 
         # Log operation
         log_account_operation(
@@ -387,7 +384,7 @@ class EmailConfirmAPIView(APIView):
 
 class PasswordChangeAPIView(APIView):
     """
-    POST /api/account/change-password/
+    POST /api/account/password-change/
     Change user password (requires old password verification).
     """
 
@@ -485,25 +482,33 @@ class AccountDeletionConfirmAPIView(APIView):
         }, status=status.HTTP_200_OK)
 
 
-class PseudonymValidationAPIView(APIView):
+class UsernameValidationAPIView(APIView):
     """
-    POST /api/account/validate-pseudonym/
-    Validate pseudonym without saving (for frontend inline validation).
+    POST /api/account/validate-username/
+    Validate username without saving (for frontend inline validation).
     """
 
     permission_classes = [AllowAny]
     throttle_classes = [ValidationThrottle]
 
     def post(self, request):
-        serializer = PseudonymValidationSerializer(data=request.data)
+        serializer = UsernameValidationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        pseudonym = serializer.validated_data['pseudonym']
+        username = serializer.validated_data['username']
 
         # Exclude current user if authenticated
         exclude_user_id = request.user.id if request.user.is_authenticated else None
 
-        # Validate pseudonym
-        result = validate_pseudonym(pseudonym, exclude_user_id=exclude_user_id)
+        # Validate username
+        result = validate_username(username, exclude_user_id=exclude_user_id)
 
-        return Response(result, status=status.HTTP_200_OK)
+        # Transform errors list to single error message for API response
+        response_data = {
+            "valid": result["valid"],
+            "available": result["available"]
+        }
+        if result.get("errors"):
+            response_data["error"] = result["errors"][0]  # Return first error
+
+        return Response(response_data, status=status.HTTP_200_OK)

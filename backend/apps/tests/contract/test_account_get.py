@@ -22,7 +22,7 @@ class TestAccountGetContract:
         - Body: Account information object
         - Authentication: Required
         """
-        url = reverse("authentication:account-detail")
+        url = reverse("authentication:account-retrieve")
         response = authenticated_client_alice.get(url)
 
         assert response.status_code == status.HTTP_200_OK
@@ -34,13 +34,12 @@ class TestAccountGetContract:
 
         Contract:
         - id: integer
-        - pseudonym: string or null
+        - username: string (required)
         - email: string (decrypted)
-        - created_at: datetime string
-        - updated_at: datetime string
+        - date_joined: datetime string
         - Does NOT include: password, deleted_at, pending_email
         """
-        url = reverse("authentication:account-detail")
+        url = reverse("authentication:account-retrieve")
         response = authenticated_client_alice.get(url)
 
         assert response.status_code == status.HTTP_200_OK
@@ -48,12 +47,11 @@ class TestAccountGetContract:
         # Check required fields are present
         assert "id" in response.data
         assert "email" in response.data
-        assert "created_at" in response.data
-        assert "updated_at" in response.data
+        assert "username" in response.data
+        assert "date_joined" in response.data
 
-        # Check pseudonym field (can be null or string)
-        assert "pseudonym" in response.data
-        assert response.data["pseudonym"] is None or isinstance(response.data["pseudonym"], str)
+        # Check username field is string (required now)
+        assert isinstance(response.data["username"], str)
 
         # Check sensitive fields are excluded
         assert "password" not in response.data
@@ -61,10 +59,9 @@ class TestAccountGetContract:
         assert "pending_email" not in response.data
 
         # Check field types
-        assert isinstance(response.data["id"], int)
+        assert isinstance(response.data["id"], str)  # UUID as string
         assert isinstance(response.data["email"], str)
-        assert isinstance(response.data["created_at"], str)
-        assert isinstance(response.data["updated_at"], str)
+        assert isinstance(response.data["date_joined"], str)
 
     def test_get_account_requires_authentication(self, api_client):
         """
@@ -73,39 +70,40 @@ class TestAccountGetContract:
         Contract:
         - Status: 401 UNAUTHORIZED for unauthenticated requests
         """
-        url = reverse("authentication:account-detail")
+        url = reverse("authentication:account-retrieve")
         response = api_client.get(url)
 
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
-        assert "detail" in response.data
+        assert "error" in response.data
+        assert response.data["error"] == "UNAUTHORIZED"
 
-    def test_get_account_shows_decrypted_email(self, authenticated_client_alice, user_alice):
+    def test_get_account_shows_decrypted_email(self, authenticated_client_alice, alice):
         """
         Test that email is decrypted and shown to account owner.
 
         Contract:
         - Email field contains plain text email (not encrypted)
         """
-        url = reverse("authentication:account-detail")
+        url = reverse("authentication:account-retrieve")
         response = authenticated_client_alice.get(url)
 
         assert response.status_code == status.HTTP_200_OK
-        assert response.data["email"] == user_alice.email
+        assert response.data["email"] == alice.email
         assert "@" in response.data["email"]  # Valid email format
 
-    def test_get_account_with_pseudonym(self, authenticated_client_alice, user_alice):
-        """Test that pseudonym is returned if set."""
-        # Set pseudonym
-        user_alice.pseudonym = "alice_wonderland"
-        user_alice.save()
+    def test_get_account_with_username(self, authenticated_client_alice, alice):
+        """Test that username is returned if set."""
+        # Set username
+        alice.username = "alice_wonderland"
+        alice.save()
 
-        url = reverse("authentication:account-detail")
+        url = reverse("authentication:account-retrieve")
         response = authenticated_client_alice.get(url)
 
         assert response.status_code == status.HTTP_200_OK
-        assert response.data["pseudonym"] == "alice_wonderland"
+        assert response.data["username"] == "alice_wonderland"
 
-    def test_deleted_user_returns_404(self, authenticated_client_alice, user_alice):
+    def test_deleted_user_returns_404(self, authenticated_client_alice, alice):
         """
         Test that deleted users (deleted_at != NULL) return 404.
 
@@ -115,10 +113,10 @@ class TestAccountGetContract:
         from django.utils import timezone
 
         # Soft delete the user
-        user_alice.deleted_at = timezone.now()
-        user_alice.save()
+        alice.deleted_at = timezone.now()
+        alice.save()
 
-        url = reverse("authentication:account-detail")
+        url = reverse("authentication:account-retrieve")
         response = authenticated_client_alice.get(url)
 
         # Should return 404 or 401 (depending on implementation)

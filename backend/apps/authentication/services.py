@@ -2,7 +2,7 @@
 Authentication and account management services.
 
 Handles JWT token generation, validation, user authentication logic,
-pseudonym validation, email changes, and account management.
+username validation, email changes, and account management.
 """
 
 import hashlib
@@ -22,8 +22,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .models import User, EmailChangeConfirmation, AccountLog
 
 
-# Pseudonym validation regex: alphanumeric and simple special characters, no spaces
-PSEUDONYM_PATTERN = re.compile(r'^[a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};\':"\\|,.<>\/?]+$')
+# Username validation regex: alphanumeric and simple special characters, no spaces
+USERNAME_PATTERN = re.compile(r'^[a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};\':"\\|,.<>\/?]+$')
 
 
 class AuthenticationService:
@@ -41,10 +41,18 @@ class AuthenticationService:
         Returns:
             User object if authenticated, None otherwise
         """
-        user = authenticate(username=email, password=password)
+        try:
+            # Find user by email_hash (since email is encrypted)
+            email_hash = User.hash_email(email)
+            user = User.objects.get(email_hash=email_hash)
 
-        if user and isinstance(user, User) and user.is_active:
-            return user
+            # Authenticate with username and password
+            authenticated_user = authenticate(username=user.username, password=password)
+
+            if authenticated_user and isinstance(authenticated_user, User) and authenticated_user.is_active:
+                return authenticated_user
+        except User.DoesNotExist:
+            pass
 
         return None
 
@@ -157,7 +165,8 @@ class AuthenticationService:
             User object if found, None otherwise
         """
         try:
-            return User.objects.get(email=email)
+            email_hash = User.hash_email(email)
+            return User.objects.get(email_hash=email_hash)
         except User.DoesNotExist:
             return None
 
@@ -184,76 +193,171 @@ class AuthenticationService:
 # Account Management Services
 
 
-def validate_pseudonym(pseudonym: str, exclude_user_id=None) -> dict:
+def _check_username_length(username: str) -> tuple[bool, str | None]:
     """
-    Validate pseudonym against rules.
-
-    Rules:
-    - Length: 1-99 characters
-    - Pattern: alphanumeric and simple special characters only
-    - No spaces allowed
-    - Case-insensitive uniqueness across all users
+    Check if username length is valid (3-100 characters).
 
     Args:
-        pseudonym: The pseudonym to validate
-        exclude_user_id: Optional user ID to exclude from uniqueness check (for updates)
+        username: The username to check
 
     Returns:
-        dict with keys:
-            - valid (bool): Whether pseudonym is valid
-            - available (bool): Whether pseudonym is available (unique)
-            - error (str|None): Error message if invalid
+        Tuple of (is_valid, error_message)
     """
-    # Check length
-    if not pseudonym or len(pseudonym) == 0:
-        return {
-            "valid": False,
-            "available": None,
-            "error": "Pseudonym is required."
-        }
+    if not username or len(username) < 3:
+        return False, "Username must be at least 3 characters long."
 
-    if len(pseudonym) >= 100:
-        return {
-            "valid": False,
-            "available": None,
-            "error": "Pseudonym must be less than 100 characters."
-        }
+    if len(username) > 100:
+        return False, "Username must be at most 100 characters long."
 
-    # Check for spaces
-    if ' ' in pseudonym:
-        return {
-            "valid": False,
-            "available": None,
-            "error": "Pseudonym cannot contain spaces."
-        }
+    return True, None
 
-    # Check pattern
-    if not PSEUDONYM_PATTERN.match(pseudonym):
-        return {
-            "valid": False,
-            "available": None,
-            "error": "Pseudonym can only contain letters, numbers, and simple special characters."
-        }
 
+def _check_username_start(username: str) -> tuple[bool, str | None]:
+    """
+    Check if username starts with alphanumeric character.
+
+    Args:
+        username: The username to check
+
+    Returns:
+        Tuple of (is_valid, error_message)
+    """
+    if not username:
+        return False, "Username cannot be empty."
+
+    if not username[0].isalnum():
+        return False, "Username must start with a letter or number."
+
+    return True, None
+
+
+def _check_username_characters(username: str) -> tuple[bool, str | None]:
+    """
+    Check if username contains only allowed characters.
+
+    Allowed: letters, numbers, underscores, hyphens.
+    NO SPACES allowed per spec.md line 46.
+
+    Args:
+        username: The username to check
+
+    Returns:
+        Tuple of (is_valid, error_message)
+    """
+    # Pattern: alphanumeric, underscore, hyphen (NO spaces)
+    # Must start with alphanumeric (checked separately)
+    pattern = re.compile(r'^[a-zA-Z0-9][a-zA-Z0-9_\-]*$')
+
+    if not pattern.match(username):
+        # Check if space is the issue
+        if ' ' in username:
+            return False, "Username cannot contain spaces."
+        return False, "Username can only contain letters, numbers, underscores, and hyphens."
+
+    return True, None
+
+
+def _check_username_spaces(username: str) -> tuple[bool, str | None]:
+    """
+    Check username doesn't contain any spaces.
+    This check is now redundant with _check_username_characters but kept for clarity.
+
+    Args:
+        username: The username to check
+
+    Returns:
+        Tuple of (is_valid, error_message)
+    """
+    # NO spaces allowed per spec
+    if ' ' in username:
+        return False, "Username cannot contain spaces."
+
+    return True, None
+
+
+def _check_username_uniqueness(username: str, exclude_user_id=None) -> tuple[bool, str | None]:
+    """
+    Check if username is unique (case-insensitive).
+
+    Args:
+        username: The username to check
+        exclude_user_id: Optional user ID to exclude from uniqueness check
+
+    Returns:
+        Tuple of (is_available, error_message)
+    """
     # Check uniqueness (case-insensitive)
-    query = User.objects.filter(pseudonym__iexact=pseudonym)
+    query = User.objects.filter(username__iexact=username)
     if exclude_user_id:
         query = query.exclude(id=exclude_user_id)
 
     is_available = not query.exists()
 
     if not is_available:
+        return False, "This username is already taken."
+
+    return True, None
+
+
+def validate_username(username: str, exclude_user_id=None) -> dict:
+    """
+    Validate username against all rules.
+
+    Rules:
+    - Length: 3-100 characters
+    - Must start with alphanumeric character
+    - Allowed characters: letters, numbers, underscores, hyphens
+    - No spaces allowed
+    - Case-insensitive uniqueness across all users
+
+    Args:
+        username: The username to validate
+        exclude_user_id: Optional user ID to exclude from uniqueness check (for updates)
+
+    Returns:
+        dict with keys:
+            - valid (bool): Whether username is valid
+            - available (bool): Whether username is available (unique)
+            - errors (list[str]): List of error messages (empty if valid)
+    """
+    errors = []
+
+    # Run all validation checks
+    checks = [
+        _check_username_length,
+        _check_username_start,
+        _check_username_characters,
+        _check_username_spaces,
+    ]
+
+    for check in checks:
+        is_valid, error_msg = check(username)
+        if not is_valid:
+            errors.append(error_msg)
+
+    # If format invalid, don't check uniqueness
+    if errors:
+        return {
+            "valid": False,
+            "available": None,  # Not checked when format is invalid
+            "errors": errors
+        }
+
+    # Check uniqueness only if format is valid
+    is_available, error_msg = _check_username_uniqueness(username, exclude_user_id)
+    if not is_available:
         return {
             "valid": True,
             "available": False,
-            "error": "This pseudonym is already taken. Please choose a different one."
+            "errors": [error_msg]
         }
 
     return {
         "valid": True,
         "available": True,
-        "error": None
+        "errors": []
     }
+
 
 
 class EmailChangeTokenGenerator:
@@ -397,12 +501,12 @@ def send_email_change_confirmation(user, new_email: str, token: str):
 
     # Render HTML and plain text versions
     html_message = render_to_string('emails/confirm_email_change.html', {
-        'pseudonym': user.pseudonym or str(user.email),
+        'username': user.username or str(user.email),
         'new_email': new_email,
         'confirmation_link': confirmation_link,
     })
     plain_message = render_to_string('emails/confirm_email_change.txt', {
-        'pseudonym': user.pseudonym or str(user.email),
+        'username': user.username or str(user.email),
         'new_email': new_email,
         'confirmation_link': confirmation_link,
     })
@@ -431,11 +535,11 @@ def send_deletion_confirmation(user, token: str):
 
     # Render HTML and plain text versions
     html_message = render_to_string('emails/confirm_account_deletion.html', {
-        'pseudonym': user.pseudonym or str(user.email),
+        'username': user.username or str(user.email),
         'confirmation_link': confirmation_link,
     })
     plain_message = render_to_string('emails/confirm_account_deletion.txt', {
-        'pseudonym': user.pseudonym or str(user.email),
+        'username': user.username or str(user.email),
         'confirmation_link': confirmation_link,
     })
 

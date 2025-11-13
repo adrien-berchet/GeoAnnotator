@@ -48,6 +48,7 @@ export function RegisterForm() {
   const navigate = useNavigate();
   const { login } = useAuth();
 
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -93,6 +94,17 @@ export function RegisterForm() {
     e.preventDefault();
     setError("");
 
+    // Validate username
+    if (!username) {
+      setError("Username is required");
+      return;
+    }
+
+    if (username.length < 3) {
+      setError("Username must be at least 3 characters");
+      return;
+    }
+
     // Validate email
     if (!email) {
       setError("Email is required");
@@ -132,7 +144,7 @@ export function RegisterForm() {
 
     try {
       // Call register API
-      const response = await register({ email, password });
+      const response = await register({ username, email, password });
 
       // Store tokens and user in auth context
       login(response.access, response.refresh, response.user);
@@ -184,6 +196,26 @@ export function RegisterForm() {
               {error}
             </div>
           )}
+
+          {/* Username field */}
+          <div className="form-group">
+            <label htmlFor="username" className="form-label">
+              Username (Pseudonym)
+            </label>
+            <input
+              id="username"
+              type="text"
+              className="form-input"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="your_username"
+              disabled={isLoading}
+              required
+            />
+            <small className="form-help">
+              This will be your public display name (used for sharing)
+            </small>
+          </div>
 
           {/* Email field */}
           <div className="form-group">

@@ -16,7 +16,7 @@ from rest_framework import status
 class TestEmailConfirmContract:
     """Contract tests for POST /api/account/confirm-email/ endpoint."""
 
-    def test_confirm_email_returns_200(self, authenticated_client_alice, user_alice):
+    def test_confirm_email_returns_200(self, authenticated_client_alice, alice):
         """
         Test that POST /api/account/confirm-email/ with valid token returns 200.
 
@@ -31,17 +31,17 @@ class TestEmailConfirmContract:
         # Create confirmation
         new_email = "alice.confirmed@example.com"
         token_generator = EmailChangeTokenGenerator()
-        token = token_generator.generate_token(user_alice, new_email)
+        token = token_generator.generate_token(alice, new_email)
 
         EmailChangeConfirmation.objects.create(
-            user=user_alice,
+            user=alice,
             new_email=new_email,
             token=token,
             expires_at=timezone.now() + timedelta(minutes=30),
         )
 
-        url = reverse("authentication:account-confirm-email")
-        payload = {"token": token, "user_id": user_alice.id}
+        url = reverse("authentication:email-confirm")
+        payload = {"token": token, "user_id": alice.id}
         response = authenticated_client_alice.post(url, payload, format="json")
 
         assert response.status_code == status.HTTP_200_OK
@@ -49,7 +49,7 @@ class TestEmailConfirmContract:
         assert "new_email" in response.data
         assert response.data["new_email"] == new_email
 
-    def test_confirm_email_invalid_token_returns_400(self, authenticated_client_alice, user_alice):
+    def test_confirm_email_invalid_token_returns_400(self, authenticated_client_alice, alice):
         """
         Test that invalid token is rejected.
 
@@ -57,15 +57,15 @@ class TestEmailConfirmContract:
         - Status: 400 BAD REQUEST
         - Error: "Invalid or expired confirmation token."
         """
-        url = reverse("authentication:account-confirm-email")
-        payload = {"token": "invalid_token_123", "user_id": user_alice.id}
+        url = reverse("authentication:email-confirm")
+        payload = {"token": "invalid_token_123", "user_id": alice.id}
         response = authenticated_client_alice.post(url, payload, format="json")
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "detail" in response.data
         assert "invalid" in response.data["detail"].lower()
 
-    def test_confirm_email_expired_token_returns_400(self, authenticated_client_alice, user_alice):
+    def test_confirm_email_expired_token_returns_400(self, authenticated_client_alice, alice):
         """
         Test that expired token is rejected.
 
@@ -78,24 +78,24 @@ class TestEmailConfirmContract:
 
         # Create expired confirmation
         token_generator = EmailChangeTokenGenerator()
-        token = token_generator.generate_token(user_alice, "expired@example.com")
+        token = token_generator.generate_token(alice, "expired@example.com")
 
         EmailChangeConfirmation.objects.create(
-            user=user_alice,
+            user=alice,
             new_email="expired@example.com",
             token=token,
             expires_at=timezone.now() - timedelta(hours=1),  # Expired
         )
 
-        url = reverse("authentication:account-confirm-email")
-        payload = {"token": token, "user_id": user_alice.id}
+        url = reverse("authentication:email-confirm")
+        payload = {"token": token, "user_id": alice.id}
         response = authenticated_client_alice.post(url, payload, format="json")
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "detail" in response.data
         assert "expired" in response.data["detail"].lower()
 
-    def test_confirm_email_wrong_user_returns_403(self, authenticated_client_alice, user_bob):
+    def test_confirm_email_wrong_user_returns_403(self, authenticated_client_alice, bob):
         """
         Test that confirming another user's email change is forbidden.
 
@@ -108,36 +108,36 @@ class TestEmailConfirmContract:
 
         # Create confirmation for Bob
         token_generator = EmailChangeTokenGenerator()
-        token = token_generator.generate_token(user_bob, "bob.new@example.com")
+        token = token_generator.generate_token(bob, "bob.new@example.com")
 
         EmailChangeConfirmation.objects.create(
-            user=user_bob,
+            user=bob,
             new_email="bob.new@example.com",
             token=token,
             expires_at=timezone.now() + timedelta(minutes=30),
         )
 
         # Alice tries to confirm Bob's email change
-        url = reverse("authentication:account-confirm-email")
-        payload = {"token": token, "user_id": user_bob.id}
+        url = reverse("authentication:email-confirm")
+        payload = {"token": token, "user_id": bob.id}
         response = authenticated_client_alice.post(url, payload, format="json")
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
-    def test_confirm_email_requires_authentication(self, api_client, user_alice):
+    def test_confirm_email_requires_authentication(self, api_client, alice):
         """
         Test that confirming email requires authentication.
 
         Contract:
         - Status: 401 UNAUTHORIZED for unauthenticated requests
         """
-        url = reverse("authentication:account-confirm-email")
-        payload = {"token": "test_token", "user_id": user_alice.id}
+        url = reverse("authentication:email-confirm")
+        payload = {"token": "test_token", "user_id": alice.id}
         response = api_client.post(url, payload, format="json")
 
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-    def test_confirm_email_updates_user_email(self, authenticated_client_alice, user_alice):
+    def test_confirm_email_updates_user_email(self, authenticated_client_alice, alice):
         """
         Test that confirming email updates user's email field.
 
@@ -150,29 +150,29 @@ class TestEmailConfirmContract:
 
         new_email = "alice.final@example.com"
         token_generator = EmailChangeTokenGenerator()
-        token = token_generator.generate_token(user_alice, new_email)
+        token = token_generator.generate_token(alice, new_email)
 
         EmailChangeConfirmation.objects.create(
-            user=user_alice,
+            user=alice,
             new_email=new_email,
             token=token,
             expires_at=timezone.now() + timedelta(minutes=30),
         )
 
-        url = reverse("authentication:account-confirm-email")
-        payload = {"token": token, "user_id": user_alice.id}
+        url = reverse("authentication:email-confirm")
+        payload = {"token": token, "user_id": alice.id}
         response = authenticated_client_alice.post(url, payload, format="json")
 
         assert response.status_code == status.HTTP_200_OK
 
         # Check email was updated
-        user_alice.refresh_from_db()
-        assert user_alice.email == new_email
+        alice.refresh_from_db()
+        assert alice.email == new_email
 
         # Check confirmation was deleted
-        assert not EmailChangeConfirmation.objects.filter(user=user_alice).exists()
+        assert not EmailChangeConfirmation.objects.filter(user=alice).exists()
 
-    def test_confirm_email_creates_account_log(self, authenticated_client_alice, user_alice):
+    def test_confirm_email_creates_account_log(self, authenticated_client_alice, alice):
         """
         Test that confirming email creates AccountLog entry.
 
@@ -185,21 +185,21 @@ class TestEmailConfirmContract:
 
         new_email = "alice.logged@example.com"
         token_generator = EmailChangeTokenGenerator()
-        token = token_generator.generate_token(user_alice, new_email)
+        token = token_generator.generate_token(alice, new_email)
 
         EmailChangeConfirmation.objects.create(
-            user=user_alice,
+            user=alice,
             new_email=new_email,
             token=token,
             expires_at=timezone.now() + timedelta(minutes=30),
         )
 
-        url = reverse("authentication:account-confirm-email")
-        payload = {"token": token, "user_id": user_alice.id}
+        url = reverse("authentication:email-confirm")
+        payload = {"token": token, "user_id": alice.id}
         response = authenticated_client_alice.post(url, payload, format="json")
 
         assert response.status_code == status.HTTP_200_OK
 
         # Check log entry
-        log = AccountLog.objects.filter(user=user_alice, operation="EMAIL_CHANGE_CONFIRMED").first()
+        log = AccountLog.objects.filter(user=alice, operation="EMAIL_CHANGE_CONFIRMED").first()
         assert log is not None

@@ -1,7 +1,7 @@
 """
 User model extension for GeoAnnotator.
 
-Extends Django's built-in User model with storage quota tracking, pseudonyms,
+Extends Django's built-in User model with storage quota tracking, usernames,
 email encryption, and account management features.
 """
 
@@ -27,14 +27,14 @@ class ActiveUserManager(BaseUserManager["User"]):
 
 
 class UserManager(BaseUserManager["User"]):
-    """Custom manager for User model with pseudonym as username."""
+    """Custom manager for User model with username."""
 
     def create_user(self, username, email=None, password=None, **extra_fields):
         """
-        Create and return a regular user with pseudonym and optional email.
+        Create and return a regular user with username and optional email.
 
         Args:
-            username: User's pseudonym (used for login)
+            username: User's username (used for login)
             email: User's email address (optional, encrypted at rest)
             password: User's password
             **extra_fields: Additional fields
@@ -43,7 +43,7 @@ class UserManager(BaseUserManager["User"]):
             User object
         """
         if not username:
-            raise ValueError("Username (pseudonym) is required")
+            raise ValueError("Username is required")
 
         if email:
             email = self.normalize_email(email)
@@ -80,10 +80,10 @@ class UserManager(BaseUserManager["User"]):
 
     def create_superuser(self, username, email=None, password=None, **extra_fields):
         """
-        Create and return a superuser with pseudonym and password.
+        Create and return a superuser with username and password.
 
         Args:
-            username: Superuser's pseudonym
+            username: Superuser's username
             email: Superuser's email address (optional)
             password: Superuser's password
             **extra_fields: Additional fields
@@ -120,9 +120,9 @@ class User(AbstractUser):
         primary_key=True, default=uuid.uuid4, editable=False, help_text="Unique user identifier"
     )
 
-    # Pseudonym is the login username (unique, required)
+    # Username is the login username (unique, required)
     username = models.CharField(
-        max_length=100, unique=True, db_index=True, help_text="User's pseudonym (used for login)"
+        max_length=100, unique=True, db_index=True, help_text="User's username (used for login)"
     )
 
     # Email hash for uniqueness check (SHA-256 of lowercase email)
@@ -175,7 +175,7 @@ class User(AbstractUser):
         help_text="Temporary storage for unconfirmed email changes",
     )
 
-    # Use username (pseudonym) as the login field
+    # Use username as the login field
     USERNAME_FIELD = "username"
     REQUIRED_FIELDS = []  # No additional required fields for createsuperuser
 
@@ -254,7 +254,7 @@ class User(AbstractUser):
         self.save()
 
     def __str__(self):
-        # Return username (pseudonym)
+        # Return username
         return self.username
 
 
@@ -337,7 +337,7 @@ class AccountLog(models.Model):
 
     # Operation type choices
     OPERATION_CHOICES = [
-        ("PSEUDONYM_CHANGED", "Pseudonym Changed"),
+        ("USERNAME_CHANGED", "Username Changed"),
         ("EMAIL_CHANGED", "Email Changed"),
         ("PASSWORD_CHANGED", "Password Changed"),
         ("ACCOUNT_DELETED", "Account Deleted"),

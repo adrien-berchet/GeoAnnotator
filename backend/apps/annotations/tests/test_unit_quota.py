@@ -29,6 +29,7 @@ class TestStorageQuota:
     def user(self):
         """Create test user with default quota."""
         return User.objects.create_user(
+            username="quotauser",
             email="quota@example.com",
             password="TestPass123",
             storage_limit=2 * 1024 * 1024 * 1024,  # 2GB

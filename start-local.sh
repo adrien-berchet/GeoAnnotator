@@ -60,7 +60,7 @@ docker-compose exec -T backend python manage.py migrate --noinput
 
 echo ""
 echo "👤 Creating superuser (if needed)..."
-echo "from apps.authentication.models import User; User.objects.create_superuser('admin@geoannotator.local', 'admin123') if not User.objects.filter(email='admin@geoannotator.local').exists() else None" | docker-compose exec -T backend python manage.py shell
+echo "from apps.authentication.models import User; User.objects.create_superuser('admin', 'admin@geoannotator.local', 'admin123') if not User.objects.filter(email_hash=User.hash_email('admin@geoannotator.local')).exists() else None" | docker-compose exec -T backend python manage.py shell
 
 echo ""
 echo "✅ Deployment complete!"

@@ -9,17 +9,16 @@ import { apiClient } from "./client";
  */
 export interface AccountInfo {
   id: number;
-  pseudonym: string;
+  username: string;
   email: string;
-  created_at: string;
-  updated_at: string;
+  date_joined: string;
 }
 
 /**
- * Pseudonym update request.
+ * Username update request.
  */
-export interface PseudonymUpdateData {
-  pseudonym: string;
+export interface UsernameUpdateData {
+  username: string;
 }
 
 /**
@@ -94,16 +93,16 @@ export interface AccountDeleteConfirmResponse {
 }
 
 /**
- * Pseudonym validation request.
+ * Username validation request.
  */
-export interface PseudonymValidationData {
-  pseudonym: string;
+export interface UsernameValidationData {
+  username: string;
 }
 
 /**
- * Pseudonym validation response.
+ * Username validation response.
  */
-export interface PseudonymValidationResponse {
+export interface UsernameValidationResponse {
   valid: boolean;
   available: boolean | null;
   error?: string;
@@ -113,17 +112,17 @@ export interface PseudonymValidationResponse {
  * Get current user's account information.
  */
 export async function getAccount(): Promise<AccountInfo> {
-  const response = await apiClient.get<AccountInfo>("/account/");
+  const response = await apiClient.get<AccountInfo>("/auth/account/");
   return response.data;
 }
 
 /**
- * Update account pseudonym.
+ * Update account username.
  */
-export async function updatePseudonym(
-  data: PseudonymUpdateData,
+export async function updateUsername(
+  data: UsernameUpdateData,
 ): Promise<AccountInfo> {
-  const response = await apiClient.patch<AccountInfo>("/account/", data);
+  const response = await apiClient.patch<AccountInfo>("/auth/account/update/", data);
   return response.data;
 }
 
@@ -134,7 +133,7 @@ export async function changeEmail(
   data: EmailChangeData,
 ): Promise<EmailChangeResponse> {
   const response = await apiClient.post<EmailChangeResponse>(
-    "/account/change-email/",
+    "/auth/account/change-email/",
     data,
   );
   return response.data;
@@ -147,7 +146,7 @@ export async function confirmEmail(
   data: EmailConfirmData,
 ): Promise<EmailConfirmResponse> {
   const response = await apiClient.post<EmailConfirmResponse>(
-    "/account/confirm-email/",
+    "/auth/account/confirm-email/",
     data,
   );
   return response.data;
@@ -160,7 +159,7 @@ export async function changePassword(
   data: PasswordChangeData,
 ): Promise<PasswordChangeResponse> {
   const response = await apiClient.post<PasswordChangeResponse>(
-    "/account/change-password/",
+    "/auth/account/password-change/",
     data,
   );
   return response.data;
@@ -170,7 +169,7 @@ export async function changePassword(
  * Soft delete user account (sends confirmation email).
  */
 export async function deleteAccount(): Promise<AccountDeleteResponse> {
-  const response = await apiClient.delete<AccountDeleteResponse>("/account/");
+  const response = await apiClient.delete<AccountDeleteResponse>("/auth/account/delete/");
   return response.data;
 }
 
@@ -181,20 +180,20 @@ export async function confirmDeleteAccount(
   data: AccountDeleteConfirmData,
 ): Promise<AccountDeleteConfirmResponse> {
   const response = await apiClient.post<AccountDeleteConfirmResponse>(
-    "/account/confirm-delete/",
+    "/auth/account/confirm-delete/",
     data,
   );
   return response.data;
 }
 
 /**
- * Validate pseudonym without saving (for frontend inline validation).
+ * Validate username without saving (for frontend inline validation).
  */
-export async function validatePseudonym(
-  data: PseudonymValidationData,
-): Promise<PseudonymValidationResponse> {
-  const response = await apiClient.post<PseudonymValidationResponse>(
-    "/account/validate-pseudonym/",
+export async function validateUsername(
+  data: UsernameValidationData,
+): Promise<UsernameValidationResponse> {
+  const response = await apiClient.post<UsernameValidationResponse>(
+    "/auth/account/validate-username/",
     data,
   );
   return response.data;

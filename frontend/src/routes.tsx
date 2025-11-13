@@ -22,7 +22,7 @@ import { EmailConfirmPage } from "./pages/EmailConfirmPage";
 import { AccountDeleteConfirmPage } from "./pages/AccountDeleteConfirmPage";
 import { ProtectedRoute } from "./routes/ProtectedRoute";
 import { PublicRoute } from "./routes/PublicRoute";
-import { ProfilePage, SharedPointsPage } from "./pages/PlaceholderPages";
+import { SharedPointsPage } from "./pages/PlaceholderPages";
 
 /**
  * Router configuration.
@@ -107,11 +107,7 @@ export const router = createBrowserRouter([
       },
       {
         path: "profile",
-        element: (
-          <ProtectedRoute>
-            <ProfilePage />
-          </ProtectedRoute>
-        ),
+        element: <Navigate to="/account" replace />,
       },
       {
         path: "account",

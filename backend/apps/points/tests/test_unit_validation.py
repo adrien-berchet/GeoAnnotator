@@ -24,7 +24,7 @@ class TestCoordinateValidation:
     @pytest.fixture
     def user(self):
         """Create test user."""
-        return User.objects.create_user(email="test@example.com", password="TestPass123")
+        return User.objects.create_user(username="test", email="test@example.com", password="TestPass123")
 
     def test_valid_coordinates(self, user):
         """Test that valid coordinates are accepted."""

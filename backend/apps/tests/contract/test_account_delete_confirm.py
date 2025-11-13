@@ -14,7 +14,7 @@ from rest_framework import status
 class TestAccountDeleteConfirmContract:
     """Contract tests for POST /api/account/confirm-delete/ endpoint."""
 
-    def test_confirm_delete_returns_200(self, authenticated_client_alice, user_alice):
+    def test_confirm_delete_returns_200(self, authenticated_client_alice, alice):
         """
         Test that POST /api/account/confirm-delete/ with valid token returns 200.
 
@@ -26,10 +26,10 @@ class TestAccountDeleteConfirmContract:
         from apps.authentication.services import AccountDeletionTokenGenerator
 
         token_generator = AccountDeletionTokenGenerator()
-        token = token_generator.generate_token(user_alice)
+        token = token_generator.generate_token(alice)
 
-        url = reverse("authentication:account-confirm-delete")
-        payload = {"token": token, "user_id": user_alice.id}
+        url = reverse("authentication:account-delete-confirm")
+        payload = {"token": token, "user_id": alice.id}
         response = authenticated_client_alice.post(url, payload, format="json")
 
         assert response.status_code == status.HTTP_200_OK
@@ -37,15 +37,15 @@ class TestAccountDeleteConfirmContract:
         assert "deleted_at" in response.data
         assert "permanent_deletion_date" in response.data
 
-    def test_confirm_delete_response_schema(self, authenticated_client_alice, user_alice):
+    def test_confirm_delete_response_schema(self, authenticated_client_alice, alice):
         """Test response schema for account deletion confirmation."""
         from apps.authentication.services import AccountDeletionTokenGenerator
 
         token_generator = AccountDeletionTokenGenerator()
-        token = token_generator.generate_token(user_alice)
+        token = token_generator.generate_token(alice)
 
-        url = reverse("authentication:account-confirm-delete")
-        payload = {"token": token, "user_id": user_alice.id}
+        url = reverse("authentication:account-delete-confirm")
+        payload = {"token": token, "user_id": alice.id}
         response = authenticated_client_alice.post(url, payload, format="json")
 
         assert response.status_code == status.HTTP_200_OK
@@ -53,7 +53,7 @@ class TestAccountDeleteConfirmContract:
         assert isinstance(response.data["deleted_at"], str)
         assert isinstance(response.data["permanent_deletion_date"], str)
 
-    def test_confirm_delete_invalid_token_returns_400(self, authenticated_client_alice, user_alice):
+    def test_confirm_delete_invalid_token_returns_400(self, authenticated_client_alice, alice):
         """
         Test that invalid token is rejected.
 
@@ -61,15 +61,15 @@ class TestAccountDeleteConfirmContract:
         - Status: 400 BAD REQUEST
         - Error: "Invalid or expired deletion confirmation token."
         """
-        url = reverse("authentication:account-confirm-delete")
-        payload = {"token": "invalid_token_xyz", "user_id": user_alice.id}
+        url = reverse("authentication:account-delete-confirm")
+        payload = {"token": "invalid_token_xyz", "user_id": alice.id}
         response = authenticated_client_alice.post(url, payload, format="json")
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "detail" in response.data
         assert "invalid" in response.data["detail"].lower()
 
-    def test_confirm_delete_wrong_user_returns_403(self, authenticated_client_alice, user_bob):
+    def test_confirm_delete_wrong_user_returns_403(self, authenticated_client_alice, bob):
         """
         Test that confirming another user's deletion is forbidden.
 
@@ -80,29 +80,29 @@ class TestAccountDeleteConfirmContract:
         from apps.authentication.services import AccountDeletionTokenGenerator
 
         token_generator = AccountDeletionTokenGenerator()
-        token = token_generator.generate_token(user_bob)
+        token = token_generator.generate_token(bob)
 
         # Alice tries to confirm Bob's deletion
-        url = reverse("authentication:account-confirm-delete")
-        payload = {"token": token, "user_id": user_bob.id}
+        url = reverse("authentication:account-delete-confirm")
+        payload = {"token": token, "user_id": bob.id}
         response = authenticated_client_alice.post(url, payload, format="json")
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
-    def test_confirm_delete_requires_authentication(self, api_client, user_alice):
+    def test_confirm_delete_requires_authentication(self, api_client, alice):
         """
         Test that confirming deletion requires authentication.
 
         Contract:
         - Status: 401 UNAUTHORIZED for unauthenticated requests
         """
-        url = reverse("authentication:account-confirm-delete")
-        payload = {"token": "test_token", "user_id": user_alice.id}
+        url = reverse("authentication:account-delete-confirm")
+        payload = {"token": "test_token", "user_id": alice.id}
         response = api_client.post(url, payload, format="json")
 
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-    def test_confirm_delete_sets_deleted_at(self, authenticated_client_alice, user_alice):
+    def test_confirm_delete_sets_deleted_at(self, authenticated_client_alice, alice):
         """
         Test that confirming deletion sets deleted_at timestamp.
 
@@ -112,21 +112,21 @@ class TestAccountDeleteConfirmContract:
         from apps.authentication.services import AccountDeletionTokenGenerator
 
         token_generator = AccountDeletionTokenGenerator()
-        token = token_generator.generate_token(user_alice)
+        token = token_generator.generate_token(alice)
 
-        url = reverse("authentication:account-confirm-delete")
-        payload = {"token": token, "user_id": user_alice.id}
+        url = reverse("authentication:account-delete-confirm")
+        payload = {"token": token, "user_id": alice.id}
         response = authenticated_client_alice.post(url, payload, format="json")
 
         assert response.status_code == status.HTTP_200_OK
 
         # Check deleted_at is set
-        user_alice.refresh_from_db()
-        assert user_alice.deleted_at is not None
-        assert user_alice.deleted_at <= timezone.now()
+        alice.refresh_from_db()
+        assert alice.deleted_at is not None
+        assert alice.deleted_at <= timezone.now()
 
     def test_confirm_delete_unshares_content(
-        self, authenticated_client_alice, user_alice, django_assert_num_queries
+        self, authenticated_client_alice, alice, django_assert_num_queries
     ):
         """
         Test that confirming deletion unshares all user's content.
@@ -141,19 +141,19 @@ class TestAccountDeleteConfirmContract:
         # (Assuming Share model exists with user FK and is_active field)
 
         token_generator = AccountDeletionTokenGenerator()
-        token = token_generator.generate_token(user_alice)
+        token = token_generator.generate_token(alice)
 
-        url = reverse("authentication:account-confirm-delete")
-        payload = {"token": token, "user_id": user_alice.id}
+        url = reverse("authentication:account-delete-confirm")
+        payload = {"token": token, "user_id": alice.id}
         response = authenticated_client_alice.post(url, payload, format="json")
 
         assert response.status_code == status.HTTP_200_OK
 
         # Check shares are inactive (if any exist)
-        active_shares = Share.objects.filter(user=user_alice, is_active=True).count()
+        active_shares = Share.objects.filter(owner=alice, is_active=True).count()
         assert active_shares == 0
 
-    def test_confirm_delete_creates_account_log(self, authenticated_client_alice, user_alice):
+    def test_confirm_delete_creates_account_log(self, authenticated_client_alice, alice):
         """
         Test that confirming deletion creates AccountLog entry.
 
@@ -164,20 +164,20 @@ class TestAccountDeleteConfirmContract:
         from apps.authentication.services import AccountDeletionTokenGenerator
 
         token_generator = AccountDeletionTokenGenerator()
-        token = token_generator.generate_token(user_alice)
+        token = token_generator.generate_token(alice)
 
-        url = reverse("authentication:account-confirm-delete")
-        payload = {"token": token, "user_id": user_alice.id}
+        url = reverse("authentication:account-delete-confirm")
+        payload = {"token": token, "user_id": alice.id}
         response = authenticated_client_alice.post(url, payload, format="json")
 
         assert response.status_code == status.HTTP_200_OK
 
         # Check log entry
-        log = AccountLog.objects.filter(user=user_alice, operation="ACCOUNT_DELETED").first()
+        log = AccountLog.objects.filter(user=alice, operation="ACCOUNT_DELETED").first()
         assert log is not None
 
     def test_confirm_delete_schedules_permanent_deletion(
-        self, authenticated_client_alice, user_alice
+        self, authenticated_client_alice, alice
     ):
         """
         Test that permanent deletion is scheduled for 30 days later.
@@ -188,10 +188,10 @@ class TestAccountDeleteConfirmContract:
         from apps.authentication.services import AccountDeletionTokenGenerator
 
         token_generator = AccountDeletionTokenGenerator()
-        token = token_generator.generate_token(user_alice)
+        token = token_generator.generate_token(alice)
 
-        url = reverse("authentication:account-confirm-delete")
-        payload = {"token": token, "user_id": user_alice.id}
+        url = reverse("authentication:account-delete-confirm")
+        payload = {"token": token, "user_id": alice.id}
         response = authenticated_client_alice.post(url, payload, format="json")
 
         assert response.status_code == status.HTTP_200_OK

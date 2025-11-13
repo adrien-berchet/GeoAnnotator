@@ -45,7 +45,7 @@ class TestPointsContract:
         """Create and authenticate a user, return (client, user_data)."""
         # Register user
         register_url = reverse("authentication:register")
-        register_data = {"email": "test@example.com", "password": "SecurePass123"}
+        register_data = {"username": "testuser", "email": "test@example.com", "password": "SecurePass123"}
         response = api_client.post(register_url, register_data, format="json")
         access_token = response.data["access"]
 
@@ -294,7 +294,7 @@ class TestPointsContract:
         # Try to access as user2
         client2 = APIClient()
         register_url = reverse("authentication:register")
-        register_data = {"email": "user2@example.com", "password": "SecurePass123"}
+        register_data = {"username": "user2", "email": "user2@example.com", "password": "SecurePass123"}
         register_response = client2.post(register_url, register_data, format="json")
         client2.credentials(HTTP_AUTHORIZATION=f"Bearer {register_response.data['access']}")
 
@@ -362,7 +362,7 @@ class TestPointsContract:
         # Try to update as user2
         client2 = APIClient()
         register_url = reverse("authentication:register")
-        register_data = {"email": "user2@example.com", "password": "SecurePass123"}
+        register_data = {"username": "user2b", "email": "user2@example.com", "password": "SecurePass123"}
         register_response = client2.post(register_url, register_data, format="json")
         client2.credentials(HTTP_AUTHORIZATION=f"Bearer {register_response.data['access']}")
 
@@ -420,7 +420,7 @@ class TestPointsContract:
         # Try to delete as user2
         client2 = APIClient()
         register_url = reverse("authentication:register")
-        register_data = {"email": "user2@example.com", "password": "SecurePass123"}
+        register_data = {"username": "user2c", "email": "user2@example.com", "password": "SecurePass123"}
         register_response = client2.post(register_url, register_data, format="json")
         client2.credentials(HTTP_AUTHORIZATION=f"Bearer {register_response.data['access']}")
 

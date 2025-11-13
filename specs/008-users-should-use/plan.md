@@ -267,7 +267,7 @@ frontend/
 9. Write contract test: PATCH /api/account/ [P]
 10. Write contract test: POST /api/account/change-email/ [P]
 11. Write contract test: POST /api/account/confirm-email/ [P]
-12. Write contract test: POST /api/account/change-password/ [P]
+12. Write contract test: POST /api/account/password-change/ [P]
 13. Write contract test: DELETE /api/account/ [P]
 14. Write contract test: POST /api/account/confirm-delete/ [P]
 15. Write contract test: POST /api/account/validate-pseudonym/ [P]
@@ -284,7 +284,7 @@ frontend/
 22. Implement PATCH /api/account/ view (pseudonym update)
 23. Implement POST /api/account/change-email/ view
 24. Implement POST /api/account/confirm-email/ view
-25. Implement POST /api/account/change-password/ view
+25. Implement POST /api/account/password-change/ view
 26. Implement DELETE /api/account/ view
 27. Implement POST /api/account/confirm-delete/ view
 28. Implement POST /api/account/validate-pseudonym/ view

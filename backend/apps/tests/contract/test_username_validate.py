@@ -1,7 +1,7 @@
 """
-Contract test: POST /api/account/validate-pseudonym/
+Contract test: POST /api/account/validate-username/
 
-Test pseudonym validation endpoint.
+Test username validation endpoint.
 """
 
 import pytest
@@ -10,20 +10,20 @@ from rest_framework import status
 
 
 @pytest.mark.django_db
-class TestPseudonymValidateContract:
-    """Contract tests for POST /api/account/validate-pseudonym/ endpoint."""
+class TestUsernameValidateContract:
+    """Contract tests for POST /api/account/validate-username/ endpoint."""
 
-    def test_validate_pseudonym_valid_available_returns_200(self, api_client):
+    def test_validate_username_valid_available_returns_200(self, api_client):
         """
-        Test that valid and available pseudonym returns 200.
+        Test that valid and available username returns 200.
 
         Contract:
         - Status: 200 OK
         - Body: { "valid": true, "available": true }
         - Does not require authentication
         """
-        url = reverse("authentication:account-validate-pseudonym")
-        payload = {"pseudonym": "unique_pseudonym_123"}
+        url = reverse("authentication:username-validate")
+        payload = {"username": "unique_username_123"}
         response = api_client.post(url, payload, format="json")
 
         assert response.status_code == status.HTTP_200_OK
@@ -31,20 +31,20 @@ class TestPseudonymValidateContract:
         assert response.data["available"] is True
         assert "error" not in response.data or response.data["error"] is None
 
-    def test_validate_pseudonym_valid_taken_returns_200(self, api_client, user_alice):
+    def test_validate_username_valid_taken_returns_200(self, api_client, alice):
         """
-        Test that valid but taken pseudonym returns 200 with available=false.
+        Test that valid but taken username returns 200 with available=false.
 
         Contract:
         - Status: 200 OK
         - Body: { "valid": true, "available": false, "error": "..." }
         """
-        # Set Alice's pseudonym
-        user_alice.pseudonym = "alice_taken"
-        user_alice.save()
+        # Set Alice's username
+        alice.username = "alice_taken"
+        alice.save()
 
-        url = reverse("authentication:account-validate-pseudonym")
-        payload = {"pseudonym": "alice_taken"}
+        url = reverse("authentication:username-validate")
+        payload = {"username": "alice_taken"}
         response = api_client.post(url, payload, format="json")
 
         assert response.status_code == status.HTTP_200_OK
@@ -53,16 +53,16 @@ class TestPseudonymValidateContract:
         assert "error" in response.data
         assert "taken" in response.data["error"].lower()
 
-    def test_validate_pseudonym_with_spaces_returns_200_invalid(self, api_client):
+    def test_validate_username_with_spaces_returns_200_invalid(self, api_client):
         """
-        Test that pseudonym with spaces returns invalid.
+        Test that username with spaces returns invalid.
 
         Contract:
         - Status: 200 OK
         - Body: { "valid": false, "available": null, "error": "..." }
         """
-        url = reverse("authentication:account-validate-pseudonym")
-        payload = {"pseudonym": "invalid pseudo"}
+        url = reverse("authentication:username-validate")
+        payload = {"username": "invalid username"}
         response = api_client.post(url, payload, format="json")
 
         assert response.status_code == status.HTTP_200_OK
@@ -71,85 +71,86 @@ class TestPseudonymValidateContract:
         assert "error" in response.data
         assert "space" in response.data["error"].lower()
 
-    def test_validate_pseudonym_too_long_returns_200_invalid(self, api_client):
+    def test_validate_username_too_long_returns_200_invalid(self, api_client):
         """
-        Test that pseudonym over 99 characters returns invalid.
+        Test that username over 100 characters returns invalid.
 
         Contract:
-        - Max length: 99 characters
+        - Max length: 100 characters
         """
-        url = reverse("authentication:account-validate-pseudonym")
-        payload = {"pseudonym": "a" * 100}
+        url = reverse("authentication:username-validate")
+        payload = {"username": "a" * 101}
         response = api_client.post(url, payload, format="json")
 
         assert response.status_code == status.HTTP_200_OK
         assert response.data["valid"] is False
         assert response.data["available"] is None
 
-    def test_validate_pseudonym_empty_returns_200_invalid(self, api_client):
+    def test_validate_username_empty_returns_200_invalid(self, api_client):
         """
-        Test that empty pseudonym returns invalid.
+        Test that empty username returns invalid.
 
         Contract:
-        - Minimum length: 1 character
+        - Minimum length: 3 characters
         """
-        url = reverse("authentication:account-validate-pseudonym")
-        payload = {"pseudonym": ""}
+        url = reverse("authentication:username-validate")
+        payload = {"username": ""}
         response = api_client.post(url, payload, format="json")
 
         assert response.status_code == status.HTTP_200_OK
         assert response.data["valid"] is False
         assert response.data["available"] is None
 
-    def test_validate_pseudonym_case_insensitive_check(self, api_client, user_alice):
+    def test_validate_username_case_insensitive_check(self, api_client, alice):
         """
         Test that uniqueness check is case-insensitive.
 
         Contract:
         - "Alice" and "alice" are considered duplicates
         """
-        user_alice.pseudonym = "AliceWonderland"
-        user_alice.save()
+        alice.username = "AliceWonderland"
+        alice.save()
 
-        url = reverse("authentication:account-validate-pseudonym")
-        payload = {"pseudonym": "alicewonderland"}  # Different case
+        url = reverse("authentication:username-validate")
+        payload = {"username": "alicewonderland"}  # Different case
         response = api_client.post(url, payload, format="json")
 
         assert response.status_code == status.HTTP_200_OK
         assert response.data["valid"] is True
         assert response.data["available"] is False
 
-    def test_validate_pseudonym_special_characters_valid(self, api_client):
+    def test_validate_username_special_characters_valid(self, api_client):
         """
-        Test that pseudonym with special characters is valid.
+        Test that username with underscores and hyphens is valid.
 
         Contract:
-        - Special characters allowed (except spaces)
+        - Allowed characters: letters, numbers, underscores, hyphens
+        - Must start with alphanumeric
         """
-        url = reverse("authentication:account-validate-pseudonym")
-        payload = {"pseudonym": "user_2024!@#"}
+        url = reverse("authentication:username-validate")
+        payload = {"username": "user_2024"}
         response = api_client.post(url, payload, format="json")
 
         assert response.status_code == status.HTTP_200_OK
         assert response.data["valid"] is True
         assert response.data["available"] is True
 
-    def test_validate_pseudonym_does_not_require_authentication(self, api_client):
+    def test_validate_username_does_not_require_authentication(self, api_client):
         """
         Test that validation works without authentication.
 
         Contract:
         - Optional authentication (can be used during registration)
         """
-        url = reverse("authentication:account-validate-pseudonym")
-        payload = {"pseudonym": "test_user"}
+        url = reverse("authentication:username-validate")
+        payload = {"username": "test_user"}
         response = api_client.post(url, payload, format="json")
 
         # Should work without authentication
         assert response.status_code == status.HTTP_200_OK
         assert "valid" in response.data
 
-    def test_validate_pseudonym_does_not_create_records(self, api_client, user_alice):
+    def test_validate_username_does_not_create_records(self, api_client, alice):
         """
         Test that validation does not create or modify any records.
 
@@ -161,8 +162,8 @@ class TestPseudonymValidateContract:
 
         initial_user_count = User.objects.count()
 
-        url = reverse("authentication:account-validate-pseudonym")
-        payload = {"pseudonym": "test_validate"}
+        url = reverse("authentication:username-validate")
+        payload = {"username": "test_validate"}
         response = api_client.post(url, payload, format="json")
 
         assert response.status_code == status.HTTP_200_OK
@@ -170,5 +171,5 @@ class TestPseudonymValidateContract:
         # No new users created
         assert User.objects.count() == initial_user_count
 
-        # No user has this pseudonym
-        assert not User.objects.filter(pseudonym="test_validate").exists()
+        # No user has this username
+        assert not User.objects.filter(username="test_validate").exists()

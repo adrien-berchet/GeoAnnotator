@@ -1,5 +1,5 @@
 """
-Contract test: POST /api/account/change-password/
+Contract test: POST /api/account/password-change/
 
 Test changing user password.
 """
@@ -11,20 +11,20 @@ from rest_framework import status
 
 @pytest.mark.django_db
 class TestPasswordChangeContract:
-    """Contract tests for POST /api/account/change-password/ endpoint."""
+    """Contract tests for POST /api/account/password-change/ endpoint."""
 
     def test_change_password_returns_200(self, authenticated_client_alice):
         """
-        Test that POST /api/account/change-password/ with valid data returns 200.
+        Test that POST /api/account/password-change/ with valid data returns 200.
 
         Contract:
         - Status: 200 OK
         - Body: { "detail": "Password changed successfully." }
         - Requires old_password verification
         """
-        url = reverse("authentication:account-change-password")
+        url = reverse("authentication:password-change")
         payload = {
-            "old_password": "testpass123",  # Default test password
+            "old_password": "SecurePass123",  # Default alice password
             "new_password": "newSecurePass456!",
         }
         response = authenticated_client_alice.post(url, payload, format="json")
@@ -41,7 +41,7 @@ class TestPasswordChangeContract:
         - Status: 400 BAD REQUEST
         - Error: "Current password is incorrect."
         """
-        url = reverse("authentication:account-change-password")
+        url = reverse("authentication:password-change")
         payload = {
             "old_password": "wrong_password",
             "new_password": "newSecurePass456!",
@@ -49,8 +49,9 @@ class TestPasswordChangeContract:
         response = authenticated_client_alice.post(url, payload, format="json")
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert "old_password" in response.data
-        assert any("incorrect" in str(error).lower() for error in response.data["old_password"])
+        assert "details" in response.data
+        assert "old_password" in response.data["details"]
+        assert any("incorrect" in str(error).lower() for error in response.data["details"]["old_password"])
 
     def test_change_password_weak_password_returns_400(self, authenticated_client_alice):
         """
@@ -61,15 +62,15 @@ class TestPasswordChangeContract:
         - Minimum 8 characters
         - Not too common
         """
-        url = reverse("authentication:account-change-password")
+        url = reverse("authentication:password-change")
         payload = {
-            "old_password": "testpass123",
+            "old_password": "SecurePass123",
             "new_password": "12345",  # Too short
         }
         response = authenticated_client_alice.post(url, payload, format="json")
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert "new_password" in response.data
+        assert "new_password" in response.data["details"]
 
     def test_change_password_common_password_returns_400(self, authenticated_client_alice):
         """
@@ -78,16 +79,17 @@ class TestPasswordChangeContract:
         Contract:
         - Django password validation: not too common
         """
-        url = reverse("authentication:account-change-password")
+        url = reverse("authentication:password-change")
         payload = {
-            "old_password": "testpass123",
+            "old_password": "SecurePass123",
             "new_password": "password",  # Too common
         }
         response = authenticated_client_alice.post(url, payload, format="json")
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert "new_password" in response.data
-        assert any("common" in str(error).lower() for error in response.data["new_password"])
+        assert "details" in response.data
+        assert "new_password" in response.data["details"]
+        assert any("common" in str(error).lower() for error in response.data["details"]["new_password"])
 
     def test_change_password_requires_authentication(self, api_client):
         """
@@ -96,7 +98,7 @@ class TestPasswordChangeContract:
         Contract:
         - Status: 401 UNAUTHORIZED for unauthenticated requests
         """
-        url = reverse("authentication:account-change-password")
+        url = reverse("authentication:password-change")
         payload = {
             "old_password": "oldpass",
             "new_password": "newpass123",
@@ -105,7 +107,7 @@ class TestPasswordChangeContract:
 
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-    def test_change_password_creates_account_log(self, authenticated_client_alice, user_alice):
+    def test_change_password_creates_account_log(self, authenticated_client_alice, alice):
         """
         Test that changing password creates AccountLog entry.
 
@@ -114,9 +116,9 @@ class TestPasswordChangeContract:
         """
         from apps.authentication.models import AccountLog
 
-        url = reverse("authentication:account-change-password")
+        url = reverse("authentication:password-change")
         payload = {
-            "old_password": "testpass123",
+            "old_password": "SecurePass123",
             "new_password": "newSecurePass789!",
         }
         response = authenticated_client_alice.post(url, payload, format="json")
@@ -124,11 +126,11 @@ class TestPasswordChangeContract:
         assert response.status_code == status.HTTP_200_OK
 
         # Check log entry
-        log = AccountLog.objects.filter(user=user_alice, operation="PASSWORD_CHANGED").first()
+        log = AccountLog.objects.filter(user=alice, operation="PASSWORD_CHANGED").first()
         assert log is not None
 
     def test_change_password_actually_updates_password(
-        self, authenticated_client_alice, user_alice
+        self, authenticated_client_alice, alice
     ):
         """
         Test that password is actually updated in database.
@@ -137,10 +139,10 @@ class TestPasswordChangeContract:
         - Updates User.password with new hashed password
         - Old password no longer works
         """
-        url = reverse("authentication:account-change-password")
+        url = reverse("authentication:password-change")
         new_password = "veryNewPassword999!"
         payload = {
-            "old_password": "testpass123",
+            "old_password": "SecurePass123",
             "new_password": new_password,
         }
         response = authenticated_client_alice.post(url, payload, format="json")
@@ -148,6 +150,6 @@ class TestPasswordChangeContract:
         assert response.status_code == status.HTTP_200_OK
 
         # Refresh user and check password
-        user_alice.refresh_from_db()
-        assert user_alice.check_password(new_password)
-        assert not user_alice.check_password("testpass123")
+        alice.refresh_from_db()
+        assert alice.check_password(new_password)
+        assert not alice.check_password("SecurePass123")

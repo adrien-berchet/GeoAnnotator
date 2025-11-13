@@ -16,7 +16,7 @@ class TestUserPreferencesSerializer:
         """Test that UserPreferences instance is serialized correctly."""
         from apps.settings.serializers import UserPreferencesSerializer
 
-        user = User.objects.create_user(email="test@example.com", password="testpass123")
+        user = User.objects.create_user(username="test", email="test@example.com", password="testpass123")
         # Signal auto-creates preferences, so we retrieve and update it
         preferences = user.preferences
         preferences.theme = "dark"
@@ -68,7 +68,7 @@ class TestUserPreferencesSerializer:
         """Test partial update with only theme field."""
         from apps.settings.serializers import UserPreferencesSerializer
 
-        user = User.objects.create_user(email="test2@example.com", password="testpass123")
+        user = User.objects.create_user(username="test2", email="test2@example.com", password="testpass123")
         # Signal auto-creates preferences, so we retrieve it
         preferences = user.preferences
 

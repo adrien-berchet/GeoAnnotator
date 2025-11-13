@@ -29,31 +29,68 @@ def api_client():
 
 
 @pytest.fixture
-def authenticated_user_with_points(api_client):
-    """Create user with GPS points."""
-    # Register and authenticate
-    register_url = reverse("authentication:register")
-    register_data = {"email": "test@example.com", "password": "SecurePass123"}
-    response = api_client.post(register_url, register_data, format="json")
-    access_token = response.data["access"]
-    user = response.data["user"]
+def authenticated_user(api_client, db):
+    """Register and authenticate a user."""
+    from django.contrib.auth import get_user_model
+    from rest_framework_simplejwt.tokens import RefreshToken
 
-    api_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access_token}")
+    User = get_user_model()
 
-    # Create GPS points
-    point_url = reverse("points:list")
-    point_ids = []
-    for i in range(3):
-        point_data = {
-            "title": f"Test Point {i + 1}",
-            "latitude": 37.7749 + (i * 0.01),
-            "longitude": -122.4194 + (i * 0.01),
-            "tags": ["test", f"point{i + 1}"],
-        }
-        point_response = api_client.post(point_url, point_data, format="json")
-        point_ids.append(point_response.data["id"])
+    # Create user directly (bypassing registration flow which requires email verification)
+    user = User.objects.create_user(
+        username="testuser",
+        email="test@example.com",
+        password="SecurePass123"
+    )
+    user.is_verified = True  # Mark as verified to bypass email verification
+    user.save()
 
-    return api_client, user, point_ids
+    # Generate JWT token manually (bypassing login endpoint)
+    refresh = RefreshToken.for_user(user)
+    token = str(refresh.access_token)
+
+    # Set credentials on API client
+    api_client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
+
+    return api_client
+
+
+@pytest.fixture
+def authenticated_user_with_points(authenticated_user):
+    """Create authenticated user with test GPS points."""
+    from django.contrib.gis.geos import Point
+    from apps.points.models import GPSPoint
+    from django.contrib.auth import get_user_model
+
+    User = get_user_model()
+    # Use email_hash instead of email for lookup
+    email_hash = User.hash_email("test@example.com")
+    user = User.objects.get(email_hash=email_hash)
+
+    # Create test points
+    point1 = GPSPoint.objects.create(
+        title="Point 1",
+        description="<p>Description 1</p>",
+        location=Point(-122.4194, 37.7749),  # San Francisco coordinates used in skip/replace tests
+        owner=user,
+        is_public=False
+    )
+    point2 = GPSPoint.objects.create(
+        title="Point 2",
+        description="<p>Description 2</p>",
+        location=Point(1, 1),
+        owner=user,
+        is_public=False
+    )
+    point3 = GPSPoint.objects.create(
+        title="Point 3",
+        description="<p>Description 3</p>",
+        location=Point(2, 2),
+        owner=user,
+        is_public=False
+    )
+
+    return authenticated_user, user, [point1.id, point2.id, point3.id]
 
 
 @pytest.mark.django_db
@@ -346,28 +383,51 @@ class TestTrashContract:
         return APIClient()
 
     @pytest.fixture
-    def authenticated_user_with_trashed_point(self, api_client):
-        """Create user with a trashed GPS point."""
-        # Register and authenticate
-        register_url = reverse("authentication:register")
-        register_data = {"email": "test@example.com", "password": "SecurePass123"}
-        response = api_client.post(register_url, register_data, format="json")
-        access_token = response.data["access"]
-        user = response.data["user"]
+    def authenticated_user_with_trashed_point(self, api_client, db):
+        """Create a user and trash a GPS point."""
+        from django.contrib.auth import get_user_model
+        from django.contrib.gis.geos import Point
+        from rest_framework_simplejwt.tokens import RefreshToken
+        from apps.points.models import GPSPoint
 
-        api_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access_token}")
+        User = get_user_model()
 
-        # Create and delete a GPS point
-        point_url = reverse("points:list")
-        point_data = {"title": "Point to Delete", "latitude": 37.7749, "longitude": -122.4194}
-        point_response = api_client.post(point_url, point_data, format="json")
-        point_id = point_response.data["id"]
+        # Create user directly
+        user = User.objects.create_user(
+            username="testuser2",
+            email="test2@example.com",
+            password="SecurePass123"
+        )
+        user.is_verified = True
+        user.save()
 
-        # Delete point (soft delete)
+        # Generate JWT token
+        refresh = RefreshToken.for_user(user)
+        token = str(refresh.access_token)
+
+        # Set credentials on API client
+        api_client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
+
+        # Create a GPS point (longitude, latitude)
+        point = GPSPoint.objects.create(
+            owner=user,
+            location=Point(2.3522, 48.8566),  # Paris coordinates
+            title="Test Point to Trash"
+        )
+        point_id = point.id
+
+        # Trash the point (soft delete)
         delete_url = reverse("points:detail", kwargs={"pk": point_id})
         api_client.delete(delete_url)
 
-        return api_client, user, point_id
+        # Return api_client, user dict, and point_id
+        user_data = {
+            "id": str(user.id),  # Convert UUID to string
+            "username": user.username,
+            "email": "test2@example.com"  # Use the email we created with
+        }
+
+        return api_client, user_data, point_id
 
     # T038: GET /trash - List trashed points
     def test_list_trash_success(self, authenticated_user_with_trashed_point):
@@ -395,7 +455,7 @@ class TestTrashContract:
         item = results[0]
         assert "id" in item
         assert "gps_point" in item
-        assert item["gps_point"]["id"] == point_id
+        assert item["gps_point"]["id"] == str(point_id)  # Compare as string
         assert "deleted_by" in item
         assert item["deleted_by"]["id"] == user["id"]
         assert "deleted_at" in item
@@ -420,7 +480,7 @@ class TestTrashContract:
 
         assert response.status_code == status.HTTP_200_OK
         assert "id" in response.data
-        assert response.data["id"] == point_id
+        assert response.data["id"] == str(point_id)  # Compare as string
         assert "title" in response.data
 
         # Verify point is accessible
@@ -477,7 +537,7 @@ class TestTrashContract:
         # Create second user
         client2 = APIClient()
         register_url = reverse("authentication:register")
-        register_data = {"email": "user2@example.com", "password": "SecurePass123"}
+        register_data = {"username": "user2", "email": "user2@example.com", "password": "SecurePass123"}
         register_response = client2.post(register_url, register_data, format="json")
         client2.credentials(HTTP_AUTHORIZATION=f"Bearer {register_response.data['access']}")
 

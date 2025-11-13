@@ -11,7 +11,7 @@ from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import User
-from .services import validate_pseudonym
+from .services import validate_username
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -63,7 +63,16 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["email", "password"]
+        fields = ["username", "email", "password"]
+
+    def validate_email(self, value):
+        """
+        Validate email is not already registered.
+        """
+        email_hash = User.hash_email(value)
+        if User.objects.filter(email_hash=email_hash).exists():
+            raise serializers.ValidationError("Email already registered.")
+        return value
 
     def validate_password(self, value):
         """
@@ -86,6 +95,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         Create user with hashed password and default storage quota (2GB).
         """
         user = User.objects.create_user(
+            username=validated_data["username"],
             email=validated_data["email"],
             password=validated_data["password"],
         )
@@ -96,7 +106,7 @@ class LoginSerializer(serializers.Serializer):
     """
     User login serializer.
 
-    Validates credentials and returns JWT tokens.
+    Validates email and password, authenticates user.
     Matches OpenAPI schema: LoginRequest
     """
 
@@ -109,33 +119,19 @@ class LoginSerializer(serializers.Serializer):
 
     def validate(self, attrs):
         """
-        Validate email and password, authenticate user.
+        Validate credentials and authenticate user.
+        Uses AuthenticationService for email-based authentication.
         """
+        from apps.authentication.services import AuthenticationService
+
         email = attrs.get("email")
         password = attrs.get("password")
 
-        user = authenticate(
-            request=self.context.get("request"),
-            username=email,  # Our User model uses email as USERNAME_FIELD
-            password=password,
-        )
+        user = AuthenticationService.authenticate_user(email, password)
 
-        if user is None:
-            raise AuthenticationFailed(
-                detail={
-                    "error": "INVALID_CREDENTIALS",
-                    "message": "Invalid email or password.",
-                },
-                code="authentication_failed",
-            )
-
-        if not user.is_active:
-            raise AuthenticationFailed(
-                detail={
-                    "error": "ACCOUNT_DISABLED",
-                    "message": "User account is disabled.",
-                },
-                code="authentication_failed",
+        if not user:
+            raise serializers.ValidationError(
+                {"detail": "Invalid email or password"}, code="authentication_failed"
             )
 
         attrs["user"] = user
@@ -205,7 +201,7 @@ class AccountSerializer(serializers.ModelSerializer):
     """
     Account information serializer.
 
-    Returns user account details including pseudonym and email (decrypted for owner).
+    Returns user account details including username and email (decrypted for owner).
     Excludes sensitive fields like password, deleted_at, pending_email.
     """
 
@@ -215,37 +211,44 @@ class AccountSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             "id",
-            "pseudonym",
+            "username",
             "email",
-            "created_at",
-            "updated_at",
+            "date_joined",
         ]
         read_only_fields = [
             "id",
             "email",
-            "created_at",
-            "updated_at",
+            "date_joined",
         ]
 
 
-class PseudonymUpdateSerializer(serializers.Serializer):
+class UsernameUpdateSerializer(serializers.Serializer):
     """
-    Pseudonym update serializer.
+    Username update serializer.
 
-    Validates pseudonym rules and uniqueness before update.
+    Validates username rules and uniqueness before update.
     """
 
-    pseudonym = serializers.CharField(max_length=100, required=True)
+    username = serializers.CharField(max_length=100, required=True)
 
-    def validate_pseudonym(self, value):
+    def validate_username(self, value):
         """
-        Validate pseudonym against all rules.
+        Validate username against all rules.
+
+        Raises ValidationError with all error messages if invalid.
         """
         user = self.context.get('request').user
-        validation_result = validate_pseudonym(value, exclude_user_id=user.id)
+        validation_result = validate_username(value, exclude_user_id=user.id)
 
         if not validation_result['valid'] or not validation_result['available']:
-            raise serializers.ValidationError(validation_result['error'])
+            # Join all errors into a single error message for DRF
+            # (DRF displays first error, but we could also raise multiple)
+            error_messages = validation_result['errors']
+            if len(error_messages) == 1:
+                raise serializers.ValidationError(error_messages[0])
+            else:
+                # Multiple errors: raise all as a list
+                raise serializers.ValidationError(error_messages)
 
         return value
 
@@ -270,7 +273,8 @@ class EmailChangeSerializer(serializers.Serializer):
             raise serializers.ValidationError("New email must be different from current email.")
 
         # Check if email already in use by another user
-        if User.objects.filter(email=value).exclude(id=user.id).exists():
+        email_hash = User.hash_email(value)
+        if User.objects.filter(email_hash=email_hash).exclude(id=user.id).exists():
             raise serializers.ValidationError("This email address is already in use.")
 
         return value
@@ -338,11 +342,12 @@ class AccountDeletionConfirmSerializer(serializers.Serializer):
     user_id = serializers.UUIDField(required=True)
 
 
-class PseudonymValidationSerializer(serializers.Serializer):
+class UsernameValidationSerializer(serializers.Serializer):
     """
-    Pseudonym validation serializer.
+    Username validation serializer.
 
     Used for frontend inline validation (doesn't modify data).
+    No validation here - validation logic is in the view to return 200 with valid=false.
     """
 
-    pseudonym = serializers.CharField(max_length=100, required=True)
+    username = serializers.CharField(required=False, allow_blank=True)

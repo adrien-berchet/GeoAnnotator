@@ -73,10 +73,6 @@ export function AccountPage() {
             <h2>Account Information</h2>
             <div className="account-info">
               <div className="info-item">
-                <span className="info-label">Account ID:</span>
-                <span className="info-value">{account?.id || user?.id}</span>
-              </div>
-              <div className="info-item">
                 <span className="info-label">Email:</span>
                 <span className="info-value">
                   {account?.email || user?.email}
@@ -85,8 +81,8 @@ export function AccountPage() {
               <div className="info-item">
                 <span className="info-label">Member since:</span>
                 <span className="info-value">
-                  {account?.created_at
-                    ? new Date(account.created_at).toLocaleDateString()
+                  {account?.date_joined
+                    ? new Date(account.date_joined).toLocaleDateString()
                     : "N/A"}
                 </span>
               </div>
@@ -100,7 +96,7 @@ export function AccountPage() {
               Your pseudonym is displayed when sharing content with others. It
               must be unique and cannot contain spaces.
             </p>
-            <PseudonymField currentPseudonym={account?.pseudonym || ""} />
+            <PseudonymField currentPseudonym={account?.username || ""} />
           </section>
 
           {/* Email Change Section */}
@@ -131,7 +127,7 @@ export function AccountPage() {
               30 days after confirmation.
             </p>
             <DeleteAccountButton
-              pseudonym={account?.pseudonym || "your account"}
+              pseudonym={account?.username || "your account"}
             />
           </section>
         </div>

@@ -244,7 +244,7 @@ curl -X POST http://localhost:8000/api/account/confirm-email/ \
 
 ### API Verification:
 ```bash
-curl -X POST http://localhost:8000/api/account/change-password/ \
+curl -X POST http://localhost:8000/api/account/password-change/ \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{

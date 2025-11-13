@@ -12,7 +12,7 @@ interface PseudonymFieldProps {
 }
 
 export function PseudonymField({ currentPseudonym }: PseudonymFieldProps) {
-  const { updateAccountPseudonym, checkPseudonym, isUpdating, isValidating } =
+  const { updateAccountUsername, checkUsername, isUpdating, isValidating } =
     useAccount();
   const { updateUser, user } = useAuth();
   const [pseudonym, setPseudonym] = useState(currentPseudonym);
@@ -42,7 +42,7 @@ export function PseudonymField({ currentPseudonym }: PseudonymFieldProps) {
 
       const timer = setTimeout(async () => {
         try {
-          const result = await checkPseudonym({ pseudonym: value });
+          const result = await checkUsername({ username: value });
 
           if (!result.valid) {
             setValidationError(result.error || "Invalid pseudonym");
@@ -59,7 +59,7 @@ export function PseudonymField({ currentPseudonym }: PseudonymFieldProps) {
 
       setDebounceTimer(timer);
     },
-    [currentPseudonym, checkPseudonym, debounceTimer],
+    [currentPseudonym, checkUsername, debounceTimer],
   );
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -80,12 +80,12 @@ export function PseudonymField({ currentPseudonym }: PseudonymFieldProps) {
     }
 
     try {
-      const updated = await updateAccountPseudonym({ pseudonym });
+      const updated = await updateAccountUsername({ username: pseudonym });
       setSuccessMessage("Pseudonym updated successfully!");
 
       // Update auth context with new pseudonym
       if (user) {
-        updateUser({ ...user, pseudonym: updated.pseudonym });
+        updateUser({ ...user, username: updated.username });
       }
     } catch {
       // Error is set in the hook

@@ -5,7 +5,7 @@
 export interface User {
   id: string;
   email: string;
-  pseudonym?: string;
+  username?: string;
   first_name?: string;
   last_name?: string;
   storage_used: number;
@@ -20,6 +20,7 @@ export interface LoginCredentials {
 }
 
 export interface RegisterData {
+  username: string;
   email: string;
   password: string;
   first_name?: string;

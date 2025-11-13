@@ -79,7 +79,7 @@ class Migration(migrations.Migration):
                     "username",
                     models.CharField(
                         db_index=True,
-                        help_text="User's pseudonym (used for login)",
+                        help_text="User's username (used for login)",
                         max_length=100,
                         unique=True,
                     ),
@@ -250,7 +250,7 @@ class Migration(migrations.Migration):
                     "operation",
                     models.CharField(
                         choices=[
-                            ("PSEUDONYM_CHANGED", "Pseudonym Changed"),
+                            ("USERNAME_CHANGED", "Username Changed"),
                             ("EMAIL_CHANGED", "Email Changed"),
                             ("PASSWORD_CHANGED", "Password Changed"),
                             ("ACCOUNT_DELETED", "Account Deleted"),

@@ -2,7 +2,7 @@
 Authentication app URL configuration.
 
 Includes authentication endpoints (register, login, token refresh) and
-account management endpoints (pseudonym, email, password, deletion).
+account management endpoints (username, email, password, deletion).
 """
 
 from django.urls import path
@@ -25,8 +25,8 @@ urlpatterns = [
     path("account/update/", views.AccountUpdateAPIView.as_view(), name="account-update"),
     path("account/change-email/", views.EmailChangeRequestAPIView.as_view(), name="email-change"),
     path("account/confirm-email/", views.EmailConfirmAPIView.as_view(), name="email-confirm"),
-    path("account/change-password/", views.PasswordChangeAPIView.as_view(), name="password-change"),
+    path("account/password-change/", views.PasswordChangeAPIView.as_view(), name="password-change"),
     path("account/delete/", views.AccountDeletionRequestAPIView.as_view(), name="account-delete"),
     path("account/confirm-delete/", views.AccountDeletionConfirmAPIView.as_view(), name="account-delete-confirm"),
-    path("account/validate-pseudonym/", views.PseudonymValidationAPIView.as_view(), name="pseudonym-validate"),
+    path("account/validate-username/", views.UsernameValidationAPIView.as_view(), name="username-validate"),
 ]

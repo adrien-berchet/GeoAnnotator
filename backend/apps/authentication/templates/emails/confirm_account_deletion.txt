@@ -1,7 +1,7 @@
 ⚠️ Confirm Account Deletion
 =============================
 
-Hi {{ pseudonym }},
+Hi {{ username }},
 
 You requested to delete your GeoAnnotator account.
 

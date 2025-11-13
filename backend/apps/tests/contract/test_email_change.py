@@ -22,7 +22,7 @@ class TestEmailChangeContract:
         - Body: { "detail": "...", "expires_at": "..." }
         - Sends confirmation email
         """
-        url = reverse("authentication:account-change-email")
+        url = reverse("authentication:email-change")
         payload = {"new_email": "alice.new@example.com"}
         response = authenticated_client_alice.post(url, payload, format="json")
 
@@ -33,7 +33,7 @@ class TestEmailChangeContract:
 
     def test_change_email_response_schema(self, authenticated_client_alice):
         """Test response schema for email change request."""
-        url = reverse("authentication:account-change-email")
+        url = reverse("authentication:email-change")
         payload = {"new_email": "alice.updated@example.com"}
         response = authenticated_client_alice.post(url, payload, format="json")
 
@@ -49,14 +49,14 @@ class TestEmailChangeContract:
         - Status: 400 BAD REQUEST
         - Error: "Enter a valid email address."
         """
-        url = reverse("authentication:account-change-email")
+        url = reverse("authentication:email-change")
         payload = {"new_email": "not-an-email"}
         response = authenticated_client_alice.post(url, payload, format="json")
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert "new_email" in response.data
+        assert "new_email" in response.data.get("details", {})
 
-    def test_change_email_duplicate_returns_400(self, authenticated_client_alice, user_bob):
+    def test_change_email_duplicate_returns_400(self, authenticated_client_alice, bob):
         """
         Test that email already in use is rejected.
 
@@ -64,15 +64,16 @@ class TestEmailChangeContract:
         - Status: 400 BAD REQUEST
         - Error: "This email address is already in use."
         """
-        url = reverse("authentication:account-change-email")
-        payload = {"new_email": user_bob.email}
+        url = reverse("authentication:email-change")
+        payload = {"new_email": bob.email}
         response = authenticated_client_alice.post(url, payload, format="json")
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert "new_email" in response.data
-        assert any("already in use" in str(error).lower() for error in response.data["new_email"])
+        assert "details" in response.data
+        assert "new_email" in response.data["details"]
+        assert any("already in use" in str(error).lower() for error in response.data["details"]["new_email"])
 
-    def test_change_email_same_as_current_returns_400(self, authenticated_client_alice, user_alice):
+    def test_change_email_same_as_current_returns_400(self, authenticated_client_alice, alice):
         """
         Test that same email as current is rejected.
 
@@ -80,12 +81,13 @@ class TestEmailChangeContract:
         - Status: 400 BAD REQUEST
         - Error: "New email must be different from current email."
         """
-        url = reverse("authentication:account-change-email")
-        payload = {"new_email": user_alice.email}
+        url = reverse("authentication:email-change")
+        payload = {"new_email": alice.email}
         response = authenticated_client_alice.post(url, payload, format="json")
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert "new_email" in response.data
+        assert "details" in response.data
+        assert "new_email" in response.data["details"]
 
     def test_change_email_requires_authentication(self, api_client):
         """
@@ -94,13 +96,13 @@ class TestEmailChangeContract:
         Contract:
         - Status: 401 UNAUTHORIZED for unauthenticated requests
         """
-        url = reverse("authentication:account-change-email")
+        url = reverse("authentication:email-change")
         payload = {"new_email": "test@example.com"}
         response = api_client.post(url, payload, format="json")
 
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-    def test_change_email_creates_confirmation_record(self, authenticated_client_alice, user_alice):
+    def test_change_email_creates_confirmation_record(self, authenticated_client_alice, alice):
         """
         Test that email change creates EmailChangeConfirmation record.
 
@@ -110,20 +112,20 @@ class TestEmailChangeContract:
         """
         from apps.authentication.models import EmailChangeConfirmation
 
-        url = reverse("authentication:account-change-email")
+        url = reverse("authentication:email-change")
         payload = {"new_email": "alice.confirmed@example.com"}
         response = authenticated_client_alice.post(url, payload, format="json")
 
         assert response.status_code == status.HTTP_200_OK
 
         # Check confirmation record
-        confirmation = EmailChangeConfirmation.objects.filter(user=user_alice).first()
+        confirmation = EmailChangeConfirmation.objects.filter(user=alice).first()
         assert confirmation is not None
         assert confirmation.new_email == "alice.confirmed@example.com"
         assert confirmation.token is not None
         assert confirmation.expires_at is not None
 
-    def test_change_email_creates_account_log(self, authenticated_client_alice, user_alice):
+    def test_change_email_creates_account_log(self, authenticated_client_alice, alice):
         """
         Test that email change request creates AccountLog entry.
 
@@ -132,12 +134,12 @@ class TestEmailChangeContract:
         """
         from apps.authentication.models import AccountLog
 
-        url = reverse("authentication:account-change-email")
+        url = reverse("authentication:email-change")
         payload = {"new_email": "alice.logged@example.com"}
         response = authenticated_client_alice.post(url, payload, format="json")
 
         assert response.status_code == status.HTTP_200_OK
 
         # Check log entry
-        log = AccountLog.objects.filter(user=user_alice, operation="EMAIL_CHANGE_REQUESTED").first()
+        log = AccountLog.objects.filter(user=alice, operation="EMAIL_CHANGE_REQUESTED").first()
         assert log is not None

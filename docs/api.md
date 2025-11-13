@@ -7,12 +7,13 @@
 ## Table of Contents
 
 1. [Authentication](#authentication)
-2. [GPS Points](#gps-points)
-3. [Annotations](#annotations)
-4. [Sharing](#sharing)
-5. [Export/Import](#exportimport)
-6. [Trash](#trash)
-7. [Error Codes](#error-codes)
+2. [Account Management](#account-management)
+3. [GPS Points](#gps-points)
+4. [Annotations](#annotations)
+5. [Sharing](#sharing)
+6. [Export/Import](#exportimport)
+7. [Trash](#trash)
+8. [Error Codes](#error-codes)
 
 ---
 
@@ -155,6 +156,416 @@ Get current user profile.
   }
 }
 ```
+
+---
+
+## Account Management
+
+Endpoints for managing user account settings: pseudonym, email, password, and account deletion.
+
+### Get Account Details
+
+Get current user account information.
+
+**Endpoint**: `GET /api/account/`
+
+**Headers**: `Authorization: Bearer <access_token>`
+
+**Response** (200 OK):
+```json
+{
+  "id": "c8b6826b-ea37-4d9c-8f30-231bfc67aca2",
+  "username": "alice_explorer",
+  "email": "encrypted_email_value",
+  "is_verified": true,
+  "preferences": {
+    "language": "en",
+    "default_map_type": "OpenStreetMap"
+  },
+  "created_at": "2025-01-15T10:30:00Z"
+}
+```
+
+**Note**: Email is encrypted in database and returned as encrypted value (not plaintext)
+
+---
+
+### Update Account
+
+Update user account settings (pseudonym).
+
+**Endpoint**: `PATCH /api/account/`
+
+**Headers**: `Authorization: Bearer <access_token>`
+
+**Request Body**:
+```json
+{
+  "username": "new_pseudonym_2025"
+}
+```
+
+**Response** (200 OK):
+```json
+{
+  "id": "c8b6826b-ea37-4d9c-8f30-231bfc67aca2",
+  "username": "new_pseudonym_2025",
+  "email": "encrypted_email_value",
+  "is_verified": true,
+  "preferences": {
+    "language": "en",
+    "default_map_type": "OpenStreetMap"
+  },
+  "created_at": "2025-01-15T10:30:00Z"
+}
+```
+
+**Validation Rules**:
+- Username length: 3-100 characters
+- Allowed characters: letters, numbers, underscores, hyphens, spaces
+- Must start with alphanumeric character
+- Must be unique (case-insensitive)
+- Cannot contain consecutive spaces
+- Cannot start/end with spaces
+
+**Error Responses**:
+```json
+// 400 Bad Request - Validation error
+{
+  "username": ["Username must be between 3 and 100 characters"]
+}
+
+// 409 Conflict - Username already taken
+{
+  "username": ["This username is already taken"]
+}
+```
+
+---
+
+### Validate Pseudonym
+
+Check if pseudonym is available before updating.
+
+**Endpoint**: `POST /api/account/validate-pseudonym/`
+
+**Headers**: `Authorization: Bearer <access_token>`
+
+**Request Body**:
+```json
+{
+  "username": "new_pseudonym_2025"
+}
+```
+
+**Response** (200 OK - Available):
+```json
+{
+  "valid": true,
+  "available": true,
+  "message": "Username is available"
+}
+```
+
+**Response** (200 OK - Taken):
+```json
+{
+  "valid": true,
+  "available": false,
+  "message": "This username is already taken"
+}
+```
+
+**Response** (200 OK - Invalid format):
+```json
+{
+  "valid": false,
+  "available": false,
+  "errors": [
+    "Username must be between 3 and 100 characters",
+    "Username can only contain letters, numbers, underscores, hyphens, and spaces"
+  ]
+}
+```
+
+**Use Case**: Client-side validation during account creation/update
+
+---
+
+### Request Email Change
+
+Initiate email change process (sends confirmation email).
+
+**Endpoint**: `POST /api/account/change-email/`
+
+**Headers**: `Authorization: Bearer <access_token>`
+
+**Request Body**:
+```json
+{
+  "new_email": "newemail@example.com",
+  "password": "current_password_123"
+}
+```
+
+**Response** (200 OK):
+```json
+{
+  "message": "Confirmation email sent to newemail@example.com",
+  "expires_at": "2025-01-15T11:30:00Z"
+}
+```
+
+**Validation Rules**:
+- Email must be valid format
+- Email must be unique (not already in use)
+- Password must match current password
+- Confirmation token valid for 1 hour
+
+**Confirmation Email**:
+```
+Subject: Confirm your email change
+
+Click this link to confirm your new email address:
+https://geoannotator.com/account/confirm-email/{token}
+
+This link expires in 1 hour.
+
+If you didn't request this change, ignore this email.
+```
+
+**Error Responses**:
+```json
+// 400 Bad Request - Invalid email
+{
+  "new_email": ["Enter a valid email address"]
+}
+
+// 409 Conflict - Email already in use
+{
+  "new_email": ["This email is already registered"]
+}
+
+// 401 Unauthorized - Wrong password
+{
+  "password": ["Incorrect password"]
+}
+```
+
+---
+
+### Confirm Email Change
+
+Confirm email change via token (sent to new email).
+
+**Endpoint**: `POST /api/account/confirm-email/{token}/`
+
+**Headers**: `Authorization: Bearer <access_token>`
+
+**URL Parameters**:
+- `token`: 6-digit confirmation code (e.g., `123456`)
+
+**Response** (200 OK):
+```json
+{
+  "message": "Email successfully updated",
+  "new_email": "newemail@example.com"
+}
+```
+
+**Effects**:
+- Email updated in database (encrypted)
+- Email hash updated for uniqueness constraint
+- Confirmation token marked as used
+- Account log entry created
+
+**Error Responses**:
+```json
+// 400 Bad Request - Invalid token
+{
+  "detail": "Invalid or expired confirmation code"
+}
+
+// 410 Gone - Token already used
+{
+  "detail": "This confirmation code has already been used"
+}
+```
+
+**Security Notes**:
+- Token valid for 1 hour
+- One-time use (cannot be reused)
+- Requires active session (prevents token hijacking)
+
+---
+
+### Change Password
+
+Update user password.
+
+**Endpoint**: `POST /api/account/password-change/`
+
+**Headers**: `Authorization: Bearer <access_token>`
+
+**Request Body**:
+```json
+{
+  "current_password": "old_password_123",
+  "new_password": "new_secure_password_456",
+  "new_password_confirm": "new_secure_password_456"
+}
+```
+
+**Response** (200 OK):
+```json
+{
+  "message": "Password successfully updated"
+}
+```
+
+**Validation Rules**:
+- Current password must be correct
+- New password minimum 8 characters
+- New password must match confirmation
+- New password cannot be same as current
+- Recommended: uppercase + lowercase + number + special character
+
+**Effects**:
+- Password updated (bcrypt hash)
+- All active sessions invalidated (logout all devices)
+- Account log entry created
+
+**Error Responses**:
+```json
+// 401 Unauthorized - Wrong current password
+{
+  "current_password": ["Current password is incorrect"]
+}
+
+// 400 Bad Request - Password too short
+{
+  "new_password": ["Password must be at least 8 characters long"]
+}
+
+// 400 Bad Request - Passwords don't match
+{
+  "new_password_confirm": ["Passwords do not match"]
+}
+```
+
+**Security Notes**:
+- Password hashed with bcrypt (work factor 12)
+- No password reset via email (security policy)
+- Users must know current password
+
+---
+
+### Request Account Deletion
+
+Initiate account deletion (sends confirmation email).
+
+**Endpoint**: `DELETE /api/account/`
+
+**Headers**: `Authorization: Bearer <access_token>`
+
+**Request Body**:
+```json
+{
+  "password": "current_password_123",
+  "reason": "No longer using the service"
+}
+```
+
+**Response** (200 OK):
+```json
+{
+  "message": "Confirmation email sent. Check your inbox to complete deletion.",
+  "expires_at": "2025-01-15T11:30:00Z"
+}
+```
+
+**Validation Rules**:
+- Password must match current password
+- Reason is optional (logged for analytics)
+- Confirmation token valid for 1 hour
+
+**Confirmation Email**:
+```
+Subject: Confirm account deletion
+
+Click this link to permanently delete your GeoAnnotator account:
+https://geoannotator.com/account/confirm-delete/{token}
+
+This action is IRREVERSIBLE and will delete:
+- All your GPS points
+- All annotations and files
+- All shares
+
+If you didn't request this, ignore this email.
+```
+
+**Error Responses**:
+```json
+// 401 Unauthorized - Wrong password
+{
+  "password": ["Incorrect password"]
+}
+```
+
+---
+
+### Confirm Account Deletion
+
+Confirm account deletion via token (sent to email).
+
+**Endpoint**: `POST /api/account/confirm-delete/{token}/`
+
+**Headers**: `Authorization: Bearer <access_token>`
+
+**URL Parameters**:
+- `token`: 6-digit confirmation code (e.g., `789012`)
+
+**Response** (200 OK):
+```json
+{
+  "message": "Account successfully deleted"
+}
+```
+
+**Effects** (IRREVERSIBLE):
+1. **Soft delete user** (30-day retention):
+   - `deleted_at` timestamp set
+   - Account marked inactive
+   - Login disabled
+2. **Immediate deletion**:
+   - All GPS points deleted
+   - All annotations deleted
+   - All files removed from storage
+   - All shares revoked
+   - Storage quota freed
+3. **Permanent deletion** (after 30 days):
+   - User record deleted via cron job
+   - Email encryption keys removed
+   - All audit logs deleted
+
+**Error Responses**:
+```json
+// 400 Bad Request - Invalid token
+{
+  "detail": "Invalid or expired confirmation code"
+}
+
+// 410 Gone - Token already used
+{
+  "detail": "This deletion has already been processed"
+}
+```
+
+**Security Notes**:
+- Token valid for 1 hour
+- One-time use (cannot be reused)
+- Requires active session
+- 30-day grace period for account recovery (manual process via support)
 
 ---
 
@@ -869,6 +1280,15 @@ Permanently delete all expired trash items.
 | `retention_expired` | Cannot restore (>30 days) |
 | `duplicate_email` | Email already registered |
 | `invalid_coordinates` | Latitude/longitude out of range |
+| `username_taken` | Username already in use (case-insensitive) |
+| `invalid_username` | Username format invalid (length, characters, etc.) |
+| `confirmation_expired` | Email/deletion confirmation token expired |
+| `confirmation_invalid` | Invalid confirmation token |
+| `confirmation_used` | Confirmation token already used |
+| `password_incorrect` | Current password is incorrect |
+| `password_too_short` | Password must be at least 8 characters |
+| `passwords_mismatch` | New password and confirmation don't match |
+| `account_deleted` | Account has been deleted (30-day grace period) |
 
 ---
 
@@ -922,5 +1342,7 @@ Interactive API documentation: `/api/docs/` (Swagger UI)
 
 ---
 
-**Last Updated**: 2025-10-06
-**API Version**: 1.0.0
+**Last Updated**: 2025-11-12
+**API Version**: 1.0.0 (with Account Management endpoints)
+
+````

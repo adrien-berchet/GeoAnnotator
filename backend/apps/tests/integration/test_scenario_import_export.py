@@ -26,16 +26,14 @@ class TestScenario5ImportExport:
 
     def setup_method(self):
         """Set up test client and create test data before each test."""
+        from rest_framework_simplejwt.tokens import RefreshToken
+
         self.client = APIClient()
 
-        # Create and authenticate Alice
-        self.alice = User.objects.create_user(email="alice@example.com", password="SecurePass123")
-        login_response = self.client.post(
-            reverse("authentication:login"),
-            {"email": "alice@example.com", "password": "SecurePass123"},
-            format="json",
-        )
-        self.alice_token = login_response.data["access"]
+        # Create Alice
+        self.alice = User.objects.create_user(username="alice", email="alice@example.com", password="SecurePass123")
+        refresh = RefreshToken.for_user(self.alice)
+        self.alice_token = str(refresh.access_token)
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.alice_token}")
 
         # Create test points

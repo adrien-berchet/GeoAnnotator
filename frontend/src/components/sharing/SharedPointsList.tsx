@@ -91,8 +91,8 @@ export function SharedPointsList({ pointId }: SharedPointsListProps) {
    * Get display name for recipient (pseudonym if available, otherwise email).
    */
   const getRecipientDisplayName = (share: Share): string => {
-    if (share.recipient_user?.pseudonym) {
-      return share.recipient_user.pseudonym;
+    if (share.recipient_user?.username) {
+      return share.recipient_user.username;
     }
     return share.recipient_email;
   };
@@ -174,13 +174,13 @@ export function SharedPointsList({ pointId }: SharedPointsListProps) {
                 <td>
                   <div className="user-info">
                     <strong>{getRecipientDisplayName(share)}</strong>
-                    {share.recipient_user?.pseudonym && (
+                    {share.recipient_user?.username && (
                       <small className="user-email">
                         {share.recipient_email}
                       </small>
                     )}
                     {share.recipient_user &&
-                      !share.recipient_user.pseudonym && (
+                      !share.recipient_user.username && (
                         <small className="user-id">
                           ID: {share.recipient_user.id}
                         </small>

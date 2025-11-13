@@ -7,17 +7,17 @@
 import { useState, useCallback } from "react";
 import {
   getAccount,
-  updatePseudonym,
+  updateUsername,
   changeEmail,
   confirmEmail,
   changePassword,
   deleteAccount,
   confirmDeleteAccount,
-  validatePseudonym,
+  validateUsername,
 } from "../api/account";
 import type {
   AccountInfo,
-  PseudonymUpdateData,
+  UsernameUpdateData,
   EmailChangeData,
   EmailChangeResponse,
   EmailConfirmData,
@@ -27,8 +27,8 @@ import type {
   AccountDeleteResponse,
   AccountDeleteConfirmData,
   AccountDeleteConfirmResponse,
-  PseudonymValidationData,
-  PseudonymValidationResponse,
+  UsernameValidationData,
+  UsernameValidationResponse,
 } from "../api/account";
 import { getErrorMessage } from "../api/client";
 
@@ -49,7 +49,7 @@ export interface UseAccountResult {
 
   // Actions
   fetchAccount: () => Promise<void>;
-  updateAccountPseudonym: (data: PseudonymUpdateData) => Promise<AccountInfo>;
+  updateAccountUsername: (data: UsernameUpdateData) => Promise<AccountInfo>;
   requestEmailChange: (data: EmailChangeData) => Promise<EmailChangeResponse>;
   confirmEmailChange: (data: EmailConfirmData) => Promise<EmailConfirmResponse>;
   updatePassword: (data: PasswordChangeData) => Promise<PasswordChangeResponse>;
@@ -57,9 +57,9 @@ export interface UseAccountResult {
   confirmAccountDeletion: (
     data: AccountDeleteConfirmData,
   ) => Promise<AccountDeleteConfirmResponse>;
-  checkPseudonym: (
-    data: PseudonymValidationData,
-  ) => Promise<PseudonymValidationResponse>;
+  checkUsername: (
+    data: UsernameValidationData,
+  ) => Promise<UsernameValidationResponse>;
   clearError: () => void;
 }
 
@@ -93,15 +93,15 @@ export function useAccount(): UseAccountResult {
   }, []);
 
   /**
-   * Update account pseudonym.
+   * Update account username.
    */
-  const updateAccountPseudonym = useCallback(
-    async (data: PseudonymUpdateData): Promise<AccountInfo> => {
+  const updateAccountUsername = useCallback(
+    async (data: UsernameUpdateData): Promise<AccountInfo> => {
       setIsUpdating(true);
       setError(null);
 
       try {
-        const updated = await updatePseudonym(data);
+        const updated = await updateUsername(data);
         setAccount(updated);
         return updated;
       } catch (err) {
@@ -228,17 +228,17 @@ export function useAccount(): UseAccountResult {
   );
 
   /**
-   * Validate pseudonym (for inline validation).
+   * Validate username (for inline validation).
    */
-  const checkPseudonym = useCallback(
+  const checkUsername = useCallback(
     async (
-      data: PseudonymValidationData,
-    ): Promise<PseudonymValidationResponse> => {
+      data: UsernameValidationData,
+    ): Promise<UsernameValidationResponse> => {
       setIsValidating(true);
       setError(null);
 
       try {
-        const response = await validatePseudonym(data);
+        const response = await validateUsername(data);
         return response;
       } catch (err) {
         const message = getErrorMessage(err);
@@ -265,13 +265,13 @@ export function useAccount(): UseAccountResult {
     isValidating,
     error,
     fetchAccount,
-    updateAccountPseudonym,
+    updateAccountUsername,
     requestEmailChange,
     confirmEmailChange,
     updatePassword,
     requestAccountDeletion,
     confirmAccountDeletion,
-    checkPseudonym,
+    checkUsername,
     clearError,
   };
 }
