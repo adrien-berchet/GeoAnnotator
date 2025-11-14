@@ -379,7 +379,16 @@
       "invalidUsername": "Invalid username",
       "usernameTaken": "Username already taken",
       "success": "Username updated successfully!",
-      "help": "3-100 characters. Letters, numbers, underscore, and hyphen allowed. Displayed when sharing content."
+      "help": "3-100 characters. Letters, numbers, underscore, and hyphen allowed. Displayed when sharing content.",
+      "errors": {
+        "empty": "Username cannot be empty.",
+        "tooShort": "Username must be at least 3 characters long.",
+        "tooLong": "Username must be at most 100 characters long.",
+        "mustStartWithAlphanumeric": "Username must start with a letter or number.",
+        "cannotContainSpaces": "Username cannot contain spaces.",
+        "invalidCharacters": "Username can only contain letters, numbers, underscores, and hyphens.",
+        "alreadyTaken": "This username is already taken."
+      }
     },
     "email": {
       "title": "Change Email Address",

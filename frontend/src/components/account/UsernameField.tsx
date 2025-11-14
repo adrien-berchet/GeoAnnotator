@@ -6,6 +6,7 @@ import { useState, useCallback, useEffect } from "react";
 import { useAccount } from "../../hooks/useAccount";
 import { useAuth } from "../../hooks/useAuth";
 import { useLanguage } from "../../contexts/LanguageContext";
+import { translateUsernameError } from "../../utils/translateBackendErrors";
 import "./UsernameField.css";
 
 interface UsernameFieldProps {
@@ -47,15 +48,15 @@ export function UsernameField({ currentUsername }: UsernameFieldProps) {
           const result = await checkUsername({ username: value });
 
           if (!result.valid) {
-            setValidationError(
+            const errorMsg =
               result.error ||
-                t("account.username.invalidUsername", "Invalid username"),
-            );
+              t("account.username.invalidUsername", "Invalid username");
+            setValidationError(translateUsernameError(errorMsg, t));
           } else if (result.available === false) {
-            setValidationError(
+            const errorMsg =
               result.error ||
-                t("account.username.usernameTaken", "Username already taken"),
-            );
+              t("account.username.usernameTaken", "Username already taken");
+            setValidationError(translateUsernameError(errorMsg, t));
           } else {
             setValidationError(null);
           }

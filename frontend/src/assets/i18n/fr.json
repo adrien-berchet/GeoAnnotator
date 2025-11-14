@@ -379,7 +379,16 @@
       "invalidUsername": "Nom d'utilisateur invalide",
       "usernameTaken": "Nom d'utilisateur déjà pris",
       "success": "Nom d'utilisateur mis à jour avec succès !",
-      "help": "3-100 caractères. Lettres, chiffres, trait de soulignement et tiret autorisés. Affiché lors du partage de contenu."
+      "help": "3-100 caractères. Lettres, chiffres, trait de soulignement et tiret autorisés. Affiché lors du partage de contenu.",
+      "errors": {
+        "empty": "Le nom d'utilisateur ne peut pas être vide.",
+        "tooShort": "Le nom d'utilisateur doit contenir au moins 3 caractères.",
+        "tooLong": "Le nom d'utilisateur doit contenir au maximum 100 caractères.",
+        "mustStartWithAlphanumeric": "Le nom d'utilisateur doit commencer par une lettre ou un chiffre.",
+        "cannotContainSpaces": "Le nom d'utilisateur ne peut pas contenir d'espaces.",
+        "invalidCharacters": "Le nom d'utilisateur ne peut contenir que des lettres, des chiffres, des traits de soulignement et des tirets.",
+        "alreadyTaken": "Ce nom d'utilisateur est déjà pris."
+      }
     },
     "email": {
       "title": "Changer l'adresse email",
