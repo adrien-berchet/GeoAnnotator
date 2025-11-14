@@ -119,6 +119,18 @@ class Command(BaseCommand):
                     user, EmailConfirmation.REGISTRATION
                 )
 
+                # Send confirmation email
+                try:
+                    EmailConfirmationService.send_confirmation_email(
+                        user, token, EmailConfirmation.REGISTRATION
+                    )
+                    email_sent = True
+                except Exception as e:
+                    self.stdout.write(
+                        self.style.ERROR(f"✗ Failed to send confirmation email: {e}")
+                    )
+                    email_sent = False
+
                 # Show confirmation info
                 self.stdout.write(self.style.WARNING("⚠ Email NOT verified"))
                 self.stdout.write("  → User must confirm email before logging in")
@@ -140,21 +152,29 @@ class Command(BaseCommand):
                         )
                     )
 
-                # Check if email will be sent
-                email_backend = getattr(settings, "EMAIL_BACKEND", "")
-                if "console" in email_backend.lower():
+                # Show email sending status
+                if email_sent:
+                    email_backend = getattr(settings, "EMAIL_BACKEND", "")
+                    if "console" in email_backend.lower():
+                        self.stdout.write("")
+                        self.stdout.write(
+                            self.style.WARNING(
+                                "ℹ Email backend is set to 'console' - check your terminal for the confirmation email"
+                            )
+                        )
+                    elif "smtp" in email_backend.lower():
+                        self.stdout.write("")
+                        self.stdout.write(
+                            self.style.SUCCESS(f"📧 Confirmation email sent to: {email}")
+                        )
+                        self.stdout.write("   Check your inbox!")
+                else:
                     self.stdout.write("")
                     self.stdout.write(
                         self.style.WARNING(
-                            "ℹ Email backend is set to 'console' - check your terminal for the confirmation email"
+                            "⚠ Email was not sent. Use the confirmation link above to verify manually."
                         )
                     )
-                elif "smtp" in email_backend.lower():
-                    self.stdout.write("")
-                    self.stdout.write(
-                        self.style.SUCCESS(f"📧 Confirmation email sent to: {email}")
-                    )
-                    self.stdout.write("   Check your inbox!")
 
         except IntegrityError as e:
             error_msg = str(e)
