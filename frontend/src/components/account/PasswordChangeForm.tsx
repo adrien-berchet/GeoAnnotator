@@ -4,10 +4,12 @@
 
 import { useState } from "react";
 import { useAccount } from "../../hooks/useAccount";
+import { useLanguage } from "../../contexts/LanguageContext";
 import "./PasswordChangeForm.css";
 
 export function PasswordChangeForm() {
   const { updatePassword, isUpdating } = useAccount();
+  const { t } = useLanguage();
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -22,27 +24,42 @@ export function PasswordChangeForm() {
 
     // Validation
     if (!oldPassword) {
-      setError("Please enter your current password");
+      setError(
+        t(
+          "account.password.enterCurrent",
+          "Please enter your current password",
+        ),
+      );
       return;
     }
 
     if (!newPassword) {
-      setError("Please enter a new password");
+      setError(t("account.password.enterNew", "Please enter a new password"));
       return;
     }
 
     if (newPassword.length < 8) {
-      setError("New password must be at least 8 characters");
+      setError(
+        t(
+          "account.password.minLength",
+          "New password must be at least 8 characters",
+        ),
+      );
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setError("New passwords do not match");
+      setError(t("account.password.noMatch", "New passwords do not match"));
       return;
     }
 
     if (newPassword === oldPassword) {
-      setError("New password must be different from current password");
+      setError(
+        t(
+          "account.password.mustBeDifferent",
+          "New password must be different from current password",
+        ),
+      );
       return;
     }
 
@@ -59,7 +76,10 @@ export function PasswordChangeForm() {
       setConfirmPassword("");
     } catch {
       setError(
-        "Failed to change password. Please check your current password and try again.",
+        t(
+          "account.password.updateError",
+          "Failed to change password. Please check your current password and try again.",
+        ),
       );
     }
   };
@@ -68,7 +88,7 @@ export function PasswordChangeForm() {
     <form className="password-change-form" onSubmit={handleSubmit}>
       <div className="form-group">
         <label htmlFor="old-password" className="form-label">
-          Current Password *
+          {t("account.password.currentPassword", "Current Password")} *
         </label>
         <div className="password-input-wrapper">
           <input
@@ -81,7 +101,10 @@ export function PasswordChangeForm() {
               setError(null);
               setSuccessMessage(null);
             }}
-            placeholder="Enter current password"
+            placeholder={t(
+              "account.password.currentPlaceholder",
+              "Enter current password",
+            )}
             disabled={isUpdating}
             aria-describedby={error ? "password-error" : undefined}
             aria-invalid={!!error}
@@ -91,7 +114,7 @@ export function PasswordChangeForm() {
 
       <div className="form-group">
         <label htmlFor="new-password" className="form-label">
-          New Password *
+          {t("account.password.newPassword", "New Password")} *
         </label>
         <div className="password-input-wrapper">
           <input
@@ -104,7 +127,10 @@ export function PasswordChangeForm() {
               setError(null);
               setSuccessMessage(null);
             }}
-            placeholder="Enter new password (min 8 characters)"
+            placeholder={t(
+              "account.password.newPlaceholder",
+              "Enter new password (min 8 characters)",
+            )}
             disabled={isUpdating}
             minLength={8}
           />
@@ -113,7 +139,7 @@ export function PasswordChangeForm() {
 
       <div className="form-group">
         <label htmlFor="confirm-password" className="form-label">
-          Confirm New Password *
+          {t("account.password.confirmPassword", "Confirm New Password")} *
         </label>
         <div className="password-input-wrapper">
           <input
@@ -126,7 +152,10 @@ export function PasswordChangeForm() {
               setError(null);
               setSuccessMessage(null);
             }}
-            placeholder="Confirm new password"
+            placeholder={t(
+              "account.password.confirmPlaceholder",
+              "Confirm new password",
+            )}
             disabled={isUpdating}
           />
         </div>
@@ -139,7 +168,9 @@ export function PasswordChangeForm() {
           checked={showPasswords}
           onChange={(e) => setShowPasswords(e.target.checked)}
         />
-        <label htmlFor="show-passwords">Show passwords</label>
+        <label htmlFor="show-passwords">
+          {t("account.password.showPasswords", "Show passwords")}
+        </label>
       </div>
 
       {error && (
@@ -150,10 +181,18 @@ export function PasswordChangeForm() {
 
       {successMessage && (
         <div className="success-message" role="status">
-          <p className="success-title">✓ Password changed successfully!</p>
+          <p className="success-title">
+            {t(
+              "account.password.successTitle",
+              "✓ Password changed successfully!",
+            )}
+          </p>
           <p className="success-text">{successMessage}</p>
           <p className="success-text">
-            You may need to log in again on other devices.
+            {t(
+              "account.password.reloginNotice",
+              "You may need to log in again on other devices.",
+            )}
           </p>
         </div>
       )}
@@ -165,7 +204,9 @@ export function PasswordChangeForm() {
           isUpdating || !oldPassword || !newPassword || !confirmPassword
         }
       >
-        {isUpdating ? "Changing..." : "Change Password"}
+        {isUpdating
+          ? t("account.password.changing", "Changing...")
+          : t("account.password.changeButton", "Change Password")}
       </button>
     </form>
   );

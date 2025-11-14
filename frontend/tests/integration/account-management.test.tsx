@@ -4,14 +4,8 @@
  * Tests complete user journeys across account management features.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import {
-  render,
-  screen,
-  waitFor,
-  fireEvent,
-  within,
-} from "@testing-library/react";
-import { BrowserRouter } from "react-router-dom";
+import { screen, waitFor, fireEvent, within } from "@testing-library/react";
+import { renderWithProviders } from "../../src/test/test-utils";
 import { AccountPage } from "../../src/pages/AccountPage";
 
 // Mock hooks
@@ -54,10 +48,6 @@ vi.mock("../../src/hooks/useAccount", () => ({
   }),
 }));
 
-const RouterWrapper = ({ children }: { children: React.ReactNode }) => (
-  <BrowserRouter>{children}</BrowserRouter>
-);
-
 describe("Account Management Integration Tests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -72,11 +62,7 @@ describe("Account Management Integration Tests", () => {
     mockCheckUsername.mockResolvedValue({ valid: true, available: true });
     mockUpdateAccountUsername.mockResolvedValue({ username: "NewUser" });
 
-    render(
-      <RouterWrapper>
-        <AccountPage />
-      </RouterWrapper>,
-    );
+    renderWithProviders(<AccountPage />);
 
     // Find username input
     const usernameInput = screen.getByLabelText("Username") as HTMLInputElement;
@@ -130,11 +116,7 @@ describe("Account Management Integration Tests", () => {
       detail: "Confirmation email sent to new@example.com",
     });
 
-    render(
-      <RouterWrapper>
-        <AccountPage />
-      </RouterWrapper>,
-    );
+    renderWithProviders(<AccountPage />);
 
     // Find email section
     const newEmailInput = screen.getByLabelText("New Email Address");
@@ -167,11 +149,7 @@ describe("Account Management Integration Tests", () => {
       detail: "Password changed successfully",
     });
 
-    render(
-      <RouterWrapper>
-        <AccountPage />
-      </RouterWrapper>,
-    );
+    renderWithProviders(<AccountPage />);
 
     // Find password fields
     const oldPassword = screen.getByLabelText(/current password/i);
@@ -209,11 +187,7 @@ describe("Account Management Integration Tests", () => {
       detail: "Deletion confirmation email sent",
     });
 
-    render(
-      <RouterWrapper>
-        <AccountPage />
-      </RouterWrapper>,
-    );
+    renderWithProviders(<AccountPage />);
 
     // Open delete modal
     const deleteButton = screen.getByRole("button", {
@@ -261,11 +235,7 @@ describe("Account Management Integration Tests", () => {
       detail: "Email sent",
     });
 
-    render(
-      <RouterWrapper>
-        <AccountPage />
-      </RouterWrapper>,
-    );
+    renderWithProviders(<AccountPage />);
 
     // 1. Update username
     const usernameInput = screen.getByLabelText("Username");
@@ -316,11 +286,7 @@ describe("Account Management Integration Tests", () => {
       error: "Username contains invalid characters",
     });
 
-    render(
-      <RouterWrapper>
-        <AccountPage />
-      </RouterWrapper>,
-    );
+    renderWithProviders(<AccountPage />);
 
     // Try invalid username
     const usernameInput = screen.getByLabelText("Username");
@@ -344,11 +310,7 @@ describe("Account Management Integration Tests", () => {
   }, 10000);
 
   it("should handle accessibility navigation", () => {
-    render(
-      <RouterWrapper>
-        <AccountPage />
-      </RouterWrapper>,
-    );
+    renderWithProviders(<AccountPage />);
 
     // Verify all sections have proper headings
     const mainHeading = screen.getByRole("heading", { level: 1 });
@@ -370,11 +332,7 @@ describe("Account Management Integration Tests", () => {
   });
 
   it("should display current user information correctly", () => {
-    render(
-      <RouterWrapper>
-        <AccountPage />
-      </RouterWrapper>,
-    );
+    renderWithProviders(<AccountPage />);
 
     // Verify email is displayed
     expect(screen.getByText("test@example.com")).toBeTruthy();

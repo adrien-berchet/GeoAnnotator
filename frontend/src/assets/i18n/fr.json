@@ -356,5 +356,93 @@
     "unauthorized": "Accès non autorisé",
     "forbidden": "Accès interdit",
     "validation": "Erreur de validation"
+  },
+  "account": {
+    "title": "Gestion du compte",
+    "subtitle": "Gérez vos informations de profil et paramètres de compte",
+    "loading": "Chargement du compte...",
+    "retry": "Réessayer",
+    "info": {
+      "title": "Informations du compte",
+      "email": "Email :",
+      "memberSince": "Membre depuis :"
+    },
+    "username": {
+      "title": "Nom d'utilisateur",
+      "description": "Votre nom d'utilisateur s'affiche lorsque vous partagez du contenu avec d'autres. Il doit être unique.",
+      "label": "Nom d'utilisateur",
+      "placeholder": "Entrez votre nom d'utilisateur",
+      "update": "Mettre à jour",
+      "updating": "Mise à jour...",
+      "updateAriaLabel": "Mettre à jour le nom d'utilisateur",
+      "checking": "Vérification de la disponibilité...",
+      "invalidUsername": "Nom d'utilisateur invalide",
+      "usernameTaken": "Nom d'utilisateur déjà pris",
+      "success": "Nom d'utilisateur mis à jour avec succès !",
+      "help": "3-100 caractères. Lettres, chiffres, trait de soulignement et tiret autorisés. Affiché lors du partage de contenu."
+    },
+    "email": {
+      "title": "Changer l'adresse email",
+      "description": "Demandez un changement de votre adresse email. Un lien de confirmation sera envoyé à la nouvelle adresse email.",
+      "currentEmail": "Email actuel",
+      "currentEmailAriaLabel": "Adresse email actuelle",
+      "newEmail": "Nouvelle adresse email",
+      "placeholder": "Entrez la nouvelle adresse email",
+      "enterNew": "Veuillez entrer une nouvelle adresse email",
+      "mustBeDifferent": "Le nouvel email doit être différent de l'email actuel",
+      "invalidFormat": "Veuillez entrer une adresse email valide",
+      "sendError": "Échec de l'envoi de l'email de confirmation. Veuillez réessayer.",
+      "successTitle": "✓ Email de confirmation envoyé !",
+      "expirationNotice": "Le lien de confirmation expirera dans 30 minutes.",
+      "sending": "Envoi en cours...",
+      "sendConfirmation": "Envoyer l'email de confirmation"
+    },
+    "password": {
+      "title": "Changer le mot de passe",
+      "description": "Modifiez votre mot de passe. Vous devrez entrer votre mot de passe actuel pour confirmer le changement.",
+      "currentPassword": "Mot de passe actuel",
+      "currentPlaceholder": "Entrez le mot de passe actuel",
+      "newPassword": "Nouveau mot de passe",
+      "newPlaceholder": "Entrez le nouveau mot de passe (min 8 caractères)",
+      "confirmPassword": "Confirmer le nouveau mot de passe",
+      "confirmPlaceholder": "Confirmez le nouveau mot de passe",
+      "showPasswords": "Afficher les mots de passe",
+      "enterCurrent": "Veuillez entrer votre mot de passe actuel",
+      "enterNew": "Veuillez entrer un nouveau mot de passe",
+      "minLength": "Le nouveau mot de passe doit contenir au moins 8 caractères",
+      "noMatch": "Les nouveaux mots de passe ne correspondent pas",
+      "mustBeDifferent": "Le nouveau mot de passe doit être différent du mot de passe actuel",
+      "updateError": "Échec du changement de mot de passe. Veuillez vérifier votre mot de passe actuel et réessayer.",
+      "successTitle": "✓ Mot de passe changé avec succès !",
+      "reloginNotice": "Vous devrez peut-être vous reconnecter sur d'autres appareils.",
+      "changing": "Changement en cours...",
+      "changeButton": "Changer le mot de passe"
+    },
+    "dangerZone": {
+      "title": "Zone dangereuse",
+      "description": "La suppression de votre compte est permanente. Toutes vos données seront supprimées 30 jours après confirmation.",
+      "yourAccount": "votre compte"
+    },
+    "delete": {
+      "button": "🗑️ Supprimer mon compte",
+      "modalTitle": "⚠️ Supprimer le compte",
+      "closeModal": "Fermer la fenêtre",
+      "warningTitle": "Cette action ne peut pas être annulée !",
+      "description": "La suppression de votre compte",
+      "willDo": "entraînera :",
+      "unshare": "Le départage immédiat de tout votre contenu partagé",
+      "sendEmail": "L'envoi d'un email de confirmation pour vérifier cette action",
+      "permanentDelete": "La suppression définitive de toutes vos données",
+      "thirtyDays": "30 jours",
+      "afterConfirmation": "après confirmation par email",
+      "typeToConfirm": "Tapez",
+      "toConfirm": "pour confirmer :",
+      "confirmError": "Veuillez taper \"DELETE\" pour confirmer",
+      "sendError": "Échec de l'envoi de la confirmation de suppression. Veuillez réessayer.",
+      "successTitle": "✓ Email de confirmation envoyé !",
+      "cancel": "Annuler",
+      "sending": "Envoi en cours...",
+      "sendConfirmation": "Envoyer l'email de confirmation"
+    }
   }
 }

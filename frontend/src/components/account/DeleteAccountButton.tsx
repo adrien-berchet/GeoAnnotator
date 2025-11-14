@@ -4,6 +4,7 @@
 
 import { useState } from "react";
 import { useAccount } from "../../hooks/useAccount";
+import { useLanguage } from "../../contexts/LanguageContext";
 import "./DeleteAccountButton.css";
 
 interface DeleteAccountButtonProps {
@@ -12,6 +13,7 @@ interface DeleteAccountButtonProps {
 
 export function DeleteAccountButton({ username }: DeleteAccountButtonProps) {
   const { requestAccountDeletion, isUpdating } = useAccount();
+  const { t } = useLanguage();
   const [showModal, setShowModal] = useState(false);
   const [confirmText, setConfirmText] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +36,12 @@ export function DeleteAccountButton({ username }: DeleteAccountButtonProps) {
 
   const handleConfirm = async () => {
     if (confirmText !== expectedText) {
-      setError(`Please type "${expectedText}" to confirm`);
+      setError(
+        t(
+          "account.delete.confirmError",
+          `Please type "${expectedText}" to confirm`,
+        ),
+      );
       return;
     }
 
@@ -49,7 +56,12 @@ export function DeleteAccountButton({ username }: DeleteAccountButtonProps) {
         handleCloseModal();
       }, 3000);
     } catch {
-      setError("Failed to send deletion confirmation. Please try again.");
+      setError(
+        t(
+          "account.delete.sendError",
+          "Failed to send deletion confirmation. Please try again.",
+        ),
+      );
     }
   };
 
@@ -61,18 +73,18 @@ export function DeleteAccountButton({ username }: DeleteAccountButtonProps) {
         onClick={handleOpenModal}
         disabled={isUpdating}
       >
-        🗑️ Delete My Account
+        {t("account.delete.button", "🗑️ Delete My Account")}
       </button>
 
       {showModal && (
         <div className="modal-overlay" onClick={handleCloseModal}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>⚠️ Delete Account</h3>
+              <h3>{t("account.delete.modalTitle", "⚠️ Delete Account")}</h3>
               <button
                 className="modal-close"
                 onClick={handleCloseModal}
-                aria-label="Close modal"
+                aria-label={t("account.delete.closeModal", "Close modal")}
               >
                 ✕
               </button>
@@ -80,23 +92,49 @@ export function DeleteAccountButton({ username }: DeleteAccountButtonProps) {
 
             <div className="modal-body">
               <div className="warning-box">
-                <p className="warning-title">This action cannot be undone!</p>
+                <p className="warning-title">
+                  {t(
+                    "account.delete.warningTitle",
+                    "This action cannot be undone!",
+                  )}
+                </p>
                 <p>
-                  Deleting your account (<strong>{username}</strong>) will:
+                  {t("account.delete.description", "Deleting your account")} (
+                  <strong>{username}</strong>){" "}
+                  {t("account.delete.willDo", "will:")}
                 </p>
                 <ul>
-                  <li>Immediately unshare all your shared content</li>
-                  <li>Send a confirmation email to verify this action</li>
                   <li>
-                    Permanently delete all your data <strong>30 days</strong>{" "}
-                    after email confirmation
+                    {t(
+                      "account.delete.unshare",
+                      "Immediately unshare all your shared content",
+                    )}
+                  </li>
+                  <li>
+                    {t(
+                      "account.delete.sendEmail",
+                      "Send a confirmation email to verify this action",
+                    )}
+                  </li>
+                  <li>
+                    {t(
+                      "account.delete.permanentDelete",
+                      "Permanently delete all your data",
+                    )}{" "}
+                    <strong>{t("account.delete.thirtyDays", "30 days")}</strong>{" "}
+                    {t(
+                      "account.delete.afterConfirmation",
+                      "after email confirmation",
+                    )}
                   </li>
                 </ul>
               </div>
 
               <div className="confirm-section">
                 <label htmlFor="confirm-delete" className="confirm-label">
-                  Type <strong>{expectedText}</strong> to confirm:
+                  {t("account.delete.typeToConfirm", "Type")}{" "}
+                  <strong>{expectedText}</strong>{" "}
+                  {t("account.delete.toConfirm", "to confirm:")}
                 </label>
                 <input
                   type="text"
@@ -123,7 +161,12 @@ export function DeleteAccountButton({ username }: DeleteAccountButtonProps) {
 
               {successMessage && (
                 <div className="success-message" role="status">
-                  <p className="success-title">✓ Confirmation email sent!</p>
+                  <p className="success-title">
+                    {t(
+                      "account.delete.successTitle",
+                      "✓ Confirmation email sent!",
+                    )}
+                  </p>
                   <p className="success-text">{successMessage}</p>
                 </div>
               )}
@@ -136,7 +179,7 @@ export function DeleteAccountButton({ username }: DeleteAccountButtonProps) {
                 onClick={handleCloseModal}
                 disabled={isUpdating}
               >
-                Cancel
+                {t("account.delete.cancel", "Cancel")}
               </button>
               <button
                 type="button"
@@ -144,7 +187,12 @@ export function DeleteAccountButton({ username }: DeleteAccountButtonProps) {
                 onClick={handleConfirm}
                 disabled={confirmText !== expectedText || isUpdating}
               >
-                {isUpdating ? "Sending..." : "Send Confirmation Email"}
+                {isUpdating
+                  ? t("account.delete.sending", "Sending...")
+                  : t(
+                      "account.delete.sendConfirmation",
+                      "Send Confirmation Email",
+                    )}
               </button>
             </div>
           </div>

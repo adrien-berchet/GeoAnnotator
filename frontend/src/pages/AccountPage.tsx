@@ -7,6 +7,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { useAccount } from "../hooks/useAccount";
+import { useLanguage } from "../contexts/LanguageContext";
 import { UsernameField } from "../components/account/UsernameField";
 import { EmailChangeForm } from "../components/account/EmailChangeForm";
 import { PasswordChangeForm } from "../components/account/PasswordChangeForm";
@@ -16,6 +17,7 @@ import "./AccountPage.css";
 export function AccountPage() {
   const { user } = useAuth();
   const { account, fetchAccount, isLoading, error } = useAccount();
+  const { t } = useLanguage();
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   useEffect(() => {
@@ -37,7 +39,9 @@ export function AccountPage() {
       <div className="account-page">
         <div className="account-loading">
           <div className="spinner" role="status">
-            <span className="visually-hidden">Loading account...</span>
+            <span className="visually-hidden">
+              {t("account.loading", "Loading account...")}
+            </span>
           </div>
         </div>
       </div>
@@ -50,7 +54,7 @@ export function AccountPage() {
         <div className="account-error">
           <p className="error-message">{error}</p>
           <button className="retry-button" onClick={fetchAccount}>
-            Retry
+            {t("account.retry", "Retry")}
           </button>
         </div>
       </div>
@@ -61,25 +65,32 @@ export function AccountPage() {
     <div className="account-page">
       <div className="account-container">
         <header className="account-header">
-          <h1>Account Management</h1>
+          <h1>{t("account.title", "Account Management")}</h1>
           <p className="account-subtitle">
-            Manage your profile information and account settings
+            {t(
+              "account.subtitle",
+              "Manage your profile information and account settings",
+            )}
           </p>
         </header>
 
         <div className="account-content">
           {/* Account Info Section */}
           <section className="account-section">
-            <h2>Account Information</h2>
+            <h2>{t("account.info.title", "Account Information")}</h2>
             <div className="account-info">
               <div className="info-item">
-                <span className="info-label">Email:</span>
+                <span className="info-label">
+                  {t("account.info.email", "Email:")}{" "}
+                </span>
                 <span className="info-value">
                   {account?.email || user?.email}
                 </span>
               </div>
               <div className="info-item">
-                <span className="info-label">Member since:</span>
+                <span className="info-label">
+                  {t("account.info.memberSince", "Member since:")}{" "}
+                </span>
                 <span className="info-value">
                   {account?.date_joined
                     ? new Date(account.date_joined).toLocaleDateString()
@@ -91,43 +102,54 @@ export function AccountPage() {
 
           {/* Username Section */}
           <section className="account-section">
-            <h2>Username</h2>
+            <h2>{t("account.username.title", "Username")}</h2>
             <p className="section-description">
-              Your username is displayed when sharing content with others. It
-              must be unique.
+              {t(
+                "account.username.description",
+                "Your username is displayed when sharing content with others. It must be unique.",
+              )}
             </p>
             <UsernameField currentUsername={account?.username || ""} />
           </section>
 
           {/* Email Change Section */}
           <section className="account-section">
-            <h2>Change Email Address</h2>
+            <h2>{t("account.email.title", "Change Email Address")}</h2>
             <p className="section-description">
-              Request a change to your email address. A confirmation link will
-              be sent to the new email address.
+              {t(
+                "account.email.description",
+                "Request a change to your email address. A confirmation link will be sent to the new email address.",
+              )}
             </p>
             <EmailChangeForm currentEmail={account?.email || ""} />
           </section>
 
           {/* Password Change Section */}
           <section className="account-section">
-            <h2>Change Password</h2>
+            <h2>{t("account.password.title", "Change Password")}</h2>
             <p className="section-description">
-              Update your password. You'll need to enter your current password
-              to confirm the change.
+              {t(
+                "account.password.description",
+                "Update your password. You'll need to enter your current password to confirm the change.",
+              )}
             </p>
             <PasswordChangeForm />
           </section>
 
           {/* Danger Zone Section */}
           <section className="account-section danger-zone">
-            <h2>Danger Zone</h2>
+            <h2>{t("account.dangerZone.title", "Danger Zone")}</h2>
             <p className="section-description danger-description">
-              Deleting your account is permanent. All your data will be removed
-              30 days after confirmation.
+              {t(
+                "account.dangerZone.description",
+                "Deleting your account is permanent. All your data will be removed 30 days after confirmation.",
+              )}
             </p>
             <DeleteAccountButton
-              username={account?.username || "your account"}
+              username={
+                account?.username ||
+                t("account.dangerZone.yourAccount", "your account")
+              }
             />
           </section>
         </div>

@@ -356,5 +356,93 @@
     "unauthorized": "Unauthorized access",
     "forbidden": "Access forbidden",
     "validation": "Validation error"
+  },
+  "account": {
+    "title": "Account Management",
+    "subtitle": "Manage your profile information and account settings",
+    "loading": "Loading account...",
+    "retry": "Retry",
+    "info": {
+      "title": "Account Information",
+      "email": "Email:",
+      "memberSince": "Member since:"
+    },
+    "username": {
+      "title": "Username",
+      "description": "Your username is displayed when sharing content with others. It must be unique.",
+      "label": "Username",
+      "placeholder": "Enter your username",
+      "update": "Update",
+      "updating": "Updating...",
+      "updateAriaLabel": "Update username",
+      "checking": "Checking availability...",
+      "invalidUsername": "Invalid username",
+      "usernameTaken": "Username already taken",
+      "success": "Username updated successfully!",
+      "help": "3-100 characters. Letters, numbers, underscore, and hyphen allowed. Displayed when sharing content."
+    },
+    "email": {
+      "title": "Change Email Address",
+      "description": "Request a change to your email address. A confirmation link will be sent to the new email address.",
+      "currentEmail": "Current Email",
+      "currentEmailAriaLabel": "Current email address",
+      "newEmail": "New Email Address",
+      "placeholder": "Enter new email address",
+      "enterNew": "Please enter a new email address",
+      "mustBeDifferent": "New email must be different from current email",
+      "invalidFormat": "Please enter a valid email address",
+      "sendError": "Failed to send confirmation email. Please try again.",
+      "successTitle": "✓ Confirmation email sent!",
+      "expirationNotice": "The confirmation link will expire in 30 minutes.",
+      "sending": "Sending...",
+      "sendConfirmation": "Send Confirmation Email"
+    },
+    "password": {
+      "title": "Change Password",
+      "description": "Update your password. You'll need to enter your current password to confirm the change.",
+      "currentPassword": "Current Password",
+      "currentPlaceholder": "Enter current password",
+      "newPassword": "New Password",
+      "newPlaceholder": "Enter new password (min 8 characters)",
+      "confirmPassword": "Confirm New Password",
+      "confirmPlaceholder": "Confirm new password",
+      "showPasswords": "Show passwords",
+      "enterCurrent": "Please enter your current password",
+      "enterNew": "Please enter a new password",
+      "minLength": "New password must be at least 8 characters",
+      "noMatch": "New passwords do not match",
+      "mustBeDifferent": "New password must be different from current password",
+      "updateError": "Failed to change password. Please check your current password and try again.",
+      "successTitle": "✓ Password changed successfully!",
+      "reloginNotice": "You may need to log in again on other devices.",
+      "changing": "Changing...",
+      "changeButton": "Change Password"
+    },
+    "dangerZone": {
+      "title": "Danger Zone",
+      "description": "Deleting your account is permanent. All your data will be removed 30 days after confirmation.",
+      "yourAccount": "your account"
+    },
+    "delete": {
+      "button": "🗑️ Delete My Account",
+      "modalTitle": "⚠️ Delete Account",
+      "closeModal": "Close modal",
+      "warningTitle": "This action cannot be undone!",
+      "description": "Deleting your account",
+      "willDo": "will:",
+      "unshare": "Immediately unshare all your shared content",
+      "sendEmail": "Send a confirmation email to verify this action",
+      "permanentDelete": "Permanently delete all your data",
+      "thirtyDays": "30 days",
+      "afterConfirmation": "after email confirmation",
+      "typeToConfirm": "Type",
+      "toConfirm": "to confirm:",
+      "confirmError": "Please type \"DELETE\" to confirm",
+      "sendError": "Failed to send deletion confirmation. Please try again.",
+      "successTitle": "✓ Confirmation email sent!",
+      "cancel": "Cancel",
+      "sending": "Sending...",
+      "sendConfirmation": "Send Confirmation Email"
+    }
   }
 }

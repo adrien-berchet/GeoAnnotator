@@ -5,6 +5,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { useAccount } from "../../hooks/useAccount";
 import { useAuth } from "../../hooks/useAuth";
+import { useLanguage } from "../../contexts/LanguageContext";
 import "./UsernameField.css";
 
 interface UsernameFieldProps {
@@ -15,6 +16,7 @@ export function UsernameField({ currentUsername }: UsernameFieldProps) {
   const { updateAccountUsername, checkUsername, isUpdating, isValidating } =
     useAccount();
   const { updateUser, user } = useAuth();
+  const { t } = useLanguage();
   const [username, setUsername] = useState(currentUsername);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -45,9 +47,15 @@ export function UsernameField({ currentUsername }: UsernameFieldProps) {
           const result = await checkUsername({ username: value });
 
           if (!result.valid) {
-            setValidationError(result.error || "Invalid username");
+            setValidationError(
+              result.error ||
+                t("account.username.invalidUsername", "Invalid username"),
+            );
           } else if (result.available === false) {
-            setValidationError(result.error || "Username already taken");
+            setValidationError(
+              result.error ||
+                t("account.username.usernameTaken", "Username already taken"),
+            );
           } else {
             setValidationError(null);
           }
@@ -59,7 +67,7 @@ export function UsernameField({ currentUsername }: UsernameFieldProps) {
 
       setDebounceTimer(timer);
     },
-    [currentUsername, checkUsername, debounceTimer],
+    [currentUsername, checkUsername, debounceTimer, t],
   );
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -81,7 +89,9 @@ export function UsernameField({ currentUsername }: UsernameFieldProps) {
 
     try {
       const updated = await updateAccountUsername({ username: username });
-      setSuccessMessage("Username updated successfully!");
+      setSuccessMessage(
+        t("account.username.success", "Username updated successfully!"),
+      );
 
       // Update auth context with new username
       if (user) {
@@ -100,7 +110,7 @@ export function UsernameField({ currentUsername }: UsernameFieldProps) {
     <form className="username-field" onSubmit={handleSubmit}>
       <div className="form-group">
         <label htmlFor="username" className="form-label">
-          Username
+          {t("account.username.label", "Username")}
         </label>
         <div className="input-with-button">
           <input
@@ -109,7 +119,10 @@ export function UsernameField({ currentUsername }: UsernameFieldProps) {
             className={`form-input ${validationError ? "input-error" : ""} ${hasChanges && !validationError ? "input-success" : ""}`}
             value={username}
             onChange={handleChange}
-            placeholder="Enter your username"
+            placeholder={t(
+              "account.username.placeholder",
+              "Enter your username",
+            )}
             maxLength={100}
             disabled={isUpdating}
             aria-describedby={validationError ? "username-error" : undefined}
@@ -119,14 +132,21 @@ export function UsernameField({ currentUsername }: UsernameFieldProps) {
             type="submit"
             className="update-button"
             disabled={!canSubmit}
-            aria-label="Update username"
+            aria-label={t(
+              "account.username.updateAriaLabel",
+              "Update username",
+            )}
           >
-            {isUpdating ? "Updating..." : "Update"}
+            {isUpdating
+              ? t("account.username.updating", "Updating...")
+              : t("account.username.update", "Update")}
           </button>
         </div>
 
         {isValidating && (
-          <p className="validation-message">Checking availability...</p>
+          <p className="validation-message">
+            {t("account.username.checking", "Checking availability...")}
+          </p>
         )}
 
         {validationError && (
@@ -142,8 +162,10 @@ export function UsernameField({ currentUsername }: UsernameFieldProps) {
         )}
 
         <p className="help-text">
-          3-100 characters. Letters, numbers, underscore, and hyphen allowed.
-          Displayed when sharing content.
+          {t(
+            "account.username.help",
+            "3-100 characters. Letters, numbers, underscore, and hyphen allowed. Displayed when sharing content.",
+          )}
         </p>
       </div>
     </form>

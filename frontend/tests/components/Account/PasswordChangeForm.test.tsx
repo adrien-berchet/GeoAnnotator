@@ -4,7 +4,8 @@
  * Tests password change form validation and submission.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { screen, waitFor, fireEvent } from "@testing-library/react";
+import { renderWithProviders } from "../../../src/test/test-utils";
 import { PasswordChangeForm } from "../../../src/components/account/PasswordChangeForm";
 
 // Mock hooks
@@ -23,7 +24,7 @@ describe("PasswordChangeForm Component", () => {
   });
 
   it("should render all password fields", () => {
-    render(<PasswordChangeForm />);
+    renderWithProviders(<PasswordChangeForm />);
 
     expect(screen.getByLabelText(/current password/i)).toBeTruthy();
     expect(screen.getByLabelText(/^new password/i)).toBeTruthy();
@@ -31,7 +32,7 @@ describe("PasswordChangeForm Component", () => {
   });
 
   it("should have submit button disabled when fields are empty", () => {
-    render(<PasswordChangeForm />);
+    renderWithProviders(<PasswordChangeForm />);
 
     const submitButton = screen.getByRole("button", {
       name: /change password/i,
@@ -40,7 +41,7 @@ describe("PasswordChangeForm Component", () => {
   });
 
   it("should enable submit button when all fields are filled", () => {
-    render(<PasswordChangeForm />);
+    renderWithProviders(<PasswordChangeForm />);
 
     const oldPassword = screen.getByLabelText(/current password/i);
     const newPassword = screen.getByLabelText(/^new password/i);
@@ -57,7 +58,7 @@ describe("PasswordChangeForm Component", () => {
   });
 
   it("should show error when old password is missing", async () => {
-    render(<PasswordChangeForm />);
+    renderWithProviders(<PasswordChangeForm />);
 
     const newPassword = screen.getByLabelText(/^new password/i);
     const confirmPassword = screen.getByLabelText(/confirm new password/i);
@@ -81,7 +82,7 @@ describe("PasswordChangeForm Component", () => {
   });
 
   it("should show error when new password is too short", async () => {
-    render(<PasswordChangeForm />);
+    renderWithProviders(<PasswordChangeForm />);
 
     const oldPassword = screen.getByLabelText(/current password/i);
     const newPassword = screen.getByLabelText(/^new password/i);
@@ -104,7 +105,7 @@ describe("PasswordChangeForm Component", () => {
   });
 
   it("should show error when passwords do not match", async () => {
-    render(<PasswordChangeForm />);
+    renderWithProviders(<PasswordChangeForm />);
 
     const oldPassword = screen.getByLabelText(/current password/i);
     const newPassword = screen.getByLabelText(/^new password/i);
@@ -125,7 +126,7 @@ describe("PasswordChangeForm Component", () => {
   });
 
   it("should show error when new password is same as old", async () => {
-    render(<PasswordChangeForm />);
+    renderWithProviders(<PasswordChangeForm />);
 
     const oldPassword = screen.getByLabelText(/current password/i);
     const newPassword = screen.getByLabelText(/^new password/i);
@@ -152,7 +153,7 @@ describe("PasswordChangeForm Component", () => {
       detail: "Password changed successfully",
     });
 
-    render(<PasswordChangeForm />);
+    renderWithProviders(<PasswordChangeForm />);
 
     const oldPassword = screen.getByLabelText(/current password/i);
     const newPassword = screen.getByLabelText(/^new password/i);
@@ -184,7 +185,7 @@ describe("PasswordChangeForm Component", () => {
       detail: "Success",
     });
 
-    render(<PasswordChangeForm />);
+    renderWithProviders(<PasswordChangeForm />);
 
     const oldPassword = screen.getByLabelText(
       /current password/i,
@@ -216,7 +217,7 @@ describe("PasswordChangeForm Component", () => {
   });
 
   it("should toggle password visibility", () => {
-    render(<PasswordChangeForm />);
+    renderWithProviders(<PasswordChangeForm />);
 
     const oldPassword = screen.getByLabelText(/current password/i);
     const showCheckbox = screen.getByLabelText(/show passwords/i);
@@ -236,7 +237,7 @@ describe("PasswordChangeForm Component", () => {
   it("should show error on failed submission", async () => {
     mockUpdatePassword.mockRejectedValue(new Error("Wrong password"));
 
-    render(<PasswordChangeForm />);
+    renderWithProviders(<PasswordChangeForm />);
 
     const oldPassword = screen.getByLabelText(/current password/i);
     const newPassword = screen.getByLabelText(/^new password/i);
@@ -257,7 +258,7 @@ describe("PasswordChangeForm Component", () => {
   });
 
   it("should have accessible ARIA attributes", () => {
-    render(<PasswordChangeForm />);
+    renderWithProviders(<PasswordChangeForm />);
 
     const oldPassword = screen.getByLabelText(/current password/i);
     expect(oldPassword.getAttribute("aria-invalid")).toBe("false");

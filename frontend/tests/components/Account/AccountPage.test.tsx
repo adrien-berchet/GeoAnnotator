@@ -4,8 +4,8 @@
  * Tests account management page rendering and accessibility.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
-import { BrowserRouter } from "react-router-dom";
+import { screen } from "@testing-library/react";
+import { renderWithProviders } from "../../../src/test/test-utils";
 import { AccountPage } from "../../../src/pages/AccountPage";
 
 // Mock hooks
@@ -44,9 +44,6 @@ vi.mock("../../../src/hooks/useAccount", () => ({
 }));
 
 // Wrapper for router context
-const RouterWrapper = ({ children }: { children: React.ReactNode }) => (
-  <BrowserRouter>{children}</BrowserRouter>
-);
 
 describe("AccountPage Component", () => {
   beforeEach(() => {
@@ -54,11 +51,7 @@ describe("AccountPage Component", () => {
   });
 
   it("should render all account management sections", () => {
-    render(
-      <RouterWrapper>
-        <AccountPage />
-      </RouterWrapper>,
-    );
+    renderWithProviders(<AccountPage />);
 
     // Check for main sections by headings (more specific)
     expect(
@@ -75,22 +68,14 @@ describe("AccountPage Component", () => {
   });
 
   it("should display current user username", () => {
-    render(
-      <RouterWrapper>
-        <AccountPage />
-      </RouterWrapper>,
-    );
+    renderWithProviders(<AccountPage />);
 
     const usernameInput = screen.getByDisplayValue("TestUser");
     expect(usernameInput).toBeTruthy();
   });
 
   it("should have accessible heading structure", () => {
-    render(
-      <RouterWrapper>
-        <AccountPage />
-      </RouterWrapper>,
-    );
+    renderWithProviders(<AccountPage />);
 
     const headings = screen.getAllByRole("heading");
     expect(headings.length).toBeGreaterThan(0);
@@ -101,11 +86,7 @@ describe("AccountPage Component", () => {
   });
 
   it("should have accessible buttons", () => {
-    render(
-      <RouterWrapper>
-        <AccountPage />
-      </RouterWrapper>,
-    );
+    renderWithProviders(<AccountPage />);
 
     const buttons = screen.getAllByRole("button");
     expect(buttons.length).toBeGreaterThan(0);
@@ -119,11 +100,7 @@ describe("AccountPage Component", () => {
   });
 
   it("should organize content into sections", () => {
-    const { container } = render(
-      <RouterWrapper>
-        <AccountPage />
-      </RouterWrapper>,
-    );
+    const { container } = renderWithProviders(<AccountPage />);
 
     // Check for section elements
     const sections = container.querySelectorAll("section");
@@ -131,11 +108,7 @@ describe("AccountPage Component", () => {
   });
 
   it("should render username field", () => {
-    render(
-      <RouterWrapper>
-        <AccountPage />
-      </RouterWrapper>,
-    );
+    renderWithProviders(<AccountPage />);
 
     // UsernameField should be present - use exact match for label
     const usernameInput = screen.getByLabelText("Username");
@@ -143,11 +116,7 @@ describe("AccountPage Component", () => {
   });
 
   it("should have proper semantic HTML structure", () => {
-    const { container } = render(
-      <RouterWrapper>
-        <AccountPage />
-      </RouterWrapper>,
-    );
+    const { container } = renderWithProviders(<AccountPage />);
 
     // Check for main or container element
     const main =
@@ -157,11 +126,7 @@ describe("AccountPage Component", () => {
   });
 
   it("should support keyboard navigation", () => {
-    render(
-      <RouterWrapper>
-        <AccountPage />
-      </RouterWrapper>,
-    );
+    renderWithProviders(<AccountPage />);
 
     const buttons = screen.getAllByRole("button");
     buttons.forEach((element) => {

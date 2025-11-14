@@ -4,7 +4,8 @@
  * Tests delete account modal and confirmation flow.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { screen, waitFor, fireEvent } from "@testing-library/react";
+import { renderWithProviders } from "../../../src/test/test-utils";
 import { DeleteAccountButton } from "../../../src/components/account/DeleteAccountButton";
 
 // Mock hooks
@@ -28,7 +29,7 @@ describe("DeleteAccountButton Component", () => {
   });
 
   it("should render delete button", () => {
-    render(<DeleteAccountButton username="TestUser" />);
+    renderWithProviders(<DeleteAccountButton username="TestUser" />);
 
     const deleteButton = screen.getByRole("button", {
       name: /delete my account/i,
@@ -37,7 +38,7 @@ describe("DeleteAccountButton Component", () => {
   });
 
   it("should open modal when button is clicked", () => {
-    render(<DeleteAccountButton username="TestUser" />);
+    renderWithProviders(<DeleteAccountButton username="TestUser" />);
 
     const deleteButton = screen.getByRole("button", {
       name: /delete my account/i,
@@ -52,7 +53,7 @@ describe("DeleteAccountButton Component", () => {
   });
 
   it("should display username in warning", () => {
-    render(<DeleteAccountButton username="TestUser" />);
+    renderWithProviders(<DeleteAccountButton username="TestUser" />);
 
     const deleteButton = screen.getByRole("button", {
       name: /delete my account/i,
@@ -64,7 +65,7 @@ describe("DeleteAccountButton Component", () => {
   });
 
   it("should close modal when close button is clicked", () => {
-    render(<DeleteAccountButton username="TestUser" />);
+    renderWithProviders(<DeleteAccountButton username="TestUser" />);
 
     const deleteButton = screen.getByRole("button", {
       name: /delete my account/i,
@@ -81,7 +82,7 @@ describe("DeleteAccountButton Component", () => {
   });
 
   it("should close modal when cancel button is clicked", () => {
-    render(<DeleteAccountButton username="TestUser" />);
+    renderWithProviders(<DeleteAccountButton username="TestUser" />);
 
     const deleteButton = screen.getByRole("button", {
       name: /delete my account/i,
@@ -98,7 +99,7 @@ describe("DeleteAccountButton Component", () => {
   });
 
   it("should close modal when clicking overlay", () => {
-    render(<DeleteAccountButton username="TestUser" />);
+    renderWithProviders(<DeleteAccountButton username="TestUser" />);
 
     const deleteButton = screen.getByRole("button", {
       name: /delete my account/i,
@@ -117,7 +118,7 @@ describe("DeleteAccountButton Component", () => {
   });
 
   it("should have confirm button disabled when text is wrong", () => {
-    render(<DeleteAccountButton username="TestUser" />);
+    renderWithProviders(<DeleteAccountButton username="TestUser" />);
 
     const deleteButton = screen.getByRole("button", {
       name: /delete my account/i,
@@ -134,7 +135,7 @@ describe("DeleteAccountButton Component", () => {
   });
 
   it("should enable confirm button when correct text is entered", () => {
-    render(<DeleteAccountButton username="TestUser" />);
+    renderWithProviders(<DeleteAccountButton username="TestUser" />);
 
     const deleteButton = screen.getByRole("button", {
       name: /delete my account/i,
@@ -151,7 +152,7 @@ describe("DeleteAccountButton Component", () => {
   });
 
   it("should disable button when wrong text is entered", async () => {
-    render(<DeleteAccountButton username="TestUser" />);
+    renderWithProviders(<DeleteAccountButton username="TestUser" />);
 
     const deleteButton = screen.getByRole("button", {
       name: /delete my account/i,
@@ -174,7 +175,7 @@ describe("DeleteAccountButton Component", () => {
       detail: "Deletion email sent",
     });
 
-    render(<DeleteAccountButton username="TestUser" />);
+    renderWithProviders(<DeleteAccountButton username="TestUser" />);
 
     const deleteButton = screen.getByRole("button", {
       name: /delete my account/i,
@@ -204,7 +205,7 @@ describe("DeleteAccountButton Component", () => {
       detail: "Deletion email sent",
     });
 
-    render(<DeleteAccountButton username="TestUser" />);
+    renderWithProviders(<DeleteAccountButton username="TestUser" />);
 
     const deleteButton = screen.getByRole("button", {
       name: /delete my account/i,
@@ -240,7 +241,7 @@ describe("DeleteAccountButton Component", () => {
   it("should show error on failed submission", async () => {
     mockRequestAccountDeletion.mockRejectedValue(new Error("Network error"));
 
-    render(<DeleteAccountButton username="TestUser" />);
+    renderWithProviders(<DeleteAccountButton username="TestUser" />);
 
     const deleteButton = screen.getByRole("button", {
       name: /delete my account/i,
@@ -264,7 +265,7 @@ describe("DeleteAccountButton Component", () => {
   });
 
   it("should have accessible modal structure", () => {
-    render(<DeleteAccountButton username="TestUser" />);
+    renderWithProviders(<DeleteAccountButton username="TestUser" />);
 
     const deleteButton = screen.getByRole("button", {
       name: /delete my account/i,
@@ -281,7 +282,7 @@ describe("DeleteAccountButton Component", () => {
   });
 
   it("should prevent modal close when clicking inside content", () => {
-    render(<DeleteAccountButton username="TestUser" />);
+    renderWithProviders(<DeleteAccountButton username="TestUser" />);
 
     const deleteButton = screen.getByRole("button", {
       name: /delete my account/i,

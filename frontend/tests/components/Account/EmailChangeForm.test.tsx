@@ -4,7 +4,8 @@
  * Tests email change form validation and submission.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { screen, waitFor, fireEvent } from "@testing-library/react";
+import { renderWithProviders } from "../../../src/test/test-utils";
 import { EmailChangeForm } from "../../../src/components/account/EmailChangeForm";
 
 // Mock hooks
@@ -23,7 +24,7 @@ describe("EmailChangeForm Component", () => {
   });
 
   it("should render with current email disabled", () => {
-    render(<EmailChangeForm currentEmail="test@example.com" />);
+    renderWithProviders(<EmailChangeForm currentEmail="test@example.com" />);
 
     const currentEmailInput = screen.getByLabelText(
       "Current Email",
@@ -33,7 +34,7 @@ describe("EmailChangeForm Component", () => {
   });
 
   it("should have submit button disabled when new email is empty", () => {
-    render(<EmailChangeForm currentEmail="test@example.com" />);
+    renderWithProviders(<EmailChangeForm currentEmail="test@example.com" />);
 
     const submitButton = screen.getByRole("button", {
       name: /send confirmation email/i,
@@ -42,7 +43,7 @@ describe("EmailChangeForm Component", () => {
   });
 
   it("should enable submit button when new email is entered", () => {
-    render(<EmailChangeForm currentEmail="test@example.com" />);
+    renderWithProviders(<EmailChangeForm currentEmail="test@example.com" />);
 
     const newEmailInput = screen.getByLabelText("New Email Address");
     fireEvent.change(newEmailInput, { target: { value: "new@example.com" } });
@@ -54,7 +55,7 @@ describe("EmailChangeForm Component", () => {
   });
 
   it("should show error when email is same as current", async () => {
-    render(<EmailChangeForm currentEmail="test@example.com" />);
+    renderWithProviders(<EmailChangeForm currentEmail="test@example.com" />);
 
     const newEmailInput = screen.getByLabelText("New Email Address");
     const submitButton = screen.getByRole("button", {
@@ -73,7 +74,7 @@ describe("EmailChangeForm Component", () => {
   });
 
   it("should show error when email is invalid", async () => {
-    render(<EmailChangeForm currentEmail="test@example.com" />);
+    renderWithProviders(<EmailChangeForm currentEmail="test@example.com" />);
 
     const newEmailInput = screen.getByLabelText("New Email Address");
     const submitButton = screen.getByRole("button", {
@@ -99,7 +100,7 @@ describe("EmailChangeForm Component", () => {
       detail: "Check your email for confirmation",
     });
 
-    render(<EmailChangeForm currentEmail="test@example.com" />);
+    renderWithProviders(<EmailChangeForm currentEmail="test@example.com" />);
 
     const newEmailInput = screen.getByLabelText("New Email Address");
     const submitButton = screen.getByRole("button", {
@@ -126,7 +127,7 @@ describe("EmailChangeForm Component", () => {
       detail: "Check your email",
     });
 
-    render(<EmailChangeForm currentEmail="test@example.com" />);
+    renderWithProviders(<EmailChangeForm currentEmail="test@example.com" />);
 
     const newEmailInput = screen.getByLabelText(
       "New Email Address",
@@ -150,7 +151,7 @@ describe("EmailChangeForm Component", () => {
   it("should show error on failed submission", async () => {
     mockRequestEmailChange.mockRejectedValue(new Error("Network error"));
 
-    render(<EmailChangeForm currentEmail="test@example.com" />);
+    renderWithProviders(<EmailChangeForm currentEmail="test@example.com" />);
 
     const newEmailInput = screen.getByLabelText("New Email Address");
     const submitButton = screen.getByRole("button", {
@@ -167,7 +168,7 @@ describe("EmailChangeForm Component", () => {
   });
 
   it("should have accessible labels and ARIA attributes", () => {
-    render(<EmailChangeForm currentEmail="test@example.com" />);
+    renderWithProviders(<EmailChangeForm currentEmail="test@example.com" />);
 
     const currentEmailInput = screen.getByLabelText("Current Email");
     const newEmailInput = screen.getByLabelText("New Email Address");
@@ -179,7 +180,7 @@ describe("EmailChangeForm Component", () => {
   });
 
   it("should clear error when typing in input", async () => {
-    render(<EmailChangeForm currentEmail="test@example.com" />);
+    renderWithProviders(<EmailChangeForm currentEmail="test@example.com" />);
 
     const newEmailInput = screen.getByLabelText("New Email Address");
     const submitButton = screen.getByRole("button", {
