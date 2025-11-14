@@ -134,6 +134,13 @@ class LoginSerializer(serializers.Serializer):
                 {"detail": "Invalid email or password"}, code="authentication_failed"
             )
 
+        # Check if email is verified
+        if not user.is_verified:
+            raise serializers.ValidationError(
+                {"detail": "Please verify your email before logging in. Check your inbox for the confirmation link."},
+                code="email_not_verified"
+            )
+
         attrs["user"] = user
         return attrs
 

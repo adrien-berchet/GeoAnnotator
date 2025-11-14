@@ -35,6 +35,7 @@ from .serializers import UserSerializer
 from .services import AccountDeletionTokenGenerator
 from .services import AuthenticationService
 from .services import EmailChangeTokenGenerator
+from .services import EmailConfirmationService
 from .services import log_account_operation
 from .services import send_deletion_confirmation
 from .services import send_email_change_confirmation
@@ -58,18 +59,84 @@ class RegisterView(generics.CreateAPIView):
         # Create user via serializer
         user = serializer.save()
 
-        # Generate tokens
-        token_data = AuthenticationService.generate_tokens(user)
+        # Generate confirmation token
+        token = EmailConfirmationService.generate_confirmation_token(user)
 
-        # Serialize user data
-        user_serializer = UserSerializer(user)
+        # Send confirmation email
+        EmailConfirmationService.send_confirmation_email(user, token)
+
+        # Return success message instead of JWT tokens
         response_data = {
-            "access": token_data["access"],
-            "refresh": token_data["refresh"],
-            "user": user_serializer.data,
+            "message": "Registration successful! Please check your email to confirm your account.",
+            "email": str(user.email),
         }
 
         return Response(response_data, status=status.HTTP_201_CREATED)
+
+
+class ConfirmEmailView(APIView):
+    """
+    POST /api/auth/confirm-email
+    Confirm user email with token from confirmation link.
+    """
+
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        token = request.data.get("token")
+
+        if not token:
+            return Response(
+                {"detail": "Token is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Confirm email
+        success, error_message = EmailConfirmationService.confirm_email(token)
+
+        if not success:
+            return Response(
+                {"detail": error_message},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        return Response(
+            {"message": "Email confirmed successfully! You can now log in."},
+            status=status.HTTP_200_OK,
+        )
+
+
+class ResendConfirmationView(APIView):
+    """
+    POST /api/auth/resend-confirmation
+    Resend confirmation email to unverified user.
+    """
+
+    permission_classes = [AllowAny]
+    throttle_classes = [AnonRateThrottle]
+
+    def post(self, request):
+        email = request.data.get("email")
+
+        if not email:
+            return Response(
+                {"detail": "Email is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Resend confirmation email
+        success, error_message = EmailConfirmationService.resend_confirmation_email(email)
+
+        if not success:
+            return Response(
+                {"detail": error_message},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        return Response(
+            {"message": "Confirmation email sent! Please check your inbox."},
+            status=status.HTTP_200_OK,
+        )
 
 
 class LoginView(APIView):

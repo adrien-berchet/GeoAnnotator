@@ -245,3 +245,6 @@ CORS_ALLOWED_ORIGINS = [origin.strip() for origin in _cors_origins.split(",") if
 # GDAL and GEOS library paths (set if not in default locations)
 # GDAL_LIBRARY_PATH = '/path/to/libgdal.so'
 # GEOS_LIBRARY_PATH = '/path/to/libgeos_c.so'
+
+# Frontend URL for email confirmation links
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:3000")

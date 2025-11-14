@@ -1,0 +1,22 @@
+Welcome to GeoAnnotator!
+========================
+
+Hi {{ user.username }},
+
+Thank you for registering with GeoAnnotator! To complete your registration and activate your account, please confirm your email address.
+
+Click the link below to verify your email:
+
+{{ confirmation_link }}
+
+⏰ IMPORTANT: This link will expire in 48 hours.
+
+Once you confirm your email, you'll be able to log in and start using GeoAnnotator.
+
+If you didn't create an account with GeoAnnotator, please ignore this email.
+
+Best regards,
+The GeoAnnotator Team
+
+---
+This is an automated email. Please do not reply to this message.

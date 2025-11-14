@@ -1,10 +1,21 @@
 from django.contrib import admin
 
+from .models import EmailConfirmation
 from .models import User
 
 
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
-    list_display = ("email", "is_active", "is_staff", "date_joined")
-    search_fields = ("email",)
+    list_display = ("email", "username", "is_verified", "is_active", "is_staff", "date_joined")
+    search_fields = ("email", "username")
+    list_filter = ("is_verified", "is_active", "is_staff")
     ordering = ("-date_joined",)
+
+
+@admin.register(EmailConfirmation)
+class EmailConfirmationAdmin(admin.ModelAdmin):
+    list_display = ("user", "created_at", "expires_at", "confirmed_at", "is_expired")
+    search_fields = ("user__email", "user__username")
+    list_filter = ("confirmed_at",)
+    ordering = ("-created_at",)
+    readonly_fields = ("token", "created_at", "expires_at", "confirmed_at")

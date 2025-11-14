@@ -328,6 +328,61 @@ class EmailChangeConfirmation(models.Model):
         return f"{status} {self.user} → {self.new_email}"
 
 
+class EmailConfirmation(models.Model):
+    """
+    Token storage for email confirmation during user registration.
+
+    Stores confirmation tokens until user verifies their email address.
+    Tokens expire after 48 hours.
+    """
+
+    user = models.ForeignKey(
+        "User",
+        on_delete=models.CASCADE,
+        related_name="email_confirmations",
+        help_text="User confirming their email",
+    )
+
+    token = models.CharField(max_length=128, unique=True, help_text="HMAC-based confirmation token")
+
+    created_at = models.DateTimeField(auto_now_add=True, help_text="Token creation timestamp")
+
+    expires_at = models.DateTimeField(
+        help_text="Token expiration timestamp (created_at + 48 hours)"
+    )
+
+    confirmed_at = models.DateTimeField(
+        blank=True, null=True, help_text="Timestamp when confirmed, NULL if pending"
+    )
+
+    class Meta:
+        db_table = "email_confirmations"
+        verbose_name = "Email Confirmation"
+        verbose_name_plural = "Email Confirmations"
+        ordering = ["-created_at"]
+
+    @property
+    def is_expired(self):
+        """Check if token has expired."""
+        return timezone.now() > self.expires_at
+
+    @property
+    def is_confirmed(self):
+        """Check if email has been confirmed."""
+        return self.confirmed_at is not None
+
+    def save(self, *args, **kwargs):
+        """Set expires_at if not already set."""
+        if not self.expires_at:
+            self.expires_at = timezone.now() + timedelta(hours=48)
+
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        status = "✓" if self.confirmed_at else ("⏰" if not self.is_expired else "❌")
+        return f"{status} {self.user} email confirmation"
+
+
 class AccountLog(models.Model):
     """
     Audit trail for sensitive account operations.
@@ -343,6 +398,8 @@ class AccountLog(models.Model):
         ("ACCOUNT_DELETED", "Account Deleted"),
         ("EMAIL_CHANGE_REQUESTED", "Email Change Requested"),
         ("EMAIL_CHANGE_CONFIRMED", "Email Change Confirmed"),
+        ("EMAIL_CONFIRMED", "Email Confirmed"),
+        ("CONFIRMATION_EMAIL_RESENT", "Confirmation Email Resent"),
     ]
 
     user = models.ForeignKey(

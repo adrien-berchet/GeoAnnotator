@@ -192,6 +192,193 @@ class AuthenticationService:
         return False
 
 
+class EmailConfirmationService:
+    """Service for email confirmation during user registration."""
+
+    @staticmethod
+    def generate_confirmation_token(user: User) -> str:
+        """
+        Generate HMAC-based confirmation token for email verification.
+
+        Args:
+            user: User object
+
+        Returns:
+            str: HMAC-based token (128 characters)
+        """
+        from .models import EmailConfirmation
+
+        # Generate token using HMAC with user ID and timestamp
+        timestamp = str(timezone.now().timestamp())
+        message = f"{user.id}:{user.email}:{timestamp}"
+        token = hmac.new(
+            settings.SECRET_KEY.encode(),
+            message.encode(),
+            hashlib.sha256,
+        ).hexdigest()
+
+        # Store token in database
+        # Delete any existing pending confirmations for this user
+        EmailConfirmation.objects.filter(
+            user=user,
+            confirmed_at__isnull=True,
+        ).delete()
+
+        # Create new confirmation record
+        EmailConfirmation.objects.create(
+            user=user,
+            token=token,
+        )
+
+        return token
+
+    @staticmethod
+    def validate_confirmation_token(token: str) -> tuple[bool, str | None, User | None]:
+        """
+        Validate email confirmation token.
+
+        Args:
+            token: Confirmation token string
+
+        Returns:
+            tuple: (is_valid, error_message, user)
+                - is_valid: True if token is valid
+                - error_message: Error message if invalid, None otherwise
+                - user: User object if valid, None otherwise
+        """
+        from .models import EmailConfirmation
+
+        try:
+            confirmation = EmailConfirmation.objects.get(token=token)
+
+            # Check if already confirmed
+            if confirmation.is_confirmed:
+                return False, "This confirmation link has already been used.", None
+
+            # Check if expired
+            if confirmation.is_expired:
+                return False, "This confirmation link has expired. Please request a new one.", None
+
+            # Valid token
+            return True, None, confirmation.user
+
+        except EmailConfirmation.DoesNotExist:
+            return False, "Invalid confirmation link.", None
+
+    @staticmethod
+    def confirm_email(token: str) -> tuple[bool, str | None]:
+        """
+        Confirm user email with token.
+
+        Args:
+            token: Confirmation token string
+
+        Returns:
+            tuple: (success, error_message)
+        """
+        from .models import EmailConfirmation
+
+        is_valid, error_message, user = EmailConfirmationService.validate_confirmation_token(token)
+
+        if not is_valid:
+            return False, error_message
+
+        # Mark user as verified
+        user.is_verified = True
+        user.save(update_fields=["is_verified"])
+
+        # Mark confirmation as completed
+        confirmation = EmailConfirmation.objects.get(token=token)
+        confirmation.confirmed_at = timezone.now()
+        confirmation.save(update_fields=["confirmed_at"])
+
+        # Log the confirmation
+        AccountLog.objects.create(
+            user=user,
+            operation="EMAIL_CONFIRMED",
+            details={"email": str(user.email)},
+        )
+
+        return True, None
+
+    @staticmethod
+    def send_confirmation_email(user: User, token: str) -> None:
+        """
+        Send confirmation email to user with token link.
+
+        Args:
+            user: User object
+            token: Confirmation token
+        """
+        # Get frontend URL from settings
+        frontend_url = getattr(settings, "FRONTEND_URL", "http://localhost:3000")
+        confirmation_link = f"{frontend_url}/confirm-email?token={token}"
+
+        # Render email templates
+        html_message = render_to_string(
+            "emails/confirm_registration.html",
+            {
+                "user": user,
+                "confirmation_link": confirmation_link,
+            },
+        )
+        text_message = render_to_string(
+            "emails/confirm_registration.txt",
+            {
+                "user": user,
+                "confirmation_link": confirmation_link,
+            },
+        )
+
+        # Send email
+        send_mail(
+            subject="Confirmez votre adresse email - GeoAnnotator",
+            message=text_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+            html_message=html_message,
+        )
+
+    @staticmethod
+    def resend_confirmation_email(email: str) -> tuple[bool, str | None]:
+        """
+        Resend confirmation email to user.
+
+        Args:
+            email: User email address
+
+        Returns:
+            tuple: (success, error_message)
+        """
+        try:
+            # Find user by email
+            email_hash = User.hash_email(email)
+            user = User.objects.get(email_hash=email_hash)
+
+            # Check if already verified
+            if user.is_verified:
+                return False, "This email address is already verified."
+
+            # Generate new token
+            token = EmailConfirmationService.generate_confirmation_token(user)
+
+            # Send email
+            EmailConfirmationService.send_confirmation_email(user, token)
+
+            # Log the resend
+            AccountLog.objects.create(
+                user=user,
+                operation="CONFIRMATION_EMAIL_RESENT",
+                details={"email": str(user.email)},
+            )
+
+            return True, None
+
+        except User.DoesNotExist:
+            # Don't reveal if email exists or not for security
+            return False, "If this email is registered and unverified, a confirmation email will be sent."
+
+
 # Account Management Services
 
 
