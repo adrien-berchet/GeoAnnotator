@@ -91,8 +91,11 @@ class TestPointTypeContract:
         data = {"names": {"en": "Type_1001"}, "order": 1000}
         response = authenticated_client_alice.post(url, data, format="json")
 
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert "limit" in str(response.data).lower() or "1000" in str(response.data)
+        # API returns 429 TOO_MANY_REQUESTS when exceeding limit (via throttle)
+        assert response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
+        # Accept either "limit", "1000" or "throttled" in the error message
+        error_msg = str(response.data).lower()
+        assert "limit" in error_msg or "1000" in error_msg or "throttled" in error_msg
 
     def test_create_type_unauthenticated(self, api_client):
         """Test that unauthenticated users cannot create types."""

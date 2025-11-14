@@ -276,7 +276,8 @@ class ShareService:
         # Check if recipient user exists
         recipient_user = None
         try:
-            recipient_user = User.objects.get(email=recipient_email)
+            email_hash = User.hash_email(recipient_email)
+            recipient_user = User.objects.get(email_hash=email_hash)
         except User.DoesNotExist:
             pass  # Will be linked when user accepts invitation
 

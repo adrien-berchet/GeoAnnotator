@@ -1,0 +1,31 @@
+⚠️ Confirm Account Deletion
+=============================
+
+Hi {{ username }},
+
+You requested to delete your GeoAnnotator account.
+
+⚠️ WARNING: This action cannot be undone!
+
+What will happen when you delete your account:
+
+• All your GPS points and annotations will be permanently deleted in 30 days
+• All content you've shared with others will be immediately unshared
+• You will no longer be able to access your account
+• Your account data will be permanently removed from our database after 30 days
+
+If you're sure you want to proceed, please click the link below to confirm account deletion:
+
+{{ confirmation_link }}
+
+💡 Changed your mind?
+
+If you didn't request this deletion or have changed your mind, simply ignore this email and your account will remain active.
+
+For security reasons, do not share this link with anyone.
+
+We're sorry to see you go,
+The GeoAnnotator Team
+
+---
+This is an automated email. Please do not reply to this message.

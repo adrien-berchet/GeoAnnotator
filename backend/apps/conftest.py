@@ -11,9 +11,9 @@ import pytest
 from django.conf import settings
 from django.contrib.gis.geos import Point
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.urls import reverse
 from PIL import Image
 from rest_framework.test import APIClient
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from apps.authentication.models import User
 from apps.points.models import GPSPoint
@@ -29,31 +29,36 @@ def api_client():
 @pytest.fixture
 def alice(db):
     """Create Alice test user."""
-    return User.objects.create_user(email="alice@example.com", password="SecurePass123")
+    return User.objects.create_user(
+        username="alice", email="alice@example.com", password="SecurePass123"
+    )
 
 
 @pytest.fixture
 def bob(db):
     """Create Bob test user."""
-    return User.objects.create_user(email="bob@example.com", password="SecurePass456")
+    return User.objects.create_user(
+        username="bob", email="bob@example.com", password="SecurePass456"
+    )
 
 
 @pytest.fixture
 def charlie(db):
     """Create Charlie test user."""
-    return User.objects.create_user(email="charlie@example.com", password="SecurePass789")
+    return User.objects.create_user(
+        username="charlie", email="charlie@example.com", password="SecurePass789"
+    )
 
 
 @pytest.fixture
 def authenticated_client_alice(alice):
     """Provide an authenticated API client for Alice."""
     api_client = APIClient()
-    login_response = api_client.post(
-        reverse("authentication:login"),
-        {"email": "alice@example.com", "password": "SecurePass123"},
-        format="json",
-    )
-    token = login_response.data["access"]
+
+    # Generate JWT token manually (bypass login endpoint to avoid rate limiting)
+    refresh = RefreshToken.for_user(alice)
+    token = str(refresh.access_token)
+
     api_client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
     return api_client
 
@@ -62,12 +67,11 @@ def authenticated_client_alice(alice):
 def authenticated_client_bob(bob):
     """Provide an authenticated API client for Bob."""
     api_client = APIClient()
-    login_response = api_client.post(
-        reverse("authentication:login"),
-        {"email": "bob@example.com", "password": "SecurePass456"},
-        format="json",
-    )
-    token = login_response.data["access"]
+
+    # Generate JWT token manually (bypass login endpoint to avoid rate limiting)
+    refresh = RefreshToken.for_user(bob)
+    token = str(refresh.access_token)
+
     api_client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
     return api_client
 

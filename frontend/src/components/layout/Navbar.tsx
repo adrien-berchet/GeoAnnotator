@@ -131,11 +131,14 @@ export function Navbar() {
                   onClick={() => setShowUserMenu(!showUserMenu)}
                 >
                   <span className="user-avatar">
-                    {user.first_name?.[0]?.toUpperCase() ||
+                    {(user.username && user.username[0]?.toUpperCase()) ||
+                      user.first_name?.[0]?.toUpperCase() ||
                       user.email[0].toUpperCase()}
                   </span>
                   <span className="user-name">
-                    {user.first_name || user.email}
+                    {(user.username && user.username.trim()) ||
+                      (user.first_name && user.first_name.trim()) ||
+                      user.email}
                   </span>
                   <span className="dropdown-arrow">▼</span>
                 </button>
@@ -143,18 +146,25 @@ export function Navbar() {
                 {showUserMenu && (
                   <div className="user-menu-dropdown">
                     <div className="user-menu-header">
-                      <div className="user-menu-email">{user.email}</div>
+                      <div className="user-menu-email">
+                        {user.username && (
+                          <div className="user-menu-username">
+                            {user.username}
+                          </div>
+                        )}
+                        {user.email}
+                      </div>
                     </div>
                     <div className="user-menu-divider"></div>
                     <Link
-                      to="/profile"
+                      to="/account"
                       className="user-menu-item"
                       onClick={() => {
                         setShowUserMenu(false);
                         setShowMobileMenu(false);
                       }}
                     >
-                      👤 Profile
+                      👤 {t("nav.account", "Account")}
                     </Link>
                     <Link
                       to="/settings"

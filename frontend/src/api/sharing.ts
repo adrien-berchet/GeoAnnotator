@@ -16,11 +16,13 @@ export interface Share {
   owner: {
     id: string;
     email: string;
+    username?: string;
   };
   recipient_email: string;
   recipient_user: {
     id: string;
     email: string;
+    username?: string;
   } | null;
   permission_level: "view" | "edit" | "transfer";
   is_active: boolean;

@@ -1,14 +1,27 @@
 """
-Authentication services.
+Authentication and account management services.
 
-Handles JWT token generation, validation, and user authentication logic.
+Handles JWT token generation, validation, user authentication logic,
+username validation, email changes, and account management.
 """
 
+import hashlib
+import hmac
+import re
+
+from django.conf import settings
 from django.contrib.auth import authenticate
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.utils import timezone
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from .models import AccountLog
 from .models import User
+
+# Username validation regex: alphanumeric and simple special characters, no spaces
+USERNAME_PATTERN = re.compile(r'^[a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};\':"\\|,.<>\/?]+$')
 
 
 class AuthenticationService:
@@ -26,10 +39,22 @@ class AuthenticationService:
         Returns:
             User object if authenticated, None otherwise
         """
-        user = authenticate(username=email, password=password)
+        try:
+            # Find user by email_hash (since email is encrypted)
+            email_hash = User.hash_email(email)
+            user = User.objects.get(email_hash=email_hash)
 
-        if user and isinstance(user, User) and user.is_active:
-            return user
+            # Authenticate with username and password
+            authenticated_user = authenticate(username=user.username, password=password)
+
+            if (
+                authenticated_user
+                and isinstance(authenticated_user, User)
+                and authenticated_user.is_active
+            ):
+                return authenticated_user
+        except User.DoesNotExist:
+            pass
 
         return None
 
@@ -142,7 +167,8 @@ class AuthenticationService:
             User object if found, None otherwise
         """
         try:
-            return User.objects.get(email=email)
+            email_hash = User.hash_email(email)
+            return User.objects.get(email_hash=email_hash)
         except User.DoesNotExist:
             return None
 
@@ -164,3 +190,409 @@ class AuthenticationService:
             user.save()
             return True
         return False
+
+
+# Account Management Services
+
+
+def _check_username_length(username: str) -> tuple[bool, str | None]:
+    """
+    Check if username length is valid (3-100 characters).
+
+    Args:
+        username: The username to check
+
+    Returns:
+        Tuple of (is_valid, error_message)
+    """
+    if not username or len(username) < 3:
+        return False, "Username must be at least 3 characters long."
+
+    if len(username) > 100:
+        return False, "Username must be at most 100 characters long."
+
+    return True, None
+
+
+def _check_username_start(username: str) -> tuple[bool, str | None]:
+    """
+    Check if username starts with alphanumeric character.
+
+    Args:
+        username: The username to check
+
+    Returns:
+        Tuple of (is_valid, error_message)
+    """
+    if not username:
+        return False, "Username cannot be empty."
+
+    if not username[0].isalnum():
+        return False, "Username must start with a letter or number."
+
+    return True, None
+
+
+def _check_username_characters(username: str) -> tuple[bool, str | None]:
+    """
+    Check if username contains only allowed characters.
+
+    Allowed: letters, numbers, underscores, hyphens.
+    NO SPACES allowed per spec.md line 46.
+
+    Args:
+        username: The username to check
+
+    Returns:
+        Tuple of (is_valid, error_message)
+    """
+    # Pattern: alphanumeric, underscore, hyphen (NO spaces)
+    # Must start with alphanumeric (checked separately)
+    pattern = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_\-]*$")
+
+    if not pattern.match(username):
+        # Check if space is the issue
+        if " " in username:
+            return False, "Username cannot contain spaces."
+        return False, "Username can only contain letters, numbers, underscores, and hyphens."
+
+    return True, None
+
+
+def _check_username_spaces(username: str) -> tuple[bool, str | None]:
+    """
+    Check username doesn't contain any spaces.
+    This check is now redundant with _check_username_characters but kept for clarity.
+
+    Args:
+        username: The username to check
+
+    Returns:
+        Tuple of (is_valid, error_message)
+    """
+    # NO spaces allowed per spec
+    if " " in username:
+        return False, "Username cannot contain spaces."
+
+    return True, None
+
+
+def _check_username_uniqueness(username: str, exclude_user_id=None) -> tuple[bool, str | None]:
+    """
+    Check if username is unique (case-insensitive).
+
+    Args:
+        username: The username to check
+        exclude_user_id: Optional user ID to exclude from uniqueness check
+
+    Returns:
+        Tuple of (is_available, error_message)
+    """
+    # Check uniqueness (case-insensitive)
+    query = User.objects.filter(username__iexact=username)
+    if exclude_user_id:
+        query = query.exclude(id=exclude_user_id)
+
+    is_available = not query.exists()
+
+    if not is_available:
+        return False, "This username is already taken."
+
+    return True, None
+
+
+def validate_username(username: str, exclude_user_id=None) -> dict:
+    """
+    Validate username against all rules.
+
+    Rules:
+    - Length: 3-100 characters
+    - Must start with alphanumeric character
+    - Allowed characters: letters, numbers, underscores, hyphens
+    - No spaces allowed
+    - Case-insensitive uniqueness across all users
+
+    Args:
+        username: The username to validate
+        exclude_user_id: Optional user ID to exclude from uniqueness check (for updates)
+
+    Returns:
+        dict with keys:
+            - valid (bool): Whether username is valid
+            - available (bool): Whether username is available (unique)
+            - errors (list[str]): List of error messages (empty if valid)
+    """
+    errors = []
+
+    # Run all validation checks
+    checks = [
+        _check_username_length,
+        _check_username_start,
+        _check_username_characters,
+        _check_username_spaces,
+    ]
+
+    for check in checks:
+        is_valid, error_msg = check(username)
+        if not is_valid:
+            errors.append(error_msg)
+
+    # If format invalid, don't check uniqueness
+    if errors:
+        return {
+            "valid": False,
+            "available": None,  # Not checked when format is invalid
+            "errors": errors,
+        }
+
+    # Check uniqueness only if format is valid
+    is_available, error_msg = _check_username_uniqueness(username, exclude_user_id)
+    if not is_available:
+        return {"valid": True, "available": False, "errors": [error_msg]}
+
+    return {"valid": True, "available": True, "errors": []}
+
+
+class EmailChangeTokenGenerator:
+    """
+    Generate and validate HMAC-based tokens for email change confirmation.
+
+    Tokens are single-use and expire after 30 minutes.
+    """
+
+    @staticmethod
+    def generate_token(user, new_email: str) -> str:
+        """
+        Generate a secure token for email change confirmation.
+
+        Args:
+            user: User object
+            new_email: New email address
+
+        Returns:
+            str: HMAC token
+        """
+        timestamp = int(timezone.now().timestamp())
+        message = f"{user.id}:{new_email}:{timestamp}".encode()
+        token = hmac.new(settings.SECRET_KEY.encode("utf-8"), message, hashlib.sha256).hexdigest()
+        return f"{token}:{timestamp}"
+
+    @staticmethod
+    def validate_token(token: str, user, new_email: str) -> bool:
+        """
+        Validate an email change confirmation token.
+
+        Args:
+            token: Token string
+            user: User object
+            new_email: New email address
+
+        Returns:
+            bool: True if valid, False otherwise
+        """
+        try:
+            token_hash, timestamp_str = token.rsplit(":", 1)
+            timestamp = int(timestamp_str)
+
+            # Check if token has expired (30 minutes)
+            token_age = timezone.now().timestamp() - timestamp
+            if token_age > 30 * 60:  # 30 minutes
+                return False
+
+            # Regenerate token and compare
+            message = f"{user.id}:{new_email}:{timestamp}".encode()
+            expected_hash = hmac.new(
+                settings.SECRET_KEY.encode("utf-8"), message, hashlib.sha256
+            ).hexdigest()
+
+            return hmac.compare_digest(token_hash, expected_hash)
+
+        except (ValueError, AttributeError):
+            return False
+
+
+class AccountDeletionTokenGenerator:
+    """
+    Generate and validate HMAC-based tokens for account deletion confirmation.
+
+    Similar to email change tokens but for account deletion.
+    """
+
+    @staticmethod
+    def generate_token(user) -> str:
+        """
+        Generate a secure token for account deletion confirmation.
+
+        Args:
+            user: User object
+
+        Returns:
+            str: HMAC token
+        """
+        timestamp = int(timezone.now().timestamp())
+        message = f"{user.id}:delete:{timestamp}".encode()
+        token = hmac.new(settings.SECRET_KEY.encode("utf-8"), message, hashlib.sha256).hexdigest()
+        return f"{token}:{timestamp}"
+
+    @staticmethod
+    def validate_token(token: str, user) -> bool:
+        """
+        Validate an account deletion confirmation token.
+
+        Args:
+            token: Token string
+            user: User object
+
+        Returns:
+            bool: True if valid, False otherwise
+        """
+        try:
+            token_hash, timestamp_str = token.rsplit(":", 1)
+            timestamp = int(timestamp_str)
+
+            # Check if token has expired (7 days for account deletion)
+            token_age = timezone.now().timestamp() - timestamp
+            if token_age > 7 * 24 * 60 * 60:  # 7 days
+                return False
+
+            # Regenerate token and compare
+            message = f"{user.id}:delete:{timestamp}".encode()
+            expected_hash = hmac.new(
+                settings.SECRET_KEY.encode("utf-8"), message, hashlib.sha256
+            ).hexdigest()
+
+            return hmac.compare_digest(token_hash, expected_hash)
+
+        except (ValueError, AttributeError):
+            return False
+
+
+def send_email_change_confirmation(user, new_email: str, token: str):
+    """
+    Send email change confirmation email.
+
+    Args:
+        user: User object
+        new_email: New email address
+        token: Confirmation token
+    """
+    # Build confirmation link
+    frontend_url = getattr(settings, "FRONTEND_URL", "http://localhost:5173")
+    confirmation_link = f"{frontend_url}/account/confirm-email?token={token}&user_id={user.id}"
+
+    # Render HTML and plain text versions
+    html_message = render_to_string(
+        "emails/confirm_email_change.html",
+        {
+            "username": user.username or str(user.email),
+            "new_email": new_email,
+            "confirmation_link": confirmation_link,
+        },
+    )
+    plain_message = render_to_string(
+        "emails/confirm_email_change.txt",
+        {
+            "username": user.username or str(user.email),
+            "new_email": new_email,
+            "confirmation_link": confirmation_link,
+        },
+    )
+
+    send_mail(
+        subject="Confirm Email Address Change",
+        message=plain_message,
+        html_message=html_message,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[new_email],
+        fail_silently=False,
+    )
+
+
+def send_deletion_confirmation(user, token: str):
+    """
+    Send account deletion confirmation email.
+
+    Args:
+        user: User object
+        token: Confirmation token
+    """
+    # Build confirmation link
+    frontend_url = getattr(settings, "FRONTEND_URL", "http://localhost:5173")
+    confirmation_link = f"{frontend_url}/account/confirm-delete?token={token}&user_id={user.id}"
+
+    # Render HTML and plain text versions
+    html_message = render_to_string(
+        "emails/confirm_account_deletion.html",
+        {
+            "username": user.username or str(user.email),
+            "confirmation_link": confirmation_link,
+        },
+    )
+    plain_message = render_to_string(
+        "emails/confirm_account_deletion.txt",
+        {
+            "username": user.username or str(user.email),
+            "confirmation_link": confirmation_link,
+        },
+    )
+
+    send_mail(
+        subject="⚠️ Confirm Account Deletion",
+        message=plain_message,
+        html_message=html_message,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[str(user.email)],
+        fail_silently=False,
+    )
+
+
+def soft_delete_user(user):
+    """
+    Soft delete a user account.
+
+    Sets deleted_at timestamp and unshares all user's content.
+
+    Args:
+        user: User object to soft delete
+    """
+    # Set deleted_at timestamp
+    user.deleted_at = timezone.now()
+    user.save(update_fields=["deleted_at"])
+
+    # Unshare all user's content
+    from apps.sharing.models import Share
+
+    Share.objects.filter(owner=user, is_active=True).update(is_active=False)
+
+
+def log_account_operation(user, operation: str, request=None, details: dict = None):
+    """
+    Log an account operation to the audit trail.
+
+    Args:
+        user: User object
+        operation: Operation type (one of AccountLog.OPERATION_CHOICES)
+        request: Optional HTTP request object for IP/user agent
+        details: Optional additional details dict
+    """
+    ip_address = None
+    user_agent = None
+
+    if request:
+        # Get IP address from request
+        x_forwarded_for = request.headers.get("x-forwarded-for")
+        if x_forwarded_for:
+            ip_address = x_forwarded_for.split(",")[0].strip()
+        else:
+            ip_address = request.META.get("REMOTE_ADDR")
+
+        # Get user agent
+        user_agent = request.headers.get("user-agent", "")[:256]
+
+    AccountLog.objects.create(
+        user=user,
+        operation=operation,
+        ip_address=ip_address,
+        user_agent=user_agent,
+        details=details or {},
+    )

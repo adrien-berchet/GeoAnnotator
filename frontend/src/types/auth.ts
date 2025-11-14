@@ -5,10 +5,13 @@
 export interface User {
   id: string;
   email: string;
+  username?: string;
   first_name?: string;
   last_name?: string;
   storage_used: number;
   storage_limit: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface LoginCredentials {
@@ -17,6 +20,7 @@ export interface LoginCredentials {
 }
 
 export interface RegisterData {
+  username: string;
   email: string;
   password: string;
   first_name?: string;

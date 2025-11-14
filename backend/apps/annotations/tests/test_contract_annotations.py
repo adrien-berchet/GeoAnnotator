@@ -40,7 +40,11 @@ class TestAnnotationsContract:
         """Create and authenticate a user with a GPS point."""
         # Register user
         register_url = reverse("authentication:register")
-        register_data = {"email": "test@example.com", "password": "SecurePass123"}
+        register_data = {
+            "username": "testuser",
+            "email": "test@example.com",
+            "password": "SecurePass123",
+        }
         response = api_client.post(register_url, register_data, format="json")
         access_token = response.data["access"]
         user = response.data["user"]
@@ -371,7 +375,11 @@ class TestAnnotationsContract:
         # Try to delete as user2
         client2 = APIClient()
         register_url = reverse("authentication:register")
-        register_data = {"email": "user2@example.com", "password": "SecurePass123"}
+        register_data = {
+            "username": "user2",
+            "email": "user2@example.com",
+            "password": "SecurePass123",
+        }
         register_response = client2.post(register_url, register_data, format="json")
         client2.credentials(HTTP_AUTHORIZATION=f"Bearer {register_response.data['access']}")
 

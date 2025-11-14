@@ -25,25 +25,23 @@ class TestScenario4SharingPermissions:
 
     def setup_method(self):
         """Set up test clients and users before each test."""
+        from rest_framework_simplejwt.tokens import RefreshToken
+
         self.client = APIClient()
 
-        # Create and authenticate Alice (owner)
-        self.alice = User.objects.create_user(email="alice@example.com", password="SecurePass123")
-        alice_login = self.client.post(
-            reverse("authentication:login"),
-            {"email": "alice@example.com", "password": "SecurePass123"},
-            format="json",
+        # Create Alice (owner)
+        self.alice = User.objects.create_user(
+            username="alice", email="alice@example.com", password="SecurePass123"
         )
-        self.alice_token = alice_login.data["access"]
+        refresh_alice = RefreshToken.for_user(self.alice)
+        self.alice_token = str(refresh_alice.access_token)
 
-        # Create and authenticate Bob (recipient)
-        self.bob = User.objects.create_user(email="bob@example.com", password="SecurePass456")
-        bob_login = self.client.post(
-            reverse("authentication:login"),
-            {"email": "bob@example.com", "password": "SecurePass456"},
-            format="json",
+        # Create Bob (recipient)
+        self.bob = User.objects.create_user(
+            username="bob", email="bob@example.com", password="SecurePass456"
         )
-        self.bob_token = bob_login.data["access"]
+        refresh_bob = RefreshToken.for_user(self.bob)
+        self.bob_token = str(refresh_bob.access_token)
 
         # Create a test point owned by Alice
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.alice_token}")

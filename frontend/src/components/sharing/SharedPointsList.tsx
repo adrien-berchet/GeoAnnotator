@@ -88,6 +88,16 @@ export function SharedPointsList({ pointId }: SharedPointsListProps) {
   };
 
   /**
+   * Get display name for recipient (username if available, otherwise email).
+   */
+  const getRecipientDisplayName = (share: Share): string => {
+    if (share.recipient_user?.username) {
+      return share.recipient_user.username;
+    }
+    return share.recipient_email;
+  };
+
+  /**
    * Format date.
    */
   const formatDate = (dateString: string | null): string => {
@@ -163,8 +173,13 @@ export function SharedPointsList({ pointId }: SharedPointsListProps) {
               <tr key={share.id} className={!share.is_active ? "revoked" : ""}>
                 <td>
                   <div className="user-info">
-                    <strong>{share.recipient_email}</strong>
-                    {share.recipient_user && (
+                    <strong>{getRecipientDisplayName(share)}</strong>
+                    {share.recipient_user?.username && (
+                      <small className="user-email">
+                        {share.recipient_email}
+                      </small>
+                    )}
+                    {share.recipient_user && !share.recipient_user.username && (
                       <small className="user-id">
                         ID: {share.recipient_user.id}
                       </small>

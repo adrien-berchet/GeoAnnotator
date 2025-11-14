@@ -21,7 +21,9 @@ def api_client():
 @pytest.fixture
 def user():
     """Create and return test user."""
-    return User.objects.create_user(email="test@example.com", password="testpass123")
+    return User.objects.create_user(
+        username="test", email="test@example.com", password="testpass123"
+    )
 
 
 @pytest.fixture
@@ -186,7 +188,9 @@ class TestSettingsIntegration:
     def test_user_registration_creates_default_preferences(self):
         """Test that user registration auto-creates preferences with defaults."""
         # This test will pass once signal is implemented
-        user = User.objects.create_user(email="newuser@example.com", password="testpass123")
+        user = User.objects.create_user(
+            username="newuser", email="newuser@example.com", password="testpass123"
+        )
 
         # Check if preferences were auto-created
 
@@ -199,7 +203,9 @@ class TestSettingsIntegration:
     def test_preferences_persist_after_logout_login(self, api_client):
         """Test that preferences persist after logout/login."""
         # Create user - signal auto-creates preferences
-        user = User.objects.create_user(email="persist@example.com", password="testpass123")
+        user = User.objects.create_user(
+            username="persist", email="persist@example.com", password="testpass123"
+        )
 
         # Set initial theme
         preferences = user.preferences
@@ -225,8 +231,12 @@ class TestSettingsIntegration:
     def test_per_user_isolation(self, api_client):
         """Test that User A changes don't affect User B."""
         # Create two users - signal auto-creates preferences for both
-        user_a = User.objects.create_user(email="usera@example.com", password="testpass123")
-        user_b = User.objects.create_user(email="userb@example.com", password="testpass123")
+        user_a = User.objects.create_user(
+            username="usera", email="usera@example.com", password="testpass123"
+        )
+        user_b = User.objects.create_user(
+            username="userb", email="userb@example.com", password="testpass123"
+        )
 
         # Set initial preferences
         prefs_a = user_a.preferences

@@ -26,17 +26,23 @@ class TestPermissionChecking:
     @pytest.fixture
     def owner(self):
         """Create owner user."""
-        return User.objects.create_user(email="owner@example.com", password="TestPass123")
+        return User.objects.create_user(
+            username="owner", email="owner@example.com", password="TestPass123"
+        )
 
     @pytest.fixture
     def viewer(self):
         """Create viewer user."""
-        return User.objects.create_user(email="viewer@example.com", password="TestPass123")
+        return User.objects.create_user(
+            username="viewer", email="viewer@example.com", password="TestPass123"
+        )
 
     @pytest.fixture
     def editor(self):
         """Create editor user."""
-        return User.objects.create_user(email="editor@example.com", password="TestPass123")
+        return User.objects.create_user(
+            username="editor", email="editor@example.com", password="TestPass123"
+        )
 
     @pytest.fixture
     def gps_point(self, owner):
@@ -85,7 +91,7 @@ class TestPermissionChecking:
     def test_transfer_permission_can_share(self, gps_point, owner):
         """Test that transfer permission allows sharing."""
         transfer_user = User.objects.create_user(
-            email="transfer@example.com", password="TestPass123"
+            username="transfer", email="transfer@example.com", password="TestPass123"
         )
 
         # Create transfer share
@@ -104,7 +110,9 @@ class TestPermissionChecking:
 
     def test_no_permission_denies_all(self, gps_point):
         """Test that user without share has no permissions."""
-        stranger = User.objects.create_user(email="stranger@example.com", password="TestPass123")
+        stranger = User.objects.create_user(
+            username="stranger", email="stranger@example.com", password="TestPass123"
+        )
 
         assert PermissionService.can_view(gps_point, stranger) is False
         assert PermissionService.can_edit(gps_point, stranger) is False
@@ -116,7 +124,9 @@ class TestPermissionChecking:
         gps_point.is_public = True
         gps_point.save()
 
-        stranger = User.objects.create_user(email="stranger@example.com", password="TestPass123")
+        stranger = User.objects.create_user(
+            username="stranger", email="stranger@example.com", password="TestPass123"
+        )
 
         assert PermissionService.can_view(gps_point, stranger) is True
         assert PermissionService.can_edit(gps_point, stranger) is False
@@ -152,7 +162,9 @@ class TestPermissionChecking:
         assert PermissionService.get_user_permission(gps_point, editor) == "edit"
 
         # Stranger
-        stranger = User.objects.create_user(email="stranger@example.com", password="TestPass123")
+        stranger = User.objects.create_user(
+            username="stranger", email="stranger@example.com", password="TestPass123"
+        )
         assert PermissionService.get_user_permission(gps_point, stranger) is None
 
     def test_get_accessible_points(self, owner, viewer):
@@ -166,7 +178,11 @@ class TestPermissionChecking:
         shared_point = GPSPoint.objects.create(
             title="Shared Point",
             location=Point(1, 1),
-            owner=User.objects.create_user(email="other@example.com", password="pass"),
+            owner=User.objects.create_user(
+                username="other",
+                email="other@example.com",
+                password="pass",
+            ),
         )
 
         Share.objects.create(
@@ -181,7 +197,11 @@ class TestPermissionChecking:
         public_point = GPSPoint.objects.create(
             title="Public Point",
             location=Point(2, 2),
-            owner=User.objects.create_user(email="public@example.com", password="pass"),
+            owner=User.objects.create_user(
+                username="public",
+                email="public@example.com",
+                password="pass",
+            ),
             is_public=True,
         )
 
@@ -200,8 +220,10 @@ class TestPermissionChecking:
     def test_permission_hierarchy(self, gps_point, owner):
         """Test permission hierarchy validation."""
         # Transfer > Edit > View
-        viewer = User.objects.create_user(email="viewer@example.com", password="pass")
-        User.objects.create_user(email="editor@example.com", password="pass")
+        viewer = User.objects.create_user(
+            username="viewer", email="viewer@example.com", password="pass"
+        )
+        User.objects.create_user(username="editor", email="editor@example.com", password="pass")
 
         # Viewer cannot grant edit
         Share.objects.create(

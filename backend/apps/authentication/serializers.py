@@ -1,16 +1,16 @@
 """
 Serializers for authentication app.
 
-Handles user registration, login, profile, and token management.
+Handles user registration, login, profile, token management, and account management.
 """
 
-from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import User
+from .services import validate_username
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -29,6 +29,7 @@ class UserSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "email",
+            "username",
             "date_joined",
             "storage_used",
             "storage_limit",
@@ -62,7 +63,16 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["email", "password"]
+        fields = ["username", "email", "password"]
+
+    def validate_email(self, value):
+        """
+        Validate email is not already registered.
+        """
+        email_hash = User.hash_email(value)
+        if User.objects.filter(email_hash=email_hash).exists():
+            raise serializers.ValidationError("Email already registered.")
+        return value
 
     def validate_password(self, value):
         """
@@ -85,6 +95,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         Create user with hashed password and default storage quota (2GB).
         """
         user = User.objects.create_user(
+            username=validated_data["username"],
             email=validated_data["email"],
             password=validated_data["password"],
         )
@@ -95,7 +106,7 @@ class LoginSerializer(serializers.Serializer):
     """
     User login serializer.
 
-    Validates credentials and returns JWT tokens.
+    Validates email and password, authenticates user.
     Matches OpenAPI schema: LoginRequest
     """
 
@@ -108,33 +119,19 @@ class LoginSerializer(serializers.Serializer):
 
     def validate(self, attrs):
         """
-        Validate email and password, authenticate user.
+        Validate credentials and authenticate user.
+        Uses AuthenticationService for email-based authentication.
         """
+        from apps.authentication.services import AuthenticationService
+
         email = attrs.get("email")
         password = attrs.get("password")
 
-        user = authenticate(
-            request=self.context.get("request"),
-            username=email,  # Our User model uses email as USERNAME_FIELD
-            password=password,
-        )
+        user = AuthenticationService.authenticate_user(email, password)
 
-        if user is None:
-            raise AuthenticationFailed(
-                detail={
-                    "error": "INVALID_CREDENTIALS",
-                    "message": "Invalid email or password.",
-                },
-                code="authentication_failed",
-            )
-
-        if not user.is_active:
-            raise AuthenticationFailed(
-                detail={
-                    "error": "ACCOUNT_DISABLED",
-                    "message": "User account is disabled.",
-                },
-                code="authentication_failed",
+        if not user:
+            raise serializers.ValidationError(
+                {"detail": "Invalid email or password"}, code="authentication_failed"
             )
 
         attrs["user"] = user
@@ -195,3 +192,164 @@ class RefreshTokenSerializer(serializers.Serializer):
                 code="token_not_valid",
             ) from None
         return value
+
+
+# Account Management Serializers
+
+
+class AccountSerializer(serializers.ModelSerializer):
+    """
+    Account information serializer.
+
+    Returns user account details including username and email (decrypted for owner).
+    Excludes sensitive fields like password, deleted_at, pending_email.
+    """
+
+    email = serializers.EmailField(read_only=True)
+
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "username",
+            "email",
+            "date_joined",
+        ]
+        read_only_fields = [
+            "id",
+            "email",
+            "date_joined",
+        ]
+
+
+class UsernameUpdateSerializer(serializers.Serializer):
+    """
+    Username update serializer.
+
+    Validates username rules and uniqueness before update.
+    """
+
+    username = serializers.CharField(max_length=100, required=True)
+
+    def validate_username(self, value):
+        """
+        Validate username against all rules.
+
+        Raises ValidationError with all error messages if invalid.
+        """
+        user = self.context.get("request").user
+        validation_result = validate_username(value, exclude_user_id=user.id)
+
+        if not validation_result["valid"] or not validation_result["available"]:
+            # Join all errors into a single error message for DRF
+            # (DRF displays first error, but we could also raise multiple)
+            error_messages = validation_result["errors"]
+            if len(error_messages) == 1:
+                raise serializers.ValidationError(error_messages[0])
+            else:
+                # Multiple errors: raise all as a list
+                raise serializers.ValidationError(error_messages)
+
+        return value
+
+
+class EmailChangeSerializer(serializers.Serializer):
+    """
+    Email change initiation serializer.
+
+    Validates new email and checks it's not already in use.
+    """
+
+    new_email = serializers.EmailField(required=True)
+
+    def validate_new_email(self, value):
+        """
+        Validate new email is not in use and different from current.
+        """
+        user = self.context.get("request").user
+
+        # Check if same as current email
+        if str(user.email) == value:
+            raise serializers.ValidationError("New email must be different from current email.")
+
+        # Check if email already in use by another user
+        email_hash = User.hash_email(value)
+        if User.objects.filter(email_hash=email_hash).exclude(id=user.id).exists():
+            raise serializers.ValidationError("This email address is already in use.")
+
+        return value
+
+
+class EmailConfirmSerializer(serializers.Serializer):
+    """
+    Email confirmation serializer.
+
+    Validates token and user_id for email change confirmation.
+    """
+
+    token = serializers.CharField(max_length=128, required=True)
+    user_id = serializers.UUIDField(required=True)
+
+
+class PasswordChangeSerializer(serializers.Serializer):
+    """
+    Password change serializer.
+
+    Requires old password verification and validates new password.
+    """
+
+    old_password = serializers.CharField(
+        write_only=True,
+        required=True,
+        style={"input_type": "password"},
+    )
+    new_password = serializers.CharField(
+        write_only=True,
+        required=True,
+        validators=[validate_password],
+        style={"input_type": "password"},
+        min_length=8,
+    )
+
+    def validate_old_password(self, value):
+        """
+        Verify old password is correct.
+        """
+        user = self.context.get("request").user
+        if not user.check_password(value):
+            raise serializers.ValidationError("Current password is incorrect.")
+        return value
+
+    def validate_new_password(self, value):
+        """
+        Validate new password strength.
+        """
+        # Django's validate_password already runs, but we can add custom checks
+        old_password = self.initial_data.get("old_password")
+        if old_password and value == old_password:
+            raise serializers.ValidationError(
+                "New password must be different from current password."
+            )
+        return value
+
+
+class AccountDeletionConfirmSerializer(serializers.Serializer):
+    """
+    Account deletion confirmation serializer.
+
+    Validates token and user_id for account deletion confirmation.
+    """
+
+    token = serializers.CharField(max_length=128, required=True)
+    user_id = serializers.UUIDField(required=True)
+
+
+class UsernameValidationSerializer(serializers.Serializer):
+    """
+    Username validation serializer.
+
+    Used for frontend inline validation (doesn't modify data).
+    No validation here - validation logic is in the view to return 200 with valid=false.
+    """
+
+    username = serializers.CharField(required=False, allow_blank=True)
