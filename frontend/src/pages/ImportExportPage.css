@@ -10,18 +10,26 @@
 
 .page-header {
   margin-bottom: 2rem;
+  display: block;
+  width: 100%;
 }
 
 .page-header h1 {
-  margin: 0 0 0.5rem 0;
   font-size: 2rem;
-  color: var(--text-primary);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin: 0 0 0.5rem 0;
+  display: block;
+  width: 100%;
 }
 
 .page-description {
-  color: var(--text-secondary);
+  color: var(--color-text-secondary);
   font-size: 1rem;
   margin: 0;
+  display: block;
+  width: 100%;
+  clear: both;
 }
 
 .import-export-container {
@@ -38,6 +46,8 @@
   border-radius: 8px;
   padding: 1.5rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
 }
 
 .export-section h2,
@@ -45,6 +55,11 @@
   margin: 0 0 1.5rem 0;
   font-size: 1.5rem;
   color: var(--text-primary);
+}
+
+.export-section > .btn,
+.import-section > .btn {
+  margin-top: auto;
 }
 
 /* Form Elements */

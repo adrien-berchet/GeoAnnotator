@@ -29,6 +29,7 @@ class UserSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "email",
+            "username",
             "date_joined",
             "storage_used",
             "storage_limit",
