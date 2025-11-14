@@ -193,47 +193,56 @@ class AuthenticationService:
 
 
 class EmailConfirmationService:
-    """Service for email confirmation during user registration."""
+    """Unified service for email confirmation flows (registration and email changes)."""
 
     @staticmethod
-    def generate_confirmation_token(user: User) -> str:
+    def generate_confirmation_token(
+        user: User, confirmation_type: str, new_email: str | None = None
+    ) -> str:
         """
         Generate HMAC-based confirmation token for email verification.
 
         Args:
             user: User object
+            confirmation_type: 'registration' or 'email_change'
+            new_email: New email address (required for email_change type)
 
         Returns:
             str: HMAC-based token (128 characters)
         """
         from .models import EmailConfirmation
 
-        # Generate token using HMAC with user ID and timestamp
+        # Generate token using HMAC with user ID, timestamp, and email
         timestamp = str(timezone.now().timestamp())
-        message = f"{user.id}:{user.email}:{timestamp}"
+        email_to_use = new_email if new_email else user.email
+        message = f"{user.id}:{email_to_use}:{timestamp}:{confirmation_type}"
         token = hmac.new(
             settings.SECRET_KEY.encode(),
             message.encode(),
             hashlib.sha256,
         ).hexdigest()
 
-        # Store token in database
-        # Delete any existing pending confirmations for this user
+        # Delete any existing pending confirmations for this user and type
         EmailConfirmation.objects.filter(
             user=user,
+            confirmation_type=confirmation_type,
             confirmed_at__isnull=True,
         ).delete()
 
         # Create new confirmation record
         EmailConfirmation.objects.create(
             user=user,
+            confirmation_type=confirmation_type,
             token=token,
+            new_email=new_email,
         )
 
         return token
 
     @staticmethod
-    def validate_confirmation_token(token: str) -> tuple[bool, str | None, User | None]:
+    def validate_confirmation_token(
+        token: str,
+    ) -> tuple[bool, str | None, "EmailConfirmation | None"]:
         """
         Validate email confirmation token.
 
@@ -241,10 +250,10 @@ class EmailConfirmationService:
             token: Confirmation token string
 
         Returns:
-            tuple: (is_valid, error_message, user)
+            tuple: (is_valid, error_message, confirmation)
                 - is_valid: True if token is valid
                 - error_message: Error message if invalid, None otherwise
-                - user: User object if valid, None otherwise
+                - confirmation: EmailConfirmation object if valid, None otherwise
         """
         from .models import EmailConfirmation
 
@@ -260,7 +269,7 @@ class EmailConfirmationService:
                 return False, "This confirmation link has expired. Please request a new one.", None
 
             # Valid token
-            return True, None, confirmation.user
+            return True, None, confirmation
 
         except EmailConfirmation.DoesNotExist:
             return False, "Invalid confirmation link.", None
@@ -268,7 +277,7 @@ class EmailConfirmationService:
     @staticmethod
     def confirm_email(token: str) -> tuple[bool, str | None]:
         """
-        Confirm user email with token.
+        Confirm user email with token (handles both registration and email change).
 
         Args:
             token: Confirmation token string
@@ -278,71 +287,104 @@ class EmailConfirmationService:
         """
         from .models import EmailConfirmation
 
-        is_valid, error_message, user = EmailConfirmationService.validate_confirmation_token(token)
+        is_valid, error_message, confirmation = (
+            EmailConfirmationService.validate_confirmation_token(token)
+        )
 
         if not is_valid:
             return False, error_message
 
-        # Mark user as verified
-        user.is_verified = True
-        user.save(update_fields=["is_verified"])
+        user = confirmation.user
+
+        # Handle based on confirmation type
+        if confirmation.confirmation_type == EmailConfirmation.REGISTRATION:
+            # Mark user as verified
+            user.is_verified = True
+            user.save(update_fields=["is_verified"])
+
+            # Log the confirmation
+            AccountLog.objects.create(
+                user=user,
+                operation="EMAIL_CONFIRMED",
+                details={"email": str(user.email)},
+            )
+
+        elif confirmation.confirmation_type == EmailConfirmation.EMAIL_CHANGE:
+            # Update user email
+            old_email = str(user.email)
+            user.email = confirmation.new_email
+            user.save(update_fields=["email"])
+
+            # Log the email change
+            AccountLog.objects.create(
+                user=user,
+                operation="EMAIL_CHANGE_CONFIRMED",
+                details={"old_email": old_email, "new_email": str(confirmation.new_email)},
+            )
 
         # Mark confirmation as completed
-        confirmation = EmailConfirmation.objects.get(token=token)
         confirmation.confirmed_at = timezone.now()
         confirmation.save(update_fields=["confirmed_at"])
-
-        # Log the confirmation
-        AccountLog.objects.create(
-            user=user,
-            operation="EMAIL_CONFIRMED",
-            details={"email": str(user.email)},
-        )
 
         return True, None
 
     @staticmethod
-    def send_confirmation_email(user: User, token: str) -> None:
+    def send_confirmation_email(
+        user: User, token: str, confirmation_type: str, new_email: str | None = None
+    ) -> None:
         """
         Send confirmation email to user with token link.
 
         Args:
             user: User object
             token: Confirmation token
+            confirmation_type: 'registration' or 'email_change'
+            new_email: New email address (for email_change type)
         """
+        from .models import EmailConfirmation
+
         # Get frontend URL from settings
         frontend_url = getattr(settings, "FRONTEND_URL", "http://localhost:3000")
         confirmation_link = f"{frontend_url}/confirm-email?token={token}"
 
+        # Select templates and subject based on confirmation type
+        if confirmation_type == EmailConfirmation.REGISTRATION:
+            html_template = "emails/confirm_registration.html"
+            text_template = "emails/confirm_registration.txt"
+            subject = "Confirmez votre adresse email - GeoAnnotator"
+            recipient = user.email
+            context = {
+                "user": user,
+                "confirmation_link": confirmation_link,
+            }
+        else:  # EMAIL_CHANGE
+            html_template = "emails/confirm_email_change.html"
+            text_template = "emails/confirm_email_change.txt"
+            subject = "Confirm Email Address Change"
+            recipient = new_email
+            context = {
+                "username": user.username,
+                "new_email": new_email,
+                "confirmation_link": confirmation_link,
+            }
+
         # Render email templates
-        html_message = render_to_string(
-            "emails/confirm_registration.html",
-            {
-                "user": user,
-                "confirmation_link": confirmation_link,
-            },
-        )
-        text_message = render_to_string(
-            "emails/confirm_registration.txt",
-            {
-                "user": user,
-                "confirmation_link": confirmation_link,
-            },
-        )
+        html_message = render_to_string(html_template, context)
+        text_message = render_to_string(text_template, context)
 
         # Send email
         send_mail(
-            subject="Confirmez votre adresse email - GeoAnnotator",
+            subject=subject,
             message=text_message,
             from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[user.email],
+            recipient_list=[recipient],
             html_message=html_message,
         )
 
     @staticmethod
     def resend_confirmation_email(email: str) -> tuple[bool, str | None]:
         """
-        Resend confirmation email to user.
+        Resend registration confirmation email to user.
 
         Args:
             email: User email address
@@ -350,6 +392,8 @@ class EmailConfirmationService:
         Returns:
             tuple: (success, error_message)
         """
+        from .models import EmailConfirmation
+
         try:
             # Find user by email
             email_hash = User.hash_email(email)
@@ -360,10 +404,14 @@ class EmailConfirmationService:
                 return False, "This email address is already verified."
 
             # Generate new token
-            token = EmailConfirmationService.generate_confirmation_token(user)
+            token = EmailConfirmationService.generate_confirmation_token(
+                user, EmailConfirmation.REGISTRATION
+            )
 
             # Send email
-            EmailConfirmationService.send_confirmation_email(user, token)
+            EmailConfirmationService.send_confirmation_email(
+                user, token, EmailConfirmation.REGISTRATION
+            )
 
             # Log the resend
             AccountLog.objects.create(
@@ -540,64 +588,6 @@ def validate_username(username: str, exclude_user_id=None) -> dict:
     return {"valid": True, "available": True, "errors": []}
 
 
-class EmailChangeTokenGenerator:
-    """
-    Generate and validate HMAC-based tokens for email change confirmation.
-
-    Tokens are single-use and expire after 30 minutes.
-    """
-
-    @staticmethod
-    def generate_token(user, new_email: str) -> str:
-        """
-        Generate a secure token for email change confirmation.
-
-        Args:
-            user: User object
-            new_email: New email address
-
-        Returns:
-            str: HMAC token
-        """
-        timestamp = int(timezone.now().timestamp())
-        message = f"{user.id}:{new_email}:{timestamp}".encode()
-        token = hmac.new(settings.SECRET_KEY.encode("utf-8"), message, hashlib.sha256).hexdigest()
-        return f"{token}:{timestamp}"
-
-    @staticmethod
-    def validate_token(token: str, user, new_email: str) -> bool:
-        """
-        Validate an email change confirmation token.
-
-        Args:
-            token: Token string
-            user: User object
-            new_email: New email address
-
-        Returns:
-            bool: True if valid, False otherwise
-        """
-        try:
-            token_hash, timestamp_str = token.rsplit(":", 1)
-            timestamp = int(timestamp_str)
-
-            # Check if token has expired (30 minutes)
-            token_age = timezone.now().timestamp() - timestamp
-            if token_age > 30 * 60:  # 30 minutes
-                return False
-
-            # Regenerate token and compare
-            message = f"{user.id}:{new_email}:{timestamp}".encode()
-            expected_hash = hmac.new(
-                settings.SECRET_KEY.encode("utf-8"), message, hashlib.sha256
-            ).hexdigest()
-
-            return hmac.compare_digest(token_hash, expected_hash)
-
-        except (ValueError, AttributeError):
-            return False
-
-
 class AccountDeletionTokenGenerator:
     """
     Generate and validate HMAC-based tokens for account deletion confirmation.
@@ -652,47 +642,6 @@ class AccountDeletionTokenGenerator:
 
         except (ValueError, AttributeError):
             return False
-
-
-def send_email_change_confirmation(user, new_email: str, token: str):
-    """
-    Send email change confirmation email.
-
-    Args:
-        user: User object
-        new_email: New email address
-        token: Confirmation token
-    """
-    # Build confirmation link
-    frontend_url = getattr(settings, "FRONTEND_URL", "http://localhost:5173")
-    confirmation_link = f"{frontend_url}/account/confirm-email?token={token}&user_id={user.id}"
-
-    # Render HTML and plain text versions
-    html_message = render_to_string(
-        "emails/confirm_email_change.html",
-        {
-            "username": user.username or str(user.email),
-            "new_email": new_email,
-            "confirmation_link": confirmation_link,
-        },
-    )
-    plain_message = render_to_string(
-        "emails/confirm_email_change.txt",
-        {
-            "username": user.username or str(user.email),
-            "new_email": new_email,
-            "confirmation_link": confirmation_link,
-        },
-    )
-
-    send_mail(
-        subject="Confirm Email Address Change",
-        message=plain_message,
-        html_message=html_message,
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[new_email],
-        fail_silently=False,
-    )
 
 
 def send_deletion_confirmation(user, token: str):

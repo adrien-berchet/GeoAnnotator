@@ -19,7 +19,6 @@ from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import TokenError
 
-from .models import EmailChangeConfirmation
 from .models import User
 from .serializers import AccountDeletionConfirmSerializer
 from .serializers import AccountSerializer
@@ -34,11 +33,9 @@ from .serializers import UsernameValidationSerializer
 from .serializers import UserSerializer
 from .services import AccountDeletionTokenGenerator
 from .services import AuthenticationService
-from .services import EmailChangeTokenGenerator
 from .services import EmailConfirmationService
 from .services import log_account_operation
 from .services import send_deletion_confirmation
-from .services import send_email_change_confirmation
 from .services import soft_delete_user
 from .services import validate_username
 
@@ -59,11 +56,18 @@ class RegisterView(generics.CreateAPIView):
         # Create user via serializer
         user = serializer.save()
 
+        # Import EmailConfirmation for type constant
+        from .models import EmailConfirmation
+
         # Generate confirmation token
-        token = EmailConfirmationService.generate_confirmation_token(user)
+        token = EmailConfirmationService.generate_confirmation_token(
+            user, EmailConfirmation.REGISTRATION
+        )
 
         # Send confirmation email
-        EmailConfirmationService.send_confirmation_email(user, token)
+        EmailConfirmationService.send_confirmation_email(
+            user, token, EmailConfirmation.REGISTRATION
+        )
 
         # Return success message instead of JWT tokens
         response_data = {
@@ -348,34 +352,31 @@ class EmailChangeRequestAPIView(APIView):
     throttle_classes = [EmailOperationThrottle]
 
     def post(self, request):
+        from .models import EmailConfirmation
+
         serializer = EmailChangeSerializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
 
         user = request.user
         new_email = serializer.validated_data["new_email"]
 
-        # Generate token
-        token = EmailChangeTokenGenerator.generate_token(user, new_email)
-
-        # Create or update confirmation record
-        expires_at = timezone.now() + timedelta(minutes=30)
-        EmailChangeConfirmation.objects.update_or_create(
-            user=user,
-            defaults={
-                "new_email": new_email,
-                "token": token,
-                "expires_at": expires_at,
-                "confirmed_at": None,  # Reset if updating
-            },
+        # Generate token using unified service
+        token = EmailConfirmationService.generate_confirmation_token(
+            user, EmailConfirmation.EMAIL_CHANGE, new_email=new_email
         )
 
-        # Send confirmation email
-        send_email_change_confirmation(user, new_email, token)
+        # Send confirmation email using unified service
+        EmailConfirmationService.send_confirmation_email(
+            user, token, EmailConfirmation.EMAIL_CHANGE, new_email=new_email
+        )
 
         # Log operation
         log_account_operation(
             user, "EMAIL_CHANGE_REQUESTED", request, details={"new_email": new_email}
         )
+
+        # Calculate expiration time (30 minutes)
+        expires_at = timezone.now() + timedelta(minutes=30)
 
         return Response(
             {
@@ -390,57 +391,68 @@ class EmailConfirmAPIView(APIView):
     """
     POST /api/account/confirm-email/
     Confirm email change with token from email link.
+
+    Note: This endpoint is for email changes on existing authenticated accounts.
+    For registration email confirmation, use ConfirmEmailView (no auth required).
     """
 
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        from .models import EmailConfirmation
+
         serializer = EmailConfirmSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         token = serializer.validated_data["token"]
         user_id = serializer.validated_data["user_id"]
 
-        # Verify user matches
+        # Verify user matches (security check)
         if str(request.user.id) != str(user_id):
             return Response(
                 {"detail": "You do not have permission to confirm this email change."},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        # Find confirmation record
-        try:
-            confirmation = EmailChangeConfirmation.objects.get(
-                user=request.user, token=token, confirmed_at__isnull=True
-            )
-        except EmailChangeConfirmation.DoesNotExist:
-            return Response(
-                {"detail": "Invalid or expired confirmation token."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        # Check if expired
-        if confirmation.is_expired:
-            return Response(
-                {"detail": "Confirmation link has expired. Please request a new one."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        # Update user email
-        new_email = confirmation.new_email
-        request.user.email = new_email
-        request.user.save(update_fields=["email"])
-
-        # Delete confirmation record (one-time use)
-        confirmation.delete()
-
-        # Log operation
-        log_account_operation(
-            request.user, "EMAIL_CHANGE_CONFIRMED", request, details={"new_email": str(new_email)}
+        # Validate token and get confirmation
+        is_valid, error_message, confirmation = (
+            EmailConfirmationService.validate_confirmation_token(token)
         )
 
+        if not is_valid:
+            return Response(
+                {"detail": error_message},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Verify confirmation belongs to authenticated user
+        if confirmation.user.id != request.user.id:
+            return Response(
+                {"detail": "You do not have permission to confirm this email change."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        # Verify this is an email change confirmation (not registration)
+        if confirmation.confirmation_type != EmailConfirmation.EMAIL_CHANGE:
+            return Response(
+                {"detail": "This endpoint is for email changes only. Registration confirmations should use /api/auth/confirm-email/"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Confirm email change using unified service
+        success, error_message = EmailConfirmationService.confirm_email(token)
+
+        if not success:
+            return Response(
+                {"detail": error_message},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Refresh user to get updated email
+        request.user.refresh_from_db()
+
         return Response(
-            {"detail": "Email address updated successfully.", "new_email": str(new_email)},
+            {"detail": "Email address updated successfully.", "new_email": str(request.user.email)},
             status=status.HTTP_200_OK,
         )
 
