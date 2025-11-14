@@ -54,29 +54,9 @@ class UserManager(BaseUserManager["User"]):
             **extra_fields,
         )
         user.set_password(password)
-        user.generate_verification_code()  # Generate verification code
         user.save(using=self._db)
 
-        # Send verification email
-        self.send_verification_email(user)
-
         return user
-
-    def send_verification_email(self, user):
-        """
-        Send an email with the verification code to the user.
-
-        Args:
-            user: User object to send the verification email to
-        """
-        from django.core.mail import send_mail
-
-        send_mail(
-            subject="Votre code de vérification",
-            message=f"Votre code de vérification est : {user.verification_code}",
-            from_email="noreply@geoannotator.com",
-            recipient_list=[user.email],
-        )
 
     def create_superuser(self, username, email=None, password=None, **extra_fields):
         """
