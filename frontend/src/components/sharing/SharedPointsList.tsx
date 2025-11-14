@@ -88,7 +88,7 @@ export function SharedPointsList({ pointId }: SharedPointsListProps) {
   };
 
   /**
-   * Get display name for recipient (pseudonym if available, otherwise email).
+   * Get display name for recipient (username if available, otherwise email).
    */
   const getRecipientDisplayName = (share: Share): string => {
     if (share.recipient_user?.username) {

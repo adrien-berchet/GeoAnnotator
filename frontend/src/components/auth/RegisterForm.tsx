@@ -200,7 +200,7 @@ export function RegisterForm() {
           {/* Username field */}
           <div className="form-group">
             <label htmlFor="username" className="form-label">
-              Username (Pseudonym)
+              Username
             </label>
             <input
               id="username"
@@ -213,7 +213,7 @@ export function RegisterForm() {
               required
             />
             <small className="form-help">
-              This will be your public display name (used for sharing)
+              Your public display name (3-100 characters, used for sharing)
             </small>
           </div>
 

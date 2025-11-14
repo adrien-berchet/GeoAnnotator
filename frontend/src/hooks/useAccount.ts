@@ -1,7 +1,7 @@
 /**
  * Account management hook.
  *
- * Provides functions for managing user account (pseudonym, email, password, deletion).
+ * Provides functions for managing user account (username, email, password, deletion).
  */
 
 import { useState, useCallback } from "react";

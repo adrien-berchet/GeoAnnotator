@@ -14,7 +14,7 @@ vi.mock("../../../src/hooks/useAuth", () => ({
     user: {
       id: "user-123",
       email: "test@example.com",
-      pseudonym: "TestUser",
+      username: "TestUser",
     },
     updateUser: vi.fn(),
   }),
@@ -25,16 +25,16 @@ vi.mock("../../../src/hooks/useAccount", () => ({
     account: {
       id: "user-123",
       email: "test@example.com",
-      pseudonym: "TestUser",
+      username: "TestUser",
     },
     fetchAccount: vi.fn(),
-    updateAccountPseudonym: vi.fn(),
+    updateAccountUsername: vi.fn(),
     requestEmailChange: vi.fn(),
     confirmEmailChange: vi.fn(),
     updatePassword: vi.fn(),
     requestAccountDeletion: vi.fn(),
     confirmAccountDeletion: vi.fn(),
-    checkPseudonym: vi.fn(),
+    checkUsername: vi.fn(),
     clearError: vi.fn(),
     isLoading: false,
     isUpdating: false,
@@ -64,7 +64,7 @@ describe("AccountPage Component", () => {
     expect(
       screen.getByRole("heading", { name: /account management/i }),
     ).toBeTruthy();
-    expect(screen.getByRole("heading", { name: /display name/i })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: /username/i })).toBeTruthy();
     expect(
       screen.getByRole("heading", { name: /change email address/i }),
     ).toBeTruthy();
@@ -74,15 +74,15 @@ describe("AccountPage Component", () => {
     expect(screen.getByRole("heading", { name: /danger zone/i })).toBeTruthy();
   });
 
-  it("should display current user pseudonym", () => {
+  it("should display current user username", () => {
     render(
       <RouterWrapper>
         <AccountPage />
       </RouterWrapper>,
     );
 
-    const pseudonymInput = screen.getByDisplayValue("TestUser");
-    expect(pseudonymInput).toBeTruthy();
+    const usernameInput = screen.getByDisplayValue("TestUser");
+    expect(usernameInput).toBeTruthy();
   });
 
   it("should have accessible heading structure", () => {
@@ -130,16 +130,16 @@ describe("AccountPage Component", () => {
     expect(sections.length).toBeGreaterThanOrEqual(3);
   });
 
-  it("should render pseudonym field", () => {
+  it("should render username field", () => {
     render(
       <RouterWrapper>
         <AccountPage />
       </RouterWrapper>,
     );
 
-    // PseudonymField should be present - use exact match for label
-    const pseudonymInput = screen.getByLabelText("Pseudonym");
-    expect(pseudonymInput).toBeTruthy();
+    // UsernameField should be present - use exact match for label
+    const usernameInput = screen.getByLabelText("Username");
+    expect(usernameInput).toBeTruthy();
   });
 
   it("should have proper semantic HTML structure", () => {

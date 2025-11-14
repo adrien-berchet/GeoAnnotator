@@ -1,21 +1,21 @@
 /**
- * Pseudonym field component with inline validation.
+ * Username field component with inline validation.
  */
 
 import { useState, useCallback, useEffect } from "react";
 import { useAccount } from "../../hooks/useAccount";
 import { useAuth } from "../../hooks/useAuth";
-import "./PseudonymField.css";
+import "./UsernameField.css";
 
-interface PseudonymFieldProps {
-  currentPseudonym: string;
+interface UsernameFieldProps {
+  currentUsername: string;
 }
 
-export function PseudonymField({ currentPseudonym }: PseudonymFieldProps) {
+export function UsernameField({ currentUsername }: UsernameFieldProps) {
   const { updateAccountUsername, checkUsername, isUpdating, isValidating } =
     useAccount();
   const { updateUser, user } = useAuth();
-  const [pseudonym, setPseudonym] = useState(currentPseudonym);
+  const [username, setUsername] = useState(currentUsername);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(
@@ -24,18 +24,18 @@ export function PseudonymField({ currentPseudonym }: PseudonymFieldProps) {
 
   // Update local state when prop changes
   useEffect(() => {
-    setPseudonym(currentPseudonym);
-  }, [currentPseudonym]);
+    setUsername(currentUsername);
+  }, [currentUsername]);
 
   // Debounced validation
-  const validatePseudonymDebounced = useCallback(
+  const validateUsernameDebounced = useCallback(
     (value: string) => {
       if (debounceTimer) {
         clearTimeout(debounceTimer);
       }
 
       // Don't validate if empty or same as current
-      if (!value || value === currentPseudonym) {
+      if (!value || value === currentUsername) {
         setValidationError(null);
         return;
       }
@@ -45,9 +45,9 @@ export function PseudonymField({ currentPseudonym }: PseudonymFieldProps) {
           const result = await checkUsername({ username: value });
 
           if (!result.valid) {
-            setValidationError(result.error || "Invalid pseudonym");
+            setValidationError(result.error || "Invalid username");
           } else if (result.available === false) {
-            setValidationError(result.error || "Pseudonym already taken");
+            setValidationError(result.error || "Username already taken");
           } else {
             setValidationError(null);
           }
@@ -59,14 +59,14 @@ export function PseudonymField({ currentPseudonym }: PseudonymFieldProps) {
 
       setDebounceTimer(timer);
     },
-    [currentPseudonym, checkUsername, debounceTimer],
+    [currentUsername, checkUsername, debounceTimer],
   );
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    setPseudonym(value);
+    setUsername(value);
     setSuccessMessage(null);
-    validatePseudonymDebounced(value);
+    validateUsernameDebounced(value);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -75,15 +75,15 @@ export function PseudonymField({ currentPseudonym }: PseudonymFieldProps) {
     setValidationError(null);
 
     // Don't submit if unchanged
-    if (pseudonym === currentPseudonym) {
+    if (username === currentUsername) {
       return;
     }
 
     try {
-      const updated = await updateAccountUsername({ username: pseudonym });
-      setSuccessMessage("Pseudonym updated successfully!");
+      const updated = await updateAccountUsername({ username: username });
+      setSuccessMessage("Username updated successfully!");
 
-      // Update auth context with new pseudonym
+      // Update auth context with new username
       if (user) {
         updateUser({ ...user, username: updated.username });
       }
@@ -92,34 +92,34 @@ export function PseudonymField({ currentPseudonym }: PseudonymFieldProps) {
     }
   };
 
-  const hasChanges = pseudonym !== currentPseudonym;
+  const hasChanges = username !== currentUsername;
   const canSubmit =
     hasChanges && !validationError && !isValidating && !isUpdating;
 
   return (
-    <form className="pseudonym-field" onSubmit={handleSubmit}>
+    <form className="username-field" onSubmit={handleSubmit}>
       <div className="form-group">
-        <label htmlFor="pseudonym" className="form-label">
-          Pseudonym
+        <label htmlFor="username" className="form-label">
+          Username
         </label>
         <div className="input-with-button">
           <input
             type="text"
-            id="pseudonym"
+            id="username"
             className={`form-input ${validationError ? "input-error" : ""} ${hasChanges && !validationError ? "input-success" : ""}`}
-            value={pseudonym}
+            value={username}
             onChange={handleChange}
-            placeholder="Enter your pseudonym"
-            maxLength={99}
+            placeholder="Enter your username"
+            maxLength={100}
             disabled={isUpdating}
-            aria-describedby={validationError ? "pseudonym-error" : undefined}
+            aria-describedby={validationError ? "username-error" : undefined}
             aria-invalid={!!validationError}
           />
           <button
             type="submit"
             className="update-button"
             disabled={!canSubmit}
-            aria-label="Update pseudonym"
+            aria-label="Update username"
           >
             {isUpdating ? "Updating..." : "Update"}
           </button>
@@ -130,7 +130,7 @@ export function PseudonymField({ currentPseudonym }: PseudonymFieldProps) {
         )}
 
         {validationError && (
-          <p className="error-message" id="pseudonym-error" role="alert">
+          <p className="error-message" id="username-error" role="alert">
             {validationError}
           </p>
         )}
@@ -142,7 +142,8 @@ export function PseudonymField({ currentPseudonym }: PseudonymFieldProps) {
         )}
 
         <p className="help-text">
-          1-99 characters, no spaces. Displayed when sharing content.
+          3-100 characters. Letters, numbers, underscore, and hyphen allowed.
+          Displayed when sharing content.
         </p>
       </div>
     </form>

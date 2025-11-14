@@ -146,7 +146,7 @@ export function Navbar() {
                     <div className="user-menu-header">
                       <div className="user-menu-email">
                         {user.username && (
-                          <div className="user-menu-pseudonym">
+                          <div className="user-menu-username">
                             {user.username}
                           </div>
                         )}

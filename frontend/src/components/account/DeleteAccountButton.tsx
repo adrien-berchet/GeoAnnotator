@@ -7,10 +7,10 @@ import { useAccount } from "../../hooks/useAccount";
 import "./DeleteAccountButton.css";
 
 interface DeleteAccountButtonProps {
-  pseudonym: string;
+  username: string;
 }
 
-export function DeleteAccountButton({ pseudonym }: DeleteAccountButtonProps) {
+export function DeleteAccountButton({ username }: DeleteAccountButtonProps) {
   const { requestAccountDeletion, isUpdating } = useAccount();
   const [showModal, setShowModal] = useState(false);
   const [confirmText, setConfirmText] = useState("");
@@ -82,7 +82,7 @@ export function DeleteAccountButton({ pseudonym }: DeleteAccountButtonProps) {
               <div className="warning-box">
                 <p className="warning-title">This action cannot be undone!</p>
                 <p>
-                  Deleting your account (<strong>{pseudonym}</strong>) will:
+                  Deleting your account (<strong>{username}</strong>) will:
                 </p>
                 <ul>
                   <li>Immediately unshare all your shared content</li>

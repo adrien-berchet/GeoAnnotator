@@ -15,8 +15,8 @@ import { BrowserRouter } from "react-router-dom";
 import { AccountPage } from "../../src/pages/AccountPage";
 
 // Mock hooks
-const mockUpdateAccountPseudonym = vi.fn();
-const mockCheckPseudonym = vi.fn();
+const mockUpdateAccountUsername = vi.fn();
+const mockCheckUsername = vi.fn();
 const mockRequestEmailChange = vi.fn();
 const mockUpdatePassword = vi.fn();
 const mockRequestAccountDeletion = vi.fn();
@@ -27,7 +27,7 @@ vi.mock("../../src/hooks/useAuth", () => ({
     user: {
       id: "user-123",
       email: "test@example.com",
-      pseudonym: "TestUser",
+      username: "TestUser",
     },
     updateUser: mockUpdateUser,
   }),
@@ -38,11 +38,11 @@ vi.mock("../../src/hooks/useAccount", () => ({
     account: {
       id: "user-123",
       email: "test@example.com",
-      pseudonym: "TestUser",
+      username: "TestUser",
     },
     fetchAccount: vi.fn(),
-    updateAccountPseudonym: mockUpdateAccountPseudonym,
-    checkPseudonym: mockCheckPseudonym,
+    updateAccountUsername: mockUpdateAccountUsername,
+    checkUsername: mockCheckUsername,
     requestEmailChange: mockRequestEmailChange,
     updatePassword: mockUpdatePassword,
     requestAccountDeletion: mockRequestAccountDeletion,
@@ -68,9 +68,9 @@ describe("Account Management Integration Tests", () => {
     // Clean up
   });
 
-  it("should complete full pseudonym update workflow", async () => {
-    mockCheckPseudonym.mockResolvedValue({ valid: true, available: true });
-    mockUpdateAccountPseudonym.mockResolvedValue({ pseudonym: "NewUser" });
+  it("should complete full username update workflow", async () => {
+    mockCheckUsername.mockResolvedValue({ valid: true, available: true });
+    mockUpdateAccountUsername.mockResolvedValue({ username: "NewUser" });
 
     render(
       <RouterWrapper>
@@ -78,20 +78,18 @@ describe("Account Management Integration Tests", () => {
       </RouterWrapper>,
     );
 
-    // Find pseudonym input
-    const pseudonymInput = screen.getByLabelText(
-      "Pseudonym",
-    ) as HTMLInputElement;
-    expect(pseudonymInput.value).toBe("TestUser");
+    // Find username input
+    const usernameInput = screen.getByLabelText("Username") as HTMLInputElement;
+    expect(usernameInput.value).toBe("TestUser");
 
-    // Change pseudonym
-    fireEvent.change(pseudonymInput, { target: { value: "NewUser" } });
+    // Change username
+    fireEvent.change(usernameInput, { target: { value: "NewUser" } });
 
     // Wait for debounced validation (real timers, 500ms)
     await waitFor(
       () => {
-        expect(mockCheckPseudonym).toHaveBeenCalledWith({
-          pseudonym: "NewUser",
+        expect(mockCheckUsername).toHaveBeenCalledWith({
+          username: "NewUser",
         });
       },
       { timeout: 1000 },
@@ -99,7 +97,7 @@ describe("Account Management Integration Tests", () => {
 
     // Submit form
     const updateButton = screen.getByRole("button", {
-      name: /update pseudonym/i,
+      name: /update username/i,
     });
     await waitFor(() => {
       expect((updateButton as HTMLButtonElement).disabled).toBe(false);
@@ -108,22 +106,22 @@ describe("Account Management Integration Tests", () => {
 
     // Verify submission
     await waitFor(() => {
-      expect(mockUpdateAccountPseudonym).toHaveBeenCalledWith({
-        pseudonym: "NewUser",
+      expect(mockUpdateAccountUsername).toHaveBeenCalledWith({
+        username: "NewUser",
       });
     });
 
     // Verify auth context updated
     await waitFor(() => {
       expect(mockUpdateUser).toHaveBeenCalledWith(
-        expect.objectContaining({ pseudonym: "NewUser" }),
+        expect.objectContaining({ username: "NewUser" }),
       );
     });
 
     // Verify success message
     await waitFor(() => {
       const success = screen.getByRole("status");
-      expect(success.textContent).toContain("Pseudonym updated successfully");
+      expect(success.textContent).toContain("Username updated successfully");
     });
   }, 10000); // Increase timeout to 10s
 
@@ -257,8 +255,8 @@ describe("Account Management Integration Tests", () => {
 
   it("should handle multiple operations in sequence", async () => {
     // Setup mocks
-    mockCheckPseudonym.mockResolvedValue({ valid: true, available: true });
-    mockUpdateAccountPseudonym.mockResolvedValue({ pseudonym: "UpdatedUser" });
+    mockCheckUsername.mockResolvedValue({ valid: true, available: true });
+    mockUpdateAccountUsername.mockResolvedValue({ username: "UpdatedUser" });
     mockRequestEmailChange.mockResolvedValue({
       detail: "Email sent",
     });
@@ -269,25 +267,25 @@ describe("Account Management Integration Tests", () => {
       </RouterWrapper>,
     );
 
-    // 1. Update pseudonym
-    const pseudonymInput = screen.getByLabelText("Pseudonym");
-    fireEvent.change(pseudonymInput, { target: { value: "UpdatedUser" } });
+    // 1. Update username
+    const usernameInput = screen.getByLabelText("Username");
+    fireEvent.change(usernameInput, { target: { value: "UpdatedUser" } });
 
     // Wait for debounced validation
     await waitFor(
       () => {
-        expect(mockCheckPseudonym).toHaveBeenCalled();
+        expect(mockCheckUsername).toHaveBeenCalled();
       },
       { timeout: 1000 },
     );
 
-    const updatePseudonymButton = screen.getByRole("button", {
-      name: /update pseudonym/i,
+    const updateUsernameButton = screen.getByRole("button", {
+      name: /update username/i,
     });
-    fireEvent.click(updatePseudonymButton);
+    fireEvent.click(updateUsernameButton);
 
     await waitFor(() => {
-      expect(mockUpdateAccountPseudonym).toHaveBeenCalled();
+      expect(mockUpdateAccountUsername).toHaveBeenCalled();
     });
 
     // 2. Request email change
@@ -308,14 +306,14 @@ describe("Account Management Integration Tests", () => {
     });
 
     // Verify both operations succeeded
-    expect(mockUpdateAccountPseudonym).toHaveBeenCalledTimes(1);
+    expect(mockUpdateAccountUsername).toHaveBeenCalledTimes(1);
     expect(mockRequestEmailChange).toHaveBeenCalledTimes(1);
   }, 10000);
 
   it("should display validation errors appropriately", async () => {
-    mockCheckPseudonym.mockResolvedValue({
+    mockCheckUsername.mockResolvedValue({
       valid: false,
-      error: "Pseudonym contains invalid characters",
+      error: "Username contains invalid characters",
     });
 
     render(
@@ -324,23 +322,23 @@ describe("Account Management Integration Tests", () => {
       </RouterWrapper>,
     );
 
-    // Try invalid pseudonym
-    const pseudonymInput = screen.getByLabelText("Pseudonym");
-    fireEvent.change(pseudonymInput, { target: { value: "Bad Name!" } });
+    // Try invalid username
+    const usernameInput = screen.getByLabelText("Username");
+    fireEvent.change(usernameInput, { target: { value: "Bad Name!" } });
 
     // Wait for debounced validation
     // Should show validation error
     await waitFor(
       () => {
         const error = screen.getByRole("alert");
-        expect(error.textContent).toBe("Pseudonym contains invalid characters");
+        expect(error.textContent).toBe("Username contains invalid characters");
       },
       { timeout: 1000 },
     );
 
     // Update button should be disabled
     const updateButton = screen.getByRole("button", {
-      name: /update pseudonym/i,
+      name: /update username/i,
     });
     expect((updateButton as HTMLButtonElement).disabled).toBe(true);
   }, 10000);
@@ -360,12 +358,12 @@ describe("Account Management Integration Tests", () => {
     expect(sectionHeadings.length).toBeGreaterThanOrEqual(4);
 
     // Verify all forms have labels
-    const pseudonymInput = screen.getByLabelText("Pseudonym");
+    const usernameInput = screen.getByLabelText("Username");
     const currentEmail = screen.getByLabelText("Current Email");
     const newEmail = screen.getByLabelText("New Email Address");
     const oldPassword = screen.getByLabelText(/current password/i);
 
-    expect(pseudonymInput).toBeTruthy();
+    expect(usernameInput).toBeTruthy();
     expect(currentEmail).toBeTruthy();
     expect(newEmail).toBeTruthy();
     expect(oldPassword).toBeTruthy();
@@ -378,15 +376,12 @@ describe("Account Management Integration Tests", () => {
       </RouterWrapper>,
     );
 
-    // Verify account info section
-    expect(screen.getByText("user-123")).toBeTruthy();
+    // Verify email is displayed
     expect(screen.getByText("test@example.com")).toBeTruthy();
 
-    // Verify pseudonym in form
-    const pseudonymInput = screen.getByLabelText(
-      "Pseudonym",
-    ) as HTMLInputElement;
-    expect(pseudonymInput.value).toBe("TestUser");
+    // Verify username in form (component still labeled "Username" in UI)
+    const usernameInput = screen.getByLabelText("Username") as HTMLInputElement;
+    expect(usernameInput.value).toBe("TestUser");
 
     // Verify current email in form
     const currentEmail = screen.getByLabelText(

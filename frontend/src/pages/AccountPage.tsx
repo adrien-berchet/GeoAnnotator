@@ -1,13 +1,13 @@
 /**
  * Account management page.
  *
- * Allows users to manage their pseudonym, email, password, and account deletion.
+ * Allows users to manage their username, email, password, and account deletion.
  */
 
 import { useEffect, useState } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { useAccount } from "../hooks/useAccount";
-import { PseudonymField } from "../components/account/PseudonymField";
+import { UsernameField } from "../components/account/UsernameField";
 import { EmailChangeForm } from "../components/account/EmailChangeForm";
 import { PasswordChangeForm } from "../components/account/PasswordChangeForm";
 import { DeleteAccountButton } from "../components/account/DeleteAccountButton";
@@ -89,14 +89,14 @@ export function AccountPage() {
             </div>
           </section>
 
-          {/* Pseudonym Section */}
+          {/* Username Section */}
           <section className="account-section">
-            <h2>Display Name</h2>
+            <h2>Username</h2>
             <p className="section-description">
-              Your pseudonym is displayed when sharing content with others. It
-              must be unique and cannot contain spaces.
+              Your username is displayed when sharing content with others. It
+              must be unique.
             </p>
-            <PseudonymField currentPseudonym={account?.username || ""} />
+            <UsernameField currentUsername={account?.username || ""} />
           </section>
 
           {/* Email Change Section */}
@@ -127,7 +127,7 @@ export function AccountPage() {
               30 days after confirmation.
             </p>
             <DeleteAccountButton
-              pseudonym={account?.username || "your account"}
+              username={account?.username || "your account"}
             />
           </section>
         </div>
