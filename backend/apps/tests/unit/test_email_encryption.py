@@ -117,9 +117,7 @@ class TestEmailEncryption:
         from django.db import connection
 
         with connection.cursor() as cursor:
-            cursor.execute(
-                "SELECT email FROM users WHERE id IN %s", [(user1.id, user2.id)]
-            )
+            cursor.execute("SELECT email FROM users WHERE id IN %s", [(user1.id, user2.id)])
             encrypted_values = [row[0] for row in cursor.fetchall()]
 
         # Each should decrypt to their own email

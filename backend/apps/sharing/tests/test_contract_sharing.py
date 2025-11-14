@@ -40,7 +40,11 @@ class TestSharingContract:
         """Create owner user with a GPS point."""
         # Register owner
         register_url = reverse("authentication:register")
-        register_data = {"username": "owner", "email": "owner@example.com", "password": "SecurePass123"}
+        register_data = {
+            "username": "owner",
+            "email": "owner@example.com",
+            "password": "SecurePass123",
+        }
         response = api_client.post(register_url, register_data, format="json")
         access_token = response.data["access"]
         user = response.data["user"]
@@ -67,7 +71,11 @@ class TestSharingContract:
 
         # Register recipient
         register_url = reverse("authentication:register")
-        register_data = {"username": "recipient", "email": "recipient@example.com", "password": "SecurePass123"}
+        register_data = {
+            "username": "recipient",
+            "email": "recipient@example.com",
+            "password": "SecurePass123",
+        }
         response = api_client.post(register_url, register_data, format="json")
         recipient = {"user": response.data["user"], "token": response.data["access"]}
 

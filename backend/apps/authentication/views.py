@@ -14,34 +14,32 @@ from rest_framework.exceptions import NotFound
 from rest_framework.permissions import AllowAny
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.throttling import UserRateThrottle, AnonRateThrottle
+from rest_framework.throttling import AnonRateThrottle
+from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import TokenError
 
-from .models import User, EmailChangeConfirmation
-from .serializers import (
-    LoginSerializer,
-    RefreshTokenSerializer,
-    RegisterSerializer,
-    UserSerializer,
-    AccountSerializer,
-    UsernameUpdateSerializer,
-    EmailChangeSerializer,
-    EmailConfirmSerializer,
-    PasswordChangeSerializer,
-    AccountDeletionConfirmSerializer,
-    UsernameValidationSerializer,
-)
-from .services import (
-    AuthenticationService,
-    validate_username,
-    EmailChangeTokenGenerator,
-    AccountDeletionTokenGenerator,
-    send_email_change_confirmation,
-    send_deletion_confirmation,
-    soft_delete_user,
-    log_account_operation,
-)
+from .models import EmailChangeConfirmation
+from .models import User
+from .serializers import AccountDeletionConfirmSerializer
+from .serializers import AccountSerializer
+from .serializers import EmailChangeSerializer
+from .serializers import EmailConfirmSerializer
+from .serializers import LoginSerializer
+from .serializers import PasswordChangeSerializer
+from .serializers import RefreshTokenSerializer
+from .serializers import RegisterSerializer
+from .serializers import UsernameUpdateSerializer
+from .serializers import UsernameValidationSerializer
+from .serializers import UserSerializer
+from .services import AccountDeletionTokenGenerator
+from .services import AuthenticationService
+from .services import EmailChangeTokenGenerator
+from .services import log_account_operation
+from .services import send_deletion_confirmation
+from .services import send_email_change_confirmation
+from .services import soft_delete_user
+from .services import validate_username
 
 
 class RegisterView(generics.CreateAPIView):
@@ -199,20 +197,23 @@ class VerifyCodeView(APIView):
 
 class AccountOperationThrottle(UserRateThrottle):
     """Custom throttle for account operations (10 requests per minute)."""
-    rate = '10/min'
-    scope = 'account'
+
+    rate = "10/min"
+    scope = "account"
 
 
 class EmailOperationThrottle(UserRateThrottle):
     """Custom throttle for email operations (3 requests per hour)."""
-    rate = '3/hour'
-    scope = 'email'
+
+    rate = "3/hour"
+    scope = "email"
 
 
 class ValidationThrottle(AnonRateThrottle):
     """Custom throttle for validation endpoint (30 requests per minute)."""
-    rate = '30/min'
-    scope = 'validation'
+
+    rate = "30/min"
+    scope = "validation"
 
 
 class AccountRetrieveAPIView(generics.RetrieveAPIView):
@@ -227,7 +228,7 @@ class AccountRetrieveAPIView(generics.RetrieveAPIView):
     def get_object(self):
         user = self.request.user
         # Block soft-deleted users from accessing their account
-        if hasattr(user, 'deleted_at') and user.deleted_at is not None:
+        if hasattr(user, "deleted_at") and user.deleted_at is not None:
             raise NotFound("User account not found.")
         return user
 
@@ -251,18 +252,18 @@ class AccountUpdateAPIView(generics.UpdateAPIView):
 
         user = self.get_object()
         old_username = user.username
-        new_username = serializer.validated_data['username']
+        new_username = serializer.validated_data["username"]
 
         # Update username
         user.username = new_username
-        user.save(update_fields=['username'])
+        user.save(update_fields=["username"])
 
         # Log operation
         log_account_operation(
             user,
-            'USERNAME_CHANGED',
+            "USERNAME_CHANGED",
             request,
-            details={'old_username': old_username, 'new_username': new_username}
+            details={"old_username": old_username, "new_username": new_username},
         )
 
         # Return full account data
@@ -280,11 +281,11 @@ class EmailChangeRequestAPIView(APIView):
     throttle_classes = [EmailOperationThrottle]
 
     def post(self, request):
-        serializer = EmailChangeSerializer(data=request.data, context={'request': request})
+        serializer = EmailChangeSerializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
 
         user = request.user
-        new_email = serializer.validated_data['new_email']
+        new_email = serializer.validated_data["new_email"]
 
         # Generate token
         token = EmailChangeTokenGenerator.generate_token(user, new_email)
@@ -294,11 +295,11 @@ class EmailChangeRequestAPIView(APIView):
         EmailChangeConfirmation.objects.update_or_create(
             user=user,
             defaults={
-                'new_email': new_email,
-                'token': token,
-                'expires_at': expires_at,
-                'confirmed_at': None  # Reset if updating
-            }
+                "new_email": new_email,
+                "token": token,
+                "expires_at": expires_at,
+                "confirmed_at": None,  # Reset if updating
+            },
         )
 
         # Send confirmation email
@@ -306,16 +307,16 @@ class EmailChangeRequestAPIView(APIView):
 
         # Log operation
         log_account_operation(
-            user,
-            'EMAIL_CHANGE_REQUESTED',
-            request,
-            details={'new_email': new_email}
+            user, "EMAIL_CHANGE_REQUESTED", request, details={"new_email": new_email}
         )
 
-        return Response({
-            'detail': f'Confirmation email sent to {new_email}. Please check your inbox.',
-            'expires_at': expires_at.isoformat()
-        }, status=status.HTTP_200_OK)
+        return Response(
+            {
+                "detail": f"Confirmation email sent to {new_email}. Please check your inbox.",
+                "expires_at": expires_at.isoformat(),
+            },
+            status=status.HTTP_200_OK,
+        )
 
 
 class EmailConfirmAPIView(APIView):
@@ -330,56 +331,51 @@ class EmailConfirmAPIView(APIView):
         serializer = EmailConfirmSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        token = serializer.validated_data['token']
-        user_id = serializer.validated_data['user_id']
+        token = serializer.validated_data["token"]
+        user_id = serializer.validated_data["user_id"]
 
         # Verify user matches
         if str(request.user.id) != str(user_id):
             return Response(
-                {'detail': 'You do not have permission to confirm this email change.'},
-                status=status.HTTP_403_FORBIDDEN
+                {"detail": "You do not have permission to confirm this email change."},
+                status=status.HTTP_403_FORBIDDEN,
             )
 
         # Find confirmation record
         try:
             confirmation = EmailChangeConfirmation.objects.get(
-                user=request.user,
-                token=token,
-                confirmed_at__isnull=True
+                user=request.user, token=token, confirmed_at__isnull=True
             )
         except EmailChangeConfirmation.DoesNotExist:
             return Response(
-                {'detail': 'Invalid or expired confirmation token.'},
-                status=status.HTTP_400_BAD_REQUEST
+                {"detail": "Invalid or expired confirmation token."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         # Check if expired
         if confirmation.is_expired:
             return Response(
-                {'detail': 'Confirmation link has expired. Please request a new one.'},
-                status=status.HTTP_400_BAD_REQUEST
+                {"detail": "Confirmation link has expired. Please request a new one."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         # Update user email
         new_email = confirmation.new_email
         request.user.email = new_email
-        request.user.save(update_fields=['email'])
+        request.user.save(update_fields=["email"])
 
         # Delete confirmation record (one-time use)
         confirmation.delete()
 
         # Log operation
         log_account_operation(
-            request.user,
-            'EMAIL_CHANGE_CONFIRMED',
-            request,
-            details={'new_email': str(new_email)}
+            request.user, "EMAIL_CHANGE_CONFIRMED", request, details={"new_email": str(new_email)}
         )
 
-        return Response({
-            'detail': 'Email address updated successfully.',
-            'new_email': str(new_email)
-        }, status=status.HTTP_200_OK)
+        return Response(
+            {"detail": "Email address updated successfully.", "new_email": str(new_email)},
+            status=status.HTTP_200_OK,
+        )
 
 
 class PasswordChangeAPIView(APIView):
@@ -392,22 +388,20 @@ class PasswordChangeAPIView(APIView):
     throttle_classes = [AccountOperationThrottle]
 
     def post(self, request):
-        serializer = PasswordChangeSerializer(data=request.data, context={'request': request})
+        serializer = PasswordChangeSerializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
 
         user = request.user
-        new_password = serializer.validated_data['new_password']
+        new_password = serializer.validated_data["new_password"]
 
         # Update password
         user.set_password(new_password)
-        user.save(update_fields=['password'])
+        user.save(update_fields=["password"])
 
         # Log operation
-        log_account_operation(user, 'PASSWORD_CHANGED', request)
+        log_account_operation(user, "PASSWORD_CHANGED", request)
 
-        return Response({
-            'detail': 'Password changed successfully.'
-        }, status=status.HTTP_200_OK)
+        return Response({"detail": "Password changed successfully."}, status=status.HTTP_200_OK)
 
 
 class AccountDeletionRequestAPIView(APIView):
@@ -431,10 +425,13 @@ class AccountDeletionRequestAPIView(APIView):
         # Note: We don't create a separate model for deletion tokens,
         # they're validated via HMAC
 
-        return Response({
-            'detail': 'Account deletion confirmation sent. Please check your email.',
-            'warning': 'Your account and all associated data will be permanently deleted in 30 days.'
-        }, status=status.HTTP_200_OK)
+        return Response(
+            {
+                "detail": "Account deletion confirmation sent. Please check your email.",
+                "warning": "Your account and all associated data will be permanently deleted in 30 days.",
+            },
+            status=status.HTTP_200_OK,
+        )
 
 
 class AccountDeletionConfirmAPIView(APIView):
@@ -449,37 +446,40 @@ class AccountDeletionConfirmAPIView(APIView):
         serializer = AccountDeletionConfirmSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        token = serializer.validated_data['token']
-        user_id = serializer.validated_data['user_id']
+        token = serializer.validated_data["token"]
+        user_id = serializer.validated_data["user_id"]
 
         # Verify user matches
         if str(request.user.id) != str(user_id):
             return Response(
-                {'detail': 'You do not have permission to confirm this deletion.'},
-                status=status.HTTP_403_FORBIDDEN
+                {"detail": "You do not have permission to confirm this deletion."},
+                status=status.HTTP_403_FORBIDDEN,
             )
 
         # Validate token
         if not AccountDeletionTokenGenerator.validate_token(token, request.user):
             return Response(
-                {'detail': 'Invalid or expired deletion confirmation token.'},
-                status=status.HTTP_400_BAD_REQUEST
+                {"detail": "Invalid or expired deletion confirmation token."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         # Soft delete user
         soft_delete_user(request.user)
 
         # Log operation
-        log_account_operation(request.user, 'ACCOUNT_DELETED', request)
+        log_account_operation(request.user, "ACCOUNT_DELETED", request)
 
         # Calculate permanent deletion date (30 days)
         permanent_deletion_date = request.user.deleted_at + timedelta(days=30)
 
-        return Response({
-            'detail': 'Account deleted successfully. Your data will be permanently removed in 30 days.',
-            'deleted_at': request.user.deleted_at.isoformat(),
-            'permanent_deletion_date': permanent_deletion_date.isoformat()
-        }, status=status.HTTP_200_OK)
+        return Response(
+            {
+                "detail": "Account deleted successfully. Your data will be permanently removed in 30 days.",
+                "deleted_at": request.user.deleted_at.isoformat(),
+                "permanent_deletion_date": permanent_deletion_date.isoformat(),
+            },
+            status=status.HTTP_200_OK,
+        )
 
 
 class UsernameValidationAPIView(APIView):
@@ -495,7 +495,7 @@ class UsernameValidationAPIView(APIView):
         serializer = UsernameValidationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        username = serializer.validated_data['username']
+        username = serializer.validated_data["username"]
 
         # Exclude current user if authenticated
         exclude_user_id = request.user.id if request.user.is_authenticated else None
@@ -504,10 +504,7 @@ class UsernameValidationAPIView(APIView):
         result = validate_username(username, exclude_user_id=exclude_user_id)
 
         # Transform errors list to single error message for API response
-        response_data = {
-            "valid": result["valid"],
-            "available": result["available"]
-        }
+        response_data = {"valid": result["valid"], "available": result["available"]}
         if result.get("errors"):
             response_data["error"] = result["errors"][0]  # Return first error
 

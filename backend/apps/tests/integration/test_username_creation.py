@@ -72,9 +72,7 @@ class TestUsernameCreationFlow:
         response = authenticated_client_alice.get(retrieve_url)
         assert response.data["username"] == "AliceInWonderland"
 
-    def test_username_appears_consistently_across_requests(
-        self, alice, authenticated_client_alice
-    ):
+    def test_username_appears_consistently_across_requests(self, alice, authenticated_client_alice):
         """Test that username is consistent across multiple GET requests."""
         alice.username = "ConsistentName"
         alice.save()
@@ -101,7 +99,9 @@ class TestUsernameCreationFlow:
 
         # Update username
         update_url = reverse("authentication:account-update")
-        response = authenticated_client_alice.patch(update_url, {"username": "NewName"}, format="json")
+        response = authenticated_client_alice.patch(
+            update_url, {"username": "NewName"}, format="json"
+        )
         assert response.status_code == 200
 
         # Verify updated state

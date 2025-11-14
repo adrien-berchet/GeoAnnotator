@@ -115,9 +115,7 @@ class TestEmailChangeFlow:
         # Should succeed because token is valid and matches the confirmation record
         assert response.status_code == 200
 
-    def test_email_change_by_different_user_fails(
-        self, alice, bob, authenticated_client_bob
-    ):
+    def test_email_change_by_different_user_fails(self, alice, bob, authenticated_client_bob):
         """Test that user can't confirm another user's email change."""
         # Alice requests email change
         EmailChangeConfirmation.objects.create(user=alice, new_email="alicenew@example.com")
@@ -171,16 +169,12 @@ class TestEmailChangeFlow:
         assert confirmations.count() == 1
         assert confirmations.first().new_email == "second@example.com"
 
-    def test_email_change_to_existing_email_rejected(
-        self, alice, bob, authenticated_client_alice
-    ):
+    def test_email_change_to_existing_email_rejected(self, alice, bob, authenticated_client_alice):
         """Test that changing to an already-used email is rejected."""
         url = reverse("authentication:email-change")
 
         # Try to change to Bob's email
-        response = authenticated_client_alice.post(
-            url, {"new_email": bob.email}, format="json"
-        )
+        response = authenticated_client_alice.post(url, {"new_email": bob.email}, format="json")
 
         assert response.status_code == 400
 
@@ -206,5 +200,7 @@ class TestEmailChangeFlow:
         )
 
         # Should have logs for both steps
-        logs = AccountLog.objects.filter(user=alice, operation__in=["EMAIL_CHANGE_REQUESTED", "EMAIL_CHANGE_CONFIRMED"])
+        logs = AccountLog.objects.filter(
+            user=alice, operation__in=["EMAIL_CHANGE_REQUESTED", "EMAIL_CHANGE_CONFIRMED"]
+        )
         assert logs.count() >= 1

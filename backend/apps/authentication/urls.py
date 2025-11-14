@@ -19,7 +19,6 @@ urlpatterns = [
     path("logout/", views.logout_view, name="logout"),
     path("profile/", views.UserProfileView.as_view(), name="profile"),
     path("verify/", views.VerifyCodeView.as_view(), name="verify"),
-
     # Account management endpoints
     path("account/", views.AccountRetrieveAPIView.as_view(), name="account-retrieve"),
     path("account/update/", views.AccountUpdateAPIView.as_view(), name="account-update"),
@@ -27,6 +26,14 @@ urlpatterns = [
     path("account/confirm-email/", views.EmailConfirmAPIView.as_view(), name="email-confirm"),
     path("account/password-change/", views.PasswordChangeAPIView.as_view(), name="password-change"),
     path("account/delete/", views.AccountDeletionRequestAPIView.as_view(), name="account-delete"),
-    path("account/confirm-delete/", views.AccountDeletionConfirmAPIView.as_view(), name="account-delete-confirm"),
-    path("account/validate-username/", views.UsernameValidationAPIView.as_view(), name="username-validate"),
+    path(
+        "account/confirm-delete/",
+        views.AccountDeletionConfirmAPIView.as_view(),
+        name="account-delete-confirm",
+    ),
+    path(
+        "account/validate-username/",
+        views.UsernameValidationAPIView.as_view(),
+        name="username-validate",
+    ),
 ]

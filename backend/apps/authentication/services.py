@@ -8,19 +8,17 @@ username validation, email changes, and account management.
 import hashlib
 import hmac
 import re
-from datetime import timedelta
 
 from django.conf import settings
 from django.contrib.auth import authenticate
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils import timezone
-from django.utils.html import strip_tags
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import User, EmailChangeConfirmation, AccountLog
-
+from .models import AccountLog
+from .models import User
 
 # Username validation regex: alphanumeric and simple special characters, no spaces
 USERNAME_PATTERN = re.compile(r'^[a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};\':"\\|,.<>\/?]+$')
@@ -49,7 +47,11 @@ class AuthenticationService:
             # Authenticate with username and password
             authenticated_user = authenticate(username=user.username, password=password)
 
-            if authenticated_user and isinstance(authenticated_user, User) and authenticated_user.is_active:
+            if (
+                authenticated_user
+                and isinstance(authenticated_user, User)
+                and authenticated_user.is_active
+            ):
                 return authenticated_user
         except User.DoesNotExist:
             pass
@@ -246,11 +248,11 @@ def _check_username_characters(username: str) -> tuple[bool, str | None]:
     """
     # Pattern: alphanumeric, underscore, hyphen (NO spaces)
     # Must start with alphanumeric (checked separately)
-    pattern = re.compile(r'^[a-zA-Z0-9][a-zA-Z0-9_\-]*$')
+    pattern = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_\-]*$")
 
     if not pattern.match(username):
         # Check if space is the issue
-        if ' ' in username:
+        if " " in username:
             return False, "Username cannot contain spaces."
         return False, "Username can only contain letters, numbers, underscores, and hyphens."
 
@@ -269,7 +271,7 @@ def _check_username_spaces(username: str) -> tuple[bool, str | None]:
         Tuple of (is_valid, error_message)
     """
     # NO spaces allowed per spec
-    if ' ' in username:
+    if " " in username:
         return False, "Username cannot contain spaces."
 
     return True, None
@@ -340,24 +342,15 @@ def validate_username(username: str, exclude_user_id=None) -> dict:
         return {
             "valid": False,
             "available": None,  # Not checked when format is invalid
-            "errors": errors
+            "errors": errors,
         }
 
     # Check uniqueness only if format is valid
     is_available, error_msg = _check_username_uniqueness(username, exclude_user_id)
     if not is_available:
-        return {
-            "valid": True,
-            "available": False,
-            "errors": [error_msg]
-        }
+        return {"valid": True, "available": False, "errors": [error_msg]}
 
-    return {
-        "valid": True,
-        "available": True,
-        "errors": []
-    }
-
+    return {"valid": True, "available": True, "errors": []}
 
 
 class EmailChangeTokenGenerator:
@@ -380,12 +373,8 @@ class EmailChangeTokenGenerator:
             str: HMAC token
         """
         timestamp = int(timezone.now().timestamp())
-        message = f"{user.id}:{new_email}:{timestamp}".encode('utf-8')
-        token = hmac.new(
-            settings.SECRET_KEY.encode('utf-8'),
-            message,
-            hashlib.sha256
-        ).hexdigest()
+        message = f"{user.id}:{new_email}:{timestamp}".encode()
+        token = hmac.new(settings.SECRET_KEY.encode("utf-8"), message, hashlib.sha256).hexdigest()
         return f"{token}:{timestamp}"
 
     @staticmethod
@@ -402,7 +391,7 @@ class EmailChangeTokenGenerator:
             bool: True if valid, False otherwise
         """
         try:
-            token_hash, timestamp_str = token.rsplit(':', 1)
+            token_hash, timestamp_str = token.rsplit(":", 1)
             timestamp = int(timestamp_str)
 
             # Check if token has expired (30 minutes)
@@ -411,11 +400,9 @@ class EmailChangeTokenGenerator:
                 return False
 
             # Regenerate token and compare
-            message = f"{user.id}:{new_email}:{timestamp}".encode('utf-8')
+            message = f"{user.id}:{new_email}:{timestamp}".encode()
             expected_hash = hmac.new(
-                settings.SECRET_KEY.encode('utf-8'),
-                message,
-                hashlib.sha256
+                settings.SECRET_KEY.encode("utf-8"), message, hashlib.sha256
             ).hexdigest()
 
             return hmac.compare_digest(token_hash, expected_hash)
@@ -443,12 +430,8 @@ class AccountDeletionTokenGenerator:
             str: HMAC token
         """
         timestamp = int(timezone.now().timestamp())
-        message = f"{user.id}:delete:{timestamp}".encode('utf-8')
-        token = hmac.new(
-            settings.SECRET_KEY.encode('utf-8'),
-            message,
-            hashlib.sha256
-        ).hexdigest()
+        message = f"{user.id}:delete:{timestamp}".encode()
+        token = hmac.new(settings.SECRET_KEY.encode("utf-8"), message, hashlib.sha256).hexdigest()
         return f"{token}:{timestamp}"
 
     @staticmethod
@@ -464,7 +447,7 @@ class AccountDeletionTokenGenerator:
             bool: True if valid, False otherwise
         """
         try:
-            token_hash, timestamp_str = token.rsplit(':', 1)
+            token_hash, timestamp_str = token.rsplit(":", 1)
             timestamp = int(timestamp_str)
 
             # Check if token has expired (7 days for account deletion)
@@ -473,11 +456,9 @@ class AccountDeletionTokenGenerator:
                 return False
 
             # Regenerate token and compare
-            message = f"{user.id}:delete:{timestamp}".encode('utf-8')
+            message = f"{user.id}:delete:{timestamp}".encode()
             expected_hash = hmac.new(
-                settings.SECRET_KEY.encode('utf-8'),
-                message,
-                hashlib.sha256
+                settings.SECRET_KEY.encode("utf-8"), message, hashlib.sha256
             ).hexdigest()
 
             return hmac.compare_digest(token_hash, expected_hash)
@@ -496,23 +477,29 @@ def send_email_change_confirmation(user, new_email: str, token: str):
         token: Confirmation token
     """
     # Build confirmation link
-    frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
+    frontend_url = getattr(settings, "FRONTEND_URL", "http://localhost:5173")
     confirmation_link = f"{frontend_url}/account/confirm-email?token={token}&user_id={user.id}"
 
     # Render HTML and plain text versions
-    html_message = render_to_string('emails/confirm_email_change.html', {
-        'username': user.username or str(user.email),
-        'new_email': new_email,
-        'confirmation_link': confirmation_link,
-    })
-    plain_message = render_to_string('emails/confirm_email_change.txt', {
-        'username': user.username or str(user.email),
-        'new_email': new_email,
-        'confirmation_link': confirmation_link,
-    })
+    html_message = render_to_string(
+        "emails/confirm_email_change.html",
+        {
+            "username": user.username or str(user.email),
+            "new_email": new_email,
+            "confirmation_link": confirmation_link,
+        },
+    )
+    plain_message = render_to_string(
+        "emails/confirm_email_change.txt",
+        {
+            "username": user.username or str(user.email),
+            "new_email": new_email,
+            "confirmation_link": confirmation_link,
+        },
+    )
 
     send_mail(
-        subject='Confirm Email Address Change',
+        subject="Confirm Email Address Change",
         message=plain_message,
         html_message=html_message,
         from_email=settings.DEFAULT_FROM_EMAIL,
@@ -530,21 +517,27 @@ def send_deletion_confirmation(user, token: str):
         token: Confirmation token
     """
     # Build confirmation link
-    frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
+    frontend_url = getattr(settings, "FRONTEND_URL", "http://localhost:5173")
     confirmation_link = f"{frontend_url}/account/confirm-delete?token={token}&user_id={user.id}"
 
     # Render HTML and plain text versions
-    html_message = render_to_string('emails/confirm_account_deletion.html', {
-        'username': user.username or str(user.email),
-        'confirmation_link': confirmation_link,
-    })
-    plain_message = render_to_string('emails/confirm_account_deletion.txt', {
-        'username': user.username or str(user.email),
-        'confirmation_link': confirmation_link,
-    })
+    html_message = render_to_string(
+        "emails/confirm_account_deletion.html",
+        {
+            "username": user.username or str(user.email),
+            "confirmation_link": confirmation_link,
+        },
+    )
+    plain_message = render_to_string(
+        "emails/confirm_account_deletion.txt",
+        {
+            "username": user.username or str(user.email),
+            "confirmation_link": confirmation_link,
+        },
+    )
 
     send_mail(
-        subject='⚠️ Confirm Account Deletion',
+        subject="⚠️ Confirm Account Deletion",
         message=plain_message,
         html_message=html_message,
         from_email=settings.DEFAULT_FROM_EMAIL,
@@ -564,10 +557,11 @@ def soft_delete_user(user):
     """
     # Set deleted_at timestamp
     user.deleted_at = timezone.now()
-    user.save(update_fields=['deleted_at'])
+    user.save(update_fields=["deleted_at"])
 
     # Unshare all user's content
     from apps.sharing.models import Share
+
     Share.objects.filter(owner=user, is_active=True).update(is_active=False)
 
 
@@ -586,19 +580,19 @@ def log_account_operation(user, operation: str, request=None, details: dict = No
 
     if request:
         # Get IP address from request
-        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        x_forwarded_for = request.headers.get("x-forwarded-for")
         if x_forwarded_for:
-            ip_address = x_forwarded_for.split(',')[0].strip()
+            ip_address = x_forwarded_for.split(",")[0].strip()
         else:
-            ip_address = request.META.get('REMOTE_ADDR')
+            ip_address = request.META.get("REMOTE_ADDR")
 
         # Get user agent
-        user_agent = request.META.get('HTTP_USER_AGENT', '')[:256]
+        user_agent = request.headers.get("user-agent", "")[:256]
 
     AccountLog.objects.create(
         user=user,
         operation=operation,
         ip_address=ip_address,
         user_agent=user_agent,
-        details=details or {}
+        details=details or {},
     )

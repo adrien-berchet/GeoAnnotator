@@ -8,6 +8,7 @@ from django.db.models.signals import pre_save
 from django.dispatch import receiver
 
 from apps.authentication.models import User
+
 from .models import Share
 
 

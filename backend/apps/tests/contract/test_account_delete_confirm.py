@@ -176,9 +176,7 @@ class TestAccountDeleteConfirmContract:
         log = AccountLog.objects.filter(user=alice, operation="ACCOUNT_DELETED").first()
         assert log is not None
 
-    def test_confirm_delete_schedules_permanent_deletion(
-        self, authenticated_client_alice, alice
-    ):
+    def test_confirm_delete_schedules_permanent_deletion(self, authenticated_client_alice, alice):
         """
         Test that permanent deletion is scheduled for 30 days later.
 

@@ -66,9 +66,7 @@ class TestUsernameSharing:
         response = authenticated_client_bob.get(url)
         assert response.data["username"] == "Bob456"
 
-    def test_username_uniqueness_enforcement(
-        self, alice, bob, authenticated_client_alice
-    ):
+    def test_username_uniqueness_enforcement(self, alice, bob, authenticated_client_alice):
         """Test that username uniqueness is enforced across users."""
         bob.username = "UniqueDisplay"
         bob.save()
@@ -81,9 +79,7 @@ class TestUsernameSharing:
 
         assert response.status_code == 400
 
-    def test_username_case_insensitive_uniqueness(
-        self, alice, bob, authenticated_client_alice
-    ):
+    def test_username_case_insensitive_uniqueness(self, alice, bob, authenticated_client_alice):
         """Test that username uniqueness is case-insensitive."""
         bob.username = "DisplayName"
         bob.save()
@@ -91,15 +87,11 @@ class TestUsernameSharing:
         url = reverse("authentication:account-update")
 
         # Try lowercase
-        response = authenticated_client_alice.patch(
-            url, {"username": "displayname"}, format="json"
-        )
+        response = authenticated_client_alice.patch(url, {"username": "displayname"}, format="json")
         assert response.status_code == 400
 
         # Try uppercase
-        response = authenticated_client_alice.patch(
-            url, {"username": "DISPLAYNAME"}, format="json"
-        )
+        response = authenticated_client_alice.patch(url, {"username": "DISPLAYNAME"}, format="json")
         assert response.status_code == 400
 
     def test_username_special_characters_allowed(self, alice, authenticated_client_alice):
@@ -109,9 +101,7 @@ class TestUsernameSharing:
         special_usernames = ["User_123", "User-Name", "User_with-both"]
 
         for username in special_usernames:
-            response = authenticated_client_alice.patch(
-                url, {"username": username}, format="json"
-            )
+            response = authenticated_client_alice.patch(url, {"username": username}, format="json")
             assert response.status_code == 200, f"Failed for {username}"
 
             # Verify it's saved
@@ -129,9 +119,7 @@ class TestUsernameSharing:
 
         # 101 chars - should fail
         username_101 = "a" * 101
-        response = authenticated_client_alice.patch(
-            url, {"username": username_101}, format="json"
-        )
+        response = authenticated_client_alice.patch(url, {"username": username_101}, format="json")
         assert response.status_code == 400
 
     def test_username_consistency_across_sessions(self, alice, authenticated_client_alice):

@@ -11,7 +11,6 @@ import pytest
 from django.conf import settings
 from django.contrib.gis.geos import Point
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.urls import reverse
 from PIL import Image
 from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -30,19 +29,25 @@ def api_client():
 @pytest.fixture
 def alice(db):
     """Create Alice test user."""
-    return User.objects.create_user(username="alice", email="alice@example.com", password="SecurePass123")
+    return User.objects.create_user(
+        username="alice", email="alice@example.com", password="SecurePass123"
+    )
 
 
 @pytest.fixture
 def bob(db):
     """Create Bob test user."""
-    return User.objects.create_user(username="bob", email="bob@example.com", password="SecurePass456")
+    return User.objects.create_user(
+        username="bob", email="bob@example.com", password="SecurePass456"
+    )
 
 
 @pytest.fixture
 def charlie(db):
     """Create Charlie test user."""
-    return User.objects.create_user(username="charlie", email="charlie@example.com", password="SecurePass789")
+    return User.objects.create_user(
+        username="charlie", email="charlie@example.com", password="SecurePass789"
+    )
 
 
 @pytest.fixture

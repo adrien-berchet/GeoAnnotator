@@ -112,15 +112,11 @@ class TestUsernameValidationFlow:
         url = reverse("authentication:account-update")
         long_username = "a" * 101
 
-        response = authenticated_client_alice.patch(
-            url, {"username": long_username}, format="json"
-        )
+        response = authenticated_client_alice.patch(url, {"username": long_username}, format="json")
 
         assert response.status_code == 400
 
-    def test_update_endpoint_rejects_duplicate(
-        self, alice, bob, authenticated_client_alice
-    ):
+    def test_update_endpoint_rejects_duplicate(self, alice, bob, authenticated_client_alice):
         """Test update endpoint rejects duplicate usernames."""
         bob.username = "BobTheBest"
         bob.save()

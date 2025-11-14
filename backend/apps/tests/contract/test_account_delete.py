@@ -52,9 +52,7 @@ class TestAccountDeleteContract:
 
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-    def test_delete_account_does_not_set_deleted_at_yet(
-        self, authenticated_client_alice, alice
-    ):
+    def test_delete_account_does_not_set_deleted_at_yet(self, authenticated_client_alice, alice):
         """
         Test that deletion request does NOT set deleted_at immediately.
 
@@ -77,7 +75,6 @@ class TestAccountDeleteContract:
         Note: AccountLog is created upon confirmation, not request.
         This test verifies the request is successful.
         """
-        from apps.authentication.models import AccountLog
 
         url = reverse("authentication:account-delete")
         response = authenticated_client_alice.delete(url)

@@ -28,12 +28,16 @@ class TestScenario7PublicPointBrowsing:
         self.client = APIClient()
 
         # Create Alice (point owner)
-        self.alice = User.objects.create_user(username="alice", email="alice@example.com", password="SecurePass123")
+        self.alice = User.objects.create_user(
+            username="alice", email="alice@example.com", password="SecurePass123"
+        )
         refresh_alice = RefreshToken.for_user(self.alice)
         self.alice_token = str(refresh_alice.access_token)
 
         # Create Bob (viewer)
-        self.bob = User.objects.create_user(username="bob", email="bob@example.com", password="SecurePass456")
+        self.bob = User.objects.create_user(
+            username="bob", email="bob@example.com", password="SecurePass456"
+        )
         refresh_bob = RefreshToken.for_user(self.bob)
         self.bob_token = str(refresh_bob.access_token)
 

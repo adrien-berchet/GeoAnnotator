@@ -97,7 +97,7 @@ class TestAuthenticationContract:
         duplicate_data = {
             "username": "testuser2",  # Different username
             "email": valid_registration_data["email"],  # Same email
-            "password": "SecurePass123"
+            "password": "SecurePass123",
         }
         response = api_client.post(url, duplicate_data, format="json")
 

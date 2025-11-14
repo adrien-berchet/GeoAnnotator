@@ -51,7 +51,9 @@ class TestPasswordChangeContract:
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "details" in response.data
         assert "old_password" in response.data["details"]
-        assert any("incorrect" in str(error).lower() for error in response.data["details"]["old_password"])
+        assert any(
+            "incorrect" in str(error).lower() for error in response.data["details"]["old_password"]
+        )
 
     def test_change_password_weak_password_returns_400(self, authenticated_client_alice):
         """
@@ -89,7 +91,9 @@ class TestPasswordChangeContract:
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "details" in response.data
         assert "new_password" in response.data["details"]
-        assert any("common" in str(error).lower() for error in response.data["details"]["new_password"])
+        assert any(
+            "common" in str(error).lower() for error in response.data["details"]["new_password"]
+        )
 
     def test_change_password_requires_authentication(self, api_client):
         """
@@ -129,9 +133,7 @@ class TestPasswordChangeContract:
         log = AccountLog.objects.filter(user=alice, operation="PASSWORD_CHANGED").first()
         assert log is not None
 
-    def test_change_password_actually_updates_password(
-        self, authenticated_client_alice, alice
-    ):
+    def test_change_password_actually_updates_password(self, authenticated_client_alice, alice):
         """
         Test that password is actually updated in database.
 

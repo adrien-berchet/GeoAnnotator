@@ -21,7 +21,9 @@ class TrashTestCase(TestCase):
 
     def setUp(self):
         """Set up test data."""
-        self.user = User.objects.create_user(username="test", email="test@trash.com", password="testpassword")
+        self.user = User.objects.create_user(
+            username="test", email="test@trash.com", password="testpassword"
+        )
 
         location = Point(2.3522, 48.8566, srid=4326)  # Paris
         self.point = GPSPoint.objects.create(

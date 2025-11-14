@@ -14,12 +14,18 @@ Tests cover:
 
 import io
 import json
+import zipfile
 
 import pytest
+from django.contrib.auth import get_user_model
+from django.contrib.gis.geos import Point
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
+from rest_framework_simplejwt.tokens import RefreshToken
+
+from apps.points.models import GPSPoint
 
 
 @pytest.fixture
@@ -31,16 +37,12 @@ def api_client():
 @pytest.fixture
 def authenticated_user(api_client, db):
     """Register and authenticate a user."""
-    from django.contrib.auth import get_user_model
-    from rest_framework_simplejwt.tokens import RefreshToken
 
     User = get_user_model()
 
     # Create user directly (bypassing registration flow which requires email verification)
     user = User.objects.create_user(
-        username="testuser",
-        email="test@example.com",
-        password="SecurePass123"
+        username="testuser", email="test@example.com", password="SecurePass123"
     )
     user.is_verified = True  # Mark as verified to bypass email verification
     user.save()
@@ -58,10 +60,6 @@ def authenticated_user(api_client, db):
 @pytest.fixture
 def authenticated_user_with_points(authenticated_user):
     """Create authenticated user with test GPS points."""
-    from django.contrib.gis.geos import Point
-    from apps.points.models import GPSPoint
-    from django.contrib.auth import get_user_model
-
     User = get_user_model()
     # Use email_hash instead of email for lookup
     email_hash = User.hash_email("test@example.com")
@@ -73,21 +71,21 @@ def authenticated_user_with_points(authenticated_user):
         description="<p>Description 1</p>",
         location=Point(-122.4194, 37.7749),  # San Francisco coordinates used in skip/replace tests
         owner=user,
-        is_public=False
+        is_public=False,
     )
     point2 = GPSPoint.objects.create(
         title="Point 2",
         description="<p>Description 2</p>",
         location=Point(1, 1),
         owner=user,
-        is_public=False
+        is_public=False,
     )
     point3 = GPSPoint.objects.create(
         title="Point 3",
         description="<p>Description 3</p>",
         location=Point(2, 2),
         owner=user,
-        is_public=False
+        is_public=False,
     )
 
     return authenticated_user, user, [point1.id, point2.id, point3.id]
@@ -385,18 +383,12 @@ class TestTrashContract:
     @pytest.fixture
     def authenticated_user_with_trashed_point(self, api_client, db):
         """Create a user and trash a GPS point."""
-        from django.contrib.auth import get_user_model
-        from django.contrib.gis.geos import Point
-        from rest_framework_simplejwt.tokens import RefreshToken
-        from apps.points.models import GPSPoint
 
         User = get_user_model()
 
         # Create user directly
         user = User.objects.create_user(
-            username="testuser2",
-            email="test2@example.com",
-            password="SecurePass123"
+            username="testuser2", email="test2@example.com", password="SecurePass123"
         )
         user.is_verified = True
         user.save()
@@ -412,7 +404,7 @@ class TestTrashContract:
         point = GPSPoint.objects.create(
             owner=user,
             location=Point(2.3522, 48.8566),  # Paris coordinates
-            title="Test Point to Trash"
+            title="Test Point to Trash",
         )
         point_id = point.id
 
@@ -424,7 +416,7 @@ class TestTrashContract:
         user_data = {
             "id": str(user.id),  # Convert UUID to string
             "username": user.username,
-            "email": "test2@example.com"  # Use the email we created with
+            "email": "test2@example.com",  # Use the email we created with
         }
 
         return api_client, user_data, point_id
@@ -537,7 +529,11 @@ class TestTrashContract:
         # Create second user
         client2 = APIClient()
         register_url = reverse("authentication:register")
-        register_data = {"username": "user2", "email": "user2@example.com", "password": "SecurePass123"}
+        register_data = {
+            "username": "user2",
+            "email": "user2@example.com",
+            "password": "SecurePass123",
+        }
         register_response = client2.post(register_url, register_data, format="json")
         client2.credentials(HTTP_AUTHORIZATION=f"Bearer {register_response.data['access']}")
 
@@ -687,7 +683,6 @@ class TestTrashContract:
         api_client, user, _ = authenticated_user_with_points
 
         # Create a simple ZIP file with GeoJSON
-        import zipfile
 
         zip_buffer = io.BytesIO()
 

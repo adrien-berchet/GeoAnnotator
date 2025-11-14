@@ -32,7 +32,9 @@ class TestScenario2PointManagement:
         self.client = APIClient()
 
         # Create Alice
-        self.alice = User.objects.create_user(username="alice", email="alice@example.com", password="SecurePass123")
+        self.alice = User.objects.create_user(
+            username="alice", email="alice@example.com", password="SecurePass123"
+        )
 
         # Generate JWT token manually (bypass login endpoint to avoid rate limiting)
         refresh = RefreshToken.for_user(self.alice)

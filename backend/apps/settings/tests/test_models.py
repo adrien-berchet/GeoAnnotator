@@ -19,7 +19,9 @@ class TestUserPreferencesModel:
     def test_default_values(self):
         """Test that UserPreferences has correct default values."""
 
-        user = User.objects.create_user(username="test", email="test@example.com", password="testpass123")
+        user = User.objects.create_user(
+            username="test", email="test@example.com", password="testpass123"
+        )
         # Signal auto-creates preferences, so we retrieve it
         preferences = user.preferences
 
@@ -30,7 +32,9 @@ class TestUserPreferencesModel:
     def test_one_to_one_relationship(self):
         """Test that User and UserPreferences have one-to-one relationship."""
 
-        user = User.objects.create_user(username="test2", email="test2@example.com", password="testpass123")
+        user = User.objects.create_user(
+            username="test2", email="test2@example.com", password="testpass123"
+        )
         # Signal auto-creates preferences, so we retrieve it
         preferences = user.preferences
 
@@ -44,7 +48,9 @@ class TestUserPreferencesModel:
 
     def test_field_choices_validation(self):
         """Test that invalid choices are rejected."""
-        user = User.objects.create_user(username="test3", email="test3@example.com", password="testpass123")
+        user = User.objects.create_user(
+            username="test3", email="test3@example.com", password="testpass123"
+        )
 
         # Test invalid theme
         preferences = UserPreferences(user=user, theme="invalid")
@@ -59,7 +65,9 @@ class TestUserPreferencesModel:
     def test_string_representation(self):
         """Test string representation of UserPreferences."""
 
-        user = User.objects.create_user(username="test4", email="test4@example.com", password="testpass123")
+        user = User.objects.create_user(
+            username="test4", email="test4@example.com", password="testpass123"
+        )
         # Signal auto-creates preferences, so we retrieve it
         preferences = user.preferences
 
@@ -68,7 +76,9 @@ class TestUserPreferencesModel:
     def test_created_at_updated_at_timestamps(self):
         """Test that created_at and updated_at are set correctly."""
 
-        user = User.objects.create_user(username="test5", email="test5@example.com", password="testpass123")
+        user = User.objects.create_user(
+            username="test5", email="test5@example.com", password="testpass123"
+        )
         # Signal auto-creates preferences, so we retrieve it
         preferences = user.preferences
         assert preferences.created_at is not None

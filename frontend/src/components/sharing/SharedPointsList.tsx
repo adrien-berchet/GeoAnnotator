@@ -179,12 +179,11 @@ export function SharedPointsList({ pointId }: SharedPointsListProps) {
                         {share.recipient_email}
                       </small>
                     )}
-                    {share.recipient_user &&
-                      !share.recipient_user.username && (
-                        <small className="user-id">
-                          ID: {share.recipient_user.id}
-                        </small>
-                      )}
+                    {share.recipient_user && !share.recipient_user.username && (
+                      <small className="user-id">
+                        ID: {share.recipient_user.id}
+                      </small>
+                    )}
                   </div>
                 </td>
                 <td>

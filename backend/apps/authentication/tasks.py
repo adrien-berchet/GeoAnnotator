@@ -30,10 +30,7 @@ def cleanup_deleted_users():
     cutoff_date = timezone.now() - timedelta(days=30)
 
     # Find users deleted more than 30 days ago
-    users_to_delete = User.objects.filter(
-        deleted_at__isnull=False,
-        deleted_at__lt=cutoff_date
-    )
+    users_to_delete = User.objects.filter(deleted_at__isnull=False, deleted_at__lt=cutoff_date)
 
     # Count before deletion
     count = users_to_delete.count()
@@ -43,7 +40,7 @@ def cleanup_deleted_users():
     users_to_delete.delete()
 
     return {
-        'users_deleted': count,
-        'timestamp': timezone.now().isoformat(),
-        'cutoff_date': cutoff_date.isoformat(),
+        "users_deleted": count,
+        "timestamp": timezone.now().isoformat(),
+        "cutoff_date": cutoff_date.isoformat(),
     }

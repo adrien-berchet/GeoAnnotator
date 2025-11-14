@@ -55,9 +55,7 @@ class TestPasswordChangeFlow:
         logs = AccountLog.objects.filter(user=alice, operation="PASSWORD_CHANGED")
         assert logs.count() >= 1
 
-    def test_password_change_with_wrong_old_password_fails(
-        self, alice, authenticated_client_alice
-    ):
+    def test_password_change_with_wrong_old_password_fails(self, alice, authenticated_client_alice):
         """Test that wrong old password rejects password change."""
         # Set known password
         alice.set_password("CorrectPass123!")

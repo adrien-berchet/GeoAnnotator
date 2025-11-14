@@ -122,7 +122,10 @@ export async function getAccount(): Promise<AccountInfo> {
 export async function updateUsername(
   data: UsernameUpdateData,
 ): Promise<AccountInfo> {
-  const response = await apiClient.patch<AccountInfo>("/auth/account/update/", data);
+  const response = await apiClient.patch<AccountInfo>(
+    "/auth/account/update/",
+    data,
+  );
   return response.data;
 }
 
@@ -169,7 +172,9 @@ export async function changePassword(
  * Soft delete user account (sends confirmation email).
  */
 export async function deleteAccount(): Promise<AccountDeleteResponse> {
-  const response = await apiClient.delete<AccountDeleteResponse>("/auth/account/delete/");
+  const response = await apiClient.delete<AccountDeleteResponse>(
+    "/auth/account/delete/",
+  );
   return response.data;
 }
 

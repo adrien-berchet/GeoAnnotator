@@ -71,7 +71,10 @@ class TestEmailChangeContract:
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "details" in response.data
         assert "new_email" in response.data["details"]
-        assert any("already in use" in str(error).lower() for error in response.data["details"]["new_email"])
+        assert any(
+            "already in use" in str(error).lower()
+            for error in response.data["details"]["new_email"]
+        )
 
     def test_change_email_same_as_current_returns_400(self, authenticated_client_alice, alice):
         """

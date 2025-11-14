@@ -4,7 +4,6 @@ Serializers for authentication app.
 Handles user registration, login, profile, token management, and account management.
 """
 
-from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework.exceptions import AuthenticationFailed
@@ -237,13 +236,13 @@ class UsernameUpdateSerializer(serializers.Serializer):
 
         Raises ValidationError with all error messages if invalid.
         """
-        user = self.context.get('request').user
+        user = self.context.get("request").user
         validation_result = validate_username(value, exclude_user_id=user.id)
 
-        if not validation_result['valid'] or not validation_result['available']:
+        if not validation_result["valid"] or not validation_result["available"]:
             # Join all errors into a single error message for DRF
             # (DRF displays first error, but we could also raise multiple)
-            error_messages = validation_result['errors']
+            error_messages = validation_result["errors"]
             if len(error_messages) == 1:
                 raise serializers.ValidationError(error_messages[0])
             else:
@@ -266,7 +265,7 @@ class EmailChangeSerializer(serializers.Serializer):
         """
         Validate new email is not in use and different from current.
         """
-        user = self.context.get('request').user
+        user = self.context.get("request").user
 
         # Check if same as current email
         if str(user.email) == value:
@@ -315,7 +314,7 @@ class PasswordChangeSerializer(serializers.Serializer):
         """
         Verify old password is correct.
         """
-        user = self.context.get('request').user
+        user = self.context.get("request").user
         if not user.check_password(value):
             raise serializers.ValidationError("Current password is incorrect.")
         return value
@@ -325,9 +324,11 @@ class PasswordChangeSerializer(serializers.Serializer):
         Validate new password strength.
         """
         # Django's validate_password already runs, but we can add custom checks
-        old_password = self.initial_data.get('old_password')
+        old_password = self.initial_data.get("old_password")
         if old_password and value == old_password:
-            raise serializers.ValidationError("New password must be different from current password.")
+            raise serializers.ValidationError(
+                "New password must be different from current password."
+            )
         return value
 
 
