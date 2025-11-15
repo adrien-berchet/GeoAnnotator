@@ -171,7 +171,7 @@ export function getErrorMessage(error: unknown): string {
             firstError !== null &&
             "string" in firstError
           ) {
-            return String(firstError.string);
+            return String((firstError as Record<string, unknown>).string);
           }
           return String(firstError);
         }
@@ -181,7 +181,7 @@ export function getErrorMessage(error: unknown): string {
           data.detail !== null &&
           "string" in data.detail
         ) {
-          return String(data.detail.string);
+          return String((data.detail as Record<string, unknown>).string);
         }
         // Last resort: convert to string
         return String(data.detail);
