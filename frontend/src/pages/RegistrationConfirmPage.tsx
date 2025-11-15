@@ -10,6 +10,7 @@ import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { confirmRegistration } from "../api/auth";
 import { getErrorMessage } from "../api/client";
 import { LoadingSpinner } from "../components/common/LoadingSpinner";
+import "./RegistrationConfirmPage.css";
 
 /**
  * Registration confirmation page component.
