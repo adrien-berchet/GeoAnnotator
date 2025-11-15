@@ -99,6 +99,21 @@ class PointTypeSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Creation language must be lowercase (ISO 639-1).")
         return value
 
+    def to_representation(self, instance):
+        """Convert icon URLs to absolute URLs if they're relative paths."""
+        data = super().to_representation(instance)
+
+        # Convert relative static/media URLs to absolute URLs
+        icon = data.get("icon")
+        if icon and isinstance(icon, str):
+            # If icon starts with / but not http/https, make it absolute
+            if icon.startswith("/") and not icon.startswith("http"):
+                request = self.context.get("request")
+                if request:
+                    data["icon"] = request.build_absolute_uri(icon)
+
+        return data
+
     def validate(self, attrs):
         """Cross-field validation."""
         # Check that creation_language has a corresponding name
