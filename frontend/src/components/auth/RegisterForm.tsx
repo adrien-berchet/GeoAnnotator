@@ -46,7 +46,6 @@ function getPasswordStrength(password: string): PasswordStrength {
  */
 export function RegisterForm() {
   const navigate = useNavigate();
-  const { login } = useAuth();
 
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -54,6 +53,8 @@ export function RegisterForm() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [registrationSuccess, setRegistrationSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   const passwordStrength = password ? getPasswordStrength(password) : null;
 
@@ -146,11 +147,17 @@ export function RegisterForm() {
       // Call register API
       const response = await register({ username, email, password });
 
-      // Store tokens and user in auth context
-      login(response.access, response.refresh, response.user);
+      // Show success message
+      setRegistrationSuccess(true);
+      setSuccessMessage(
+        response.message ||
+          "Registration successful! Please check your email to confirm your account.",
+      );
 
-      // Redirect to map
-      navigate("/map");
+      // Redirect to login page after 3 seconds
+      setTimeout(() => {
+        navigate("/login");
+      }, 3000);
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
@@ -183,6 +190,39 @@ export function RegisterForm() {
     };
     return labels[strength];
   };
+
+  // Show success message if registration succeeded
+  if (registrationSuccess) {
+    return (
+      <div className="register-form-container">
+        <div className="register-form-card">
+          <div className="success-icon">
+            <svg
+              className="icon-check"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+          </div>
+          <h1>Check Your Email!</h1>
+          <div className="alert alert-success" role="alert">
+            {successMessage}
+          </div>
+          <p className="redirect-hint">
+            Redirecting to login page in 3 seconds...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="register-form-container">

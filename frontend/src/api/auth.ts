@@ -18,9 +18,8 @@ interface LoginResponse {
  * Register response.
  */
 interface RegisterResponse {
-  access: string;
-  refresh: string;
-  user: User;
+  message: string;
+  email: string;
 }
 
 /**
