@@ -1,0 +1,64 @@
+/**
+ * Custom styles for marker clusters.
+ *
+ * Overrides default MarkerCluster styles to match application design.
+ */
+
+/* Cluster markers */
+.marker-cluster-small,
+.marker-cluster-medium,
+.marker-cluster-large {
+  background-clip: padding-box;
+}
+
+/* Small clusters (< 10 markers) */
+.marker-cluster-small {
+  background-color: rgba(59, 130, 246, 0.6);
+}
+
+.marker-cluster-small div {
+  background-color: rgba(59, 130, 246, 0.8);
+  font-weight: 600;
+  color: white;
+}
+
+/* Medium clusters (10-99 markers) */
+.marker-cluster-medium {
+  background-color: rgba(234, 179, 8, 0.6);
+}
+
+.marker-cluster-medium div {
+  background-color: rgba(234, 179, 8, 0.8);
+  font-weight: 600;
+  color: white;
+}
+
+/* Large clusters (100+ markers) */
+.marker-cluster-large {
+  background-color: rgba(239, 68, 68, 0.6);
+}
+
+.marker-cluster-large div {
+  background-color: rgba(239, 68, 68, 0.8);
+  font-weight: 600;
+  color: white;
+}
+
+/* Cluster hover effect */
+.marker-cluster:hover {
+  transform: scale(1.1);
+  transition: transform 0.2s ease-in-out;
+}
+
+/* Spiderfy lines (when clusters expand) */
+.leaflet-cluster-anim .leaflet-marker-icon,
+.leaflet-cluster-anim .leaflet-marker-shadow {
+  transition: transform 0.3s ease-out, opacity 0.3s ease-in;
+}
+
+/* Polygon that shows cluster coverage */
+.marker-cluster-cover-polygon {
+  fill: rgba(59, 130, 246, 0.2);
+  stroke: rgba(59, 130, 246, 0.6);
+  stroke-width: 2;
+}
