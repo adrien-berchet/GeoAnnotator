@@ -53,12 +53,20 @@ apiClient.interceptors.response.use(
 
     // If 401 and not already retried, try to refresh token
     if (error.response?.status === 401 && !originalRequest._retry) {
+      // Don't redirect to login if the error is from the login endpoint itself
+      const isLoginRequest = originalRequest.url?.includes("/auth/login");
+
       originalRequest._retry = true;
 
       try {
         const refreshToken = localStorage.getItem("refresh_token");
 
         if (!refreshToken) {
+          // If this is a login request failure, just reject without redirecting
+          if (isLoginRequest) {
+            return Promise.reject(error);
+          }
+
           // No refresh token, redirect to login
           localStorage.removeItem("access_token");
           localStorage.removeItem("refresh_token");
@@ -84,6 +92,11 @@ apiClient.interceptors.response.use(
 
         return apiClient(originalRequest);
       } catch (refreshError) {
+        // If this is a login request failure, just reject without redirecting
+        if (isLoginRequest) {
+          return Promise.reject(error);
+        }
+
         // Refresh failed, redirect to login
         localStorage.removeItem("access_token");
         localStorage.removeItem("refresh_token");
