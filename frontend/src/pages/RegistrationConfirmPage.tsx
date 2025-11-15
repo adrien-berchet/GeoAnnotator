@@ -7,7 +7,7 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
-import { confirmRegistration } from "../api/auth";
+import { confirmRegistration, resendConfirmation } from "../api/auth";
 import { getErrorMessage } from "../api/client";
 import { LoadingSpinner } from "../components/common/LoadingSpinner";
 import "./RegistrationConfirmPage.css";
@@ -22,6 +22,11 @@ export function RegistrationConfirmPage() {
     "loading",
   );
   const [message, setMessage] = useState("");
+  const [isExpired, setIsExpired] = useState(false);
+  const [showResendForm, setShowResendForm] = useState(false);
+  const [resendEmail, setResendEmail] = useState("");
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState(false);
 
   useEffect(() => {
     const confirmEmail = async () => {
@@ -47,12 +52,40 @@ export function RegistrationConfirmPage() {
         }, 3000);
       } catch (err) {
         setStatus("error");
-        setMessage(getErrorMessage(err));
+        const errorMessage = getErrorMessage(err);
+        setMessage(errorMessage);
+
+        // Check if the error is due to expiration
+        if (errorMessage.toLowerCase().includes("expired")) {
+          setIsExpired(true);
+        }
       }
     };
 
     confirmEmail();
   }, [searchParams, navigate]);
+
+  const handleResendConfirmation = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!resendEmail) {
+      return;
+    }
+
+    setResendLoading(true);
+
+    try {
+      await resendConfirmation(resendEmail);
+      setResendSuccess(true);
+      setMessage(
+        "Confirmation email sent! Please check your inbox for the new confirmation link.",
+      );
+    } catch (err) {
+      setMessage(getErrorMessage(err));
+    } finally {
+      setResendLoading(false);
+    }
+  };
 
   if (status === "loading") {
     return (
@@ -111,6 +144,59 @@ export function RegistrationConfirmPage() {
           <p className="confirmation-hint">
             Redirecting to login page in 3 seconds...
           </p>
+        ) : resendSuccess ? (
+          <div className="confirmation-actions">
+            <Link to="/login" className="btn-primary">
+              Go to Login
+            </Link>
+          </div>
+        ) : isExpired && !showResendForm ? (
+          <div className="confirmation-actions">
+            <button
+              onClick={() => setShowResendForm(true)}
+              className="btn-primary"
+            >
+              Resend Confirmation Email
+            </button>
+            <Link to="/login" className="btn-secondary">
+              Go to Login
+            </Link>
+          </div>
+        ) : isExpired && showResendForm ? (
+          <form onSubmit={handleResendConfirmation} className="resend-form">
+            <div className="form-group">
+              <label htmlFor="resend-email" className="form-label">
+                Enter your email to receive a new confirmation link:
+              </label>
+              <input
+                id="resend-email"
+                type="email"
+                className="form-input"
+                value={resendEmail}
+                onChange={(e) => setResendEmail(e.target.value)}
+                placeholder="your.email@example.com"
+                disabled={resendLoading}
+                required
+              />
+            </div>
+            <div className="form-actions">
+              <button
+                type="submit"
+                className="btn-primary"
+                disabled={resendLoading}
+              >
+                {resendLoading ? "Sending..." : "Send Confirmation Email"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowResendForm(false)}
+                className="btn-secondary"
+                disabled={resendLoading}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
         ) : (
           <div className="confirmation-actions">
             <Link to="/login" className="btn-primary">

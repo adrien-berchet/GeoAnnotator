@@ -50,3 +50,45 @@
   color: var(--color-text-tertiary);
   font-size: var(--font-size-sm);
 }
+
+/* Resend confirmation notice */
+.resend-confirmation-notice {
+  background-color: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+
+.resend-confirmation-notice p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  text-align: center;
+}
+
+.resend-link {
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  padding: 0;
+  font-family: inherit;
+}
+
+.resend-link:hover:not(:disabled) {
+  color: var(--color-primary-hover);
+}
+
+.resend-link:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.alert-success {
+  background-color: #d4edda;
+  border: 1px solid #c3e6cb;
+  color: #155724;
+}

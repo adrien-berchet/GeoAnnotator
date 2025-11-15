@@ -61,6 +61,19 @@ export async function confirmRegistration(
 }
 
 /**
+ * Resend confirmation email to unverified user.
+ */
+export async function resendConfirmation(
+  email: string,
+): Promise<EmailConfirmResponse> {
+  const response = await apiClient.post<EmailConfirmResponse>(
+    "/auth/resend-confirmation/",
+    { email },
+  );
+  return response.data;
+}
+
+/**
  * Login user.
  */
 export async function login(

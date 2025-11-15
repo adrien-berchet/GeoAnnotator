@@ -8,7 +8,7 @@ import { useState, useEffect } from "react";
 import type { FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
-import { login } from "../../api/auth";
+import { login, resendConfirmation } from "../../api/auth";
 import { getErrorMessage } from "../../api/client";
 import "./LoginForm.css";
 
@@ -23,6 +23,9 @@ export function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isEmailNotVerified, setIsEmailNotVerified] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState(false);
 
   // Apply system theme for login page (no user is authenticated yet)
   useEffect(() => {
@@ -60,6 +63,8 @@ export function LoginForm() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError("");
+    setIsEmailNotVerified(false);
+    setResendSuccess(false);
 
     // Validate email
     if (!email) {
@@ -95,9 +100,40 @@ export function LoginForm() {
       // Redirect to map
       navigate("/map");
     } catch (err) {
-      setError(getErrorMessage(err));
+      const errorMessage = getErrorMessage(err);
+      setError(errorMessage);
+
+      // Check if error is about unverified email
+      if (
+        errorMessage.toLowerCase().includes("verify your email") ||
+        errorMessage.toLowerCase().includes("email not verified")
+      ) {
+        setIsEmailNotVerified(true);
+      }
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleResendConfirmation = async () => {
+    if (!email) {
+      return;
+    }
+
+    setResendLoading(true);
+    setError("");
+
+    try {
+      await resendConfirmation(email);
+      setResendSuccess(true);
+      setError(
+        "Confirmation email sent! Please check your inbox for the confirmation link.",
+      );
+      setIsEmailNotVerified(false);
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setResendLoading(false);
     }
   };
 
@@ -109,8 +145,28 @@ export function LoginForm() {
         <form onSubmit={handleSubmit} className="login-form">
           {/* Error display */}
           {error && (
-            <div className="alert alert-error" role="alert">
+            <div
+              className={`alert ${resendSuccess ? "alert-success" : "alert-error"}`}
+              role="alert"
+            >
               {error}
+            </div>
+          )}
+
+          {/* Resend confirmation link */}
+          {isEmailNotVerified && !resendSuccess && (
+            <div className="resend-confirmation-notice">
+              <p>
+                Didn't receive the confirmation email?{" "}
+                <button
+                  type="button"
+                  onClick={handleResendConfirmation}
+                  disabled={resendLoading}
+                  className="resend-link"
+                >
+                  {resendLoading ? "Sending..." : "Click here to resend"}
+                </button>
+              </p>
             </div>
           )}
 
