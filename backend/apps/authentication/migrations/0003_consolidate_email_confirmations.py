@@ -1,8 +1,6 @@
 # Generated manually for email confirmation consolidation
 
-import django.db.models.deletion
 import fernet_fields.fields
-from django.conf import settings
 from django.db import migrations
 from django.db import models
 
@@ -56,7 +54,9 @@ class Migration(migrations.Migration):
             model_name="emailconfirmation",
             name="new_email_hash",
             field=models.CharField(
-                blank=True, help_text="SHA-256 hash of new email for uniqueness check", max_length=64
+                blank=True,
+                help_text="SHA-256 hash of new email for uniqueness check",
+                max_length=64,
             ),
         ),
         # Add indexes for performance

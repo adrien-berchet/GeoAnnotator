@@ -15,7 +15,9 @@ urlpatterns = [
     # Authentication endpoints
     path("register/", views.RegisterView.as_view(), name="register"),
     path("confirm-email/", views.ConfirmEmailView.as_view(), name="confirm-email"),
-    path("resend-confirmation/", views.ResendConfirmationView.as_view(), name="resend-confirmation"),
+    path(
+        "resend-confirmation/", views.ResendConfirmationView.as_view(), name="resend-confirmation"
+    ),
     path("login/", views.LoginView.as_view(), name="login"),
     path("refresh/", views.RefreshTokenView.as_view(), name="refresh"),
     path("logout/", views.logout_view, name="logout"),

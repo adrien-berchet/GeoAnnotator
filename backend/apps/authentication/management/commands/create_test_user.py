@@ -98,7 +98,7 @@ class Command(BaseCommand):
                 password=password,
             )
 
-            self.stdout.write(self.style.SUCCESS(f"✓ User created successfully!"))
+            self.stdout.write(self.style.SUCCESS("✓ User created successfully!"))
             self.stdout.write(f"  Username: {username}")
             self.stdout.write(f"  Email: {email}")
             self.stdout.write(f"  Password: {password}")
@@ -126,9 +126,7 @@ class Command(BaseCommand):
                     )
                     email_sent = True
                 except Exception as e:
-                    self.stdout.write(
-                        self.style.ERROR(f"✗ Failed to send confirmation email: {e}")
-                    )
+                    self.stdout.write(self.style.ERROR(f"✗ Failed to send confirmation email: {e}"))
                     email_sent = False
 
                 # Show confirmation info
@@ -182,19 +180,19 @@ class Command(BaseCommand):
                 raise CommandError(
                     f"User with username '{username}' already exists. "
                     f"Use --delete-existing to remove it first."
-                )
+                ) from e
             elif "email" in error_msg.lower():
                 raise CommandError(
                     f"User with email '{email}' already exists. "
                     f"Use --delete-existing to remove it first."
-                )
+                ) from e
             else:
-                raise CommandError(f"Error creating user: {e}")
+                raise CommandError(f"Error creating user: {e}") from e
 
         self.stdout.write("")
         self.stdout.write(self.style.MIGRATE_HEADING("Quick Commands:"))
-        self.stdout.write(f"  Login: POST /api/auth/login/")
+        self.stdout.write("  Login: POST /api/auth/login/")
         self.stdout.write(f'         {{"email": "{email}", "password": "{password}"}}')
         if not auto_verify:
-            self.stdout.write(f"  Confirm: POST /api/auth/confirm-email/")
+            self.stdout.write("  Confirm: POST /api/auth/confirm-email/")
             self.stdout.write(f'           {{"token": "{token}"}}')

@@ -435,7 +435,12 @@ class EmailConfirmAPIView(APIView):
         # Verify this is an email change confirmation (not registration)
         if confirmation.confirmation_type != EmailConfirmation.EMAIL_CHANGE:
             return Response(
-                {"detail": "This endpoint is for email changes only. Registration confirmations should use /api/auth/confirm-email/"},
+                {
+                    "detail": (
+                        "This endpoint is for email changes only. Registration confirmations "
+                        "should use /api/auth/confirm-email/"
+                    )
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 

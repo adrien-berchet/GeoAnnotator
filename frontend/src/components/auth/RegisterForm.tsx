@@ -7,7 +7,6 @@
 import { useState, useEffect } from "react";
 import type { FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../hooks/useAuth";
 import { register } from "../../api/auth";
 import { getErrorMessage } from "../../api/client";
 import "./RegisterForm.css";

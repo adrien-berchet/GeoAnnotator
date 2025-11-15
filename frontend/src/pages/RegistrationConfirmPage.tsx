@@ -133,9 +133,7 @@ export function RegistrationConfirmPage() {
         </div>
 
         <h1>
-          {status === "success"
-            ? "Email Confirmed!"
-            : "Confirmation Failed"}
+          {status === "success" ? "Email Confirmed!" : "Confirmation Failed"}
         </h1>
 
         <p className="confirmation-message">{message}</p>
