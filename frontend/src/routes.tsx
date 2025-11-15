@@ -19,6 +19,7 @@ import { SettingsPage } from "./pages/SettingsPage";
 import { ImportExportPage } from "./pages/ImportExportPage";
 import { AccountPage } from "./pages/AccountPage";
 import { EmailConfirmPage } from "./pages/EmailConfirmPage";
+import { RegistrationConfirmPage } from "./pages/RegistrationConfirmPage";
 import { AccountDeleteConfirmPage } from "./pages/AccountDeleteConfirmPage";
 import { ProtectedRoute } from "./routes/ProtectedRoute";
 import { PublicRoute } from "./routes/PublicRoute";
@@ -52,6 +53,14 @@ export const router = createBrowserRouter([
         element: (
           <PublicRoute>
             <RegisterPage />
+          </PublicRoute>
+        ),
+      },
+      {
+        path: "confirm-email",
+        element: (
+          <PublicRoute>
+            <RegistrationConfirmPage />
           </PublicRoute>
         ),
       },

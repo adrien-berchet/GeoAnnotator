@@ -31,12 +31,32 @@ interface RefreshResponse {
 }
 
 /**
+ * Email confirmation response.
+ */
+interface EmailConfirmResponse {
+  message: string;
+}
+
+/**
  * Register new user.
  */
 export async function register(data: RegisterData): Promise<RegisterResponse> {
   const response = await apiClient.post<RegisterResponse>(
     "/auth/register/",
     data,
+  );
+  return response.data;
+}
+
+/**
+ * Confirm email registration.
+ */
+export async function confirmRegistration(
+  token: string,
+): Promise<EmailConfirmResponse> {
+  const response = await apiClient.post<EmailConfirmResponse>(
+    "/auth/confirm-email/",
+    { token },
   );
   return response.data;
 }
