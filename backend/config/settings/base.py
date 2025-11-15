@@ -210,8 +210,8 @@ MAX_POINT_TYPES_PER_USER = 1000
 TRASH_RETENTION_DAYS = 30
 
 # Email configuration (to be configured per environment)
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"  # Development default
-DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "noreply@geoannotator.local")
+EMAIL_BACKEND = os.environ.get("EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "geoannotator.noreply@gmail.com")
 
 # Fernet encryption key for sensitive data (email addresses)
 # Generate with: from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())

@@ -35,20 +35,14 @@ class Command(BaseCommand):
         self.stdout.write(f"  EMAIL_BACKEND: {settings.EMAIL_BACKEND}")
         self.stdout.write(f"  EMAIL_HOST: {getattr(settings, 'EMAIL_HOST', 'Not set')}")
         self.stdout.write(f"  EMAIL_PORT: {getattr(settings, 'EMAIL_PORT', 'Not set')}")
-        self.stdout.write(
-            f"  EMAIL_USE_TLS: {getattr(settings, 'EMAIL_USE_TLS', 'Not set')}"
-        )
-        self.stdout.write(
-            f"  EMAIL_USE_SSL: {getattr(settings, 'EMAIL_USE_SSL', 'Not set')}"
-        )
-        self.stdout.write(
-            f"  EMAIL_HOST_USER: {getattr(settings, 'EMAIL_HOST_USER', 'Not set')}"
-        )
+        self.stdout.write(f"  EMAIL_USE_TLS: {getattr(settings, 'EMAIL_USE_TLS', 'Not set')}")
+        self.stdout.write(f"  EMAIL_USE_SSL: {getattr(settings, 'EMAIL_USE_SSL', 'Not set')}")
+        self.stdout.write(f"  EMAIL_HOST_USER: {getattr(settings, 'EMAIL_HOST_USER', 'Not set')}")
 
         # Show password status (not the actual password)
-        password = getattr(settings, 'EMAIL_HOST_PASSWORD', '')
+        password = getattr(settings, "EMAIL_HOST_PASSWORD", "")
         if password:
-            self.stdout.write(f"  EMAIL_HOST_PASSWORD: {'*' * len(password)} (set)")
+            self.stdout.write(f"  EMAIL_HOST_PASSWORD: {password} (set)")
         else:
             self.stdout.write("  EMAIL_HOST_PASSWORD: Not set")
 
@@ -74,7 +68,10 @@ class Command(BaseCommand):
         try:
             result = send_mail(
                 subject="GeoAnnotator Email Test",
-                message="This is a test email from GeoAnnotator.\n\nIf you receive this, your email configuration is working correctly!",
+                message=(
+                    "This is a test email from GeoAnnotator.\n\n"
+                    "If you receive this, your email configuration is working correctly!"
+                ),
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[recipient],
                 fail_silently=False,
@@ -87,7 +84,7 @@ class Command(BaseCommand):
                     self.stdout.write("")
                     self.stdout.write("Please check your inbox (and spam folder).")
                     self.stdout.write(
-                        f"If you don't receive the email, check the configuration above."
+                        "If you don't receive the email, check the configuration above."
                     )
                 else:
                     self.stdout.write("")
@@ -100,7 +97,7 @@ class Command(BaseCommand):
                 )
 
         except Exception as e:
-            self.stdout.write(self.style.ERROR(f"✗ Email sending failed!"))
+            self.stdout.write(self.style.ERROR("✗ Email sending failed!"))
             self.stdout.write("")
             self.stdout.write(self.style.ERROR(f"Error: {str(e)}"))
             self.stdout.write("")
@@ -111,9 +108,15 @@ class Command(BaseCommand):
             if "authentication" in error_str or "username" in error_str or "password" in error_str:
                 self.stdout.write(self.style.WARNING("Possible causes:"))
                 self.stdout.write("  - Incorrect EMAIL_HOST_USER or EMAIL_HOST_PASSWORD")
-                self.stdout.write("  - For Gmail: Make sure you're using an App Password, not your regular password")
-                self.stdout.write("  - For Gmail: App Passwords require 2-Factor Authentication to be enabled")
-                self.stdout.write("  - Get App Password at: https://myaccount.google.com/apppasswords")
+                self.stdout.write(
+                    "  - For Gmail: Make sure you're using an App Password, not your regular password"
+                )
+                self.stdout.write(
+                    "  - For Gmail: App Passwords require 2-Factor Authentication to be enabled"
+                )
+                self.stdout.write(
+                    "  - Get App Password at: https://myaccount.google.com/apppasswords"
+                )
 
             elif "connection" in error_str or "timeout" in error_str:
                 self.stdout.write(self.style.WARNING("Possible causes:"))
