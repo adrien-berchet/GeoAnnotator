@@ -17,7 +17,10 @@ from django.utils import timezone
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from apps.sharing.models import Share
+
 from .models import AccountLog
+from .models import EmailConfirmation
 from .models import User
 
 # Username validation regex: alphanumeric and simple special characters, no spaces
@@ -210,7 +213,6 @@ class EmailConfirmationService:
         Returns:
             str: HMAC-based token (128 characters)
         """
-        from .models import EmailConfirmation
 
         # Generate token using HMAC with user ID, timestamp, and email
         timestamp = str(timezone.now().timestamp())
@@ -242,7 +244,7 @@ class EmailConfirmationService:
     @staticmethod
     def validate_confirmation_token(
         token: str,
-    ) -> tuple[bool, str | None, "EmailConfirmation | None"]:
+    ) -> tuple[bool, str | None, EmailConfirmation | None]:
         """
         Validate email confirmation token.
 
@@ -255,8 +257,6 @@ class EmailConfirmationService:
                 - error_message: Error message if invalid, None otherwise
                 - confirmation: EmailConfirmation object if valid, None otherwise
         """
-        from .models import EmailConfirmation
-
         try:
             confirmation = EmailConfirmation.objects.get(token=token)
 
@@ -285,8 +285,6 @@ class EmailConfirmationService:
         Returns:
             tuple: (success, error_message)
         """
-        from .models import EmailConfirmation
-
         is_valid, error_message, confirmation = (
             EmailConfirmationService.validate_confirmation_token(token)
         )
@@ -341,10 +339,8 @@ class EmailConfirmationService:
             confirmation_type: 'registration' or 'email_change'
             new_email: New email address (for email_change type)
         """
-        from .models import EmailConfirmation
-
         # Get frontend URL from settings
-        frontend_url = getattr(settings, "FRONTEND_URL", "http://localhost:3000")
+        frontend_url = getattr(settings, "FRONTEND_URL", "http://localhost:5173")
         confirmation_link = f"{frontend_url}/confirm-email?token={token}"
 
         # Select templates and subject based on confirmation type
@@ -392,8 +388,6 @@ class EmailConfirmationService:
         Returns:
             tuple: (success, error_message)
         """
-        from .models import EmailConfirmation
-
         try:
             # Find user by email
             email_hash = User.hash_email(email)
@@ -424,7 +418,10 @@ class EmailConfirmationService:
 
         except User.DoesNotExist:
             # Don't reveal if email exists or not for security
-            return False, "If this email is registered and unverified, a confirmation email will be sent."
+            return (
+                False,
+                "If this email is registered and unverified, a confirmation email will be sent.",
+            )
 
 
 # Account Management Services
@@ -696,8 +693,6 @@ def soft_delete_user(user):
     user.save(update_fields=["deleted_at"])
 
     # Unshare all user's content
-    from apps.sharing.models import Share
-
     Share.objects.filter(owner=user, is_active=True).update(is_active=False)
 
 
