@@ -141,7 +141,38 @@ export function getErrorMessage(error: unknown): string {
       }
 
       // Check for standard error fields
-      if (data.detail) return data.detail;
+      if (data.detail) {
+        // Handle ErrorDetail objects from DRF (can be string, array, or object)
+        if (typeof data.detail === "string") {
+          return data.detail;
+        }
+        // If it's an array, extract the first message
+        if (Array.isArray(data.detail)) {
+          const firstError = data.detail[0];
+          if (typeof firstError === "string") {
+            return firstError;
+          }
+          // If it's an ErrorDetail object with a 'string' property
+          if (
+            typeof firstError === "object" &&
+            firstError !== null &&
+            "string" in firstError
+          ) {
+            return String(firstError.string);
+          }
+          return String(firstError);
+        }
+        // If it's an ErrorDetail object with a 'string' property
+        if (
+          typeof data.detail === "object" &&
+          data.detail !== null &&
+          "string" in data.detail
+        ) {
+          return String(data.detail.string);
+        }
+        // Last resort: convert to string
+        return String(data.detail);
+      }
       if (data.message && data.message !== "Invalid request data")
         return data.message;
 
@@ -150,7 +181,11 @@ export function getErrorMessage(error: unknown): string {
         if (key === "error" || key === "message" || key === "details") continue;
 
         if (Array.isArray(data[key]) && data[key].length > 0) {
-          return data[key][0]; // Return first error message
+          const firstError = data[key][0];
+          // Could be an ErrorDetail object or string
+          return typeof firstError === "string"
+            ? firstError
+            : String(firstError);
         }
         if (typeof data[key] === "string") {
           return data[key];
