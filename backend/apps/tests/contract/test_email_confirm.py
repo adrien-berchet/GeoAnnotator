@@ -25,19 +25,13 @@ class TestEmailConfirmContract:
         - Body: { "detail": "...", "new_email": "..." }
         - Updates user email
         """
-        from apps.authentication.models import EmailChangeConfirmation
-        from apps.authentication.services import EmailChangeTokenGenerator
+        from apps.authentication.models import EmailConfirmation
+        from apps.authentication.services import EmailConfirmationService
 
         # Create confirmation
         new_email = "alice.confirmed@example.com"
-        token_generator = EmailChangeTokenGenerator()
-        token = token_generator.generate_token(alice, new_email)
-
-        EmailChangeConfirmation.objects.create(
-            user=alice,
-            new_email=new_email,
-            token=token,
-            expires_at=timezone.now() + timedelta(minutes=30),
+        token = EmailConfirmationService.generate_confirmation_token(
+            alice, EmailConfirmation.EMAIL_CHANGE, new_email
         )
 
         url = reverse("authentication:email-confirm")
@@ -73,19 +67,18 @@ class TestEmailConfirmContract:
         - Status: 400 BAD REQUEST
         - Error: "Confirmation link has expired."
         """
-        from apps.authentication.models import EmailChangeConfirmation
-        from apps.authentication.services import EmailChangeTokenGenerator
+        from apps.authentication.models import EmailConfirmation
+        from apps.authentication.services import EmailConfirmationService
 
         # Create expired confirmation
-        token_generator = EmailChangeTokenGenerator()
-        token = token_generator.generate_token(alice, "expired@example.com")
-
-        EmailChangeConfirmation.objects.create(
-            user=alice,
-            new_email="expired@example.com",
-            token=token,
-            expires_at=timezone.now() - timedelta(hours=1),  # Expired
+        token = EmailConfirmationService.generate_confirmation_token(
+            alice, EmailConfirmation.EMAIL_CHANGE, "expired@example.com"
         )
+
+        # Manually set expiration to the past
+        confirmation = EmailConfirmation.objects.get(token=token)
+        confirmation.expires_at = timezone.now() - timedelta(hours=1)
+        confirmation.save()
 
         url = reverse("authentication:email-confirm")
         payload = {"token": token, "user_id": alice.id}
@@ -103,18 +96,12 @@ class TestEmailConfirmContract:
         - Status: 403 FORBIDDEN
         - Error: "You do not have permission to confirm this email change."
         """
-        from apps.authentication.models import EmailChangeConfirmation
-        from apps.authentication.services import EmailChangeTokenGenerator
+        from apps.authentication.models import EmailConfirmation
+        from apps.authentication.services import EmailConfirmationService
 
         # Create confirmation for Bob
-        token_generator = EmailChangeTokenGenerator()
-        token = token_generator.generate_token(bob, "bob.new@example.com")
-
-        EmailChangeConfirmation.objects.create(
-            user=bob,
-            new_email="bob.new@example.com",
-            token=token,
-            expires_at=timezone.now() + timedelta(minutes=30),
+        token = EmailConfirmationService.generate_confirmation_token(
+            bob, EmailConfirmation.EMAIL_CHANGE, "bob.new@example.com"
         )
 
         # Alice tries to confirm Bob's email change
@@ -145,18 +132,12 @@ class TestEmailConfirmContract:
         - Updates User.email to new email
         - Deletes EmailChangeConfirmation record
         """
-        from apps.authentication.models import EmailChangeConfirmation
-        from apps.authentication.services import EmailChangeTokenGenerator
+        from apps.authentication.models import EmailConfirmation
+        from apps.authentication.services import EmailConfirmationService
 
         new_email = "alice.final@example.com"
-        token_generator = EmailChangeTokenGenerator()
-        token = token_generator.generate_token(alice, new_email)
-
-        EmailChangeConfirmation.objects.create(
-            user=alice,
-            new_email=new_email,
-            token=token,
-            expires_at=timezone.now() + timedelta(minutes=30),
+        token = EmailConfirmationService.generate_confirmation_token(
+            alice, EmailConfirmation.EMAIL_CHANGE, new_email
         )
 
         url = reverse("authentication:email-confirm")
@@ -169,8 +150,11 @@ class TestEmailConfirmContract:
         alice.refresh_from_db()
         assert alice.email == new_email
 
-        # Check confirmation was deleted
-        assert not EmailChangeConfirmation.objects.filter(user=alice).exists()
+        # Check confirmation was marked as confirmed (not deleted)
+        confirmation = EmailConfirmation.objects.get(
+            user=alice, confirmation_type=EmailConfirmation.EMAIL_CHANGE
+        )
+        assert confirmation.is_confirmed
 
     def test_confirm_email_creates_account_log(self, authenticated_client_alice, alice):
         """
@@ -180,18 +164,12 @@ class TestEmailConfirmContract:
         - Creates AccountLog with operation=EMAIL_CHANGE_CONFIRMED
         """
         from apps.authentication.models import AccountLog
-        from apps.authentication.models import EmailChangeConfirmation
-        from apps.authentication.services import EmailChangeTokenGenerator
+        from apps.authentication.models import EmailConfirmation
+        from apps.authentication.services import EmailConfirmationService
 
         new_email = "alice.logged@example.com"
-        token_generator = EmailChangeTokenGenerator()
-        token = token_generator.generate_token(alice, new_email)
-
-        EmailChangeConfirmation.objects.create(
-            user=alice,
-            new_email=new_email,
-            token=token,
-            expires_at=timezone.now() + timedelta(minutes=30),
+        token = EmailConfirmationService.generate_confirmation_token(
+            alice, EmailConfirmation.EMAIL_CHANGE, new_email
         )
 
         url = reverse("authentication:email-confirm")

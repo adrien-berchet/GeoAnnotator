@@ -113,7 +113,7 @@ class TestEmailChangeContract:
         - Creates EmailChangeConfirmation with token
         - Token expires in 30 minutes
         """
-        from apps.authentication.models import EmailChangeConfirmation
+        from apps.authentication.models import EmailConfirmation
 
         url = reverse("authentication:email-change")
         payload = {"new_email": "alice.confirmed@example.com"}
@@ -122,7 +122,9 @@ class TestEmailChangeContract:
         assert response.status_code == status.HTTP_200_OK
 
         # Check confirmation record
-        confirmation = EmailChangeConfirmation.objects.filter(user=alice).first()
+        confirmation = EmailConfirmation.objects.filter(
+            user=alice, confirmation_type=EmailConfirmation.EMAIL_CHANGE
+        ).first()
         assert confirmation is not None
         assert confirmation.new_email == "alice.confirmed@example.com"
         assert confirmation.token is not None

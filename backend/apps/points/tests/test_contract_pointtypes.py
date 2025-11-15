@@ -40,7 +40,8 @@ class TestPointTypeContract:
         assert response.status_code == status.HTTP_201_CREATED
         assert "id" in response.data
         assert response.data["names"]["en"] == "Restaurant"
-        assert response.data["icon"] == "/icons/restaurant.svg"
+        # Icon URL is now absolute (e.g., http://testserver/icons/restaurant.svg)
+        assert "/icons/restaurant.svg" in response.data["icon"]
         assert response.data["order"] == 1
         assert response.data["status"] == "active"
         assert "owner" in response.data
@@ -191,7 +192,8 @@ class TestPointTypeContract:
         assert response.status_code == status.HTTP_200_OK
         assert response.data["id"] == str(point_type.id)
         assert response.data["names"]["en"] == "Museum"
-        assert response.data["icon"] == "/icons/museum.svg"
+        # Icon URL is now absolute (e.g., http://testserver/icons/museum.svg)
+        assert "/icons/museum.svg" in response.data["icon"]
 
     def test_get_type_detail_not_own_type(self, authenticated_client_alice, bob):
         """Test that user cannot get detail of another user's type."""
@@ -220,7 +222,8 @@ class TestPointTypeContract:
 
         assert response.status_code == status.HTTP_200_OK
         assert response.data["names"]["en"] == "Café"
-        assert response.data["icon"] == "/icons/cafe.svg"
+        # Icon URL is now absolute (e.g., http://testserver/icons/cafe.svg)
+        assert "/icons/cafe.svg" in response.data["icon"]
 
     def test_update_type_duplicate_name(self, authenticated_client_alice, alice):
         """Test that updating to duplicate name fails."""

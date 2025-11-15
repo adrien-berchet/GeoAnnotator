@@ -18,6 +18,10 @@ import pytest
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
+from rest_framework_simplejwt.tokens import RefreshToken
+
+from apps.conftest import create_verified_user
+from apps.conftest import get_authenticated_client
 
 
 @pytest.mark.django_db
@@ -38,19 +42,11 @@ class TestSharingContract:
     @pytest.fixture
     def owner_with_point(self, api_client):
         """Create owner user with a GPS point."""
-        # Register owner
-        register_url = reverse("authentication:register")
-        register_data = {
-            "username": "owner",
-            "email": "owner@example.com",
-            "password": "SecurePass123",
-        }
-        response = api_client.post(register_url, register_data, format="json")
-        access_token = response.data["access"]
-        user = response.data["user"]
+        # Create verified owner
+        user = create_verified_user("owner", "owner@example.com", "SecurePass123")
 
-        # Set authentication
-        api_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access_token}")
+        # Get authenticated client
+        api_client = get_authenticated_client(user)
 
         # Create GPS point
         point_url = reverse("points:list")
@@ -58,30 +54,19 @@ class TestSharingContract:
         point_response = api_client.post(point_url, point_data, format="json")
         point_id = point_response.data["id"]
 
-        return api_client, user, point_id
+        return api_client, {"id": str(user.id), "email": str(user.email)}, point_id
 
     @pytest.fixture
     def recipient_user(self, api_client):
         """Create recipient user."""
-        # Save current credentials
-        current_auth = api_client._credentials.copy() if hasattr(api_client, "_credentials") else {}
+        # Create verified recipient
+        user = create_verified_user("recipient", "recipient@example.com", "SecurePass123")
 
-        # Temporarily clear authentication
-        api_client.credentials()
+        # Generate token for recipient
+        refresh = RefreshToken.for_user(user)
+        token = str(refresh.access_token)
 
-        # Register recipient
-        register_url = reverse("authentication:register")
-        register_data = {
-            "username": "recipient",
-            "email": "recipient@example.com",
-            "password": "SecurePass123",
-        }
-        response = api_client.post(register_url, register_data, format="json")
-        recipient = {"user": response.data["user"], "token": response.data["access"]}
-
-        # Restore original credentials
-        if current_auth:
-            api_client.credentials(**current_auth)
+        recipient = {"user": {"id": str(user.id), "email": str(user.email)}, "token": token}
 
         return recipient
 

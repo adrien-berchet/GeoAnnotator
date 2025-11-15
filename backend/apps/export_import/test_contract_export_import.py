@@ -25,6 +25,8 @@ from rest_framework import status
 from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from apps.conftest import create_verified_user
+from apps.conftest import get_authenticated_client
 from apps.points.models import GPSPoint
 
 
@@ -527,15 +529,8 @@ class TestTrashContract:
         owner_client, owner, point_id = authenticated_user_with_trashed_point
 
         # Create second user
-        client2 = APIClient()
-        register_url = reverse("authentication:register")
-        register_data = {
-            "username": "user2",
-            "email": "user2@example.com",
-            "password": "SecurePass123",
-        }
-        register_response = client2.post(register_url, register_data, format="json")
-        client2.credentials(HTTP_AUTHORIZATION=f"Bearer {register_response.data['access']}")
+        user2 = create_verified_user("user2", "user2@example.com", "SecurePass123")
+        client2 = get_authenticated_client(user2)
 
         # Try to permanently delete as user2
         url = reverse("trash:points-permanent", kwargs={"pk": point_id})

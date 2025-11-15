@@ -21,6 +21,8 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from apps.conftest import create_verified_user
+from apps.conftest import get_authenticated_client
 from apps.points.models import GPSPoint
 from apps.points.models import PointType
 
@@ -42,21 +44,14 @@ class TestPointsContract:
 
     @pytest.fixture
     def authenticated_user(self, api_client):
-        """Create and authenticate a user, return (client, user_data)."""
-        # Register user
-        register_url = reverse("authentication:register")
-        register_data = {
-            "username": "testuser",
-            "email": "test@example.com",
-            "password": "SecurePass123",
-        }
-        response = api_client.post(register_url, register_data, format="json")
-        access_token = response.data["access"]
+        """Create and authenticate a verified user, return (client, user_data)."""
+        # Create verified user
+        user = create_verified_user("testuser", "test@example.com", "SecurePass123")
 
-        # Set authentication
-        api_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access_token}")
+        # Get authenticated client
+        api_client = get_authenticated_client(user)
 
-        return api_client, response.data["user"]
+        return api_client, {"id": str(user.id), "email": str(user.email)}
 
     @pytest.fixture
     def valid_point_data(self):
@@ -296,15 +291,8 @@ class TestPointsContract:
         point_id = create_response.data["id"]
 
         # Try to access as user2
-        client2 = APIClient()
-        register_url = reverse("authentication:register")
-        register_data = {
-            "username": "user2",
-            "email": "user2@example.com",
-            "password": "SecurePass123",
-        }
-        register_response = client2.post(register_url, register_data, format="json")
-        client2.credentials(HTTP_AUTHORIZATION=f"Bearer {register_response.data['access']}")
+        user2 = create_verified_user("user2", "user2@example.com", "SecurePass123")
+        client2 = get_authenticated_client(user2)
 
         detail_url = reverse("points:detail", kwargs={"pk": point_id})
         response = client2.get(detail_url)
@@ -368,15 +356,8 @@ class TestPointsContract:
         client1.post(lock_url)
 
         # Try to update as user2
-        client2 = APIClient()
-        register_url = reverse("authentication:register")
-        register_data = {
-            "username": "user2b",
-            "email": "user2@example.com",
-            "password": "SecurePass123",
-        }
-        register_response = client2.post(register_url, register_data, format="json")
-        client2.credentials(HTTP_AUTHORIZATION=f"Bearer {register_response.data['access']}")
+        user2 = create_verified_user("user2b", "user2@example.com", "SecurePass123")
+        client2 = get_authenticated_client(user2)
 
         # Share point with edit permission to user2 first
         # (This will be tested in sharing contract tests)
@@ -430,15 +411,8 @@ class TestPointsContract:
         point_id = create_response.data["id"]
 
         # Try to delete as user2
-        client2 = APIClient()
-        register_url = reverse("authentication:register")
-        register_data = {
-            "username": "user2c",
-            "email": "user2@example.com",
-            "password": "SecurePass123",
-        }
-        register_response = client2.post(register_url, register_data, format="json")
-        client2.credentials(HTTP_AUTHORIZATION=f"Bearer {register_response.data['access']}")
+        user2 = create_verified_user("user2c", "user2@example.com", "SecurePass123")
+        client2 = get_authenticated_client(user2)
 
         delete_url = reverse("points:detail", kwargs={"pk": point_id})
         response = client2.delete(delete_url)
