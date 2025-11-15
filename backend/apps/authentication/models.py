@@ -31,11 +31,11 @@ class UserManager(BaseUserManager["User"]):
 
     def create_user(self, username, email=None, password=None, **extra_fields):
         """
-        Create and return a regular user with username and optional email.
+        Create and return a regular user with username and password.
 
         Args:
-            username: User's username (used for login)
-            email: User's email address (optional, encrypted at rest)
+            username: User's username
+            email: User's email address (required)
             password: User's password
             **extra_fields: Additional fields
 
@@ -45,8 +45,10 @@ class UserManager(BaseUserManager["User"]):
         if not username:
             raise ValueError("Username is required")
 
-        if email:
-            email = self.normalize_email(email)
+        if not email:
+            raise ValueError("Email is required")
+
+        email = self.normalize_email(email)
 
         user = self.model(
             username=username,
@@ -157,7 +159,7 @@ class User(AbstractUser):
 
     # Use username as the login field
     USERNAME_FIELD = "username"
-    REQUIRED_FIELDS = []  # No additional required fields for createsuperuser
+    REQUIRED_FIELDS = ["email"]  # Email is required for createsuperuser
 
     # Use custom managers
     objects = UserManager()  # Default manager (includes deleted users)
