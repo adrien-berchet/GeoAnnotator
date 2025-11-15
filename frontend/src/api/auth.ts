@@ -18,9 +18,8 @@ interface LoginResponse {
  * Register response.
  */
 interface RegisterResponse {
-  access: string;
-  refresh: string;
-  user: User;
+  message: string;
+  email: string;
 }
 
 /**
@@ -31,12 +30,45 @@ interface RefreshResponse {
 }
 
 /**
+ * Email confirmation response.
+ */
+interface EmailConfirmResponse {
+  message: string;
+}
+
+/**
  * Register new user.
  */
 export async function register(data: RegisterData): Promise<RegisterResponse> {
   const response = await apiClient.post<RegisterResponse>(
     "/auth/register/",
     data,
+  );
+  return response.data;
+}
+
+/**
+ * Confirm email registration.
+ */
+export async function confirmRegistration(
+  token: string,
+): Promise<EmailConfirmResponse> {
+  const response = await apiClient.post<EmailConfirmResponse>(
+    "/auth/confirm-email/",
+    { token },
+  );
+  return response.data;
+}
+
+/**
+ * Resend confirmation email to unverified user.
+ */
+export async function resendConfirmation(
+  email: string,
+): Promise<EmailConfirmResponse> {
+  const response = await apiClient.post<EmailConfirmResponse>(
+    "/auth/resend-confirmation/",
+    { email },
   );
   return response.data;
 }

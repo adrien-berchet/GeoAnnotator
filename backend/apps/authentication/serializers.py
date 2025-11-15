@@ -130,8 +130,13 @@ class LoginSerializer(serializers.Serializer):
         user = AuthenticationService.authenticate_user(email, password)
 
         if not user:
-            raise serializers.ValidationError(
-                {"detail": "Invalid email or password"}, code="authentication_failed"
+            raise AuthenticationFailed("Invalid email or password", code="authentication_failed")
+
+        # Check if email is verified
+        if not user.is_verified:
+            raise AuthenticationFailed(
+                "Please verify your email before logging in. Check your inbox for the confirmation link.",
+                code="email_not_verified",
             )
 
         attrs["user"] = user

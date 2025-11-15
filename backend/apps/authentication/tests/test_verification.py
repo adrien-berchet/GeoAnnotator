@@ -18,6 +18,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from apps.authentication.models import User
 from apps.points.models import PointType
 
 
@@ -53,10 +54,10 @@ class TestAuthenticationContract:
 
         Expected:
         - Status: 201 Created
-        - Response contains: access, refresh, user
-        - User has: id, email, date_joined, storage_used, storage_limit
-        - Default storage_limit: 2GB (2147483648 bytes)
+        - Response contains: message, email (no tokens - email must be verified first)
+        - User created with default storage_limit: 2GB (2147483648 bytes)
         - storage_used: 0 (new user)
+        - is_verified: False (must confirm email)
         """
         url = reverse("authentication:register")
         response = api_client.post(url, valid_registration_data, format="json")
@@ -64,20 +65,18 @@ class TestAuthenticationContract:
         # Validate status code
         assert response.status_code == status.HTTP_201_CREATED
 
-        # Validate response structure
-        assert "access" in response.data
-        assert "refresh" in response.data
-        assert "user" in response.data
+        # Validate response structure (no tokens until email verified)
+        assert "message" in response.data
+        assert "email" in response.data
+        assert "access" not in response.data  # No tokens until verified
+        assert "refresh" not in response.data
 
-        # Validate user object
-        user = response.data["user"]
-        assert "id" in user
-        assert user["email"] == valid_registration_data["email"]
-        assert "date_joined" in user
-        assert user["storage_used"] == 0
-        assert user["storage_limit"] == 2 * 1024 * 1024 * 1024  # 2GB
-        assert "storage_percentage" in user
-        assert user["storage_percentage"] == 0.0
+        # Validate user was created
+        email_hash = User.hash_email(valid_registration_data["email"])
+        user = User.objects.get(email_hash=email_hash)
+        assert user.storage_used == 0
+        assert user.storage_limit == 2 * 1024 * 1024 * 1024  # 2GB
+        assert user.is_verified is False  # Must confirm email
 
     def test_register_duplicate_email(self, api_client, valid_registration_data):
         """
@@ -139,10 +138,18 @@ class TestAuthenticationContract:
         - Status: 200 OK
         - Response contains: access, refresh, user
         - Tokens are valid JWT strings
+
+        Note: User must be verified before login
         """
         # Create user first
         register_url = reverse("authentication:register")
         api_client.post(register_url, valid_registration_data, format="json")
+
+        # Verify user email
+        email_hash = User.hash_email(valid_registration_data["email"])
+        user = User.objects.get(email_hash=email_hash)
+        user.is_verified = True
+        user.save()
 
         # Login
         login_url = reverse("authentication:login")
@@ -159,17 +166,17 @@ class TestAuthenticationContract:
         Test login with invalid credentials.
 
         Expected:
-        - Status: 401 Unauthorized
-        - error: INVALID_CREDENTIALS
-        - message: "Email or password incorrect"
+        - Status: 401 Unauthorized (authentication failed)
+        - error or details field present
+        - message or detail describing the error
         """
         url = reverse("authentication:login")
         invalid_data = {"email": "nonexistent@example.com", "password": "WrongPass123"}
 
         response = api_client.post(url, invalid_data, format="json")
 
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert "error" in response.data or "details" in response.data
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert "error" in response.data or "details" in response.data or "detail" in response.data
         assert "message" in response.data or "detail" in response.data
 
     # T013: POST /auth/refresh - Token refresh
@@ -182,11 +189,28 @@ class TestAuthenticationContract:
         - Response contains: access (new access token)
         - New access token is different from original
         """
-        # Register and get tokens
+        # Register user
         register_url = reverse("authentication:register")
-        register_response = api_client.post(register_url, valid_registration_data, format="json")
-        refresh_token = register_response.data["refresh"]
-        original_access = register_response.data["access"]
+        api_client.post(register_url, valid_registration_data, format="json")
+
+        # Verify user email
+        email_hash = User.hash_email(valid_registration_data["email"])
+        user = User.objects.get(email_hash=email_hash)
+        user.is_verified = True
+        user.save()
+
+        # Login to get tokens
+        login_url = reverse("authentication:login")
+        login_response = api_client.post(
+            login_url,
+            {
+                "email": valid_registration_data["email"],
+                "password": valid_registration_data["password"],
+            },
+            format="json",
+        )
+        refresh_token = login_response.data["refresh"]
+        original_access = login_response.data["access"]
 
         # Refresh token
         refresh_url = reverse("authentication:refresh")
@@ -221,10 +245,27 @@ class TestAuthenticationContract:
         - Status: 200 OK
         - Response contains: id, email, date_joined, storage_used, storage_limit
         """
-        # Register and get access token
+        # Register user
         register_url = reverse("authentication:register")
-        register_response = api_client.post(register_url, valid_registration_data, format="json")
-        access_token = register_response.data["access"]
+        api_client.post(register_url, valid_registration_data, format="json")
+
+        # Verify user email
+        email_hash = User.hash_email(valid_registration_data["email"])
+        user = User.objects.get(email_hash=email_hash)
+        user.is_verified = True
+        user.save()
+
+        # Login to get access token
+        login_url = reverse("authentication:login")
+        login_response = api_client.post(
+            login_url,
+            {
+                "email": valid_registration_data["email"],
+                "password": valid_registration_data["password"],
+            },
+            format="json",
+        )
+        access_token = login_response.data["access"]
 
         # Get profile
         url = reverse("authentication:profile")
@@ -264,10 +305,27 @@ class TestAuthenticationContract:
         Note: JWT logout is client-side (discard tokens).
         Server just acknowledges the request.
         """
-        # Register and get access token
+        # Register user
         register_url = reverse("authentication:register")
-        register_response = api_client.post(register_url, valid_registration_data, format="json")
-        access_token = register_response.data["access"]
+        api_client.post(register_url, valid_registration_data, format="json")
+
+        # Verify user email
+        email_hash = User.hash_email(valid_registration_data["email"])
+        user = User.objects.get(email_hash=email_hash)
+        user.is_verified = True
+        user.save()
+
+        # Login to get access token
+        login_url = reverse("authentication:login")
+        login_response = api_client.post(
+            login_url,
+            {
+                "email": valid_registration_data["email"],
+                "password": valid_registration_data["password"],
+            },
+            format="json",
+        )
+        access_token = login_response.data["access"]
 
         # Logout
         url = reverse("authentication:logout")

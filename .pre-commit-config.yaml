@@ -41,18 +41,15 @@ repos:
         files: ^frontend/
         types_or: [javascript, jsx, ts, tsx, json, css]
 
-  - repo: https://github.com/pre-commit/mirrors-eslint
-    rev: v9.39.1
+  # ESLint (using local to respect flat config)
+  - repo: local
     hooks:
       - id: eslint
+        name: ESLint
+        entry: bash -c 'cd frontend && npm run lint'
+        language: system
         files: ^frontend/.*\.[jt]sx?$
-        types: [file]
-        args: ['--config', 'frontend/eslint.config.js', '--fix']
-        additional_dependencies:
-          - eslint@9.39.1
-          - typescript@5.9.3
-          - '@typescript-eslint/parser@8.19.1'
-          - '@typescript-eslint/eslint-plugin@8.19.1'
+        pass_filenames: false
 
   # TypeScript type checking
   - repo: local

@@ -17,8 +17,14 @@ ALLOWED_HOSTS = ["localhost", "127.0.0.1", "0.0.0.0"]
 CORS_ALLOW_ALL_ORIGINS = True  # Allow all origins in development
 CORS_ALLOW_CREDENTIALS = True  # Allow credentials (cookies, JWT) with CORS
 
-# Development email backend (prints to console)
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+# Email configuration (can be overridden via environment variables)
+EMAIL_BACKEND = os.environ.get("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
+EMAIL_HOST = os.environ.get("EMAIL_HOST", "localhost")
+EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "25"))
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
+EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "False").lower() == "true"
+EMAIL_USE_SSL = os.environ.get("EMAIL_USE_SSL", "False").lower() == "true"
 
 # Add development-specific apps
 INSTALLED_APPS += [

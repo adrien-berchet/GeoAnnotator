@@ -54,29 +54,9 @@ class UserManager(BaseUserManager["User"]):
             **extra_fields,
         )
         user.set_password(password)
-        user.generate_verification_code()  # Generate verification code
         user.save(using=self._db)
 
-        # Send verification email
-        self.send_verification_email(user)
-
         return user
-
-    def send_verification_email(self, user):
-        """
-        Send an email with the verification code to the user.
-
-        Args:
-            user: User object to send the verification email to
-        """
-        from django.core.mail import send_mail
-
-        send_mail(
-            subject="Votre code de vérification",
-            message=f"Votre code de vérification est : {user.verification_code}",
-            from_email="noreply@geoannotator.com",
-            recipient_list=[user.email],
-        )
 
     def create_superuser(self, username, email=None, password=None, **extra_fields):
         """
@@ -328,6 +308,104 @@ class EmailChangeConfirmation(models.Model):
         return f"{status} {self.user} → {self.new_email}"
 
 
+class EmailConfirmation(models.Model):
+    """
+    Unified token storage for email confirmation flows.
+
+    Handles both:
+    - Registration email confirmation (48-hour expiry)
+    - Email change confirmation for existing accounts (30-minute expiry)
+    """
+
+    # Confirmation type choices
+    REGISTRATION = "registration"
+    EMAIL_CHANGE = "email_change"
+
+    TYPE_CHOICES = [
+        (REGISTRATION, "Registration"),
+        (EMAIL_CHANGE, "Email Change"),
+    ]
+
+    user = models.ForeignKey(
+        "User",
+        on_delete=models.CASCADE,
+        related_name="email_confirmations",
+        help_text="User confirming their email",
+    )
+
+    confirmation_type = models.CharField(
+        max_length=20,
+        choices=TYPE_CHOICES,
+        default=REGISTRATION,
+        help_text="Type of email confirmation",
+    )
+
+    token = models.CharField(max_length=128, unique=True, help_text="HMAC-based confirmation token")
+
+    # For email changes: the new email address being confirmed
+    new_email = fernet_fields.EncryptedEmailField(
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text="New email address (only for email change confirmations)",
+    )
+
+    new_email_hash = models.CharField(
+        max_length=64,
+        blank=True,
+        help_text="SHA-256 hash of new email for uniqueness check",
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True, help_text="Token creation timestamp")
+
+    expires_at = models.DateTimeField(help_text="Token expiration timestamp")
+
+    confirmed_at = models.DateTimeField(
+        blank=True, null=True, help_text="Timestamp when confirmed, NULL if pending"
+    )
+
+    class Meta:
+        db_table = "email_confirmations"
+        verbose_name = "Email Confirmation"
+        verbose_name_plural = "Email Confirmations"
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["confirmation_type"], name="idx_confirmation_type"),
+            models.Index(fields=["user", "confirmation_type"], name="idx_user_conf_type"),
+        ]
+
+    @property
+    def is_expired(self):
+        """Check if token has expired."""
+        return timezone.now() > self.expires_at
+
+    @property
+    def is_confirmed(self):
+        """Check if email has been confirmed."""
+        return self.confirmed_at is not None
+
+    def save(self, *args, **kwargs):
+        """Set expires_at and new_email_hash if not already set."""
+        if not self.expires_at:
+            # Set expiration based on confirmation type
+            if self.confirmation_type == self.REGISTRATION:
+                self.expires_at = timezone.now() + timedelta(hours=48)
+            else:  # EMAIL_CHANGE
+                self.expires_at = timezone.now() + timedelta(minutes=30)
+
+        # Generate hash for new email (for email change confirmations)
+        if self.new_email and not self.new_email_hash:
+            self.new_email_hash = User.hash_email(str(self.new_email))
+
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        status = "✓" if self.confirmed_at else ("⏰" if not self.is_expired else "❌")
+        if self.confirmation_type == self.EMAIL_CHANGE:
+            return f"{status} {self.user} → {self.new_email}"
+        return f"{status} {self.user} registration"
+
+
 class AccountLog(models.Model):
     """
     Audit trail for sensitive account operations.
@@ -343,6 +421,8 @@ class AccountLog(models.Model):
         ("ACCOUNT_DELETED", "Account Deleted"),
         ("EMAIL_CHANGE_REQUESTED", "Email Change Requested"),
         ("EMAIL_CHANGE_CONFIRMED", "Email Change Confirmed"),
+        ("EMAIL_CONFIRMED", "Email Confirmed"),
+        ("CONFIRMATION_EMAIL_RESENT", "Confirmation Email Resent"),
     ]
 
     user = models.ForeignKey(

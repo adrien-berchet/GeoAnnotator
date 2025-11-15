@@ -134,12 +134,12 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
-STATIC_URL = "static/"
+STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 # STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Media files (user uploads)
-MEDIA_URL = "media/"
+MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 # Default primary key field type
@@ -210,8 +210,8 @@ MAX_POINT_TYPES_PER_USER = 1000
 TRASH_RETENTION_DAYS = 30
 
 # Email configuration (to be configured per environment)
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"  # Development default
-DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "noreply@geoannotator.local")
+EMAIL_BACKEND = os.environ.get("EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "geoannotator.noreply@gmail.com")
 
 # Fernet encryption key for sensitive data (email addresses)
 # Generate with: from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())
@@ -245,3 +245,6 @@ CORS_ALLOWED_ORIGINS = [origin.strip() for origin in _cors_origins.split(",") if
 # GDAL and GEOS library paths (set if not in default locations)
 # GDAL_LIBRARY_PATH = '/path/to/libgdal.so'
 # GEOS_LIBRARY_PATH = '/path/to/libgeos_c.so'
+
+# Frontend URL for email confirmation links
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:3000")

@@ -11,6 +11,7 @@ import pytest
 from django.conf import settings
 from django.contrib.gis.geos import Point
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.urls import reverse
 from PIL import Image
 from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -18,6 +19,66 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from apps.authentication.models import User
 from apps.points.models import GPSPoint
 from apps.points.models import Tag
+
+
+def create_verified_user(username: str, email: str, password: str) -> User:
+    """
+    Helper function to create a verified user for testing.
+
+    Args:
+        username: Username for the user
+        email: Email address
+        password: Password
+
+    Returns:
+        Verified User instance
+    """
+    user = User.objects.create_user(username=username, email=email, password=password)
+    user.is_verified = True
+    user.save()
+    return user
+
+
+def get_authenticated_client(user: User) -> APIClient:
+    """
+    Helper function to get an authenticated API client for a user.
+
+    Args:
+        user: User instance
+
+    Returns:
+        APIClient with authentication credentials set
+    """
+    api_client = APIClient()
+    refresh = RefreshToken.for_user(user)
+    token = str(refresh.access_token)
+    api_client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
+    return api_client
+
+
+def login_and_get_token(email: str, password: str, api_client: APIClient = None) -> dict:
+    """
+    Helper function to login a verified user and get tokens.
+
+    Args:
+        email: User email
+        password: User password
+        api_client: Optional APIClient (creates new one if not provided)
+
+    Returns:
+        dict with 'access', 'refresh', 'user' keys
+
+    Raises:
+        AssertionError: If login fails
+    """
+    if api_client is None:
+        api_client = APIClient()
+
+    login_url = reverse("authentication:login")
+    response = api_client.post(login_url, {"email": email, "password": password}, format="json")
+
+    assert response.status_code == 200, f"Login failed: {response.data}"
+    return response.data
 
 
 @pytest.fixture
@@ -28,26 +89,35 @@ def api_client():
 
 @pytest.fixture
 def alice(db):
-    """Create Alice test user."""
-    return User.objects.create_user(
+    """Create Alice test user (verified)."""
+    user = User.objects.create_user(
         username="alice", email="alice@example.com", password="SecurePass123"
     )
+    user.is_verified = True
+    user.save()
+    return user
 
 
 @pytest.fixture
 def bob(db):
-    """Create Bob test user."""
-    return User.objects.create_user(
+    """Create Bob test user (verified)."""
+    user = User.objects.create_user(
         username="bob", email="bob@example.com", password="SecurePass456"
     )
+    user.is_verified = True
+    user.save()
+    return user
 
 
 @pytest.fixture
 def charlie(db):
-    """Create Charlie test user."""
-    return User.objects.create_user(
+    """Create Charlie test user (verified)."""
+    user = User.objects.create_user(
         username="charlie", email="charlie@example.com", password="SecurePass789"
     )
+    user.is_verified = True
+    user.save()
+    return user
 
 
 @pytest.fixture

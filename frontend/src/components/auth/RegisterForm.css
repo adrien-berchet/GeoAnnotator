@@ -92,3 +92,36 @@
   font-weight: var(--font-weight-semibold);
   white-space: nowrap;
 }
+
+/* Success message styles */
+.success-icon {
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--spacing-xl);
+}
+
+.icon-check {
+  width: 64px;
+  height: 64px;
+  color: #ffffff;
+  background-color: #28a745;
+  border-radius: 50%;
+  padding: var(--spacing-md);
+}
+
+.alert-success {
+  background-color: #d4edda;
+  border: 1px solid #c3e6cb;
+  color: #155724;
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--spacing-lg);
+  text-align: center;
+}
+
+.redirect-hint {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-sm);
+  font-style: italic;
+  text-align: center;
+}

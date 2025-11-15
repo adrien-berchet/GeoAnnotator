@@ -8,6 +8,8 @@ import pytest
 from django.urls import reverse
 from rest_framework import status
 
+from apps.authentication.models import User
+
 
 @pytest.mark.django_db
 class TestUsernameValidateContract:
@@ -158,8 +160,6 @@ class TestUsernameValidateContract:
         - Read-only operation
         - No side effects
         """
-        from apps.authentication.models import User
-
         initial_user_count = User.objects.count()
 
         url = reverse("authentication:username-validate")
