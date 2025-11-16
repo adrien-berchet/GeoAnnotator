@@ -33,7 +33,10 @@ interface MarkerClusterGroupProps extends L.MarkerClusterGroupOptions {
  * </MapContainer>
  * ```
  */
-function MarkerClusterGroupComponent({ children, ...options }: MarkerClusterGroupProps) {
+function MarkerClusterGroupComponent({
+  children,
+  ...options
+}: MarkerClusterGroupProps) {
   const parentContext = useLeafletContext();
 
   // Create the cluster group once and store in ref
@@ -53,7 +56,11 @@ function MarkerClusterGroupComponent({ children, ...options }: MarkerClusterGrou
 
   // Store context in ref for absolute stability across all browsers
   // Firefox seems to handle context changes differently than Chrome
-  const contextRef = useRef<any>(null);
+  const contextRef = useRef<{
+    __version: number;
+    map: L.Map;
+    layerContainer: L.MarkerClusterGroup;
+  } | null>(null);
   if (contextRef.current === null) {
     contextRef.current = {
       __version: parentContext.__version,
@@ -75,7 +82,9 @@ function MarkerClusterGroupComponent({ children, ...options }: MarkerClusterGrou
   }, []); // Empty dependency array - only run once on mount
 
   return (
-    <LeafletContext.Provider value={contextRef.current}>{children}</LeafletContext.Provider>
+    <LeafletContext.Provider value={contextRef.current}>
+      {children}
+    </LeafletContext.Provider>
   );
 }
 
@@ -86,14 +95,18 @@ function MarkerClusterGroupComponent({ children, ...options }: MarkerClusterGrou
  */
 function arePropsEqual(
   prevProps: MarkerClusterGroupProps,
-  nextProps: MarkerClusterGroupProps
+  nextProps: MarkerClusterGroupProps,
 ): boolean {
   // Convert children to arrays
   const prevChildren = prevProps.children
-    ? (Array.isArray(prevProps.children) ? prevProps.children : [prevProps.children])
+    ? Array.isArray(prevProps.children)
+      ? prevProps.children
+      : [prevProps.children]
     : [];
   const nextChildren = nextProps.children
-    ? (Array.isArray(nextProps.children) ? nextProps.children : [nextProps.children])
+    ? Array.isArray(nextProps.children)
+      ? nextProps.children
+      : [nextProps.children]
     : [];
 
   // If counts are different, definitely re-render
@@ -103,8 +116,12 @@ function arePropsEqual(
 
   // Compare by checking if all keys are the same
   // This allows React to skip re-rendering when parent updates for unrelated reasons
-  const prevKeys = prevChildren.map((child: any) => child?.key).filter(Boolean);
-  const nextKeys = nextChildren.map((child: any) => child?.key).filter(Boolean);
+  const prevKeys = prevChildren
+    .map((child: React.ReactElement) => child?.key)
+    .filter(Boolean);
+  const nextKeys = nextChildren
+    .map((child: React.ReactElement) => child?.key)
+    .filter(Boolean);
 
   if (prevKeys.length !== nextKeys.length) {
     return false;
@@ -119,4 +136,7 @@ function arePropsEqual(
  * when parent component updates (e.g., device position changes, filter panel opens).
  * This is especially important in Firefox which handles re-renders differently.
  */
-export const MarkerClusterGroup = memo(MarkerClusterGroupComponent, arePropsEqual);
+export const MarkerClusterGroup = memo(
+  MarkerClusterGroupComponent,
+  arePropsEqual,
+);

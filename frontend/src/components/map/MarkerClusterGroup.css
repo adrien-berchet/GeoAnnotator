@@ -53,7 +53,9 @@
 /* Spiderfy lines (when clusters expand) */
 .leaflet-cluster-anim .leaflet-marker-icon,
 .leaflet-cluster-anim .leaflet-marker-shadow {
-  transition: transform 0.3s ease-out, opacity 0.3s ease-in;
+  transition:
+    transform 0.3s ease-out,
+    opacity 0.3s ease-in;
 }
 
 /* Polygon that shows cluster coverage */
