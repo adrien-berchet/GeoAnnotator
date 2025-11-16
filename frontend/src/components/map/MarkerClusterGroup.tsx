@@ -80,8 +80,43 @@ function MarkerClusterGroupComponent({ children, ...options }: MarkerClusterGrou
 }
 
 /**
+ * Custom comparison function for React.memo.
+ * Only re-render if the children actually changed (by comparing keys).
+ * We ignore other prop changes because cluster options are captured at creation time.
+ */
+function arePropsEqual(
+  prevProps: MarkerClusterGroupProps,
+  nextProps: MarkerClusterGroupProps
+): boolean {
+  // Convert children to arrays
+  const prevChildren = prevProps.children
+    ? (Array.isArray(prevProps.children) ? prevProps.children : [prevProps.children])
+    : [];
+  const nextChildren = nextProps.children
+    ? (Array.isArray(nextProps.children) ? nextProps.children : [nextProps.children])
+    : [];
+
+  // If counts are different, definitely re-render
+  if (prevChildren.length !== nextChildren.length) {
+    return false;
+  }
+
+  // Compare by checking if all keys are the same
+  // This allows React to skip re-rendering when parent updates for unrelated reasons
+  const prevKeys = prevChildren.map((child: any) => child?.key).filter(Boolean);
+  const nextKeys = nextChildren.map((child: any) => child?.key).filter(Boolean);
+
+  if (prevKeys.length !== nextKeys.length) {
+    return false;
+  }
+
+  // Check if all keys are the same (order matters for clustering)
+  return prevKeys.every((key, index) => key === nextKeys[index]);
+}
+
+/**
  * Memoized MarkerClusterGroup to prevent unnecessary re-renders
- * when parent component updates (e.g., device position changes).
+ * when parent component updates (e.g., device position changes, filter panel opens).
  * This is especially important in Firefox which handles re-renders differently.
  */
-export const MarkerClusterGroup = memo(MarkerClusterGroupComponent);
+export const MarkerClusterGroup = memo(MarkerClusterGroupComponent, arePropsEqual);
