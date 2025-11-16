@@ -91,3 +91,9 @@ vi.mock("@/hooks/useAuth", () => ({
   })),
   AuthProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
+
+// Mock MarkerClusterGroup component
+vi.mock("@/components/map/MarkerClusterGroup", () => ({
+  MarkerClusterGroup: ({ children }: { children?: React.ReactNode }) =>
+    children,
+}));
