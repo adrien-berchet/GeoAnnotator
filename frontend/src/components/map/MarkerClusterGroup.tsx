@@ -4,7 +4,7 @@
  * Wraps leaflet.markercluster to provide clustering functionality for markers.
  */
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useLeafletContext, LeafletContext } from "@react-leaflet/core";
 import L from "leaflet";
 import "leaflet.markercluster";
@@ -35,34 +35,33 @@ interface MarkerClusterGroupProps extends L.MarkerClusterGroupOptions {
  */
 export function MarkerClusterGroup({ children, ...options }: MarkerClusterGroupProps) {
   const parentContext = useLeafletContext();
-  const [clusterGroup, setClusterGroup] = useState<L.MarkerClusterGroup | null>(null);
+
+  // Create the cluster group synchronously so it exists before children render
+  const clusterGroup = useMemo(() => {
+    return new L.MarkerClusterGroup(options);
+  }, [options]);
 
   useEffect(() => {
-    // Create the cluster group
-    const cluster = new L.MarkerClusterGroup(options);
-    setClusterGroup(cluster);
-
     // Add to parent container (map)
     const container = parentContext.layerContainer || parentContext.map;
-    container.addLayer(cluster);
+    container.addLayer(clusterGroup);
 
     // Cleanup
     return () => {
-      container.removeLayer(cluster);
-      setClusterGroup(null);
+      container.removeLayer(clusterGroup);
     };
-  }, [parentContext, options]);
+  }, [parentContext, clusterGroup]);
 
   // Create a new context with the cluster group as the layer container
   const context = useMemo(
     () => ({
       ...parentContext,
-      layerContainer: clusterGroup || parentContext.layerContainer,
+      layerContainer: clusterGroup,
     }),
     [parentContext, clusterGroup]
   );
 
-  return clusterGroup ? (
+  return (
     <LeafletContext.Provider value={context}>{children}</LeafletContext.Provider>
-  ) : null;
+  );
 }
