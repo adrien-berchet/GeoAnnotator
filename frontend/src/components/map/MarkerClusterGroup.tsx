@@ -46,15 +46,16 @@ export function MarkerClusterGroup({ children, ...options }: MarkerClusterGroupP
   const clusterGroup = clusterGroupRef.current;
 
   useEffect(() => {
-    // Add to parent container (map)
+    // Add to parent container (map) once on mount
     const container = parentContext.layerContainer || parentContext.map;
     container.addLayer(clusterGroup);
 
-    // Cleanup
+    // Cleanup on unmount
     return () => {
       container.removeLayer(clusterGroup);
     };
-  }, [parentContext, clusterGroup]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty dependency array - only run once on mount
 
   // Create a new context with the cluster group as the layer container
   const context = useMemo(
