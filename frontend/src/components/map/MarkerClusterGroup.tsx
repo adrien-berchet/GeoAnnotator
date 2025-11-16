@@ -4,7 +4,7 @@
  * Wraps leaflet.markercluster to provide clustering functionality for markers.
  */
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, memo } from "react";
 import { useLeafletContext, LeafletContext } from "@react-leaflet/core";
 import L from "leaflet";
 import "leaflet.markercluster";
@@ -33,7 +33,7 @@ interface MarkerClusterGroupProps extends L.MarkerClusterGroupOptions {
  * </MapContainer>
  * ```
  */
-export function MarkerClusterGroup({ children, ...options }: MarkerClusterGroupProps) {
+function MarkerClusterGroupComponent({ children, ...options }: MarkerClusterGroupProps) {
   const parentContext = useLeafletContext();
 
   // Create the cluster group once and store in ref
@@ -78,3 +78,10 @@ export function MarkerClusterGroup({ children, ...options }: MarkerClusterGroupP
     <LeafletContext.Provider value={contextRef.current}>{children}</LeafletContext.Provider>
   );
 }
+
+/**
+ * Memoized MarkerClusterGroup to prevent unnecessary re-renders
+ * when parent component updates (e.g., device position changes).
+ * This is especially important in Firefox which handles re-renders differently.
+ */
+export const MarkerClusterGroup = memo(MarkerClusterGroupComponent);
