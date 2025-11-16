@@ -9,6 +9,7 @@ import { useSearchParams } from "react-router-dom";
 import type { Map as LeafletMap } from "leaflet";
 import { MapView } from "../components/map/MapView";
 import { PointMarker } from "../components/map/PointMarker";
+import { MarkerClusterGroup } from "../components/map/MarkerClusterGroup";
 import { BlueDot } from "../components/map/BlueDot";
 import { RecenterButton } from "../components/map/RecenterButton";
 import { CreatePointModal } from "../components/map/CreatePointModal";
@@ -431,14 +432,22 @@ export function MapPage() {
         tileLayer={currentTileLayer}
         center={initialCenter}
       >
-        {/* Render point markers */}
-        {points.map((point) => (
-          <PointMarker
-            key={point.id}
-            point={point}
-            onClick={handlePointClick}
-          />
-        ))}
+        {/* Render point markers with clustering */}
+        <MarkerClusterGroup
+          chunkedLoading={true}
+          spiderfyOnMaxZoom={true}
+          showCoverageOnHover={false}
+          zoomToBoundsOnClick={true}
+          maxClusterRadius={50}
+        >
+          {points.map((point) => (
+            <PointMarker
+              key={point.id}
+              point={point}
+              onClick={handlePointClick}
+            />
+          ))}
+        </MarkerClusterGroup>
 
         {/* Render blue dot for device position */}
         {devicePosition && (
