@@ -4,7 +4,7 @@
  * Wraps leaflet.markercluster to provide clustering functionality for markers.
  */
 
-import { useEffect, useRef, useMemo } from "react";
+import { useEffect, useRef } from "react";
 import { useLeafletContext, LeafletContext } from "@react-leaflet/core";
 import L from "leaflet";
 import "leaflet.markercluster";
@@ -41,9 +41,26 @@ export function MarkerClusterGroup({ children, ...options }: MarkerClusterGroupP
   // (options is a new object on every render from MapPage)
   const clusterGroupRef = useRef<L.MarkerClusterGroup | null>(null);
   if (clusterGroupRef.current === null) {
-    clusterGroupRef.current = new L.MarkerClusterGroup(options);
+    // Add options to prevent cluster from refreshing/resetting
+    const clusterOptions = {
+      ...options,
+      animateAddingMarkers: false, // Disable animations to prevent resets
+      removeOutsideVisibleBounds: false, // Keep all clusters in DOM
+    };
+    clusterGroupRef.current = new L.MarkerClusterGroup(clusterOptions);
   }
   const clusterGroup = clusterGroupRef.current;
+
+  // Store context in ref for absolute stability across all browsers
+  // Firefox seems to handle context changes differently than Chrome
+  const contextRef = useRef<any>(null);
+  if (contextRef.current === null) {
+    contextRef.current = {
+      __version: parentContext.__version,
+      map: parentContext.map,
+      layerContainer: clusterGroup,
+    };
+  }
 
   useEffect(() => {
     // Add to parent container (map) once on mount
@@ -57,18 +74,7 @@ export function MarkerClusterGroup({ children, ...options }: MarkerClusterGroupP
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Empty dependency array - only run once on mount
 
-  // Create a completely stable context that never changes
-  // Using useMemo with empty deps ensures this object is created once and reused
-  const context = useMemo(() => {
-    return {
-      __version: parentContext.__version,
-      map: parentContext.map,
-      layerContainer: clusterGroup,
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Empty deps - create once and never change
-
   return (
-    <LeafletContext.Provider value={context}>{children}</LeafletContext.Provider>
+    <LeafletContext.Provider value={contextRef.current}>{children}</LeafletContext.Provider>
   );
 }
