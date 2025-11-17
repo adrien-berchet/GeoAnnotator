@@ -1,0 +1,164 @@
+# Render.com Blueprint for GeoAnnotator
+# Documentation: https://render.com/docs/blueprint-spec
+
+services:
+  # Django Backend (API)
+  - type: web
+    name: geoannotator-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    dockerCommand: gunicorn config.wsgi:application --bind 0.0.0.0:10000 --workers 4 --timeout 120
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11
+      - key: DJANGO_SETTINGS_MODULE
+        value: config.settings.production
+      - key: DEBUG
+        value: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: FERNET_KEY
+        sync: false  # Manual configuration required (32 base64 characters)
+      - key: ALLOWED_HOSTS
+        value: .onrender.com
+      - key: DATABASE_URL
+        sync: false  # Neon PostgreSQL connection string (configure manually)
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: geoannotator-redis
+          property: connectionString
+      - key: CELERY_BROKER_URL
+        fromService:
+          type: redis
+          name: geoannotator-redis
+          property: connectionString
+      - key: CELERY_RESULT_BACKEND
+        fromService:
+          type: redis
+          name: geoannotator-redis
+          property: connectionString
+      - key: EMAIL_BACKEND
+        value: django.core.mail.backends.smtp.EmailBackend
+      - key: EMAIL_HOST
+        value: smtp.gmail.com
+      - key: EMAIL_PORT
+        value: 587
+      - key: EMAIL_USE_TLS
+        value: true
+      - key: EMAIL_HOST_USER
+        sync: false  # Gmail address (configure manually)
+      - key: EMAIL_HOST_PASSWORD
+        sync: false  # Gmail App Password (configure manually)
+      - key: DEFAULT_FROM_EMAIL
+        sync: false  # Sender email address (configure manually)
+      - key: FRONTEND_URL
+        sync: false  # Frontend URL on Vercel (configure manually)
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false  # Frontend URL on Vercel (configure manually)
+      # MinIO / S3 (configure based on your storage solution)
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_STORAGE_BUCKET_NAME
+        sync: false
+      - key: AWS_S3_ENDPOINT_URL
+        sync: false
+      - key: AWS_S3_REGION_NAME
+        value: eu-west-3
+
+  # Celery Worker (asynchronous email processing)
+  - type: worker
+    name: geoannotator-celery-worker
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    dockerCommand: celery -A config worker --loglevel=info --concurrency=2
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11
+      - key: DJANGO_SETTINGS_MODULE
+        value: config.settings.production
+      - key: DEBUG
+        value: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: FERNET_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false  # Neon PostgreSQL connection string (configure manually)
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: geoannotator-redis
+          property: connectionString
+      - key: CELERY_BROKER_URL
+        fromService:
+          type: redis
+          name: geoannotator-redis
+          property: connectionString
+      - key: CELERY_RESULT_BACKEND
+        fromService:
+          type: redis
+          name: geoannotator-redis
+          property: connectionString
+      - key: EMAIL_BACKEND
+        value: django.core.mail.backends.smtp.EmailBackend
+      - key: EMAIL_HOST
+        value: smtp.gmail.com
+      - key: EMAIL_PORT
+        value: 587
+      - key: EMAIL_USE_TLS
+        value: true
+      - key: EMAIL_HOST_USER
+        sync: false
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+      - key: DEFAULT_FROM_EMAIL
+        sync: false
+
+  # Celery Beat (scheduled tasks - cleanup)
+  - type: worker
+    name: geoannotator-celery-beat
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    dockerCommand: celery -A config beat --loglevel=info
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11
+      - key: DJANGO_SETTINGS_MODULE
+        value: config.settings.production
+      - key: DEBUG
+        value: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: FERNET_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false  # Neon PostgreSQL connection string (configure manually)
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: geoannotator-redis
+          property: connectionString
+      - key: CELERY_BROKER_URL
+        fromService:
+          type: redis
+          name: geoannotator-redis
+          property: connectionString
+      - key: CELERY_RESULT_BACKEND
+        fromService:
+          type: redis
+          name: geoannotator-redis
+          property: connectionString
+
+  # Redis for Celery message broker
+  # Note: Private service, only accessible by other Render services
+  - type: redis
+    name: geoannotator-redis
+    plan: starter  # Free up to 25MB, upgrade if needed
+    maxmemoryPolicy: allkeys-lru  # Automatic eviction when memory is full
+    ipAllowList: []  # Empty = only accessible by Render services

@@ -7,13 +7,14 @@ This guide covers deploying GeoAnnotator to production environments.
 1. [Prerequisites](#prerequisites)
 2. [Environment Setup](#environment-setup)
 3. [Database Configuration](#database-configuration)
-4. [Docker Deployment](#docker-deployment)
-5. [Manual Deployment](#manual-deployment)
-6. [Environment Variables](#environment-variables)
-7. [Security Checklist](#security-checklist)
-8. [Monitoring & Logging](#monitoring--logging)
-9. [Backup & Restore](#backup--restore)
-10. [Troubleshooting](#troubleshooting)
+4. [Celery & Redis Setup](#celery--redis-setup)
+5. [Docker Deployment](#docker-deployment)
+6. [Manual Deployment](#manual-deployment)
+7. [Environment Variables](#environment-variables)
+8. [Security Checklist](#security-checklist)
+9. [Monitoring & Logging](#monitoring--logging)
+10. [Backup & Restore](#backup--restore)
+11. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -155,6 +156,33 @@ effective_cache_size = 1GB
 ```bash
 sudo systemctl restart postgresql
 ```
+
+---
+
+## Celery & Redis Setup
+
+GeoAnnotator utilise Celery pour l'envoi asynchrone d'emails et les tâches planifiées (nettoyage des tokens, suppression des comptes).
+
+**⚠️ Important** : Sans Redis et Celery, les emails seront envoyés de manière synchrone (bloquante) et peuvent causer des timeouts en production.
+
+Pour une configuration complète de Celery et Redis, consultez la [documentation dédiée](./celery-redis-setup.md).
+
+**Configuration rapide avec Docker** : Redis et Celery sont déjà inclus dans `docker-compose.yml`. Aucune configuration supplémentaire n'est nécessaire.
+
+**Configuration manuelle** :
+1. Installer Redis : `sudo apt install redis-server`
+2. Configurer les variables d'environnement :
+   ```env
+   CELERY_BROKER_URL=redis://localhost:6379/0
+   CELERY_RESULT_BACKEND=redis://localhost:6379/0
+   ```
+3. Démarrer les workers :
+   ```bash
+   celery -A config worker --loglevel=info
+   celery -A config beat --loglevel=info
+   ```
+
+Voir [celery-redis-setup.md](./celery-redis-setup.md) pour plus de détails.
 
 ---
 

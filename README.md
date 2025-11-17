@@ -297,7 +297,9 @@ npm test src/components/auth/LoginForm.test.tsx
 
 - **[Markdown Annotations Guide](docs/markdown-annotations.md)** - Learn how to use Markdown formatting in text annotations
 - **[API Documentation](docs/api.md)** - REST API reference
-- **[Deployment Guide](docs/deployment.md)** - Production deployment instructions
+- **[Deployment Guide](docs/deployment.md)** - General production deployment instructions
+- **[Render.com + Neon Deployment](RENDER.md)** - Quick deploy with Blueprint (recommended)
+- **[Celery & Redis Setup](docs/celery-redis-setup.md)** - Async email configuration
 
 ## License
 
