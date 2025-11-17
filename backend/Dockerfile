@@ -78,5 +78,8 @@ RUN SECRET_KEY=docker-build-secret \
     ALLOWED_HOSTS=localhost \
     python manage.py collectstatic --noinput
 
-# Use gunicorn for production
+# Make startup script executable (for Render single-service deployment)
+RUN chmod +x start-render.sh
+
+# Use gunicorn for production (can be overridden by render.yaml)
 CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:10000", "--workers", "4", "--timeout", "120"]
