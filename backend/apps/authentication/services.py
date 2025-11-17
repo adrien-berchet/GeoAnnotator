@@ -24,7 +24,6 @@ from apps.authentication.models import User
 from apps.authentication.tasks import send_email_async
 from apps.sharing.models import Share
 
-
 # Username validation regex: alphanumeric and simple special characters, no spaces
 USERNAME_PATTERN = re.compile(r'^[a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};\':"\\|,.<>\/?]+$')
 

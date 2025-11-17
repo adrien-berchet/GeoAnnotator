@@ -92,3 +92,8 @@ venv.bak/
 .mypy_cache/
 .dmypy.json
 dmypy.json
+
+# Celery
+celerybeat-schedule
+celerybeat-schedule.db
+celerybeat.pid
