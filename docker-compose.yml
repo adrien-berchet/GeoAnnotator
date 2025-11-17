@@ -56,6 +56,23 @@ services:
     networks:
       - geoannotator_network
 
+  # Redis for Celery broker
+  redis:
+    image: redis:7-alpine
+    container_name: geoannotator_redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - geoannotator_network
+
   # Django backend
   backend:
     build:
@@ -98,6 +115,10 @@ services:
 
       # CORS
       CORS_ALLOWED_ORIGINS: http://localhost:5173,http://localhost:3000
+
+      # Celery
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
     volumes:
       - ./backend:/app
       - media_files:/app/media
@@ -108,10 +129,90 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - geoannotator_network
     stdin_open: true
     tty: true
+
+  # Celery worker for background tasks
+  celery_worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    container_name: geoannotator_celery_worker
+    command: celery -A config worker --loglevel=info
+    environment:
+      DEBUG: ${DEBUG:-True}
+      SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-production}
+      FERNET_KEY: ${FERNET_KEY:-dev-fernet-key-change-in-production}
+
+      # Database configuration
+      DATABASE_URL: postgresql://${POSTGRES_USER:-geoannotator}:${DB_PASSWORD:-geoannotator_dev_password}@db:5432/${POSTGRES_DB:-geoannotator}
+      POSTGRES_HOST: db
+      POSTGRES_DB: ${POSTGRES_DB:-geoannotator}
+      POSTGRES_USER: ${POSTGRES_USER:-geoannotator}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-geoannotator_dev_password}
+      POSTGRES_PORT: "5432"
+
+      # Celery
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+
+      # Email configuration
+      EMAIL_BACKEND: ${EMAIL_BACKEND:-django.core.mail.backends.console.EmailBackend}
+      EMAIL_HOST: ${EMAIL_HOST:-localhost}
+      EMAIL_PORT: ${EMAIL_PORT:-25}
+      EMAIL_HOST_USER: ${EMAIL_HOST_USER:-}
+      EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD:-}
+      EMAIL_USE_TLS: ${EMAIL_USE_TLS:-False}
+      EMAIL_USE_SSL: ${EMAIL_USE_SSL:-False}
+      DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL:-noreply@geoannotator.local}
+    volumes:
+      - ./backend:/app
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - geoannotator_network
+
+  # Celery beat for scheduled tasks
+  celery_beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    container_name: geoannotator_celery_beat
+    command: celery -A config beat --loglevel=info
+    environment:
+      DEBUG: ${DEBUG:-True}
+      SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-production}
+      FERNET_KEY: ${FERNET_KEY:-dev-fernet-key-change-in-production}
+
+      # Database configuration
+      DATABASE_URL: postgresql://${POSTGRES_USER:-geoannotator}:${DB_PASSWORD:-geoannotator_dev_password}@db:5432/${POSTGRES_DB:-geoannotator}
+      POSTGRES_HOST: db
+      POSTGRES_DB: ${POSTGRES_DB:-geoannotator}
+      POSTGRES_USER: ${POSTGRES_USER:-geoannotator}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-geoannotator_dev_password}
+      POSTGRES_PORT: "5432"
+
+      # Celery
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+    volumes:
+      - ./backend:/app
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - geoannotator_network
 
   # React frontend (development)
   frontend:
@@ -138,6 +239,8 @@ volumes:
   postgres_data:
     driver: local
   minio_data:
+    driver: local
+  redis_data:
     driver: local
   media_files:
     driver: local

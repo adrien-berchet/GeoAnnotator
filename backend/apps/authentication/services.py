@@ -11,7 +11,6 @@ import re
 
 from django.conf import settings
 from django.contrib.auth import authenticate
-from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils import timezone
 from rest_framework_simplejwt.exceptions import TokenError
@@ -369,8 +368,10 @@ class EmailConfirmationService:
         html_message = render_to_string(html_template, context)
         text_message = render_to_string(text_template, context)
 
-        # Send email
-        send_mail(
+        # Send email asynchronously via Celery
+        from .tasks import send_email_async
+
+        send_email_async.delay(
             subject=subject,
             message=text_message,
             from_email=settings.DEFAULT_FROM_EMAIL,
@@ -670,13 +671,15 @@ def send_deletion_confirmation(user, token: str):
         },
     )
 
-    send_mail(
+    # Send email asynchronously via Celery
+    from apps.authentication.tasks import send_email_async
+
+    send_email_async.delay(
         subject="⚠️ Confirm Account Deletion",
         message=plain_message,
-        html_message=html_message,
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=[str(user.email)],
-        fail_silently=False,
+        html_message=html_message,
     )
 
 

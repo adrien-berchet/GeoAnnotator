@@ -1,15 +1,53 @@
 """
 Celery tasks for authentication app.
 
-Handles periodic cleanup of soft-deleted users and other background tasks.
+Handles periodic cleanup of soft-deleted users and email sending.
 """
 
 from datetime import timedelta
 
 from celery import shared_task
+from django.core.mail import send_mail
 from django.utils import timezone
 
+from .models import EmailChangeConfirmation
+from .models import EmailConfirmation
 from .models import User
+
+
+@shared_task(bind=True, max_retries=3, default_retry_delay=60)
+def send_email_async(
+    self,
+    subject: str,
+    message: str,
+    from_email: str,
+    recipient_list: list[str],
+    html_message: str | None = None,
+):
+    """
+    Send email asynchronously via Celery.
+
+    Args:
+        subject: Email subject
+        message: Plain text message
+        from_email: Sender email
+        recipient_list: List of recipient emails
+        html_message: Optional HTML message
+
+    Retries up to 3 times with 60 second delay between attempts.
+    """
+    try:
+        send_mail(
+            subject=subject,
+            message=message,
+            from_email=from_email,
+            recipient_list=recipient_list,
+            html_message=html_message,
+            fail_silently=False,
+        )
+    except Exception as exc:
+        # Retry on failure (network issues, SMTP errors, etc.)
+        raise self.retry(exc=exc) from exc
 
 
 @shared_task
@@ -41,6 +79,46 @@ def cleanup_deleted_users():
 
     return {
         "users_deleted": count,
+        "timestamp": timezone.now().isoformat(),
+        "cutoff_date": cutoff_date.isoformat(),
+    }
+
+
+@shared_task
+def cleanup_expired_confirmation_tokens():
+    """
+    Delete expired email confirmation tokens.
+
+    This task should be scheduled to run daily via Celery Beat.
+    It removes:
+    - EmailConfirmation tokens expired for more than 7 days
+    - EmailChangeConfirmation tokens expired for more than 7 days
+
+    Keeping expired tokens for 7 days allows users to understand why
+    their link doesn't work (expired vs invalid).
+
+    Returns:
+        dict: Statistics about the cleanup operation
+            - email_confirmations_deleted: Number of registration confirmations deleted
+            - email_change_confirmations_deleted: Number of email change confirmations deleted
+            - timestamp: When the cleanup was performed
+    """
+    # Calculate cutoff (7 days ago)
+    cutoff_date = timezone.now() - timedelta(days=7)
+
+    # Delete old EmailConfirmation records (registration)
+    email_confirmations = EmailConfirmation.objects.filter(expires_at__lt=cutoff_date)
+    email_confirmations_count = email_confirmations.count()
+    email_confirmations.delete()
+
+    # Delete old EmailChangeConfirmation records (email changes)
+    email_change_confirmations = EmailChangeConfirmation.objects.filter(expires_at__lt=cutoff_date)
+    email_change_confirmations_count = email_change_confirmations.count()
+    email_change_confirmations.delete()
+
+    return {
+        "email_confirmations_deleted": email_confirmations_count,
+        "email_change_confirmations_deleted": email_change_confirmations_count,
         "timestamp": timezone.now().isoformat(),
         "cutoff_date": cutoff_date.isoformat(),
     }
