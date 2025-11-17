@@ -7,20 +7,23 @@ username validation, email changes, and account management.
 
 import hashlib
 import hmac
+import logging
 import re
 
 from django.conf import settings
 from django.contrib.auth import authenticate
+from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils import timezone
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from apps.authentication.models import AccountLog
+from apps.authentication.models import EmailConfirmation
+from apps.authentication.models import User
+from apps.authentication.tasks import send_email_async
 from apps.sharing.models import Share
 
-from .models import AccountLog
-from .models import EmailConfirmation
-from .models import User
 
 # Username validation regex: alphanumeric and simple special characters, no spaces
 USERNAME_PATTERN = re.compile(r'^[a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};\':"\\|,.<>\/?]+$')
@@ -353,6 +356,8 @@ class EmailConfirmationService:
                 "confirmation_link": confirmation_link,
             }
         else:  # EMAIL_CHANGE
+            if new_email is None:
+                raise ValueError("new_email must be provided for email_change confirmation type.")
             confirmation_link = f"{frontend_url}/account/confirm-email?token={token}"
             html_template = "emails/confirm_email_change.html"
             text_template = "emails/confirm_email_change.txt"
@@ -368,16 +373,28 @@ class EmailConfirmationService:
         html_message = render_to_string(html_template, context)
         text_message = render_to_string(text_template, context)
 
-        # Send email asynchronously via Celery
-        from .tasks import send_email_async
+        # Send email asynchronously via Celery (fallback to synchronous if Redis unavailable)
+        try:
+            send_email_async.delay(
+                subject=subject,
+                message=text_message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[recipient],
+                html_message=html_message,
+            )
+        except Exception as e:
+            # Fallback to synchronous email sending if Celery/Redis is unavailable
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Celery unavailable, sending email synchronously: {e}")
 
-        send_email_async.delay(
-            subject=subject,
-            message=text_message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[recipient],
-            html_message=html_message,
-        )
+            send_mail(
+                subject=subject,
+                message=text_message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[recipient],
+                html_message=html_message,
+                fail_silently=False,
+            )
 
     @staticmethod
     def resend_confirmation_email(email: str) -> tuple[bool, str | None]:
@@ -671,16 +688,28 @@ def send_deletion_confirmation(user, token: str):
         },
     )
 
-    # Send email asynchronously via Celery
-    from apps.authentication.tasks import send_email_async
+    # Send email asynchronously via Celery (fallback to synchronous if Redis unavailable)
+    try:
+        send_email_async.delay(
+            subject="⚠️ Confirm Account Deletion",
+            message=plain_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[str(user.email)],
+            html_message=html_message,
+        )
+    except Exception as e:
+        # Fallback to synchronous email sending if Celery/Redis is unavailable
+        logger = logging.getLogger(__name__)
+        logger.warning(f"Celery unavailable, sending email synchronously: {e}")
 
-    send_email_async.delay(
-        subject="⚠️ Confirm Account Deletion",
-        message=plain_message,
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[str(user.email)],
-        html_message=html_message,
-    )
+        send_mail(
+            subject="⚠️ Confirm Account Deletion",
+            message=plain_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[str(user.email)],
+            html_message=html_message,
+            fail_silently=False,
+        )
 
 
 def soft_delete_user(user):
