@@ -35,6 +35,12 @@ AWS_STORAGE_BUCKET_NAME = None
 # Email backend for tests (in-memory)
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 
+# Celery settings for tests - run tasks synchronously without Redis
+CELERY_TASK_ALWAYS_EAGER = True  # Execute tasks immediately without worker
+CELERY_TASK_EAGER_PROPAGATES = True  # Propagate exceptions in eager mode
+CELERY_BROKER_URL = "memory://"  # Use in-memory broker for tests
+CELERY_RESULT_BACKEND = "cache+memory://"  # Use in-memory result backend
+
 # Simplify middleware for tests
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
