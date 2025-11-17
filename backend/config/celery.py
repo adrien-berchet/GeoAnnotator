@@ -30,6 +30,13 @@ app.conf.beat_schedule = {
             "expires": 3600,  # Task expires after 1 hour if not executed
         },
     },
+    "cleanup-expired-tokens-daily": {
+        "task": "apps.authentication.tasks.cleanup_expired_confirmation_tokens",
+        "schedule": crontab(hour=3, minute=0),  # Run daily at 3:00 AM
+        "options": {
+            "expires": 3600,  # Task expires after 1 hour if not executed
+        },
+    },
 }
 
 # Configure timezone for scheduled tasks
