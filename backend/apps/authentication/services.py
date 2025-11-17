@@ -341,10 +341,10 @@ class EmailConfirmationService:
         """
         # Get frontend URL from settings
         frontend_url = getattr(settings, "FRONTEND_URL", "http://localhost:5173")
-        confirmation_link = f"{frontend_url}/confirm-email?token={token}"
 
         # Select templates and subject based on confirmation type
         if confirmation_type == EmailConfirmation.REGISTRATION:
+            confirmation_link = f"{frontend_url}/confirm-email?token={token}"
             html_template = "emails/confirm_registration.html"
             text_template = "emails/confirm_registration.txt"
             subject = "Confirmez votre adresse email - GeoAnnotator"
@@ -354,6 +354,7 @@ class EmailConfirmationService:
                 "confirmation_link": confirmation_link,
             }
         else:  # EMAIL_CHANGE
+            confirmation_link = f"{frontend_url}/account/confirm-email?token={token}"
             html_template = "emails/confirm_email_change.html"
             text_template = "emails/confirm_email_change.txt"
             subject = "Confirm Email Address Change"
