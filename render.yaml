@@ -6,6 +6,7 @@ services:
   - type: web
     name: geoannotator-backend
     runtime: docker
+    plan: starter  # Free tier with limitations (sleeps after 15min inactivity)
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
     dockerCommand: gunicorn config.wsgi:application --bind 0.0.0.0:10000 --workers 4 --timeout 120
@@ -73,6 +74,7 @@ services:
   - type: worker
     name: geoannotator-celery-worker
     runtime: docker
+    plan: starter  # Free tier with limitations (sleeps after 15min inactivity)
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
     dockerCommand: celery -A config worker --loglevel=info --concurrency=2
@@ -123,6 +125,7 @@ services:
   - type: worker
     name: geoannotator-celery-beat
     runtime: docker
+    plan: starter  # Free tier with limitations (sleeps after 15min inactivity)
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
     dockerCommand: celery -A config beat --loglevel=info
@@ -159,6 +162,6 @@ services:
   # Note: Private service, only accessible by other Render services
   - type: redis
     name: geoannotator-redis
-    plan: starter  # Free up to 25MB, upgrade if needed
+    plan: free  # Free up to 25MB, upgrade if needed
     maxmemoryPolicy: allkeys-lru  # Automatic eviction when memory is full
     ipAllowList: []  # Empty = only accessible by Render services

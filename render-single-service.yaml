@@ -1,0 +1,79 @@
+# Render.com Blueprint for GeoAnnotator (Single Service)
+# Documentation: https://render.com/docs/blueprint-spec
+#
+# This configuration uses a SINGLE web service (free tier) that runs:
+# - Django Backend (Gunicorn)
+# - Celery Worker (background emails)
+# - Celery Beat (scheduled cleanup)
+#
+# For Redis, use a free external service like:
+# - Upstash Redis (free tier: 10k commands/day)
+# - Redis Cloud (free tier: 30MB)
+
+services:
+  # All-in-One: Django Backend + Celery Worker + Celery Beat
+  - type: web
+    name: geoannotator-backend
+    runtime: docker
+    plan: starter  # FREE tier (sleeps after 15min inactivity)
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    dockerCommand: ./start-render.sh  # Custom startup script
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11
+      - key: DJANGO_SETTINGS_MODULE
+        value: config.settings.production
+      - key: DEBUG
+        value: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: FERNET_KEY
+        sync: false  # Manual configuration required (32 base64 characters)
+      - key: ALLOWED_HOSTS
+        value: .onrender.com
+      - key: DATABASE_URL
+        sync: false  # Neon PostgreSQL connection string (configure manually)
+
+      # Redis - Use external free service
+      # Example: redis://default:password@redis-12345.upstash.io:6379
+      - key: REDIS_URL
+        sync: false  # Configure with Upstash/Redis Cloud connection string
+      - key: CELERY_BROKER_URL
+        sync: false  # Same as REDIS_URL
+      - key: CELERY_RESULT_BACKEND
+        sync: false  # Same as REDIS_URL
+
+      # Email Configuration
+      - key: EMAIL_BACKEND
+        value: django.core.mail.backends.smtp.EmailBackend
+      - key: EMAIL_HOST
+        value: smtp.gmail.com
+      - key: EMAIL_PORT
+        value: 587
+      - key: EMAIL_USE_TLS
+        value: true
+      - key: EMAIL_HOST_USER
+        sync: false  # Gmail address (configure manually)
+      - key: EMAIL_HOST_PASSWORD
+        sync: false  # Gmail App Password (configure manually)
+      - key: DEFAULT_FROM_EMAIL
+        sync: false  # Sender email address (configure manually)
+
+      # Frontend
+      - key: FRONTEND_URL
+        sync: false  # Frontend URL on Vercel (configure manually)
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false  # Frontend URL on Vercel (configure manually)
+
+      # Storage (Optional - S3/MinIO)
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_STORAGE_BUCKET_NAME
+        sync: false
+      - key: AWS_S3_ENDPOINT_URL
+        sync: false
+      - key: AWS_S3_REGION_NAME
+        value: eu-west-3
