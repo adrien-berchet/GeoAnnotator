@@ -14,11 +14,15 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from PIL import Image
 from rest_framework.test import APIClient
+from rest_framework.test import APIRequestFactory
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from apps.annotations.models import Annotation
 from apps.authentication.models import User
 from apps.points.models import GPSPoint
 from apps.points.models import Tag
+from apps.trash.models import AnnotationTrash
+from apps.trash.models import Trash
 
 
 def create_verified_user(username: str, email: str, password: str) -> User:
@@ -234,6 +238,115 @@ def enable_db_access_for_all_tests(db):
     It ensures that the database is available.
     """
     pass
+
+
+@pytest.fixture
+def text_annotation(gps_point_alice):
+    """Create a text annotation for testing."""
+
+    return Annotation.objects.create(
+        gps_point=gps_point_alice, type="text", text_content="<p>Test annotation content</p>"
+    )
+
+
+@pytest.fixture
+def image_annotation(gps_point_alice, sample_image_file):
+    """Create an image annotation for testing."""
+
+    annotation = Annotation.objects.create(
+        gps_point=gps_point_alice,
+        type="image",
+        file=sample_image_file,
+        file_name="test_image.jpg",
+        file_size=sample_image_file.size,
+        mime_type="image/jpeg",
+    )
+    # Update storage usage
+    gps_point_alice.owner.add_storage_usage(sample_image_file.size)
+    return annotation
+
+
+@pytest.fixture
+def document_annotation(gps_point_alice, sample_pdf_file):
+    """Create a document annotation for testing."""
+
+    annotation = Annotation.objects.create(
+        gps_point=gps_point_alice,
+        type="document",
+        file=sample_pdf_file,
+        file_name="test_document.pdf",
+        file_size=sample_pdf_file.size,
+        mime_type="application/pdf",
+    )
+    # Update storage usage
+    gps_point_alice.owner.add_storage_usage(sample_pdf_file.size)
+    return annotation
+
+
+@pytest.fixture
+def gps_point(alice):
+    """Generic GPS point fixture (alias for gps_point_alice)."""
+    return GPSPoint.objects.create(
+        title="Test Point",
+        description="<p>Generic test point</p>",
+        location=Point(-122.6765, 45.5231),
+        owner=alice,
+        is_public=False,
+    )
+
+
+@pytest.fixture
+def api_request_factory():
+    """Provide a request factory for creating mock requests."""
+    return APIRequestFactory()
+
+
+@pytest.fixture
+def trash_entry_alice(alice, gps_point_alice):
+    """Create a trash entry for Alice's GPS point."""
+
+    trash = Trash.objects.create(gps_point=gps_point_alice, deleted_by=alice)
+    return trash
+
+
+@pytest.fixture
+def trash_entry_bob(bob, gps_point_bob):
+    """Create a trash entry for Bob's GPS point."""
+
+    trash = Trash.objects.create(gps_point=gps_point_bob, deleted_by=bob)
+    return trash
+
+
+@pytest.fixture
+def annotation_trash_entry(alice, text_annotation):
+    """Create an annotation trash entry for Alice's annotation."""
+
+    annotation_trash = AnnotationTrash.objects.create(annotation=text_annotation, deleted_by=alice)
+    return annotation_trash
+
+
+@pytest.fixture
+def annotation_trash_bob(bob, gps_point_bob):
+    """Create an annotation trash entry for Bob's annotation."""
+
+    # Create text annotation for Bob
+    annotation = Annotation.objects.create(
+        gps_point=gps_point_bob, type="text", text_content="Bob's annotation"
+    )
+    annotation_trash = AnnotationTrash.objects.create(annotation=annotation, deleted_by=bob)
+    return annotation_trash
+
+
+@pytest.fixture
+def gps_point_bob(bob):
+    """Create a GPS point owned by Bob."""
+    return GPSPoint.objects.create(
+        title="Bob's Test Point",
+        description="<p>Test point for Bob</p>",
+        location=Point(-122.6819, 45.5280),
+        owner=bob,
+        is_public=False,
+    )
 
 
 @pytest.fixture
