@@ -234,6 +234,20 @@ CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = "UTC"
 
+# SSL/TLS configuration for external Redis (Upstash, Redis Cloud)
+# Required when using rediss:// (SSL) connections
+if CELERY_BROKER_URL.startswith("rediss://"):
+    import ssl
+
+    CELERY_BROKER_USE_SSL = {
+        "ssl_cert_reqs": ssl.CERT_REQUIRED,
+        "ssl_ca_certs": None,  # Use system CA certificates
+    }
+    CELERY_REDIS_BACKEND_USE_SSL = {
+        "ssl_cert_reqs": ssl.CERT_REQUIRED,
+        "ssl_ca_certs": None,
+    }
+
 # Fernet encryption key for sensitive data (email addresses)
 FERNET_KEY = os.environ.get("FERNET_KEY", "")
 

@@ -4,6 +4,7 @@ Celery tasks for authentication app.
 Handles periodic cleanup of soft-deleted users and email sending.
 """
 
+import logging
 from datetime import timedelta
 
 from celery import shared_task
@@ -13,6 +14,8 @@ from django.utils import timezone
 from .models import EmailChangeConfirmation
 from .models import EmailConfirmation
 from .models import User
+
+logger = logging.getLogger(__name__)
 
 
 @shared_task(bind=True, max_retries=3, default_retry_delay=60)
@@ -36,7 +39,29 @@ def send_email_async(
 
     Retries up to 3 times with 60 second delay between attempts.
     """
+    from django.conf import settings
+
+    logger.info(f"Attempting to send email: {subject} to {recipient_list}")
+    logger.info(
+        f"Email config: HOST={settings.EMAIL_HOST}, PORT={settings.EMAIL_PORT}, TLS={settings.EMAIL_USE_TLS}"
+    )
+
     try:
+        # Test network connectivity to SMTP server
+        import socket
+
+        logger.info(f"Testing connection to {settings.EMAIL_HOST}:{settings.EMAIL_PORT}...")
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(10)
+        try:
+            sock.connect((settings.EMAIL_HOST, settings.EMAIL_PORT))
+            logger.info("✓ Network connection to SMTP server successful")
+            sock.close()
+        except Exception as conn_exc:
+            logger.error(f"✗ Network connection failed: {conn_exc}")
+            raise
+
+        # Attempt to send email
         send_mail(
             subject=subject,
             message=message,
@@ -45,7 +70,9 @@ def send_email_async(
             html_message=html_message,
             fail_silently=False,
         )
+        logger.info(f"✓ Email sent successfully to {recipient_list}")
     except Exception as exc:
+        logger.error(f"✗ Email sending failed: {exc}", exc_info=True)
         # Retry on failure (network issues, SMTP errors, etc.)
         raise self.retry(exc=exc) from exc
 
