@@ -19,8 +19,9 @@ If you're sure you want to proceed, please click the link below to confirm accou
 {{ confirmation_link }}
 
 💡 Changed your mind?
-
 If you didn't request this deletion or have changed your mind, simply ignore this email and your account will remain active.
+
+📬 NOTE: If you don't see this email in your inbox, please check your spam/junk folder.
 
 For security reasons, do not share this link with anyone.
 

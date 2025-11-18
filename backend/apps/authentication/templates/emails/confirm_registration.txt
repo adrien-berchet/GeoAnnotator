@@ -11,6 +11,8 @@ Click the link below to verify your email:
 
 ⏰ IMPORTANT: This link will expire in 48 hours.
 
+📬 NOTE: If you don't see this email in your inbox, please check your spam/junk folder.
+
 Once you confirm your email, you'll be able to log in and start using GeoAnnotator.
 
 If you didn't create an account with GeoAnnotator, please ignore this email.
