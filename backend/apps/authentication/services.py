@@ -312,7 +312,9 @@ class EmailConfirmationService:
             # Update user email
             old_email = str(user.email)
             user.email = confirmation.new_email
-            user.save(update_fields=["email"])
+            # Must include email_hash in update_fields because save() regenerates it
+            # but it won't be persisted unless explicitly included
+            user.save(update_fields=["email", "email_hash"])
 
             # Log the email change
             AccountLog.objects.create(
