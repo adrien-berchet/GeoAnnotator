@@ -1,63 +1,9 @@
 /**
  * Settings page styles
+ * Uses common page layout styles from components.css
  */
 
-.settings-page {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: var(--spacing-2xl);
-}
-
-.settings-header {
-  margin-bottom: var(--spacing-2xl);
-}
-
-.settings-header h1 {
-  font-size: var(--font-size-3xl);
-  font-weight: var(--font-weight-bold);
-  margin: 0 0 var(--spacing-sm) 0;
-  color: var(--color-text-primary);
-}
-
-.settings-subtitle {
-  font-size: var(--font-size-base);
-  color: var(--color-text-secondary);
-  margin: 0;
-}
-
-.settings-loading {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 300px;
-}
-
-/* Note: .spinner, .visually-hidden, .error-message, and .success-message are now in components.css */
-
-.settings-error {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--spacing-lg);
-  padding: var(--spacing-2xl);
-  text-align: center;
-}
-
-.retry-button {
-  padding: var(--spacing-md) var(--spacing-xl);
-  background: var(--color-primary);
-  color: var(--color-primary-contrast);
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-base);
-  font-weight: var(--font-weight-semibold);
-  cursor: pointer;
-  transition: background var(--transition-base);
-}
-
-.retry-button:hover {
-  background: var(--color-primary-hover);
-}
+/* Use .page, .page-header, .page-subtitle, .page-loading, .page-error, .btn-retry from components.css */
 
 .settings-form {
   display: flex;
@@ -179,19 +125,4 @@
 
 .warning-actions button:last-child:hover {
   background: var(--color-primary-hover);
-}
-
-/* Responsive design */
-@media (max-width: 640px) {
-  .settings-page {
-    padding: var(--spacing-lg);
-  }
-
-  .settings-header h1 {
-    font-size: var(--font-size-2xl);
-  }
-
-  .theme-selector {
-    flex-direction: column;
-  }
 }

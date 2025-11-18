@@ -36,8 +36,8 @@ export function AccountPage() {
 
   if (isInitialLoad && isLoading) {
     return (
-      <div className="account-page">
-        <div className="account-loading">
+      <div className="page">
+        <div className="page-loading">
           <div className="spinner" role="status">
             <span className="visually-hidden">
               {t("account.loading", "Loading account...")}
@@ -50,10 +50,10 @@ export function AccountPage() {
 
   if (error && !account) {
     return (
-      <div className="account-page">
-        <div className="account-error">
+      <div className="page">
+        <div className="page-error">
           <p className="error-message">{error}</p>
-          <button className="retry-button" onClick={fetchAccount}>
+          <button className="btn-retry" onClick={fetchAccount}>
             {t("account.retry", "Retry")}
           </button>
         </div>
@@ -62,11 +62,11 @@ export function AccountPage() {
   }
 
   return (
-    <div className="account-page">
+    <div className="page">
       <div className="account-container">
-        <header className="account-header">
+        <header className="page-header">
           <h1>{t("account.title", "Account Management")}</h1>
-          <p className="account-subtitle">
+          <p className="page-subtitle">
             {t(
               "account.subtitle",
               "Manage your profile information and account settings",
@@ -76,7 +76,7 @@ export function AccountPage() {
 
         <div className="account-content">
           {/* Account Info Section */}
-          <section className="account-section">
+          <section className="page-section">
             <h2>{t("account.info.title", "Account Information")}</h2>
             <div className="account-info">
               <div className="info-item">
@@ -101,7 +101,7 @@ export function AccountPage() {
           </section>
 
           {/* Username Section */}
-          <section className="account-section">
+          <section className="page-section">
             <h2>{t("account.username.title", "Username")}</h2>
             <p className="section-description">
               {t(
@@ -113,7 +113,7 @@ export function AccountPage() {
           </section>
 
           {/* Email Change Section */}
-          <section className="account-section">
+          <section className="page-section">
             <h2>{t("account.email.title", "Change Email Address")}</h2>
             <p className="section-description">
               {t(
@@ -125,7 +125,7 @@ export function AccountPage() {
           </section>
 
           {/* Password Change Section */}
-          <section className="account-section">
+          <section className="page-section">
             <h2>{t("account.password.title", "Change Password")}</h2>
             <p className="section-description">
               {t(
@@ -137,7 +137,7 @@ export function AccountPage() {
           </section>
 
           {/* Danger Zone Section */}
-          <section className="account-section danger-zone">
+          <section className="page-section danger-zone">
             <h2>{t("account.dangerZone.title", "Danger Zone")}</h2>
             <p className="section-description danger-description">
               {t(

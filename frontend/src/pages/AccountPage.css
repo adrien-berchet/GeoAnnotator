@@ -1,66 +1,14 @@
 /**
  * Account page styles
+ * Uses common page layout styles from components.css
  */
 
-.account-page {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: var(--spacing-2xl);
-}
+/* Use .page, .page-header, .page-subtitle, .page-loading, .page-error, .btn-retry from components.css */
 
 .account-container {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-2xl);
-}
-
-.account-header {
-  margin-bottom: var(--spacing-lg);
-}
-
-.account-header h1 {
-  font-size: var(--font-size-3xl);
-  font-weight: var(--font-weight-bold);
-  margin: 0 0 var(--spacing-sm) 0;
-  color: var(--color-text-primary);
-}
-
-.account-subtitle {
-  font-size: var(--font-size-base);
-  color: var(--color-text-secondary);
-  margin: 0;
-}
-
-.account-loading {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 300px;
-}
-
-.account-error {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--spacing-lg);
-  padding: var(--spacing-2xl);
-  text-align: center;
-}
-
-.retry-button {
-  padding: var(--spacing-md) var(--spacing-xl);
-  background: var(--color-primary);
-  color: var(--color-primary-contrast);
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-base);
-  font-weight: var(--font-weight-semibold);
-  cursor: pointer;
-  transition: background var(--transition-base);
-}
-
-.retry-button:hover {
-  background: var(--color-primary-hover);
 }
 
 .account-content {
@@ -69,26 +17,7 @@
   gap: var(--spacing-3xl);
 }
 
-.account-section {
-  padding: var(--spacing-xl);
-  background: var(--color-bg-secondary);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--color-border-primary);
-}
-
-.account-section h2 {
-  font-size: var(--font-size-xl);
-  font-weight: var(--font-weight-semibold);
-  margin: 0 0 var(--spacing-md) 0;
-  color: var(--color-text-primary);
-}
-
-.section-description {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
-  margin: 0 0 var(--spacing-lg) 0;
-  line-height: 1.5;
-}
+/* Use .page-section for account sections from components.css */
 
 .account-info {
   display: flex;
@@ -137,18 +66,6 @@
 
 /* Responsive design */
 @media (max-width: 640px) {
-  .account-page {
-    padding: var(--spacing-lg);
-  }
-
-  .account-header h1 {
-    font-size: var(--font-size-2xl);
-  }
-
-  .account-section {
-    padding: var(--spacing-md);
-  }
-
   .info-item {
     flex-direction: column;
     align-items: flex-start;

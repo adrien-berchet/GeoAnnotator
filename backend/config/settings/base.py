@@ -248,9 +248,6 @@ if CELERY_BROKER_URL.startswith("rediss://"):
         "ssl_ca_certs": None,
     }
 
-# Fernet encryption key for sensitive data (email addresses)
-FERNET_KEY = os.environ.get("FERNET_KEY", "")
-
 # CORS settings
 CORS_ALLOW_ALL_ORIGINS = False  # Override in development
 # Parse CORS origins from environment variable (comma-separated)
