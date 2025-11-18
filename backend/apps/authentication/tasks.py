@@ -41,27 +41,11 @@ def send_email_async(
     """
     from django.conf import settings
 
-    logger.info(f"Attempting to send email: {subject} to {recipient_list}")
-    logger.info(
-        f"Email config: HOST={settings.EMAIL_HOST}, PORT={settings.EMAIL_PORT}, TLS={settings.EMAIL_USE_TLS}"
-    )
+    logger.info(f"📧 Sending email: '{subject}' to {recipient_list}")
+    logger.info(f"Using backend: {settings.EMAIL_BACKEND}")
 
     try:
-        # Test network connectivity to SMTP server
-        import socket
-
-        logger.info(f"Testing connection to {settings.EMAIL_HOST}:{settings.EMAIL_PORT}...")
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.settimeout(10)
-        try:
-            sock.connect((settings.EMAIL_HOST, settings.EMAIL_PORT))
-            logger.info("✓ Network connection to SMTP server successful")
-            sock.close()
-        except Exception as conn_exc:
-            logger.error(f"✗ Network connection failed: {conn_exc}")
-            raise
-
-        # Attempt to send email
+        # Send email using configured backend (Mailjet HTTP API or SMTP)
         send_mail(
             subject=subject,
             message=message,
@@ -70,10 +54,10 @@ def send_email_async(
             html_message=html_message,
             fail_silently=False,
         )
-        logger.info(f"✓ Email sent successfully to {recipient_list}")
+        logger.info(f"✅ Email sent successfully: '{subject}' to {recipient_list}")
     except Exception as exc:
-        logger.error(f"✗ Email sending failed: {exc}", exc_info=True)
-        # Retry on failure (network issues, SMTP errors, etc.)
+        logger.error(f"❌ Email sending failed: {exc}", exc_info=True)
+        # Retry on failure (network issues, API errors, etc.)
         raise self.retry(exc=exc) from exc
 
 

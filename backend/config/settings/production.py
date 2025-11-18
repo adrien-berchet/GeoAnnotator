@@ -98,5 +98,15 @@ LOGGING = {
             "level": "INFO",
             "propagate": False,
         },
+        "config": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "celery": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
     },
 }

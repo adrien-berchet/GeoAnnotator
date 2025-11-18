@@ -31,6 +31,7 @@ urlpatterns = [
     path("api/v1/tags/", include("apps.points.tags_urls")),
     path("api/v1/types/", include("apps.points.types_urls")),
     path("api/v1/settings/", include("apps.settings.urls")),
+    path("api/v1/system/", include("apps.core.urls")),  # System diagnostics
 ]
 
 # Serve media files in development
