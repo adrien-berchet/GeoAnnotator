@@ -23,7 +23,8 @@ INSTALLED_APPS += [
 SECURE_SSL_REDIRECT = True
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
-SECURE_BROWSER_XSS_FILTER = True
+# Note: SECURE_BROWSER_XSS_FILTER is deprecated as of Django 4.0
+# Modern browsers have built-in XSS protection enabled by default
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = "DENY"
 

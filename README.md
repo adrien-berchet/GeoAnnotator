@@ -23,11 +23,11 @@ A comprehensive web application for geospatial annotation enabling field researc
 - **Python 3.11+**
 
 ### Frontend
-- **React 18+** with TypeScript
-- **Vite 5+** for fast development
+- **React 19+** with TypeScript
+- **Vite 7+** for fast development
 - **Leaflet 1.9+** for interactive mapping
 - **Axios** for API calls
-- **React Router** for navigation
+- **React Router 7+** for navigation
 
 ## Quick Start with Docker (Recommended)
 
@@ -70,9 +70,9 @@ See [QUICKSTART.md](QUICKSTART.md) for detailed instructions.
 
 ### Manual Setup
 - Python 3.11+
-- Node.js 20.19+ or 22.12+
+- Node.js 20+ or 22+
 - PostgreSQL 15+ with PostGIS extension
-- GDAL 3.7+ (for GeoDjango)
+- GDAL 3.6+ (for GeoDjango)
 
 ## Installation
 

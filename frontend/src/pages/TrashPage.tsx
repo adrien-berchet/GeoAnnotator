@@ -131,7 +131,7 @@ export function TrashPage() {
 
   if (isLoading) {
     return (
-      <div className="trash-page">
+      <div className="page">
         <div className="loading">{t("trash.loading", "Loading trash...")}</div>
       </div>
     );
@@ -139,9 +139,9 @@ export function TrashPage() {
 
   if (error) {
     return (
-      <div className="trash-page">
+      <div className="page">
         <div className="error">{error}</div>
-        <button className="btn btn-retry" onClick={loadTrashData}>
+        <button className="btn-retry" onClick={loadTrashData}>
           {t("common.retry", "Retry")}
         </button>
       </div>
@@ -153,10 +153,10 @@ export function TrashPage() {
     activeTab === "points" ? pointsTrash.length : annotationsTrash.length;
 
   return (
-    <div className="trash-page">
-      <header className="trash-header">
+    <div className="page">
+      <header className="page-header">
         <h1>🗑️ {t("trash.title", "Trash")}</h1>
-        <p className="trash-subtitle">
+        <p className="page-subtitle">
           {t(
             "trash.subtitle",
             "Deleted items are kept for 30 days before permanent deletion.",

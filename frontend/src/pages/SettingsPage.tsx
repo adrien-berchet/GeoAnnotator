@@ -163,8 +163,8 @@ export function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="settings-page">
-        <div className="settings-loading">
+      <div className="page">
+        <div className="page-loading">
           <div
             className="spinner"
             role="status"
@@ -181,10 +181,10 @@ export function SettingsPage() {
 
   if (error && !preferences) {
     return (
-      <div className="settings-page">
-        <div className="settings-error">
+      <div className="page">
+        <div className="page-error">
           <p className="error-message">{error}</p>
-          <button type="button" onClick={loadSettings} className="retry-button">
+          <button type="button" onClick={loadSettings} className="btn-retry">
             {t("common.retry", "Retry")}
           </button>
         </div>
@@ -193,10 +193,10 @@ export function SettingsPage() {
   }
 
   return (
-    <div className="settings-page">
-      <header className="settings-header">
+    <div className="page">
+      <header className="page-header">
         <h1>{t("settings.title", "Settings")}</h1>
-        <p className="settings-subtitle">
+        <p className="page-subtitle">
           {t(
             "settings.subtitle",
             "Manage your preferences and application settings",

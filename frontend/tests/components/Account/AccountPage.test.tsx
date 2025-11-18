@@ -118,11 +118,9 @@ describe("AccountPage Component", () => {
   it("should have proper semantic HTML structure", () => {
     const { container } = renderWithProviders(<AccountPage />);
 
-    // Check for main or container element
-    const main =
-      container.querySelector("main") ||
-      container.querySelector(".account-page");
-    expect(main).toBeTruthy();
+    // Check for page container element
+    const pageContainer = container.querySelector(".page");
+    expect(pageContainer).toBeTruthy();
   });
 
   it("should support keyboard navigation", () => {

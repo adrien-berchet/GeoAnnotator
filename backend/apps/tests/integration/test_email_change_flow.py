@@ -63,6 +63,12 @@ class TestEmailChangeFlow:
         logs = AccountLog.objects.filter(user=alice, operation="EMAIL_CHANGE_CONFIRMED")
         assert logs.count() >= 1
 
+        # Step 5: Verify email_hash was updated (critical for login to work)
+        from apps.authentication.models import User
+
+        expected_hash = User.hash_email(new_email)
+        assert alice.email_hash == expected_hash, "email_hash must be updated with new email!"
+
     def test_email_change_request_creates_confirmation_record(
         self, alice, authenticated_client_alice
     ):
@@ -221,3 +227,60 @@ class TestEmailChangeFlow:
             user=alice, operation__in=["EMAIL_CHANGE_REQUESTED", "EMAIL_CHANGE_CONFIRMED"]
         )
         assert logs.count() >= 1
+
+    def test_email_change_allows_login_with_new_email_and_releases_old_email(
+        self, alice, authenticated_client_alice
+    ):
+        """
+        Test that after email change:
+        1. Login works with new email
+        2. Login fails with old email
+        3. Old email can be reused by a new user
+        """
+        from apps.authentication.models import User
+        from apps.authentication.services import AuthenticationService
+
+        old_email = str(alice.email)
+        new_email = "alice_new_email@example.com"
+        password = "testpassword123"  # Assuming alice's password
+
+        # Request and confirm email change
+        change_url = reverse("authentication:email-change")
+        authenticated_client_alice.post(change_url, {"new_email": new_email}, format="json")
+
+        confirmation = EmailConfirmation.objects.get(
+            user=alice, confirmation_type=EmailConfirmation.EMAIL_CHANGE
+        )
+        token = confirmation.token
+
+        confirm_url = reverse("authentication:email-confirm")
+        authenticated_client_alice.post(
+            confirm_url, {"token": token, "user_id": str(alice.id)}, format="json"
+        )
+
+        # Refresh alice from database
+        alice.refresh_from_db()
+
+        # Verify 1: Email and email_hash were both updated
+        assert alice.email == new_email
+        assert alice.email_hash == User.hash_email(new_email)
+
+        # Verify 2: Login with new email works (via AuthenticationService)
+        # Note: alice fixture might not have a password set, so we need to set one first
+        alice.set_password(password)
+        alice.save()
+
+        authenticated_user = AuthenticationService.authenticate_user(new_email, password)
+        assert authenticated_user is not None
+        assert authenticated_user.id == alice.id
+
+        # Verify 3: Login with old email fails
+        authenticated_user = AuthenticationService.authenticate_user(old_email, password)
+        assert authenticated_user is None
+
+        # Verify 4: Old email can be reused (no uniqueness conflict)
+        new_user = User.objects.create_user(
+            username="newuser", email=old_email, password="newpassword123"
+        )
+        assert new_user.email == old_email
+        assert new_user.email_hash == User.hash_email(old_email)
