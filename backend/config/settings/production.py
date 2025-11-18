@@ -61,7 +61,7 @@ AWS_S3_OBJECT_PARAMETERS = {
 
 STORAGES = {
     "default": {"BACKEND": "storages.backends.s3.S3Storage"},
-    "staticfiles": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
     "media": {"BACKEND": "storages.backends.s3.S3Storage"},
 }
 
