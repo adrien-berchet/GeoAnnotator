@@ -147,12 +147,6 @@
   padding: 1rem;
   border-top: 1px solid var(--color-border-primary);
   color: var(--color-text-primary);
-  vertical-align: middle;
-  height: 60px;
-}
-
-.shared-points-table tbody tr {
-  height: 60px;
 }
 
 .shared-points-table tbody tr:hover {
@@ -194,19 +188,15 @@
 .point-tags {
   min-width: 150px;
   max-width: 250px;
-  white-space: nowrap;
-  overflow: hidden;
-  height: 100%;
-  display: flex;
-  align-items: center;
 }
 
 .tags-list {
-  display: flex;
+  display: inline-flex;
   gap: 0.5rem;
   flex-wrap: nowrap;
-  overflow: hidden;
   align-items: center;
+  overflow: hidden;
+  max-width: 100%;
 }
 
 .tag-badge {
@@ -218,6 +208,9 @@
   font-size: 0.75rem;
   white-space: nowrap;
   flex-shrink: 0;
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .tag-more {
@@ -245,11 +238,11 @@
 }
 
 .point-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  min-width: 200px;
-  height: 100%;
+  vertical-align: middle;
+}
+
+.point-actions > button {
+  vertical-align: middle;
 }
 
 /* Buttons */
