@@ -148,6 +148,11 @@
   border-top: 1px solid var(--color-border-primary);
   color: var(--color-text-primary);
   vertical-align: middle;
+  height: 60px;
+}
+
+.shared-points-table tbody tr {
+  height: 60px;
 }
 
 .shared-points-table tbody tr:hover {
@@ -190,6 +195,10 @@
   min-width: 150px;
   max-width: 250px;
   white-space: nowrap;
+  overflow: hidden;
+  height: 100%;
+  display: flex;
+  align-items: center;
 }
 
 .tags-list {
@@ -197,6 +206,7 @@
   gap: 0.5rem;
   flex-wrap: nowrap;
   overflow: hidden;
+  align-items: center;
 }
 
 .tag-badge {
@@ -239,6 +249,7 @@
   align-items: center;
   gap: 0.5rem;
   min-width: 200px;
+  height: 100%;
 }
 
 /* Buttons */
