@@ -11,6 +11,7 @@ import { apiClient } from "./client";
  */
 export interface Friend {
   id: string;
+  friendship_id: string;
   username: string;
   email: string;
   shares_sent_count: number;

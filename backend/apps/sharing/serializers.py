@@ -277,11 +277,18 @@ class FriendSerializer(serializers.Serializer):
     """
 
     id = serializers.UUIDField(read_only=True)
+    friendship_id = serializers.SerializerMethodField()
     username = serializers.CharField(read_only=True)
     email = serializers.EmailField(read_only=True)
     shares_sent_count = serializers.IntegerField(read_only=True, default=0)
     shares_received_count = serializers.IntegerField(read_only=True, default=0)
     friendship_created_at = serializers.SerializerMethodField()
+
+    def get_friendship_id(self, obj):
+        """Get the friendship ID."""
+        user = self.context.get("request").user
+        friendship = Friendship.objects.filter(user=user, friend=obj).first()
+        return friendship.id if friendship else None
 
     def get_friendship_created_at(self, obj):
         """Get the friendship creation timestamp."""

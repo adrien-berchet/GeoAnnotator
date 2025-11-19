@@ -139,7 +139,7 @@ export function FriendsPage() {
               <div
                 key={friend.id}
                 className="friend-card"
-                onClick={() => navigate(`/friends/${friend.id}`)}
+                onClick={() => navigate(`/friends/${friend.friendship_id}`)}
               >
                 <div className="friend-card-header">
                   <div className="friend-avatar">
