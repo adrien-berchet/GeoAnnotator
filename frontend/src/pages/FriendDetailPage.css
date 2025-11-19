@@ -79,8 +79,8 @@
 }
 
 .stat-card {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-primary);
   border-radius: 8px;
   padding: 1.5rem;
   display: flex;
@@ -92,13 +92,13 @@
 .stat-card .stat-value {
   font-size: 2.5rem;
   font-weight: 700;
-  color: var(--primary-color);
+  color: var(--color-primary);
   margin-bottom: 0.5rem;
 }
 
 .stat-card .stat-label {
   font-size: 0.875rem;
-  color: var(--text-secondary);
+  color: var(--color-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -106,19 +106,20 @@
 /* Shared Points Section */
 .shared-points-section {
   margin-top: 2rem;
+  min-width: 100%;
 }
 
 .shared-points-section h2 {
   margin: 0 0 1.5rem 0;
   font-size: 1.5rem;
-  color: var(--text-primary);
+  color: var(--color-text-primary);
 }
 
 /* Table */
 .shared-points-table {
   overflow-x: auto;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-primary);
   border-radius: 8px;
 }
 
@@ -128,8 +129,8 @@
 }
 
 .shared-points-table thead {
-  background: var(--bg-primary);
-  border-bottom: 2px solid var(--border-color);
+  background: var(--color-bg-primary);
+  border-bottom: 2px solid var(--color-border-primary);
 }
 
 .shared-points-table th {
@@ -137,19 +138,19 @@
   text-align: left;
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--text-secondary);
+  color: var(--color-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .shared-points-table td {
   padding: 1rem;
-  border-top: 1px solid var(--border-color);
-  color: var(--text-primary);
+  border-top: 1px solid var(--color-border-primary);
+  color: var(--color-text-primary);
 }
 
 .shared-points-table tbody tr:hover {
-  background: var(--bg-primary);
+  background: var(--color-bg-hover);
 }
 
 .point-title {
@@ -169,7 +170,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.25rem 0.75rem;
-  background: var(--bg-primary);
+  background: var(--color-bg-tertiary);
   border-radius: 4px;
   font-size: 0.875rem;
 }
@@ -196,19 +197,19 @@
 .tag-badge {
   display: inline-block;
   padding: 0.25rem 0.5rem;
-  background: var(--primary-color);
+  background: var(--color-primary);
   color: white;
   border-radius: 4px;
   font-size: 0.75rem;
 }
 
 .tag-more {
-  color: var(--text-secondary);
+  color: var(--color-text-secondary);
   font-size: 0.75rem;
 }
 
 .text-muted {
-  color: var(--text-secondary);
+  color: var(--color-text-secondary);
   font-style: italic;
 }
 
@@ -219,7 +220,7 @@
 }
 
 .point-date {
-  color: var(--text-secondary);
+  color: var(--color-text-secondary);
   font-size: 0.875rem;
   min-width: 100px;
 }
@@ -235,29 +236,41 @@
   padding: 0.5rem 0.75rem;
   font-size: 0.875rem;
   border-radius: 4px;
-  border: none;
   cursor: pointer;
   font-weight: 500;
   transition: all 0.2s ease;
+  border: none;
 }
 
 .btn-small.btn-primary {
-  background: var(--primary-color);
+  background: var(--color-primary);
   color: white;
+  border: none;
 }
 
 .btn-small.btn-primary:hover {
-  background: var(--primary-color-dark);
+  background: var(--color-primary-hover);
 }
 
 .btn-small.btn-secondary {
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
+  background: transparent;
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border-primary);
 }
 
 .btn-small.btn-secondary:hover {
-  background: var(--bg-secondary);
+  background: var(--color-bg-hover);
+  border-color: var(--color-border-secondary);
+}
+
+.btn-small.btn-danger {
+  background: var(--color-danger);
+  color: white;
+  border: none;
+}
+
+.btn-small.btn-danger:hover {
+  background: var(--color-danger-hover);
 }
 
 /* Dialog */
@@ -276,7 +289,7 @@
 }
 
 .dialog {
-  background: var(--bg-secondary);
+  background: var(--color-bg-secondary);
   border-radius: 8px;
   padding: 2rem;
   max-width: 500px;
@@ -287,17 +300,17 @@
 .dialog h2 {
   margin: 0 0 1rem 0;
   font-size: 1.5rem;
-  color: var(--text-primary);
+  color: var(--color-text-primary);
 }
 
 .dialog p {
   margin: 0 0 1rem 0;
-  color: var(--text-secondary);
+  color: var(--color-text-secondary);
   line-height: 1.5;
 }
 
 .dialog-stats {
-  background: var(--bg-primary);
+  background: var(--color-bg-primary);
   padding: 1rem;
   border-radius: 6px;
   margin: 1rem 0;
@@ -305,7 +318,7 @@
 
 .dialog-stats p {
   margin: 0.5rem 0;
-  color: var(--text-primary);
+  color: var(--color-text-primary);
 }
 
 .warning-text {

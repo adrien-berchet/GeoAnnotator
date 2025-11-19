@@ -230,7 +230,7 @@ export function FriendDetailPage() {
                           // TODO: Implement unshare functionality
                           console.log("Unshare point:", point.id);
                         }}
-                        className="btn-small btn-secondary"
+                        className="btn-small btn-danger"
                       >
                         Unshare
                       </button>
