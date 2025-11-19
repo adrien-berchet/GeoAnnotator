@@ -27,6 +27,7 @@ export function PointsListPage() {
   const [searchInput, setSearchInput] = useState("");
   const [selectedTagNames, setSelectedTagNames] = useState<string[]>([]);
   const [selectedTypeIds, setSelectedTypeIds] = useState<string[]>([]);
+  const [selectedPointIds, setSelectedPointIds] = useState<string[]>([]);
   const navigate = useNavigate();
 
   const searchQuery = searchParams.get("search") || "";
@@ -194,6 +195,30 @@ export function PointsListPage() {
     setSearchInput("");
   };
 
+  // Point selection handlers
+  const handleTogglePoint = (pointId: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click navigation
+    setSelectedPointIds((prev) =>
+      prev.includes(pointId)
+        ? prev.filter((id) => id !== pointId)
+        : [...prev, pointId]
+    );
+  };
+
+  const handleSelectAll = () => {
+    const allPointIds = points.map((p) => p.id);
+    setSelectedPointIds(allPointIds);
+  };
+
+  const handleDeselectAll = () => {
+    setSelectedPointIds([]);
+  };
+
+  const handleShareSelected = () => {
+    // TODO: Open share panel
+    console.log("Share selected points:", selectedPointIds);
+  };
+
   const formatDate = (dateString: string) => {
     const locale = t("common.locale", "en-US");
     return new Date(dateString).toLocaleDateString(locale, {
@@ -325,6 +350,34 @@ export function PointsListPage() {
               : t("map.point", "point")}
           </span>
         </div>
+
+        {/* Selection Toolbar */}
+        {points.length > 0 && (
+          <div className="selection-toolbar">
+            <div className="selection-actions">
+              {selectedPointIds.length === 0 ? (
+                <button onClick={handleSelectAll} className="btn-select">
+                  Select All ({points.length})
+                </button>
+              ) : (
+                <>
+                  <button onClick={handleDeselectAll} className="btn-select">
+                    Deselect All
+                  </button>
+                  <span className="selection-count">
+                    {selectedPointIds.length} selected
+                  </span>
+                  <button
+                    onClick={handleShareSelected}
+                    className="btn-primary btn-share"
+                  >
+                    Share Selected
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {points.length === 0 ? (
@@ -346,9 +399,19 @@ export function PointsListPage() {
           {points.map((point) => (
             <div
               key={point.id}
-              className="point-card"
+              className={`point-card ${selectedPointIds.includes(point.id) ? "selected" : ""}`}
               onClick={() => navigate(`/points/${point.id}`)}
             >
+              {/* Selection Checkbox */}
+              <div className="point-card-checkbox">
+                <input
+                  type="checkbox"
+                  checked={selectedPointIds.includes(point.id)}
+                  onChange={(e) => handleTogglePoint(point.id, e as any)}
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </div>
+
               <div className="point-card-header">
                 <h3 className="point-card-title">
                   {point.title || "Untitled Point"}
