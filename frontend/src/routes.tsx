@@ -26,6 +26,7 @@ import { PublicRoute } from "./routes/PublicRoute";
 import { SharedPointsPage } from "./pages/PlaceholderPages";
 import { FriendsPage } from "./pages/FriendsPage";
 import { FriendDetailPage } from "./pages/FriendDetailPage";
+import { PointSharingPage } from "./pages/PointSharingPage";
 
 /**
  * Router configuration.
@@ -97,6 +98,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <EditPointPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "points/:id/sharing",
+        element: (
+          <ProtectedRoute>
+            <PointSharingPage />
           </ProtectedRoute>
         ),
       },

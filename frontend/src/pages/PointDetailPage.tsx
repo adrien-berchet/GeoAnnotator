@@ -171,6 +171,14 @@ export function PointDetailPage() {
           >
             ✏️ {t("common.edit", "Edit")}
           </button>
+          {!point.shared_by && (
+            <button
+              onClick={() => navigate(`/points/${id}/sharing`)}
+              className="btn btn-secondary"
+            >
+              🤝 {t("pointDetail.manageSharing", "Manage Sharing")}
+            </button>
+          )}
           <button
             onClick={handleDeletePoint}
             className="btn btn-danger"
@@ -250,6 +258,15 @@ export function PointDetailPage() {
               <span className="metadata-value">
                 {formatDate(point.updated_at)}
               </span>
+            </div>
+          )}
+
+          {point.shared_by && (
+            <div className="metadata-item">
+              <span className="metadata-label">
+                🤝 {t("pointDetail.sharedBy", "Shared by")}
+              </span>
+              <span className="metadata-value">{point.shared_by}</span>
             </div>
           )}
         </div>
