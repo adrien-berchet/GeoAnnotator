@@ -189,6 +189,7 @@
 .point-tags {
   min-width: 150px;
   max-width: 250px;
+  white-space: nowrap;
 }
 
 .tags-list {
@@ -235,6 +236,7 @@
 
 .point-actions {
   display: flex;
+  align-items: center;
   gap: 0.5rem;
   min-width: 200px;
 }
