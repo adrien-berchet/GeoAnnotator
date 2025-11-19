@@ -101,24 +101,26 @@ export function FriendDetailPage() {
           ← Back to Friends
         </button>
 
-        <div className="friend-detail-title">
-          <div className="friend-avatar-large">
-            {friendDetail.username.charAt(0).toUpperCase()}
+        <div className="friend-header-content">
+          <div className="friend-detail-title">
+            <div className="friend-avatar-large">
+              {friendDetail.username.charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <h1>{friendDetail.username}</h1>
+              <p className="friend-since">
+                Friends since {formatDate(friendDetail.friendship_created_at)}
+              </p>
+            </div>
           </div>
-          <div>
-            <h1>{friendDetail.username}</h1>
-            <p className="friend-since">
-              Friends since {formatDate(friendDetail.friendship_created_at)}
-            </p>
-          </div>
-        </div>
 
-        <button
-          onClick={() => setShowRemoveDialog(true)}
-          className="btn-danger"
-        >
-          Remove Friend
-        </button>
+          <button
+            onClick={() => setShowRemoveDialog(true)}
+            className="btn-danger"
+          >
+            Remove Friend
+          </button>
+        </div>
       </div>
 
       {/* Statistics */}

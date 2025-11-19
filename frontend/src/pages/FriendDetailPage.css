@@ -28,11 +28,20 @@
   text-decoration: underline;
 }
 
+.friend-header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
 .friend-detail-title {
   display: flex;
   align-items: center;
   gap: 1.5rem;
-  margin-bottom: 1.5rem;
+  flex: 1;
+  min-width: 300px;
 }
 
 .friend-avatar-large {
@@ -338,9 +347,20 @@
     padding: 1rem;
   }
 
+  .friend-header-content {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
   .friend-detail-title {
     flex-direction: column;
     align-items: flex-start;
+    min-width: 0;
+  }
+
+  .btn-danger {
+    width: 100%;
   }
 
   .friend-stats-row {
