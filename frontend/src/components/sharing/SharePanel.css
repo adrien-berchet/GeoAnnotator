@@ -27,7 +27,7 @@
   bottom: 0;
   width: 450px;
   max-width: 90vw;
-  background: var(--bg-secondary);
+  background: var(--color-bg-secondary);
   box-shadow: -4px 0 20px rgba(0, 0, 0, 0.2);
   transform: translateX(100%);
   transition: transform 0.3s ease;
@@ -46,21 +46,21 @@
   align-items: center;
   justify-content: space-between;
   padding: 1.5rem;
-  border-bottom: 1px solid var(--border-color);
-  background: var(--bg-primary);
+  border-bottom: 1px solid var(--color-border-primary);
+  background: var(--color-bg-primary);
 }
 
 .share-header h2 {
   margin: 0;
   font-size: 1.5rem;
-  color: var(--text-primary);
+  color: var(--color-text-primary);
 }
 
 .share-close {
   background: none;
   border: none;
   font-size: 1.5rem;
-  color: var(--text-secondary);
+  color: var(--color-text-secondary);
   cursor: pointer;
   padding: 0.5rem;
   width: 40px;
@@ -73,8 +73,8 @@
 }
 
 .share-close:hover {
-  background: var(--bg-secondary);
-  color: var(--text-primary);
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
 }
 
 /* Content */
@@ -85,16 +85,16 @@
 }
 
 .share-info {
-  background: var(--bg-primary);
+  background: var(--color-bg-primary);
   padding: 1rem;
   border-radius: 6px;
   margin-bottom: 1.5rem;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--color-border-primary);
 }
 
 .share-info p {
   margin: 0;
-  color: var(--text-primary);
+  color: var(--color-text-primary);
 }
 
 /* Sections */
@@ -105,13 +105,13 @@
 .share-section h3 {
   margin: 0 0 1rem 0;
   font-size: 1.125rem;
-  color: var(--text-primary);
+  color: var(--color-text-primary);
 }
 
 .section-description {
   margin: 0 0 0.75rem 0;
   font-size: 0.875rem;
-  color: var(--text-secondary);
+  color: var(--color-text-secondary);
 }
 
 /* Permission Selector */
@@ -126,25 +126,25 @@
   align-items: flex-start;
   gap: 0.75rem;
   padding: 1rem;
-  background: var(--bg-primary);
-  border: 2px solid var(--border-color);
+  background: var(--color-bg-primary);
+  border: 2px solid var(--color-border-primary);
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .permission-option:hover {
-  border-color: var(--primary-color);
+  border-color: var(--color-primary);
 }
 
 .permission-option input[type="radio"] {
   margin-top: 0.25rem;
   cursor: pointer;
-  accent-color: var(--primary-color);
+  accent-color: var(--color-primary);
 }
 
 .permission-option input[type="radio"]:checked + .permission-details {
-  color: var(--primary-color);
+  color: var(--color-primary);
 }
 
 .permission-details {
@@ -154,12 +154,12 @@
 }
 
 .permission-details strong {
-  color: var(--text-primary);
+  color: var(--color-text-primary);
   font-size: 1rem;
 }
 
 .permission-details span {
-  color: var(--text-secondary);
+  color: var(--color-text-secondary);
   font-size: 0.875rem;
 }
 
@@ -178,21 +178,21 @@
   align-items: center;
   gap: 0.75rem;
   padding: 0.75rem;
-  background: var(--bg-primary);
-  border: 1px solid var(--border-color);
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border-primary);
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .friend-option:hover {
-  background: var(--bg-secondary);
-  border-color: var(--primary-color);
+  background: var(--color-bg-secondary);
+  border-color: var(--color-primary);
 }
 
 .friend-option input[type="checkbox"] {
   cursor: pointer;
-  accent-color: var(--primary-color);
+  accent-color: var(--color-primary);
   width: 18px;
   height: 18px;
 }
@@ -200,36 +200,36 @@
 .friend-name {
   flex: 1;
   font-weight: 500;
-  color: var(--text-primary);
+  color: var(--color-text-primary);
 }
 
 .friend-stats {
   font-size: 0.875rem;
-  color: var(--text-secondary);
+  color: var(--color-text-secondary);
 }
 
 /* Usernames Textarea */
 .usernames-textarea {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--color-border-primary);
   border-radius: 6px;
   font-family: inherit;
   font-size: 0.875rem;
-  background: var(--bg-primary);
-  color: var(--text-primary);
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
   resize: vertical;
   min-height: 100px;
 }
 
 .usernames-textarea:focus {
   outline: none;
-  border-color: var(--primary-color);
+  border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .usernames-textarea::placeholder {
-  color: var(--text-secondary);
+  color: var(--color-text-secondary);
 }
 
 /* Messages */
@@ -237,16 +237,16 @@
 .empty-message {
   text-align: center;
   padding: 2rem 1rem;
-  color: var(--text-secondary);
+  color: var(--color-text-secondary);
   font-size: 0.875rem;
 }
 
 .error-message {
   padding: 0.75rem;
-  background: #fee;
-  border: 1px solid #fcc;
+  background: var(--color-danger-bg);
+  border: 1px solid var(--color-danger-border);
   border-radius: 6px;
-  color: #c33;
+  color: var(--color-danger);
   font-size: 0.875rem;
   margin-top: 1rem;
 }
@@ -256,8 +256,8 @@
   display: flex;
   gap: 1rem;
   padding: 1.5rem;
-  border-top: 1px solid var(--border-color);
-  background: var(--bg-primary);
+  border-top: 1px solid var(--color-border-primary);
+  background: var(--color-bg-primary);
 }
 
 .share-footer button {
@@ -268,29 +268,30 @@
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
+}
+
+.share-footer .btn-secondary {
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-primary);
+}
+
+.share-footer .btn-secondary:hover:not(:disabled) {
+  background: var(--color-bg-hover);
+  border-color: var(--color-border-secondary);
+}
+
+.share-footer .btn-primary {
+  background: var(--color-primary);
+  color: white;
   border: none;
 }
 
-.btn-secondary {
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
+.share-footer .btn-primary:hover:not(:disabled) {
+  background: var(--color-primary-hover);
 }
 
-.btn-secondary:hover {
-  background: var(--bg-primary);
-}
-
-.btn-primary {
-  background: var(--primary-color);
-  color: white;
-}
-
-.btn-primary:hover {
-  background: var(--primary-color-dark);
-}
-
-.btn-primary:disabled {
+.share-footer .btn-primary:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
