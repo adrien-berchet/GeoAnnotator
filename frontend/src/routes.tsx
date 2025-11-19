@@ -24,6 +24,8 @@ import { AccountDeleteConfirmPage } from "./pages/AccountDeleteConfirmPage";
 import { ProtectedRoute } from "./routes/ProtectedRoute";
 import { PublicRoute } from "./routes/PublicRoute";
 import { SharedPointsPage } from "./pages/PlaceholderPages";
+import { FriendsPage } from "./pages/FriendsPage";
+import { FriendDetailPage } from "./pages/FriendDetailPage";
 
 /**
  * Router configuration.
@@ -139,6 +141,22 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <SharedPointsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "friends",
+        element: (
+          <ProtectedRoute>
+            <FriendsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "friends/:friendId",
+        element: (
+          <ProtectedRoute>
+            <FriendDetailPage />
           </ProtectedRoute>
         ),
       },
