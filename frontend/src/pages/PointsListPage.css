@@ -266,6 +266,14 @@
   -webkit-box-orient: vertical;
 }
 
+/* Badge container */
+.point-badges {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  align-items: flex-end;
+}
+
 /* Badge public - variante du badge commun */
 .point-badge {
   display: inline-flex;
@@ -280,6 +288,12 @@
 .point-badge.public {
   background: var(--color-success-light);
   color: var(--color-success-dark);
+}
+
+.point-badge.shared {
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
+  cursor: help;
 }
 
 .point-card-location,

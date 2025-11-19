@@ -342,6 +342,7 @@ class GPSPointSerializer(serializers.ModelSerializer):
     permission = serializers.SerializerMethodField()
     annotation_count = serializers.SerializerMethodField()
     shared_by = serializers.SerializerMethodField()
+    share_count = serializers.SerializerMethodField()
 
     # GeoJSON location (auto-generated from lat/lon)
     location = serializers.SerializerMethodField()
@@ -365,6 +366,7 @@ class GPSPointSerializer(serializers.ModelSerializer):
             "permission",
             "annotation_count",
             "shared_by",
+            "share_count",
         ]
         read_only_fields = [
             "id",
@@ -468,6 +470,26 @@ class GPSPointSerializer(serializers.ModelSerializer):
             return share.owner.username
 
         return None
+
+    def get_share_count(self, obj):
+        """
+        Get the number of users this point is shared with.
+
+        Returns count for owners, 0 for non-owners (they can't see this info).
+        """
+        user = self.context.get("request").user if self.context.get("request") else None
+
+        if not user or not user.is_authenticated:
+            return 0
+
+        # Only show share count to the owner
+        if obj.owner != user:
+            return 0
+
+        # Count active shares for this point
+        from apps.sharing.models import Share
+
+        return Share.objects.filter(gps_point=obj, is_active=True).count()
 
     def create(self, validated_data):
         """
@@ -655,6 +677,7 @@ class GPSPointListSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True, read_only=True)
     permission = serializers.SerializerMethodField()
     annotation_count = serializers.SerializerMethodField()
+    share_count = serializers.SerializerMethodField()
 
     class Meta:
         model = GPSPoint
@@ -671,6 +694,7 @@ class GPSPointListSerializer(serializers.ModelSerializer):
             "updated_at",
             "permission",
             "annotation_count",
+            "share_count",
         ]
 
     def get_permission(self, obj):
@@ -699,3 +723,23 @@ class GPSPointListSerializer(serializers.ModelSerializer):
         """Get the count of non-deleted annotations for this point."""
         # Exclude annotations that have a trash_entry (soft-deleted)
         return obj.annotations.exclude(trash_entry__isnull=False).count()
+
+    def get_share_count(self, obj):
+        """
+        Get the number of users this point is shared with.
+
+        Returns count for owners, 0 for non-owners (they can't see this info).
+        """
+        user = self.context.get("request").user if self.context.get("request") else None
+
+        if not user or not user.is_authenticated:
+            return 0
+
+        # Only show share count to the owner
+        if obj.owner != user:
+            return 0
+
+        # Count active shares for this point
+        from apps.sharing.models import Share
+
+        return Share.objects.filter(gps_point=obj, is_active=True).count()

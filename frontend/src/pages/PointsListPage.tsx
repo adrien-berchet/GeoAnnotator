@@ -452,9 +452,16 @@ export function PointsListPage() {
                 <h3 className="point-card-title">
                   {point.title || "Untitled Point"}
                 </h3>
-                {point.is_public && (
-                  <span className="point-badge public">🌐 Public</span>
-                )}
+                <div className="point-badges">
+                  {point.is_public && (
+                    <span className="point-badge public">🌐 Public</span>
+                  )}
+                  {!point.shared_by && point.share_count > 0 && (
+                    <span className="point-badge shared" title={`Shared with ${point.share_count} user${point.share_count !== 1 ? 's' : ''}`}>
+                      🤝 {point.share_count}
+                    </span>
+                  )}
+                </div>
               </div>
 
               <div className="point-card-location">

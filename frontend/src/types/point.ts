@@ -46,6 +46,7 @@ export interface GPSPoint {
   } | null;
   editing_lock_acquired_at: string | null;
   shared_by: string | null; // Username of friend who shared this point
+  share_count: number; // Number of users this point is shared with (owner only)
 }
 
 export interface CreatePointData {
