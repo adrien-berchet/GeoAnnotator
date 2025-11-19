@@ -311,22 +311,18 @@ class FriendshipViewSet(viewsets.ModelViewSet):
             owner=friend, recipient_user=request.user, is_active=True
         ).count()
 
-        # Prepare friend detail data
-        from apps.points.serializers import GPSPointListSerializer
-
+        # Prepare friend detail data - pass queryset, not serialized data
         friend_data = {
             "id": friend.id,
             "username": friend.username,
             "email": friend.email,
             "friendship_created_at": friendship.created_at,
-            "shared_points": GPSPointListSerializer(
-                shared_points, many=True, context={"request": request}
-            ).data,
+            "shared_points": shared_points,  # Pass queryset, let serializer handle it
             "shares_sent_count": shares_sent_count,
             "shares_received_count": shares_received_count,
         }
 
-        serializer = FriendDetailSerializer(friend_data)
+        serializer = FriendDetailSerializer(friend_data, context={"request": request})
         return Response(serializer.data)
 
     def destroy(self, request, pk=None):
