@@ -126,6 +126,24 @@
 
 /* tags-list et tag utilisent les classes communes */
 
+/* Shared indicators for tags and types from shared points */
+.shared-indicator {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  font-style: italic;
+  opacity: 0.8;
+}
+
+.tag.shared {
+  opacity: 0.85;
+  border: 1px dashed var(--color-border-secondary);
+  background: var(--color-bg-tertiary);
+}
+
+.metadata-value.shared {
+  opacity: 0.9;
+}
+
 /* Annotations Section */
 .annotations-section {
   margin-top: var(--spacing-2xl);
