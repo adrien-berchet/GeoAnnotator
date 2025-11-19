@@ -82,7 +82,7 @@ export interface RemoveFriendResponse {
  * Get list of friends with share statistics
  */
 export async function getFriends(): Promise<Friend[]> {
-  const response = await apiClient.get<Friend[]>("/api/v1/sharing/friendships/");
+  const response = await apiClient.get<Friend[]>("/v1/sharing/friendships/");
   return response.data;
 }
 
@@ -90,7 +90,7 @@ export async function getFriends(): Promise<Friend[]> {
  * Add a friend by username
  */
 export async function addFriend(username: string): Promise<Friendship> {
-  const response = await apiClient.post<Friendship>("/api/v1/sharing/friendships/", {
+  const response = await apiClient.post<Friendship>("/v1/sharing/friendships/", {
     username,
   });
   return response.data;
@@ -101,7 +101,7 @@ export async function addFriend(username: string): Promise<Friendship> {
  */
 export async function getFriendDetail(friendshipId: string): Promise<FriendDetail> {
   const response = await apiClient.get<FriendDetail>(
-    `/api/v1/sharing/friendships/${friendshipId}/`
+    `/v1/sharing/friendships/${friendshipId}/`
   );
   return response.data;
 }
@@ -113,7 +113,7 @@ export async function removeFriend(
   friendshipId: string
 ): Promise<RemoveFriendResponse> {
   const response = await apiClient.delete<RemoveFriendResponse>(
-    `/api/v1/sharing/friendships/${friendshipId}/`
+    `/v1/sharing/friendships/${friendshipId}/`
   );
   return response.data;
 }
@@ -149,7 +149,7 @@ export async function batchSharePoints(
   request: BatchShareRequest
 ): Promise<BatchShareResponse> {
   const response = await apiClient.post<BatchShareResponse>(
-    "/api/v1/sharing/batch/",
+    "/v1/sharing/batch/",
     request
   );
   return response.data;
