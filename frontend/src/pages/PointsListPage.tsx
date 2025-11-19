@@ -11,8 +11,10 @@ import { getPointTypes } from "../api/types";
 import { getErrorMessage } from "../api/client";
 import { LoadingSpinner } from "../components/common/LoadingSpinner";
 import { FilterPanel } from "../components/common/FilterPanel";
+import { SharePanel } from "../components/sharing/SharePanel";
 import { useLanguage } from "../contexts/LanguageContext";
 import type { GPSPoint, Tag, PointType } from "../types/point";
+import { batchSharePoints } from "../api/friends";
 import "./PointsListPage.css";
 
 export function PointsListPage() {
@@ -28,6 +30,8 @@ export function PointsListPage() {
   const [selectedTagNames, setSelectedTagNames] = useState<string[]>([]);
   const [selectedTypeIds, setSelectedTypeIds] = useState<string[]>([]);
   const [selectedPointIds, setSelectedPointIds] = useState<string[]>([]);
+  const [isSharePanelOpen, setIsSharePanelOpen] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
   const navigate = useNavigate();
 
   const searchQuery = searchParams.get("search") || "";
@@ -215,8 +219,40 @@ export function PointsListPage() {
   };
 
   const handleShareSelected = () => {
-    // TODO: Open share panel
-    console.log("Share selected points:", selectedPointIds);
+    setIsSharePanelOpen(true);
+  };
+
+  const handleShare = async (usernames: string[], permissionLevel: string) => {
+    setIsSharing(true);
+    setError("");
+
+    try {
+      const result = await batchSharePoints({
+        point_ids: selectedPointIds,
+        usernames,
+        permission_level: permissionLevel as "view" | "edit" | "transfer",
+      });
+
+      // Show success/error summary
+      if (result.error_count === 0) {
+        alert(`Successfully shared ${result.success_count} point(s) with ${usernames.length} user(s)`);
+      } else if (result.success_count === 0) {
+        alert(`Failed to share points: ${result.error_count} errors`);
+      } else {
+        alert(
+          `Partially successful: ${result.success_count} succeeded, ${result.error_count} failed`
+        );
+      }
+
+      // Close panel and clear selection
+      setIsSharePanelOpen(false);
+      setSelectedPointIds([]);
+    } catch (err) {
+      setError(getErrorMessage(err));
+      alert(`Error sharing points: ${getErrorMessage(err)}`);
+    } finally {
+      setIsSharing(false);
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -469,6 +505,14 @@ export function PointsListPage() {
           ))}
         </div>
       )}
+
+      {/* Share Panel */}
+      <SharePanel
+        isOpen={isSharePanelOpen}
+        selectedPointIds={selectedPointIds}
+        onClose={() => setIsSharePanelOpen(false)}
+        onShare={handleShare}
+      />
     </div>
   );
 }
