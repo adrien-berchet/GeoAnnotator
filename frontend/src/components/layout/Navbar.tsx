@@ -167,6 +167,16 @@ export function Navbar() {
                       👤 {t("nav.account", "Account")}
                     </Link>
                     <Link
+                      to="/friends"
+                      className="user-menu-item"
+                      onClick={() => {
+                        setShowUserMenu(false);
+                        setShowMobileMenu(false);
+                      }}
+                    >
+                      🤝 {t("nav.friends", "Friends")}
+                    </Link>
+                    <Link
                       to="/settings"
                       className="user-menu-item"
                       onClick={() => {
