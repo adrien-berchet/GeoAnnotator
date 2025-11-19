@@ -243,6 +243,11 @@
 
 .point-actions > button {
   vertical-align: middle;
+  margin-left: 0.5rem;
+}
+
+.point-actions > button:first-child {
+  margin-left: 0;
 }
 
 /* Buttons */

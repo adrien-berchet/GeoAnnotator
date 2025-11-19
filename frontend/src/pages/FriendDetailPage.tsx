@@ -199,14 +199,17 @@ export function FriendDetailPage() {
                     <td className="point-tags">
                       {point.tags.length > 0 ? (
                         <div className="tags-list">
-                          {point.tags.slice(0, 2).map((tag) => (
-                            <span key={tag.id} className="tag-badge">
-                              {tag.name}
-                            </span>
-                          ))}
-                          {point.tags.length > 2 && (
+                          {point.tags.length <= 2 ? (
+                            // Show individual tags if there are 1-2 tags
+                            point.tags.map((tag) => (
+                              <span key={tag.id} className="tag-badge">
+                                {tag.name}
+                              </span>
+                            ))
+                          ) : (
+                            // Show only count if there are 3+ tags to avoid wrapping
                             <span className="tag-more">
-                              +{point.tags.length - 2}
+                              {point.tags.length} tags
                             </span>
                           )}
                         </div>
