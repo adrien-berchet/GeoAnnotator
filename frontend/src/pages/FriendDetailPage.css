@@ -147,6 +147,7 @@
   padding: 1rem;
   border-top: 1px solid var(--color-border-primary);
   color: var(--color-text-primary);
+  vertical-align: middle;
 }
 
 .shared-points-table tbody tr:hover {
@@ -155,6 +156,7 @@
 
 .point-title {
   font-weight: 500;
+  min-width: 15ch;
   max-width: 250px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -186,12 +188,14 @@
 
 .point-tags {
   min-width: 150px;
+  max-width: 250px;
 }
 
 .tags-list {
   display: flex;
   gap: 0.5rem;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow: hidden;
 }
 
 .tag-badge {
@@ -201,11 +205,15 @@
   color: white;
   border-radius: 4px;
   font-size: 0.75rem;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .tag-more {
   color: var(--color-text-secondary);
   font-size: 0.75rem;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .text-muted {
