@@ -8,12 +8,12 @@ import { apiClient } from "./client";
 
 /**
  * Friend interface with share statistics
+ * Note: Email is excluded for privacy
  */
 export interface Friend {
   id: string;
   friendship_id: string;
   username: string;
-  email: string;
   shares_sent_count: number;
   shares_received_count: number;
   friendship_created_at: string;
@@ -26,18 +26,17 @@ export interface Friendship {
   id: string;
   friend: {
     id: string;
-    email: string;
   };
   created_at: string;
 }
 
 /**
  * Friend detail with shared points
+ * Note: Email is excluded for privacy
  */
 export interface FriendDetail {
   id: string;
   username: string;
-  email: string;
   friendship_created_at: string;
   shared_points: Array<{
     id: string;

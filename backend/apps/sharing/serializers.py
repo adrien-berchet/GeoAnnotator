@@ -274,12 +274,12 @@ class FriendSerializer(serializers.Serializer):
 
     Returns friend user details along with counts of shares sent/received.
     Used in friends list view.
+    Note: Email is excluded for privacy.
     """
 
     id = serializers.UUIDField(read_only=True)
     friendship_id = serializers.SerializerMethodField()
     username = serializers.CharField(read_only=True)
-    email = serializers.EmailField(read_only=True)
     shares_sent_count = serializers.IntegerField(read_only=True, default=0)
     shares_received_count = serializers.IntegerField(read_only=True, default=0)
     friendship_created_at = serializers.SerializerMethodField()
@@ -368,11 +368,11 @@ class FriendDetailSerializer(serializers.Serializer):
     Friend detail serializer with shared points.
 
     Returns friend details and list of points shared with them.
+    Note: Email is excluded for privacy.
     """
 
     id = serializers.UUIDField(read_only=True)
     username = serializers.CharField(read_only=True)
-    email = serializers.EmailField(read_only=True)
     friendship_created_at = serializers.DateTimeField(read_only=True)
     shared_points = GPSPointListSerializer(many=True, read_only=True)
     shares_sent_count = serializers.IntegerField(read_only=True)

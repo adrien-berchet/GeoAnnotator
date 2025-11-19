@@ -202,10 +202,8 @@ export function PointSharingPage() {
               <thead>
                 <tr>
                   <th>User</th>
-                  <th>Email</th>
                   <th>Permission</th>
                   <th>Shared On</th>
-                  <th>Status</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -217,7 +215,6 @@ export function PointSharingPage() {
                         <span className="text-muted">Not registered</span>
                       )}
                     </td>
-                    <td className="email-cell">{share.recipient_email}</td>
                     <td>
                       <span className={getPermissionBadgeClass(share.permission_level)}>
                         {share.permission_level}
@@ -225,13 +222,6 @@ export function PointSharingPage() {
                     </td>
                     <td className="date-cell">
                       {new Date(share.created_at).toLocaleDateString()}
-                    </td>
-                    <td className="status-cell">
-                      {share.accepted_at ? (
-                        <span className="status-badge accepted">✓ Accepted</span>
-                      ) : (
-                        <span className="status-badge pending">⏳ Pending</span>
-                      )}
                     </td>
                     <td className="actions-cell">
                       <button

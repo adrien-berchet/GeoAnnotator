@@ -312,10 +312,10 @@ class FriendshipViewSet(viewsets.ModelViewSet):
         ).count()
 
         # Prepare friend detail data - pass queryset, not serialized data
+        # Note: Email excluded for privacy
         friend_data = {
             "id": friend.id,
             "username": friend.username,
-            "email": friend.email,
             "friendship_created_at": friendship.created_at,
             "shared_points": shared_points,  # Pass queryset, let serializer handle it
             "shares_sent_count": shares_sent_count,
