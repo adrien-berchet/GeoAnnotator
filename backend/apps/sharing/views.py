@@ -11,11 +11,19 @@ from rest_framework.response import Response
 
 from apps.points.models import GPSPoint
 
+from .models import Friendship
 from .models import Share
 from .serializers import AcceptShareSerializer
+from .serializers import AddFriendSerializer
+from .serializers import BatchShareSerializer
 from .serializers import CreateShareSerializer
+from .serializers import FriendDetailSerializer
+from .serializers import FriendSerializer
+from .serializers import FriendshipSerializer
 from .serializers import ShareSerializer
 from .serializers import UpdateShareSerializer
+from .services import BatchShareService
+from .services import FriendshipService
 from .services import PermissionService
 from .services import ShareService
 
@@ -216,3 +224,187 @@ class ShareViewSet(viewsets.ModelViewSet):
 
         except ValueError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class FriendshipViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for Friendship CRUD operations.
+
+    Endpoints:
+    - GET /api/v1/friendships/ - List all friends with share stats
+    - POST /api/v1/friendships/ - Add a friend by username
+    - GET /api/v1/friendships/{id}/ - Get friend detail with shared points
+    - DELETE /api/v1/friendships/{id}/ - Remove friend (revokes all shares)
+    """
+
+    permission_classes = [IsAuthenticated]
+    pagination_class = None
+
+    def get_serializer_class(self):
+        if self.action == "create":
+            return AddFriendSerializer
+        elif self.action == "retrieve":
+            return FriendDetailSerializer
+        elif self.action == "list":
+            return FriendSerializer
+        return FriendshipSerializer
+
+    def get_queryset(self):
+        """Return friendships for current user."""
+        user = self.request.user
+        return Friendship.objects.filter(user=user).select_related("friend")
+
+    def list(self, request):
+        """List all friends with share statistics."""
+        user = request.user
+
+        # Get friends with share stats from service
+        friends = FriendshipService.get_friends(user)
+
+        serializer = FriendSerializer(
+            friends, many=True, context={"request": request}
+        )
+        return Response(serializer.data)
+
+    def create(self, request):
+        """Add a friend by username."""
+        serializer = AddFriendSerializer(
+            data=request.data, context={"request": request}
+        )
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            friendship = serializer.save()
+
+            # Return the created friendship
+            response_serializer = FriendshipSerializer(
+                friendship, context={"request": request}
+            )
+            return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+
+        except ValueError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    def retrieve(self, request, pk=None):
+        """Get friend detail with shared points."""
+        try:
+            friendship = self.get_object()
+            friend = friendship.friend
+        except Friendship.DoesNotExist:
+            return Response(
+                {"error": "Friendship not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Get shared points with this friend
+        shared_points = FriendshipService.get_shared_points_with_friend(
+            request.user, friend
+        )
+
+        # Get share counts
+        from django.db.models import Count, Q
+
+        shares_sent_count = Share.objects.filter(
+            owner=request.user, recipient_user=friend, is_active=True
+        ).count()
+
+        shares_received_count = Share.objects.filter(
+            owner=friend, recipient_user=request.user, is_active=True
+        ).count()
+
+        # Prepare friend detail data
+        from apps.points.serializers import GPSPointListSerializer
+
+        friend_data = {
+            "id": friend.id,
+            "username": friend.username,
+            "email": friend.email,
+            "friendship_created_at": friendship.created_at,
+            "shared_points": GPSPointListSerializer(
+                shared_points, many=True, context={"request": request}
+            ).data,
+            "shares_sent_count": shares_sent_count,
+            "shares_received_count": shares_received_count,
+        }
+
+        serializer = FriendDetailSerializer(friend_data)
+        return Response(serializer.data)
+
+    def destroy(self, request, pk=None):
+        """
+        Remove friend and revoke all shares in both directions.
+
+        Returns count of revoked shares.
+        """
+        try:
+            friendship = self.get_object()
+            friend = friendship.friend
+        except Friendship.DoesNotExist:
+            return Response(
+                {"error": "Friendship not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        try:
+            # Remove friend via service (handles bidirectional removal and share revocation)
+            result = FriendshipService.remove_friend(request.user, friend)
+
+            return Response(
+                {
+                    "message": f"Successfully removed {friend.username} as friend",
+                    "friendships_deleted": result["friendships_deleted"],
+                    "shares_revoked": result["total_shares_revoked"],
+                    "details": {
+                        "shares_revoked_to_friend": result["shares_revoked_to_friend"],
+                        "shares_revoked_from_friend": result["shares_revoked_from_friend"],
+                    },
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        except ValueError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class BatchShareView(viewsets.ViewSet):
+    """
+    ViewSet for batch sharing operations.
+
+    Endpoints:
+    - POST /api/v1/sharing/batch/ - Share multiple points with multiple users
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def create(self, request):
+        """
+        Batch share multiple points with multiple users.
+
+        Request body:
+        {
+            "point_ids": ["uuid1", "uuid2", ...],
+            "usernames": ["user1", "user2", ...],
+            "permission_level": "view" | "edit" | "transfer"
+        }
+
+        Response:
+        {
+            "success_count": int,
+            "error_count": int,
+            "total_attempted": int,
+            "results": [...]
+        }
+        """
+        serializer = BatchShareSerializer(
+            data=request.data, context={"request": request}
+        )
+        serializer.is_valid(raise_exception=True)
+
+        result = serializer.save()
+
+        # Return appropriate status code based on results
+        if result["error_count"] == 0:
+            return Response(result, status=status.HTTP_201_CREATED)
+        elif result["success_count"] == 0:
+            return Response(result, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            # Partial success
+            return Response(result, status=status.HTTP_207_MULTI_STATUS)

@@ -12,6 +12,7 @@ from rest_framework import serializers
 from apps.authentication.serializers import UserSerializer
 from apps.points.serializers import GPSPointListSerializer
 from apps.points.serializers import GPSPointSerializer
+from apps.sharing.models import Friendship
 from apps.sharing.models import Share
 
 
@@ -265,3 +266,175 @@ class AcceptShareSerializer(serializers.Serializer):
 
         share.accept(user)
         return share
+
+
+class FriendSerializer(serializers.Serializer):
+    """
+    Friend serializer with share statistics.
+
+    Returns friend user details along with counts of shares sent/received.
+    Used in friends list view.
+    """
+
+    id = serializers.UUIDField(read_only=True)
+    username = serializers.CharField(read_only=True)
+    email = serializers.EmailField(read_only=True)
+    shares_sent_count = serializers.IntegerField(read_only=True, default=0)
+    shares_received_count = serializers.IntegerField(read_only=True, default=0)
+    friendship_created_at = serializers.SerializerMethodField()
+
+    def get_friendship_created_at(self, obj):
+        """Get the friendship creation timestamp."""
+        user = self.context.get("request").user
+        friendship = Friendship.objects.filter(user=user, friend=obj).first()
+        return friendship.created_at if friendship else None
+
+
+class AddFriendSerializer(serializers.Serializer):
+    """
+    Add friend serializer.
+
+    Accepts username of the friend to add.
+    """
+
+    username = serializers.CharField(
+        required=True,
+        help_text="Username of the friend to add",
+        max_length=150,
+    )
+
+    def validate_username(self, value):
+        """Validate username format and existence."""
+        if not value or not value.strip():
+            raise serializers.ValidationError("Username is required")
+
+        value = value.strip()
+
+        # Check if trying to add self
+        user = self.context["request"].user
+        if user.username == value:
+            raise serializers.ValidationError("Cannot add yourself as a friend")
+
+        # Check if user exists
+        from apps.authentication.models import User
+
+        try:
+            User.objects.get(username=value)
+        except User.DoesNotExist:
+            raise serializers.ValidationError(
+                f"User with username '{value}' not found"
+            ) from None
+
+        return value
+
+    def create(self, validated_data):
+        """Create friendship using FriendshipService."""
+        from apps.sharing.services import FriendshipService
+
+        user = self.context["request"].user
+        username = validated_data["username"]
+
+        try:
+            friendship = FriendshipService.add_friend(user, username)
+            return friendship
+        except ValueError as e:
+            raise serializers.ValidationError({"username": str(e)}) from None
+
+
+class FriendshipSerializer(serializers.ModelSerializer):
+    """
+    Friendship serializer.
+
+    Returns friendship details including friend info.
+    """
+
+    friend = UserSerializer(read_only=True)
+
+    class Meta:
+        model = Friendship
+        fields = ["id", "friend", "created_at"]
+        read_only_fields = ["id", "friend", "created_at"]
+
+
+class FriendDetailSerializer(serializers.Serializer):
+    """
+    Friend detail serializer with shared points.
+
+    Returns friend details and list of points shared with them.
+    """
+
+    id = serializers.UUIDField(read_only=True)
+    username = serializers.CharField(read_only=True)
+    email = serializers.EmailField(read_only=True)
+    friendship_created_at = serializers.DateTimeField(read_only=True)
+    shared_points = GPSPointListSerializer(many=True, read_only=True)
+    shares_sent_count = serializers.IntegerField(read_only=True)
+    shares_received_count = serializers.IntegerField(read_only=True)
+
+
+class BatchShareSerializer(serializers.Serializer):
+    """
+    Batch share serializer.
+
+    Accepts multiple point IDs and usernames to create shares in bulk.
+    """
+
+    point_ids = serializers.ListField(
+        child=serializers.UUIDField(),
+        required=True,
+        help_text="List of GPS point UUIDs to share",
+        min_length=1,
+    )
+
+    usernames = serializers.ListField(
+        child=serializers.CharField(max_length=150),
+        required=True,
+        help_text="List of usernames to share with",
+        min_length=1,
+    )
+
+    permission_level = serializers.ChoiceField(
+        choices=["view", "edit", "transfer"],
+        required=True,
+        help_text="Permission level for all shares",
+    )
+
+    def validate_point_ids(self, value):
+        """Validate point IDs list."""
+        if not value:
+            raise serializers.ValidationError("At least one point ID is required")
+
+        if len(value) > 100:
+            raise serializers.ValidationError("Cannot share more than 100 points at once")
+
+        return value
+
+    def validate_usernames(self, value):
+        """Validate usernames list."""
+        if not value:
+            raise serializers.ValidationError("At least one username is required")
+
+        if len(value) > 50:
+            raise serializers.ValidationError("Cannot share with more than 50 users at once")
+
+        # Remove duplicates and whitespace
+        cleaned = [u.strip() for u in value if u.strip()]
+        return list(set(cleaned))
+
+    def create(self, validated_data):
+        """Create batch shares using BatchShareService."""
+        from apps.sharing.services import BatchShareService
+
+        user = self.context["request"].user
+        point_ids = [str(pid) for pid in validated_data["point_ids"]]
+        usernames = validated_data["usernames"]
+        permission_level = validated_data["permission_level"]
+
+        result = BatchShareService.batch_create_shares(
+            point_ids=point_ids,
+            usernames=usernames,
+            permission_level=permission_level,
+            owner=user,
+        )
+
+        return result

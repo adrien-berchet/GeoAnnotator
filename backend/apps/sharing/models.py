@@ -20,6 +20,85 @@ class ActiveShareManager(models.Manager):
         return super().get_queryset().filter(is_active=True)
 
 
+class Friendship(models.Model):
+    """
+    Friendship relationship between two users.
+
+    Friendships are bidirectional - if User A is friends with User B,
+    then User B is automatically friends with User A.
+
+    Friendships are used to:
+    1. Show a list of users you've shared points with
+    2. Enable quick sharing with known users
+    3. View shared points organized by friend
+
+    When a friendship is removed, all shares in both directions are revoked.
+    """
+
+    id = models.UUIDField(
+        primary_key=True, default=uuid.uuid4, editable=False, help_text="Unique friendship identifier"
+    )
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="friendships_initiated",
+        help_text="User who initiated or maintains this friendship record",
+    )
+
+    friend = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="friendships_received",
+        help_text="The friend user",
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True, help_text="Friendship creation timestamp")
+
+    class Meta:
+        db_table = "friendships"
+        verbose_name = "Friendship"
+        verbose_name_plural = "Friendships"
+        constraints = [
+            # Prevent duplicate friendships
+            models.UniqueConstraint(
+                fields=["user", "friend"], name="unique_friendship"
+            ),
+            # Prevent self-friendship
+            models.CheckConstraint(
+                check=~models.Q(user=models.F("friend")),
+                name="no_self_friendship"
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["user"], name="idx_friendship_user"),
+            models.Index(fields=["friend"], name="idx_friendship_friend"),
+            models.Index(fields=["user", "friend"], name="idx_friendship_pair"),
+        ]
+        ordering = ["-created_at"]
+
+    def clean(self):
+        """Validate friendship constraints."""
+        from django.core.exceptions import ValidationError
+
+        # Prevent self-friendship
+        if self.user == self.friend:
+            raise ValidationError("Cannot be friends with yourself")
+
+        # Check for reverse friendship to maintain bidirectional consistency
+        if self.pk is None:  # Only on creation
+            reverse_exists = Friendship.objects.filter(
+                user=self.friend, friend=self.user
+            ).exists()
+            if reverse_exists:
+                raise ValidationError(
+                    "Friendship already exists in the reverse direction"
+                )
+
+    def __str__(self):
+        return f"{self.user.username} ↔ {self.friend.username}"
+
+
 class Share(models.Model):
     """
     Sharing relationship between a point owner and a recipient.
