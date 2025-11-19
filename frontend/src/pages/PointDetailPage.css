@@ -124,7 +124,20 @@
   font-weight: var(--font-weight-semibold);
 }
 
-/* tags-list et tag utilisent les classes communes */
+/* Ensure tags display inline and only take needed width */
+.point-tags .tags-list {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.point-tags .tag {
+  display: inline-flex;
+  width: auto;
+  flex-grow: 0;
+  flex-shrink: 0;
+}
 
 /* Shared indicators for tags and types from shared points */
 .shared-indicator {
