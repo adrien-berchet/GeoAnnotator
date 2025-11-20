@@ -5,7 +5,7 @@
  */
 
 import { useEffect, useRef } from "react";
-import { MapContainer, TileLayer, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, useMap, ScaleControl } from "react-leaflet";
 import type { Map as LeafletMap } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { initializeLeaflet } from "../../utils/leaflet-config";
@@ -60,7 +60,7 @@ export function MapView({
     url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
     attribution:
       '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    maxZoom: 19,
+    maxZoom: 22,
   };
 
   const activeLayer = tileLayer || defaultLayer;
@@ -83,6 +83,9 @@ export function MapView({
 
         {/* Map event handler */}
         <MapEventHandler onMapReady={onMapReady} />
+
+        {/* Scale bar (bottom left) */}
+        <ScaleControl position="bottomleft" />
 
         {/* Additional children (markers, popups, etc.) */}
         {children}

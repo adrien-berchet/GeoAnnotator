@@ -27,14 +27,14 @@ export const TILE_LAYERS: TileLayer[] = [
     url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
     attribution:
       '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    maxZoom: 19,
+    maxZoom: 22,
   },
   {
     id: "satellite",
     name: "Satellite",
     url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
     attribution: '&copy; <a href="https://www.esri.com/">Esri</a>',
-    maxZoom: 19,
+    maxZoom: 22,
   },
   {
     id: "topo",
@@ -42,7 +42,7 @@ export const TILE_LAYERS: TileLayer[] = [
     url: "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
     attribution:
       '&copy; <a href="https://opentopomap.org">OpenTopoMap</a> contributors',
-    maxZoom: 17,
+    maxZoom: 22,
   },
   {
     id: "cycle",
@@ -50,7 +50,7 @@ export const TILE_LAYERS: TileLayer[] = [
     url: "https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png",
     attribution:
       '&copy; <a href="https://www.cyclosm.org">CyclOSM</a> contributors',
-    maxZoom: 20,
+    maxZoom: 22,
   },
 ];
 
