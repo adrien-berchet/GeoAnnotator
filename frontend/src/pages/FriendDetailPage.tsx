@@ -6,12 +6,25 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getFriendDetail, removeFriend, type FriendDetail } from "../api/friends";
+import {
+  getFriendDetail,
+  removeFriend,
+  type FriendDetail,
+  getAutoShareRules,
+  createAutoShareRule,
+  updateAutoShareRule,
+  deleteAutoShareRule,
+  type AutoShareRule,
+  type CreateAutoShareRuleRequest,
+  type UpdateAutoShareRuleRequest,
+} from "../api/friends";
 import { updateShare, deleteShare } from "../api/sharing";
 import { getErrorMessage } from "../api/client";
 import { LoadingSpinner } from "../components/common/LoadingSpinner";
 import { useLanguage } from "../contexts/LanguageContext";
 import { getPointTypeName } from "../utils/pointTypeUtils";
+import { AutoShareRuleForm } from "../components/sharing/AutoShareRuleForm";
+import { AutoShareRulesList } from "../components/sharing/AutoShareRulesList";
 import "./FriendDetailPage.css";
 
 export function FriendDetailPage() {
@@ -23,6 +36,14 @@ export function FriendDetailPage() {
   const [isRemoving, setIsRemoving] = useState(false);
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
   const [isUnsharing, setIsUnsharing] = useState<string | null>(null);
+
+  // Auto-share rules state
+  const [autoShareRules, setAutoShareRules] = useState<AutoShareRule[]>([]);
+  const [isLoadingRules, setIsLoadingRules] = useState(false);
+  const [rulesExpanded, setRulesExpanded] = useState(true);
+  const [showRuleForm, setShowRuleForm] = useState(false);
+  const [isSubmittingRule, setIsSubmittingRule] = useState(false);
+
   const navigate = useNavigate();
   const { language } = useLanguage();
 
@@ -42,8 +63,24 @@ export function FriendDetailPage() {
     }
   };
 
+  const loadAutoShareRules = async () => {
+    if (!friendId) return;
+
+    setIsLoadingRules(true);
+
+    try {
+      const rules = await getAutoShareRules(friendId);
+      setAutoShareRules(rules);
+    } catch (err) {
+      console.error("Failed to load auto-share rules:", err);
+    } finally {
+      setIsLoadingRules(false);
+    }
+  };
+
   useEffect(() => {
     loadFriendDetail();
+    loadAutoShareRules();
   }, [friendId]);
 
   const handleRemoveFriend = async () => {
@@ -94,6 +131,39 @@ export function FriendDetailPage() {
     } finally {
       setIsUnsharing(null);
     }
+  };
+
+  const handleCreateRule = async (request: CreateAutoShareRuleRequest) => {
+    if (!friendId) return;
+
+    setIsSubmittingRule(true);
+
+    try {
+      await createAutoShareRule(friendId, request);
+      await loadAutoShareRules();
+      setShowRuleForm(false);
+    } catch (err) {
+      throw err; // Let the form handle the error
+    } finally {
+      setIsSubmittingRule(false);
+    }
+  };
+
+  const handleUpdateRule = async (
+    ruleId: string,
+    request: UpdateAutoShareRuleRequest
+  ) => {
+    if (!friendId) return;
+
+    await updateAutoShareRule(friendId, ruleId, request);
+    await loadAutoShareRules();
+  };
+
+  const handleDeleteRule = async (ruleId: string) => {
+    if (!friendId) return;
+
+    await deleteAutoShareRule(friendId, ruleId);
+    await loadAutoShareRules();
   };
 
   const formatDate = (dateString: string) => {
@@ -174,6 +244,60 @@ export function FriendDetailPage() {
           <span className="stat-value">{totalShares}</span>
           <span className="stat-label">Total shared points</span>
         </div>
+      </div>
+
+      {/* Auto-Share Rules Section */}
+      <div className="auto-share-rules-section">
+        <div className="section-header">
+          <h2>
+            <button
+              className="collapsible-toggle"
+              onClick={() => setRulesExpanded(!rulesExpanded)}
+            >
+              {rulesExpanded ? "▼" : "▶"} Auto-Share Rules{" "}
+              {autoShareRules.length > 0 && (
+                <span className="rule-count">({autoShareRules.length})</span>
+              )}
+            </button>
+          </h2>
+          {rulesExpanded && !showRuleForm && (
+            <button
+              className="btn-primary"
+              onClick={() => setShowRuleForm(true)}
+            >
+              + Add Rule
+            </button>
+          )}
+        </div>
+
+        {rulesExpanded && (
+          <div className="section-content">
+            <p className="section-description">
+              Automatically share newly created points with{" "}
+              {friendDetail.username} based on type and tag filters
+            </p>
+
+            {showRuleForm && (
+              <div className="rule-form-container">
+                <AutoShareRuleForm
+                  onSubmit={handleCreateRule}
+                  onCancel={() => setShowRuleForm(false)}
+                  isSubmitting={isSubmittingRule}
+                />
+              </div>
+            )}
+
+            {isLoadingRules ? (
+              <div className="loading-rules">Loading rules...</div>
+            ) : (
+              <AutoShareRulesList
+                rules={autoShareRules}
+                onUpdateRule={handleUpdateRule}
+                onDeleteRule={handleDeleteRule}
+              />
+            )}
+          </div>
+        )}
       </div>
 
       {/* Shared Points List */}
