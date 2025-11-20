@@ -7,6 +7,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getFriendDetail, removeFriend, type FriendDetail } from "../api/friends";
+import { updateShare, deleteShare } from "../api/sharing";
 import { getErrorMessage } from "../api/client";
 import { LoadingSpinner } from "../components/common/LoadingSpinner";
 import { useLanguage } from "../contexts/LanguageContext";
@@ -20,6 +21,8 @@ export function FriendDetailPage() {
   const [error, setError] = useState("");
   const [showRemoveDialog, setShowRemoveDialog] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
+  const [isUpdating, setIsUpdating] = useState<string | null>(null);
+  const [isUnsharing, setIsUnsharing] = useState<string | null>(null);
   const navigate = useNavigate();
   const { language } = useLanguage();
 
@@ -56,6 +59,40 @@ export function FriendDetailPage() {
       setShowRemoveDialog(false);
     } finally {
       setIsRemoving(false);
+    }
+  };
+
+  const handlePermissionChange = async (shareId: string, newPermission: string) => {
+    setIsUpdating(shareId);
+
+    try {
+      await updateShare(shareId, {
+        permission_level: newPermission as "view" | "edit" | "transfer",
+      });
+      // Reload friend details to reflect the change
+      await loadFriendDetail();
+    } catch (err) {
+      alert(`Error updating permission: ${getErrorMessage(err)}`);
+    } finally {
+      setIsUpdating(null);
+    }
+  };
+
+  const handleUnshare = async (point: FriendDetail["shared_points"][0]) => {
+    if (!confirm(`Are you sure you want to unshare "${point.title}" with ${friendDetail?.username}?`)) {
+      return;
+    }
+
+    setIsUnsharing(point.share_id);
+
+    try {
+      await deleteShare(point.share_id);
+      // Reload friend details to reflect the change
+      await loadFriendDetail();
+    } catch (err) {
+      alert(`Error unsharing: ${getErrorMessage(err)}`);
+    } finally {
+      setIsUnsharing(null);
     }
   };
 
@@ -166,6 +203,7 @@ export function FriendDetailPage() {
                   <th>Type</th>
                   <th>Tags</th>
                   <th>Location</th>
+                  <th>Permission</th>
                   <th>Created</th>
                   <th>Actions</th>
                 </tr>
@@ -220,6 +258,18 @@ export function FriendDetailPage() {
                     <td className="point-location">
                       {point.latitude.toFixed(4)}, {point.longitude.toFixed(4)}
                     </td>
+                    <td>
+                      <select
+                        value={point.permission_level}
+                        onChange={(e) => handlePermissionChange(point.share_id, e.target.value)}
+                        className={`permission-select ${point.permission_level}`}
+                        disabled={isUpdating === point.share_id}
+                      >
+                        <option value="view">View</option>
+                        <option value="edit">Edit</option>
+                        <option value="transfer">Transfer</option>
+                      </select>
+                    </td>
                     <td className="point-date">{formatDate(point.created_at)}</td>
                     <td className="point-actions">
                       <button
@@ -229,13 +279,11 @@ export function FriendDetailPage() {
                         View Details
                       </button>
                       <button
-                        onClick={() => {
-                          // TODO: Implement unshare functionality
-                          console.log("Unshare point:", point.id);
-                        }}
+                        onClick={() => handleUnshare(point)}
                         className="btn-small btn-danger"
+                        disabled={isUnsharing === point.share_id || isUpdating === point.share_id}
                       >
-                        Unshare
+                        {isUnsharing === point.share_id ? "Unsharing..." : "Unshare"}
                       </button>
                     </td>
                   </tr>

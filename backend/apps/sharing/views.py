@@ -295,10 +295,24 @@ class FriendshipViewSet(viewsets.ModelViewSet):
                 {"error": "Friendship not found"}, status=status.HTTP_404_NOT_FOUND
             )
 
-        # Get shared points with this friend
-        shared_points = FriendshipService.get_shared_points_with_friend(
+        # Get shared points with this friend, annotated with share info
+        shared_points_queryset = FriendshipService.get_shared_points_with_friend(
             request.user, friend
         )
+
+        # Annotate each point with share_id and permission_level
+        shared_points_list = []
+        for point in shared_points_queryset:
+            # Get the share for this point
+            share = Share.objects.filter(
+                gps_point=point, owner=request.user, recipient_user=friend, is_active=True
+            ).first()
+
+            if share:
+                # Add share attributes to the point object
+                point.share_id = str(share.id)
+                point.permission_level = share.permission_level
+                shared_points_list.append(point)
 
         # Get share counts
         from django.db.models import Count, Q
@@ -311,13 +325,13 @@ class FriendshipViewSet(viewsets.ModelViewSet):
             owner=friend, recipient_user=request.user, is_active=True
         ).count()
 
-        # Prepare friend detail data - pass queryset, not serialized data
+        # Prepare friend detail data
         # Note: Email excluded for privacy
         friend_data = {
             "id": friend.id,
             "username": friend.username,
             "friendship_created_at": friendship.created_at,
-            "shared_points": shared_points,  # Pass queryset, let serializer handle it
+            "shared_points": shared_points_list,
             "shares_sent_count": shares_sent_count,
             "shares_received_count": shares_received_count,
         }

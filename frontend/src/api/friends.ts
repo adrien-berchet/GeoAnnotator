@@ -53,6 +53,8 @@ export interface FriendDetail {
       name: string;
     }>;
     created_at: string;
+    share_id: string;
+    permission_level: "view" | "edit" | "transfer";
   }>;
   shares_sent_count: number;
   shares_received_count: number;

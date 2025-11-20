@@ -363,6 +363,31 @@ class FriendshipSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "friend", "created_at"]
 
 
+class SharedPointWithPermissionSerializer(serializers.Serializer):
+    """
+    Serializer for points with share information.
+
+    Includes both point data and the associated share's permission level and ID.
+    """
+    id = serializers.UUIDField(read_only=True)
+    title = serializers.CharField(read_only=True)
+    latitude = serializers.FloatField(read_only=True)
+    longitude = serializers.FloatField(read_only=True)
+    type = PointTypeSerializer(read_only=True)
+    tags = TagSerializer(many=True, read_only=True)
+    created_at = serializers.DateTimeField(read_only=True)
+    share_id = serializers.SerializerMethodField()
+    permission_level = serializers.SerializerMethodField()
+
+    def get_share_id(self, obj):
+        """Get the share ID for this point."""
+        return getattr(obj, 'share_id', None)
+
+    def get_permission_level(self, obj):
+        """Get the permission level for this point."""
+        return getattr(obj, 'permission_level', None)
+
+
 class FriendDetailSerializer(serializers.Serializer):
     """
     Friend detail serializer with shared points.
@@ -374,7 +399,7 @@ class FriendDetailSerializer(serializers.Serializer):
     id = serializers.UUIDField(read_only=True)
     username = serializers.CharField(read_only=True)
     friendship_created_at = serializers.DateTimeField(read_only=True)
-    shared_points = GPSPointListSerializer(many=True, read_only=True)
+    shared_points = SharedPointWithPermissionSerializer(many=True, read_only=True)
     shares_sent_count = serializers.IntegerField(read_only=True)
     shares_received_count = serializers.IntegerField(read_only=True)
 
