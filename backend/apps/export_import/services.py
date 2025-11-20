@@ -50,6 +50,7 @@ class ExportService:
                     "title": point.title,
                     "description": point.description,
                     "is_public": point.is_public,
+                    "owner": point.owner.email,
                     "owner_id": str(point.owner.id),
                     "tags": [tag.name for tag in point.tags.all()],
                     "created_at": point.created_at.isoformat(),

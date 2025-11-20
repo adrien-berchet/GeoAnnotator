@@ -120,7 +120,7 @@ class ShareViewSet(viewsets.ModelViewSet):
         requested_permission = serializer.validated_data["permission_level"]
 
         # Cannot grant higher permission than you have
-        permission_hierarchy = {"view": 1, "edit": 2, "transfer": 3, "owner": 4}
+        permission_hierarchy = {"view": 1, "edit": 2, "manage": 3, "owner": 4}
         if permission_hierarchy.get(requested_permission, 0) >= permission_hierarchy.get(
             user_permission, 0
         ):
@@ -396,7 +396,7 @@ class BatchShareView(viewsets.ViewSet):
         {
             "point_ids": ["uuid1", "uuid2", ...],
             "usernames": ["user1", "user2", ...],
-            "permission_level": "view" | "edit" | "transfer"
+            "permission_level": "view" | "edit" | "manage"
         }
 
         Response:
