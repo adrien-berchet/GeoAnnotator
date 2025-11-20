@@ -11,6 +11,7 @@ import type { Map as LeafletMap } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { initializeLeaflet } from "../../utils/leaflet-config";
 import type { TileLayer as TileLayerType } from "./MapLayerSelector";
+import { DEFAULT_TILE_LAYER } from "./MapLayerSelector";
 
 // Initialize Leaflet configuration
 initializeLeaflet();
@@ -79,17 +80,7 @@ export function MapView({
 }: MapViewProps) {
   const mapRef = useRef<LeafletMap | null>(null);
 
-  // Default tile layer (OpenStreetMap)
-  const defaultLayer = {
-    id: "osm",
-    name: "Street Map",
-    url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-    attribution:
-      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    maxZoom: 22,
-  };
-
-  const activeLayer = tileLayer || defaultLayer;
+  const activeLayer = tileLayer || DEFAULT_TILE_LAYER;
 
   return (
     <div className="map-view-container">
@@ -105,6 +96,7 @@ export function MapView({
           attribution={activeLayer.attribution}
           url={activeLayer.url}
           maxZoom={activeLayer.maxZoom}
+          maxNativeZoom={activeLayer.maxNativeZoom}
         />
 
         {/* Map event handler */}
