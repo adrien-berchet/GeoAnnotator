@@ -29,9 +29,9 @@ const PERMISSION_INFO: Record<
     description: "Can view and modify point",
     icon: "✏️",
   },
-  transfer: {
-    label: "Transfer",
-    description: "Can transfer ownership",
+  manage: {
+    label: "Manage",
+    description: "Can manage and share point",
     icon: "👑",
   },
 };
@@ -71,7 +71,7 @@ export function PermissionSelector({
         <small className="hierarchy-hint">
           {value === "view" && "• Basic access level"}
           {value === "edit" && "• Includes View permissions"}
-          {value === "transfer" && "• Includes View and Edit permissions"}
+          {value === "manage" && "• Includes View and Edit permissions"}
         </small>
       </div>
     </div>

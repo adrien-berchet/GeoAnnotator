@@ -67,7 +67,7 @@ export function FriendDetailPage() {
 
     try {
       await updateShare(shareId, {
-        permission_level: newPermission as "view" | "edit" | "transfer",
+        permission_level: newPermission as "view" | "edit" | "manage",
       });
       // Reload friend details to reflect the change
       await loadFriendDetail();
@@ -267,7 +267,7 @@ export function FriendDetailPage() {
                       >
                         <option value="view">View</option>
                         <option value="edit">Edit</option>
-                        <option value="transfer">Transfer</option>
+                        <option value="manage">Manage</option>
                       </select>
                     </td>
                     <td className="point-date">{formatDate(point.created_at)}</td>

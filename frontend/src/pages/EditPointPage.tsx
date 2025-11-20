@@ -95,7 +95,7 @@ export function EditPointPage() {
         if (lockErr?.response?.status === 403) {
           // Permission denied
           setError(
-            "You do not have permission to edit this point. Only users with edit or transfer permissions can modify this point.",
+            "You do not have permission to edit this point. Only users with edit or manage permissions can modify this point.",
           );
         } else if (lockErr?.response?.status === 409) {
           // Point locked by another user
@@ -268,7 +268,7 @@ export function EditPointPage() {
               <p>
                 You do not have permission to edit this point.
                 <br />
-                Only users with edit or transfer permissions can modify this point.
+                Only users with edit or manage permissions can modify this point.
               </p>
             </>
           ) : point.editing_lock_user ? (

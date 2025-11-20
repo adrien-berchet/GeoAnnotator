@@ -54,7 +54,7 @@ export interface FriendDetail {
     }>;
     created_at: string;
     share_id: string;
-    permission_level: "view" | "edit" | "transfer";
+    permission_level: "view" | "edit" | "manage";
   }>;
   shares_sent_count: number;
   shares_received_count: number;
@@ -126,7 +126,7 @@ export async function removeFriend(
 export interface BatchShareRequest {
   point_ids: string[];
   usernames: string[];
-  permission_level: "view" | "edit" | "transfer";
+  permission_level: "view" | "edit" | "manage";
 }
 
 export interface BatchShareResult {

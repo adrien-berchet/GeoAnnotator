@@ -21,7 +21,7 @@ from .models import Share
 class PermissionService:
     """Service for checking and managing permissions."""
 
-    PERMISSION_LEVELS = ["view", "edit", "transfer", "owner"]
+    PERMISSION_LEVELS = ["view", "edit", "manage", "owner"]
 
     @staticmethod
     def get_user_permission(point: GPSPoint, user: User) -> str | None:
@@ -33,7 +33,7 @@ class PermissionService:
             user: User object
 
         Returns:
-            str: 'owner', 'transfer', 'edit', 'view', or None
+            str: 'owner', 'manage', 'edit', 'view', or None
         """
         # Owner has full permissions
         if point.owner == user:
@@ -63,7 +63,7 @@ class PermissionService:
         Args:
             point: GPSPoint object
             user: User object
-            required_level: 'view', 'edit', or 'transfer'
+            required_level: 'view', 'edit', or 'manage'
 
         Returns:
             bool: True if user has permission
@@ -73,11 +73,11 @@ class PermissionService:
         if user_level is None:
             return False
 
-        # Permission hierarchy: owner > transfer > edit > view
+        # Permission hierarchy: owner > manage > edit > view
         hierarchy = {
             "view": 0,
             "edit": 1,
-            "transfer": 2,
+            "manage": 2,
             "owner": 3,
         }
 
@@ -95,8 +95,8 @@ class PermissionService:
 
     @staticmethod
     def can_share(point: GPSPoint, user: User) -> bool:
-        """Check if user can share point (requires transfer permission)."""
-        return PermissionService.has_permission(point, user, "transfer")
+        """Check if user can share point (requires manage permission)."""
+        return PermissionService.has_permission(point, user, "manage")
 
     @staticmethod
     def is_owner(point: GPSPoint, user: User) -> bool:
@@ -244,7 +244,7 @@ class ShareService:
         Args:
             point: GPSPoint to share
             recipient_email: Recipient email address
-            permission_level: 'view', 'edit', or 'transfer'
+            permission_level: 'view', 'edit', or 'manage'
             owner: User creating share
 
         Returns:
@@ -254,7 +254,7 @@ class ShareService:
             ValueError: If validation fails
         """
         # Validate permission level
-        if permission_level not in ["view", "edit", "transfer"]:
+        if permission_level not in ["view", "edit", "manage"]:
             raise ValueError(f"Invalid permission level: {permission_level}")
 
         # Check if user has permission to share
@@ -313,7 +313,7 @@ class ShareService:
             ValueError: If validation fails
         """
         # Validate permission level
-        if permission_level not in ["view", "edit", "transfer"]:
+        if permission_level not in ["view", "edit", "manage"]:
             raise ValueError(f"Invalid permission level: {permission_level}")
 
         # Check if user has permission to update
@@ -631,7 +631,7 @@ class BatchShareService:
         Args:
             point_ids: List of GPS point UUIDs to share
             usernames: List of usernames to share with
-            permission_level: Permission level for all shares ('view', 'edit', 'transfer')
+            permission_level: Permission level for all shares ('view', 'edit', 'manage')
             owner: User creating the shares
 
         Returns:
@@ -657,7 +657,7 @@ class BatchShareService:
         already_shared_count = 0
 
         # Validate permission level
-        if permission_level not in ["view", "edit", "transfer"]:
+        if permission_level not in ["view", "edit", "manage"]:
             return {
                 "success_count": 0,
                 "error_count": len(point_ids) * len(usernames),

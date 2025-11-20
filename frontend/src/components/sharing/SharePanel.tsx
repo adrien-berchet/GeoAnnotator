@@ -25,7 +25,7 @@ export function SharePanel({
   const [friends, setFriends] = useState<Friend[]>([]);
   const [selectedFriends, setSelectedFriends] = useState<string[]>([]);
   const [newUsernames, setNewUsernames] = useState("");
-  const [permissionLevel, setPermissionLevel] = useState<"view" | "edit" | "transfer">("view");
+  const [permissionLevel, setPermissionLevel] = useState<"view" | "edit" | "manage">("view");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -153,12 +153,12 @@ export function SharePanel({
                 <input
                   type="radio"
                   name="permission"
-                  value="transfer"
-                  checked={permissionLevel === "transfer"}
-                  onChange={() => setPermissionLevel("transfer")}
+                  value="manage"
+                  checked={permissionLevel === "manage"}
+                  onChange={() => setPermissionLevel("manage")}
                 />
                 <div className="permission-details">
-                  <strong>Transfer</strong>
+                  <strong>Manage</strong>
                   <span>Can view, edit, and share with others</span>
                 </div>
               </label>

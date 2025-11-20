@@ -106,7 +106,7 @@ class Share(models.Model):
     Permission levels:
     - view: Can view point and annotations
     - edit: Can view + edit point and annotations
-    - transfer: Can view + edit + share with others
+    - manage: Can view + edit + share with others and manage existing shares
 
     Invitation flow:
     1. Owner creates share → invitation_token generated, email sent
@@ -118,12 +118,12 @@ class Share(models.Model):
     # Permission level choices
     PERMISSION_VIEW = "view"
     PERMISSION_EDIT = "edit"
-    PERMISSION_TRANSFER = "transfer"
+    PERMISSION_MANAGE = "manage"
 
     PERMISSION_CHOICES = [
         (PERMISSION_VIEW, "View"),
         (PERMISSION_EDIT, "Edit"),
-        (PERMISSION_TRANSFER, "Transfer"),
+        (PERMISSION_MANAGE, "Manage"),
     ]
 
     # Invitation status
@@ -169,7 +169,7 @@ class Share(models.Model):
         choices=PERMISSION_CHOICES,
         default=PERMISSION_VIEW,
         db_index=True,
-        help_text="Permission level (view/edit/transfer)",
+        help_text="Permission level (view/edit/manage)",
     )
 
     invitation_token = models.UUIDField(

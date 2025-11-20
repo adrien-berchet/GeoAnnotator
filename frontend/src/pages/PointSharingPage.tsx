@@ -86,7 +86,7 @@ export function PointSharingPage() {
 
     try {
       await updateShare(share.id, {
-        permission_level: newPermission as "view" | "edit" | "transfer",
+        permission_level: newPermission as "view" | "edit" | "manage",
       });
       // Reload shares to reflect the change
       const updatedShares = await getPointShares(id!);
@@ -108,7 +108,7 @@ export function PointSharingPage() {
       const result = await batchSharePoints({
         point_ids: [id],
         usernames,
-        permission_level: permissionLevel as "view" | "edit" | "transfer",
+        permission_level: permissionLevel as "view" | "edit" | "manage",
       });
 
       // Show success/error summary
@@ -140,8 +140,8 @@ export function PointSharingPage() {
         return "permission-badge view";
       case "edit":
         return "permission-badge edit";
-      case "transfer":
-        return "permission-badge transfer";
+      case "manage":
+        return "permission-badge manage";
       default:
         return "permission-badge";
     }
@@ -242,7 +242,7 @@ export function PointSharingPage() {
                       >
                         <option value="view">View</option>
                         <option value="edit">Edit</option>
-                        <option value="transfer">Transfer</option>
+                        <option value="manage">Manage</option>
                       </select>
                     </td>
                     <td className="date-cell">

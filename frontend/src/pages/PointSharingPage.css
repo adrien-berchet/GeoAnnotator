@@ -173,7 +173,7 @@
   color: #92400e;
 }
 
-.permission-badge.transfer {
+.permission-badge.manage {
   background: #fce7f3;
   color: #831843;
 }
@@ -217,7 +217,7 @@
   border-color: #fde68a;
 }
 
-.permission-select.transfer {
+.permission-select.manage {
   background: #fce7f3;
   color: #831843;
   border-color: #f9a8d4;

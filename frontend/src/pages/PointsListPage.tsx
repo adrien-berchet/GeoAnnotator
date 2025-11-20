@@ -267,7 +267,7 @@ export function PointsListPage() {
       const result = await batchSharePoints({
         point_ids: selectedPointIds,
         usernames,
-        permission_level: permissionLevel as "view" | "edit" | "transfer",
+        permission_level: permissionLevel as "view" | "edit" | "manage",
       });
 
       // Show success/error summary

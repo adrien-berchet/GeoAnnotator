@@ -89,16 +89,16 @@ class CreateShareSerializer(serializers.ModelSerializer):
 
     def validate_permission_level(self, value):
         """Validate permission level is valid."""
-        if value not in ["view", "edit", "transfer"]:
+        if value not in ["view", "edit", "manage"]:
             raise serializers.ValidationError(
-                f"Invalid permission level: {value}. Must be one of: view, edit, transfer"
+                f"Invalid permission level: {value}. Must be one of: view, edit, manage"
             )
         return value
 
     def validate(self, attrs):
         """
         Validate share creation:
-        - User must have transfer permission
+        - User must have manage permission
         - Cannot share with self
         - No duplicate shares for same email
 
@@ -116,11 +116,11 @@ class CreateShareSerializer(serializers.ModelSerializer):
 
         recipient_email = attrs["recipient_email"]
 
-        # Check if user has transfer permission
+        # Check if user has manage permission
         point_serializer = GPSPointSerializer(gps_point, context=self.context)
         permission = point_serializer.get_permission(gps_point)
 
-        if permission not in ["transfer", "owner"]:
+        if permission not in ["manage", "owner"]:
             raise serializers.ValidationError(
                 {
                     "error": "ACCESS_DENIED",
@@ -187,9 +187,9 @@ class UpdateShareSerializer(serializers.ModelSerializer):
 
     def validate_permission_level(self, value):
         """Validate permission level is valid."""
-        if value not in ["view", "edit", "transfer"]:
+        if value not in ["view", "edit", "manage"]:
             raise serializers.ValidationError(
-                f"Invalid permission level: {value}. Must be one of: view, edit, transfer"
+                f"Invalid permission level: {value}. Must be one of: view, edit, manage"
             )
         return value
 
@@ -197,11 +197,11 @@ class UpdateShareSerializer(serializers.ModelSerializer):
         """Validate user has permission to update share."""
         share = self.instance
 
-        # Only owner or users with transfer permission can update
+        # Only owner or users with manage permission can update
         point_serializer = GPSPointSerializer(share.gps_point, context=self.context)
         permission = point_serializer.get_permission(share.gps_point)
 
-        if permission not in ["transfer", "owner"]:
+        if permission not in ["manage", "owner"]:
             raise serializers.ValidationError(
                 {
                     "error": "ACCESS_DENIED",
@@ -428,7 +428,7 @@ class BatchShareSerializer(serializers.Serializer):
     )
 
     permission_level = serializers.ChoiceField(
-        choices=["view", "edit", "transfer"],
+        choices=["view", "edit", "manage"],
         required=True,
         help_text="Permission level for all shares",
     )
