@@ -468,6 +468,9 @@ export function PointsListPage() {
               <button onClick={handleSelectAll} className="btn-select">
                 Select All
               </button>
+              <button onClick={handleDeselectAll} className="btn-select">
+                Deselect All
+              </button>
               {selectedPointIds.length > 0 && (
                 <span className="selection-count">
                   {selectedPointIds.length} selected
@@ -475,12 +478,12 @@ export function PointsListPage() {
               )}
               <button
                 onClick={handleShareSelected}
-                className="btn-primary btn-share"
+                className="btn-toolbar btn-toolbar-primary"
                 disabled={selectedPointIds.length === 0}
               >
                 Share Selected
               </button>
-              <button onClick={handleExitSharingMode} className="btn-secondary">
+              <button onClick={handleExitSharingMode} className="btn-toolbar btn-toolbar-secondary">
                 Cancel
               </button>
             </div>
