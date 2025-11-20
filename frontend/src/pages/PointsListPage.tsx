@@ -296,9 +296,32 @@ export function PointsListPage() {
       setSelectedPointIds([]);
       setSharingModeActive(false);
       setLastClickedIndex(null);
-    } catch (err) {
-      setError(getErrorMessage(err));
-      alert(`Error sharing points: ${getErrorMessage(err)}`);
+    } catch (err: any) {
+      // Check if this is a batch share response with detailed results
+      if (err?.response?.data?.results && Array.isArray(err.response.data.results)) {
+        const errorResults = err.response.data.results.filter(
+          (r: any) => r.status === "error"
+        );
+
+        if (errorResults.length > 0) {
+          // Get unique error messages
+          const errorMessages = new Set<string>();
+          errorResults.forEach((r: any) => {
+            if (r.error) errorMessages.add(r.error);
+          });
+
+          const errorText = Array.from(errorMessages).join("; ");
+          setError(errorText);
+          alert(`Error sharing points: ${errorText}`);
+        } else {
+          setError("Failed to share points");
+          alert("Error sharing points: Failed to share points");
+        }
+      } else {
+        const errorMsg = getErrorMessage(err);
+        setError(errorMsg);
+        alert(`Error sharing points: ${errorMsg}`);
+      }
     } finally {
       setIsSharing(false);
     }
