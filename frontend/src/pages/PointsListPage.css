@@ -462,6 +462,13 @@
   gap: var(--spacing-md);
 }
 
+.selection-actions button {
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .btn-select {
   padding: var(--spacing-sm) var(--spacing-md);
   background: var(--color-bg-primary);

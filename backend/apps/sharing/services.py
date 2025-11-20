@@ -638,12 +638,13 @@ class BatchShareService:
             dict with results: {
                 'success_count': int,
                 'error_count': int,
+                'already_shared_count': int,
                 'total_attempted': int,
                 'results': [
                     {
                         'point_id': str,
                         'username': str,
-                        'status': 'success' | 'error',
+                        'status': 'success' | 'error' | 'already_shared',
                         'error': str (if status == 'error'),
                         'share_id': str (if status == 'success')
                     }
@@ -653,6 +654,7 @@ class BatchShareService:
         results = []
         success_count = 0
         error_count = 0
+        already_shared_count = 0
 
         # Validate permission level
         if permission_level not in ["view", "edit", "transfer"]:
@@ -752,11 +754,11 @@ class BatchShareService:
                         {
                             "point_id": point_id,
                             "username": username,
-                            "status": "error",
-                            "error": "Already shared with this user",
+                            "status": "already_shared",
+                            "message": "Already shared with this user",
                         }
                     )
-                    error_count += 1
+                    already_shared_count += 1
                     continue
 
                 # Create share
@@ -797,6 +799,7 @@ class BatchShareService:
         return {
             "success_count": success_count,
             "error_count": error_count,
+            "already_shared_count": already_shared_count,
             "total_attempted": len(point_ids) * len(usernames),
             "results": results,
         }

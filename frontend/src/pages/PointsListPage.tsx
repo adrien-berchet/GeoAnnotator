@@ -271,14 +271,24 @@ export function PointsListPage() {
       });
 
       // Show success/error summary
-      if (result.error_count === 0) {
-        alert(`Successfully shared ${result.success_count} point(s) with ${usernames.length} user(s)`);
-      } else if (result.success_count === 0) {
-        alert(`Failed to share points: ${result.error_count} errors`);
+      const messages = [];
+
+      if (result.success_count > 0) {
+        messages.push(`${result.success_count} shared successfully`);
+      }
+
+      if (result.already_shared_count > 0) {
+        messages.push(`${result.already_shared_count} already shared`);
+      }
+
+      if (result.error_count > 0) {
+        messages.push(`${result.error_count} failed`);
+      }
+
+      if (messages.length > 0) {
+        alert(messages.join(", "));
       } else {
-        alert(
-          `Partially successful: ${result.success_count} succeeded, ${result.error_count} failed`
-        );
+        alert("No changes made");
       }
 
       // Close panel, clear selection, and exit sharing mode

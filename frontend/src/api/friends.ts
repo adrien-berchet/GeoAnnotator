@@ -130,14 +130,16 @@ export interface BatchShareRequest {
 export interface BatchShareResult {
   point_id: string;
   username: string;
-  status: "success" | "error";
+  status: "success" | "error" | "already_shared";
   error?: string;
+  message?: string;
   share_id?: string;
 }
 
 export interface BatchShareResponse {
   success_count: number;
   error_count: number;
+  already_shared_count: number;
   total_attempted: number;
   results: BatchShareResult[];
 }
