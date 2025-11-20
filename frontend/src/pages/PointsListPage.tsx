@@ -311,15 +311,12 @@ export function PointsListPage() {
           });
 
           const errorText = Array.from(errorMessages).join("; ");
-          setError(errorText);
           alert(`Error sharing points: ${errorText}`);
         } else {
-          setError("Failed to share points");
           alert("Error sharing points: Failed to share points");
         }
       } else {
         const errorMsg = getErrorMessage(err);
-        setError(errorMsg);
         alert(`Error sharing points: ${errorMsg}`);
       }
     } finally {
