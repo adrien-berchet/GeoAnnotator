@@ -51,7 +51,6 @@ class ExportService:
                     "description": point.description,
                     "is_public": point.is_public,
                     "owner": point.owner.username,
-                    "owner_id": str(point.owner.id),
                     "tags": [tag.name for tag in point.tags.all()],
                     "created_at": point.created_at.isoformat(),
                     "updated_at": point.updated_at.isoformat(),
@@ -133,10 +132,6 @@ class ExportService:
                 value=point.owner.username,
             )
             pnt.extendeddata.newdata(
-                name="owner_id",
-                value=str(point.owner.id),
-            )
-            pnt.extendeddata.newdata(
                 name="is_public",
                 value=str(point.is_public),
             )
@@ -171,7 +166,6 @@ class ExportService:
                 "longitude",
                 "is_public",
                 "owner",
-                "owner_id",
                 "tags",
                 "created_at",
                 "updated_at",
@@ -189,7 +183,6 @@ class ExportService:
                     point.longitude,
                     point.is_public,
                     point.owner.username,
-                    str(point.owner.id),
                     "|".join([tag.name for tag in point.tags.all()]),
                     point.created_at.isoformat(),
                     point.updated_at.isoformat(),
