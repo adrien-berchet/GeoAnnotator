@@ -12,6 +12,8 @@ from rest_framework import serializers
 from apps.authentication.serializers import UserSerializer
 from apps.points.serializers import GPSPointListSerializer
 from apps.points.serializers import GPSPointSerializer
+from apps.points.serializers import PointTypeSerializer
+from apps.points.serializers import TagSerializer
 from apps.sharing.models import Friendship
 from apps.sharing.models import Share
 
