@@ -88,25 +88,25 @@ class TestPermissionChecking:
         assert PermissionService.can_share(gps_point, editor) is False
         assert PermissionService.is_owner(gps_point, editor) is False
 
-    def test_transfer_permission_can_share(self, gps_point, owner):
-        """Test that transfer permission allows sharing."""
-        transfer_user = User.objects.create_user(
-            username="transfer", email="transfer@example.com", password="TestPass123"
+    def test_manage_permission_can_share(self, gps_point, owner):
+        """Test that manage permission allows sharing."""
+        manage_user = User.objects.create_user(
+            username="manage", email="manage@example.com", password="TestPass123"
         )
 
-        # Create transfer share
+        # Create manage share
         Share.objects.create(
             gps_point=gps_point,
             owner=owner,
-            recipient_email=transfer_user.email,
-            recipient_user=transfer_user,
-            permission_level="transfer",
+            recipient_email=manage_user.email,
+            recipient_user=manage_user,
+            permission_level="manage",
         )
 
-        assert PermissionService.can_view(gps_point, transfer_user) is True
-        assert PermissionService.can_edit(gps_point, transfer_user) is True
-        assert PermissionService.can_share(gps_point, transfer_user) is True
-        assert PermissionService.is_owner(gps_point, transfer_user) is False
+        assert PermissionService.can_view(gps_point, manage_user) is True
+        assert PermissionService.can_edit(gps_point, manage_user) is True
+        assert PermissionService.can_share(gps_point, manage_user) is True
+        assert PermissionService.is_owner(gps_point, manage_user) is False
 
     def test_no_permission_denies_all(self, gps_point):
         """Test that user without share has no permissions."""

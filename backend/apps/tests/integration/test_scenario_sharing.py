@@ -325,13 +325,13 @@ class TestScenario4SharingPermissions:
         # Then
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
-    def test_step_9_alice_upgrades_bob_to_transfer(self):
+    def test_step_9_alice_upgrades_bob_to_manage(self):
         """
-        Step 9: Alice Upgrades Bob to Transfer Permission
+        Step 9: Alice Upgrades Bob to Manage Permission
 
         Expected:
         - Response 200 with updated share
-        - permission_level = "transfer"
+        - permission_level = "manage"
         """
         # Given - Create share
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.alice_token}")
@@ -344,17 +344,17 @@ class TestScenario4SharingPermissions:
         )
         share_id = share_response.data["id"]
 
-        # When - Upgrade to transfer
+        # When - Upgrade to manage
         share_detail_url = reverse(
             "sharing:detail", kwargs={"point_id": self.point_id, "pk": share_id}
         )
         response = self.client.patch(
-            share_detail_url, {"permission_level": "transfer"}, format="json"
+            share_detail_url, {"permission_level": "manage"}, format="json"
         )
 
         # Then
         assert response.status_code == status.HTTP_200_OK
-        assert response.data["permission_level"] == "transfer"
+        assert response.data["permission_level"] == "manage"
 
     def test_step_10_bob_shares_point_with_charlie(self):
         """
@@ -364,13 +364,13 @@ class TestScenario4SharingPermissions:
         - Response 201 with created share
         - owner = alice@example.com (original owner tracked)
         """
-        # Given - Bob has transfer permission
+        # Given - Bob has manage permission
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.alice_token}")
         shares_url = reverse("sharing:list", kwargs={"point_id": self.point_id})
 
         share_response = self.client.post(
             shares_url,
-            {"recipient_email": "bob@example.com", "permission_level": "transfer"},
+            {"recipient_email": "bob@example.com", "permission_level": "manage"},
             format="json",
         )
 
@@ -408,7 +408,7 @@ class TestScenario4SharingPermissions:
 
         bob_share_response = self.client.post(
             shares_url,
-            {"recipient_email": "bob@example.com", "permission_level": "transfer"},
+            {"recipient_email": "bob@example.com", "permission_level": "manage"},
             format="json",
         )
         bob_share_id = bob_share_response.data["id"]

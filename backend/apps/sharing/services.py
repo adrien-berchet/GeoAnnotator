@@ -14,13 +14,15 @@ from django.utils import timezone
 from apps.authentication.models import User
 from apps.points.models import GPSPoint
 
+from .models import AutoShareRule
+from .models import Friendship
 from .models import Share
 
 
 class PermissionService:
     """Service for checking and managing permissions."""
 
-    PERMISSION_LEVELS = ["view", "edit", "transfer", "owner"]
+    PERMISSION_LEVELS = ["view", "edit", "manage", "owner"]
 
     @staticmethod
     def get_user_permission(point: GPSPoint, user: User) -> str | None:
@@ -32,7 +34,7 @@ class PermissionService:
             user: User object
 
         Returns:
-            str: 'owner', 'transfer', 'edit', 'view', or None
+            str: 'owner', 'manage', 'edit', 'view', or None
         """
         # Owner has full permissions
         if point.owner == user:
@@ -62,7 +64,7 @@ class PermissionService:
         Args:
             point: GPSPoint object
             user: User object
-            required_level: 'view', 'edit', or 'transfer'
+            required_level: 'view', 'edit', or 'manage'
 
         Returns:
             bool: True if user has permission
@@ -72,11 +74,11 @@ class PermissionService:
         if user_level is None:
             return False
 
-        # Permission hierarchy: owner > transfer > edit > view
+        # Permission hierarchy: owner > manage > edit > view
         hierarchy = {
             "view": 0,
             "edit": 1,
-            "transfer": 2,
+            "manage": 2,
             "owner": 3,
         }
 
@@ -94,8 +96,8 @@ class PermissionService:
 
     @staticmethod
     def can_share(point: GPSPoint, user: User) -> bool:
-        """Check if user can share point (requires transfer permission)."""
-        return PermissionService.has_permission(point, user, "transfer")
+        """Check if user can share point (requires manage permission)."""
+        return PermissionService.has_permission(point, user, "manage")
 
     @staticmethod
     def is_owner(point: GPSPoint, user: User) -> bool:
@@ -243,7 +245,7 @@ class ShareService:
         Args:
             point: GPSPoint to share
             recipient_email: Recipient email address
-            permission_level: 'view', 'edit', or 'transfer'
+            permission_level: 'view', 'edit', or 'manage'
             owner: User creating share
 
         Returns:
@@ -253,7 +255,7 @@ class ShareService:
             ValueError: If validation fails
         """
         # Validate permission level
-        if permission_level not in ["view", "edit", "transfer"]:
+        if permission_level not in ["view", "edit", "manage"]:
             raise ValueError(f"Invalid permission level: {permission_level}")
 
         # Check if user has permission to share
@@ -312,7 +314,7 @@ class ShareService:
             ValueError: If validation fails
         """
         # Validate permission level
-        if permission_level not in ["view", "edit", "transfer"]:
+        if permission_level not in ["view", "edit", "manage"]:
             raise ValueError(f"Invalid permission level: {permission_level}")
 
         # Check if user has permission to update
@@ -404,3 +406,584 @@ class ShareService:
             point: GPSPoint object
         """
         Share.objects.filter(gps_point=point).update(is_active=True)
+
+
+class FriendshipService:
+    """Service for managing friendships between users."""
+
+    @staticmethod
+    def add_friend(user: User, friend_username: str) -> Friendship:
+        """
+        Add a friend by username.
+
+        Creates a bidirectional friendship - two Friendship records are created,
+        one for each direction.
+
+        Args:
+            user: User who is adding the friend
+            friend_username: Username of the friend to add
+
+        Returns:
+            Friendship object (user → friend)
+
+        Raises:
+            ValueError: If friend not found, trying to add self, or friendship exists
+        """
+        # Validate username
+        if not friend_username or not friend_username.strip():
+            raise ValueError("Username is required")
+
+        friend_username = friend_username.strip()
+
+        # Check if trying to add self
+        if user.username == friend_username:
+            raise ValueError("Cannot add yourself as a friend")
+
+        # Find friend by username
+        try:
+            friend = User.objects.get(username=friend_username)
+        except User.DoesNotExist:
+            raise ValueError(f"User with username '{friend_username}' not found") from None
+
+        # Check if friendship already exists (either direction)
+        existing = Friendship.objects.filter(
+            Q(user=user, friend=friend) | Q(user=friend, friend=user)
+        ).exists()
+
+        if existing:
+            raise ValueError(f"Already friends with {friend_username}")
+
+        # Create bidirectional friendship
+        friendship_1 = Friendship.objects.create(user=user, friend=friend)
+        Friendship.objects.create(user=friend, friend=user)
+
+        return friendship_1
+
+    @staticmethod
+    def remove_friend(user: User, friend: User) -> dict:
+        """
+        Remove a friendship and revoke all shares in both directions.
+
+        This is a bidirectional operation:
+        1. Delete friendship records (both directions)
+        2. Revoke all shares FROM user TO friend
+        3. Revoke all shares FROM friend TO user
+
+        Args:
+            user: User who is removing the friend
+            friend: Friend to remove
+
+        Returns:
+            dict with counts: {
+                'friendships_deleted': int,
+                'shares_revoked_to_friend': int,
+                'shares_revoked_from_friend': int,
+                'total_shares_revoked': int
+            }
+
+        Raises:
+            ValueError: If not friends or friend not found
+        """
+        # Check if friendship exists
+        friendship_exists = Friendship.objects.filter(
+            Q(user=user, friend=friend) | Q(user=friend, friend=user)
+        ).exists()
+
+        if not friendship_exists:
+            raise ValueError(f"Not friends with {friend.username}")
+
+        # Delete friendships (both directions)
+        friendships_deleted = Friendship.objects.filter(
+            Q(user=user, friend=friend) | Q(user=friend, friend=user)
+        ).delete()[0]
+
+        # Revoke shares FROM user TO friend
+        # Find shares where user is owner and friend is recipient
+        shares_to_friend = Share.objects.filter(
+            owner=user,
+            recipient_user=friend,
+        )
+        shares_revoked_to_friend = shares_to_friend.count()
+        shares_to_friend.delete()
+
+        # Revoke shares FROM friend TO user
+        # Find shares where friend is owner and user is recipient
+        shares_from_friend = Share.objects.filter(
+            owner=friend,
+            recipient_user=user,
+        )
+        shares_revoked_from_friend = shares_from_friend.count()
+        shares_from_friend.delete()
+
+        return {
+            "friendships_deleted": friendships_deleted,
+            "shares_revoked_to_friend": shares_revoked_to_friend,
+            "shares_revoked_from_friend": shares_revoked_from_friend,
+            "total_shares_revoked": shares_revoked_to_friend + shares_revoked_from_friend,
+        }
+
+    @staticmethod
+    def get_friends(user: User):
+        """
+        Get all friends of a user with share statistics.
+
+        Returns a queryset of User objects that are friends with the given user,
+        annotated with share counts.
+
+        Args:
+            user: User to get friends for
+
+        Returns:
+            QuerySet of User objects (friends)
+        """
+        from django.db.models import Count
+
+        # Get friend IDs from friendships where user is the initiator
+        friendship_ids = Friendship.objects.filter(user=user).values_list("friend_id", flat=True)
+
+        # Get friends and annotate with share counts
+        friends = (
+            User.objects.filter(id__in=friendship_ids)
+            .annotate(
+                # Count shares sent to this friend
+                shares_sent_count=Count(
+                    "shares_received",
+                    filter=Q(shares_received__owner=user, shares_received__is_active=True),
+                ),
+                # Count shares received from this friend
+                shares_received_count=Count(
+                    "shares_sent",
+                    filter=Q(shares_sent__recipient_user=user, shares_sent__is_active=True),
+                ),
+            )
+            .order_by("username")
+        )
+
+        return friends
+
+    @staticmethod
+    def get_shared_points_with_friend(user: User, friend: User):
+        """
+        Get all points shared with a specific friend.
+
+        Returns points owned by user that are shared with friend.
+
+        Args:
+            user: User who owns the points
+            friend: Friend to check shares with
+
+        Returns:
+            QuerySet of GPSPoint objects shared with friend
+        """
+        # Get points owned by user that are shared with friend
+        shared_points = GPSPoint.objects.filter(
+            owner=user, shares__recipient_user=friend, shares__is_active=True
+        ).distinct()
+
+        return shared_points
+
+    @staticmethod
+    def are_friends(user: User, friend: User) -> bool:
+        """
+        Check if two users are friends.
+
+        Args:
+            user: First user
+            friend: Second user
+
+        Returns:
+            bool: True if friends, False otherwise
+        """
+        return Friendship.objects.filter(
+            Q(user=user, friend=friend) | Q(user=friend, friend=user)
+        ).exists()
+
+    @staticmethod
+    def get_friendship(user: User, friend: User) -> Friendship | None:
+        """
+        Get the friendship object between two users.
+
+        Args:
+            user: First user
+            friend: Second user
+
+        Returns:
+            Friendship object or None if not friends
+        """
+        return Friendship.objects.filter(Q(user=user, friend=friend)).first()
+
+
+class BatchShareService:
+    """Service for batch sharing operations."""
+
+    @staticmethod
+    def batch_create_shares(
+        point_ids: list[str],
+        usernames: list[str],
+        permission_level: str,
+        owner: User,
+    ) -> dict:
+        """
+        Share multiple points with multiple users.
+
+        Creates shares for each combination of point and username.
+        Automatically creates friendships if they don't exist (hybrid approach).
+
+        Args:
+            point_ids: List of GPS point UUIDs to share
+            usernames: List of usernames to share with
+            permission_level: Permission level for all shares ('view', 'edit', 'manage')
+            owner: User creating the shares
+
+        Returns:
+            dict with results: {
+                'success_count': int,
+                'error_count': int,
+                'already_shared_count': int,
+                'total_attempted': int,
+                'results': [
+                    {
+                        'point_id': str,
+                        'username': str,
+                        'status': 'success' | 'error' | 'already_shared',
+                        'error': str (if status == 'error'),
+                        'share_id': str (if status == 'success')
+                    }
+                ]
+            }
+        """
+        results = []
+        success_count = 0
+        error_count = 0
+        already_shared_count = 0
+
+        # Validate permission level
+        if permission_level not in ["view", "edit", "manage"]:
+            return {
+                "success_count": 0,
+                "error_count": len(point_ids) * len(usernames),
+                "total_attempted": len(point_ids) * len(usernames),
+                "error": f"Invalid permission level: {permission_level}",
+                "results": [],
+            }
+
+        # Get all points and validate ownership/permissions
+        points = GPSPoint.objects.filter(id__in=point_ids)
+        point_dict = {str(p.id): p for p in points}
+
+        # Get all users by username
+        users = User.objects.filter(username__in=usernames)
+        user_dict = {u.username: u for u in users}
+
+        # Process each combination
+        for point_id in point_ids:
+            point = point_dict.get(point_id)
+
+            if not point:
+                # Point not found or no access
+                for username in usernames:
+                    results.append(
+                        {
+                            "point_id": point_id,
+                            "username": username,
+                            "status": "error",
+                            "error": "Point not found or access denied",
+                        }
+                    )
+                    error_count += 1
+                continue
+
+            # Check if user has permission to share this point
+            if not PermissionService.can_share(point, owner):
+                for username in usernames:
+                    results.append(
+                        {
+                            "point_id": point_id,
+                            "username": username,
+                            "status": "error",
+                            "error": "No permission to share this point",
+                        }
+                    )
+                    error_count += 1
+                continue
+
+            # Share with each user
+            for username in usernames:
+                friend = user_dict.get(username)
+
+                if not friend:
+                    results.append(
+                        {
+                            "point_id": point_id,
+                            "username": username,
+                            "status": "error",
+                            "error": f"User '{username}' not found",
+                        }
+                    )
+                    error_count += 1
+                    continue
+
+                # Check if trying to share with self
+                if friend == owner:
+                    results.append(
+                        {
+                            "point_id": point_id,
+                            "username": username,
+                            "status": "error",
+                            "error": "Cannot share with yourself",
+                        }
+                    )
+                    error_count += 1
+                    continue
+
+                # Create friendship if it doesn't exist (hybrid approach)
+                try:
+                    if not FriendshipService.are_friends(owner, friend):
+                        FriendshipService.add_friend(owner, username)
+                except ValueError:
+                    # Friendship might already exist (race condition), ignore
+                    pass
+
+                # Check if already shared
+                existing_share = Share.objects.filter(
+                    gps_point=point,
+                    recipient_user=friend,
+                ).first()
+
+                if existing_share:
+                    results.append(
+                        {
+                            "point_id": point_id,
+                            "username": username,
+                            "status": "already_shared",
+                            "message": "Already shared with this user",
+                        }
+                    )
+                    already_shared_count += 1
+                    continue
+
+                # Create share
+                try:
+                    # Get recipient email for backward compatibility
+                    recipient_email = friend.email
+
+                    share = Share.objects.create(
+                        gps_point=point,
+                        owner=point.owner,
+                        recipient_email=recipient_email,
+                        recipient_user=friend,
+                        permission_level=permission_level,
+                        accepted_at=timezone.now(),  # Auto-accept for existing users
+                    )
+
+                    results.append(
+                        {
+                            "point_id": point_id,
+                            "username": username,
+                            "status": "success",
+                            "share_id": str(share.id),
+                        }
+                    )
+                    success_count += 1
+
+                except Exception as e:
+                    results.append(
+                        {
+                            "point_id": point_id,
+                            "username": username,
+                            "status": "error",
+                            "error": str(e),
+                        }
+                    )
+                    error_count += 1
+
+        return {
+            "success_count": success_count,
+            "error_count": error_count,
+            "already_shared_count": already_shared_count,
+            "total_attempted": len(point_ids) * len(usernames),
+            "results": results,
+        }
+
+
+class AutoShareService:
+    """Service for automatic sharing based on rules."""
+
+    @staticmethod
+    def apply_auto_share_rules(point: GPSPoint) -> dict:
+        """
+        Apply auto-share rules for a newly created point.
+
+        Evaluates all active rules for the point owner and creates shares
+        with friends based on matching rules.
+
+        When multiple rules match for the same friend:
+        - Uses the highest permission level
+
+        Skips auto-sharing if:
+        - Point already manually shared with friend
+        - Friend doesn't exist or friendship removed
+
+        Args:
+            point: Newly created GPSPoint object
+
+        Returns:
+            dict with results: {
+                'shares_created': int,
+                'skipped_count': int,
+                'error_count': int,
+                'results': [
+                    {
+                        'friend_username': str,
+                        'status': 'success' | 'skipped' | 'error',
+                        'reason': str (if skipped or error),
+                        'share_id': str (if success),
+                        'permission_level': str (if success)
+                    }
+                ]
+            }
+        """
+        results = []
+        shares_created = 0
+        skipped_count = 0
+        error_count = 0
+
+        # Get all active rules for the point owner
+        active_rules = (
+            AutoShareRule.objects.filter(user=point.owner, is_active=True)
+            .select_related("friend")
+            .prefetch_related("point_types", "tags")
+        )
+
+        if not active_rules:
+            return {
+                "shares_created": 0,
+                "skipped_count": 0,
+                "error_count": 0,
+                "results": [],
+            }
+
+        # Group rules by friend and find highest permission for each
+        friend_rules = {}  # friend_id -> (friend, highest_permission, matching_rules)
+
+        for rule in active_rules:
+            # Check if rule matches the point
+            if not rule.matches_point(point):
+                continue
+
+            friend = rule.friend
+            friend_id = friend.id
+
+            # Get permission hierarchy value
+            hierarchy = {"view": 0, "edit": 1, "manage": 2}
+            current_permission = rule.permission_level
+            current_level = hierarchy.get(current_permission, 0)
+
+            # Track highest permission for this friend
+            if friend_id not in friend_rules:
+                friend_rules[friend_id] = (friend, current_permission, [rule])
+            else:
+                existing_friend, existing_permission, existing_rules = friend_rules[friend_id]
+                existing_level = hierarchy.get(existing_permission, 0)
+
+                if current_level > existing_level:
+                    friend_rules[friend_id] = (friend, current_permission, [rule])
+                elif current_level == existing_level:
+                    # Same permission level, just track the rule
+                    existing_rules.append(rule)
+                    friend_rules[friend_id] = (existing_friend, existing_permission, existing_rules)
+
+        # Create shares for each friend
+        for friend, permission_level, _matching_rules in friend_rules.values():
+            # Check if friendship still exists
+            if not FriendshipService.are_friends(point.owner, friend):
+                results.append(
+                    {
+                        "friend_username": friend.username,
+                        "status": "skipped",
+                        "reason": "Friendship no longer exists",
+                    }
+                )
+                skipped_count += 1
+                continue
+
+            # Check if already manually shared
+            existing_share = Share.objects.filter(gps_point=point, recipient_user=friend).first()
+
+            if existing_share:
+                results.append(
+                    {
+                        "friend_username": friend.username,
+                        "status": "skipped",
+                        "reason": "Already shared manually",
+                    }
+                )
+                skipped_count += 1
+                continue
+
+            # Create auto-share
+            try:
+                share = Share.objects.create(
+                    gps_point=point,
+                    owner=point.owner,
+                    recipient_email=friend.email,
+                    recipient_user=friend,
+                    permission_level=permission_level,
+                    accepted_at=timezone.now(),  # Auto-accept for friends
+                )
+
+                results.append(
+                    {
+                        "friend_username": friend.username,
+                        "status": "success",
+                        "share_id": str(share.id),
+                        "permission_level": permission_level,
+                    }
+                )
+                shares_created += 1
+
+                # TODO: Send notification to friend about auto-shared point
+
+            except Exception as e:
+                results.append(
+                    {
+                        "friend_username": friend.username,
+                        "status": "error",
+                        "reason": str(e),
+                    }
+                )
+                error_count += 1
+
+        return {
+            "shares_created": shares_created,
+            "skipped_count": skipped_count,
+            "error_count": error_count,
+            "results": results,
+        }
+
+    @staticmethod
+    def get_matching_rules_for_point(point: GPSPoint) -> list[AutoShareRule]:
+        """
+        Get all active rules that would match a given point.
+
+        Useful for previewing which friends will receive a point.
+
+        Args:
+            point: GPSPoint object
+
+        Returns:
+            List of matching AutoShareRule objects
+        """
+        # Get all active rules for the point owner
+        active_rules = (
+            AutoShareRule.objects.filter(user=point.owner, is_active=True)
+            .select_related("friend")
+            .prefetch_related("point_types", "tags")
+        )
+
+        matching_rules = []
+        for rule in active_rules:
+            if rule.matches_point(point):
+                matching_rules.append(rule)
+
+        return matching_rules

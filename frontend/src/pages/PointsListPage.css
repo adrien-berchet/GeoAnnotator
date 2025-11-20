@@ -211,9 +211,18 @@
 }
 
 .points-list-stats {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
+  margin-bottom: var(--spacing-md);
+}
+
+.btn-share-mode {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  font-size: var(--font-size-sm);
 }
 
 /* Note: .error-container is now in components.css */
@@ -266,6 +275,14 @@
   -webkit-box-orient: vertical;
 }
 
+/* Badge container */
+.point-badges {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  align-items: flex-end;
+}
+
 /* Badge public - variante du badge commun */
 .point-badge {
   display: inline-flex;
@@ -280,6 +297,12 @@
 .point-badge.public {
   background: var(--color-success-light);
   color: var(--color-success-dark);
+}
+
+.point-badge.shared {
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
+  cursor: help;
 }
 
 .point-card-location,
@@ -422,4 +445,181 @@
   }
 
   /* La grille s'adapte automatiquement, pas besoin de forcer 1 colonne */
+}
+
+/* Selection Toolbar */
+.selection-toolbar {
+  margin: var(--spacing-lg) 0;
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-lg);
+}
+
+.selection-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.selection-actions button {
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-select {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-select:hover {
+  background: var(--color-bg-secondary);
+  border-color: var(--color-primary);
+}
+
+.selection-count {
+  font-weight: 600;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+}
+
+/* Toolbar-specific button styles for better readability */
+.btn-toolbar {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+  height: 40px;
+}
+
+.btn-toolbar-primary {
+  background: #3b82f6;
+  color: #ffffff;
+  border-color: #3b82f6;
+  margin-left: auto;
+}
+
+.btn-toolbar-primary:hover:not(:disabled) {
+  background: #2563eb;
+  border-color: #2563eb;
+}
+
+.btn-toolbar-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #9ca3af;
+  border-color: #9ca3af;
+  color: #ffffff;
+}
+
+.btn-toolbar-secondary {
+  background: #ffffff;
+  color: #374151;
+  border-color: #d1d5db;
+}
+
+.btn-toolbar-secondary:hover:not(:disabled) {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+  color: #1f2937;
+}
+
+/* Dark mode specific overrides for toolbar buttons */
+@media (prefers-color-scheme: dark) {
+  .btn-toolbar-primary {
+    background: #3b82f6;
+    color: #ffffff;
+    border-color: #3b82f6;
+  }
+
+  .btn-toolbar-primary:hover:not(:disabled) {
+    background: #60a5fa;
+    border-color: #60a5fa;
+  }
+
+  .btn-toolbar-primary:disabled {
+    background: #4b5563;
+    border-color: #4b5563;
+    color: #9ca3af;
+  }
+
+  .btn-toolbar-secondary {
+    background: #374151;
+    color: #f3f4f6;
+    border-color: #6b7280;
+  }
+
+  .btn-toolbar-secondary:hover:not(:disabled) {
+    background: #4b5563;
+    border-color: #9ca3af;
+    color: #ffffff;
+  }
+}
+
+/* Point Card Selection */
+.point-card {
+  position: relative;
+}
+
+.point-card.sharing-mode {
+  cursor: pointer;
+  user-select: none;
+}
+
+.point-card.sharing-mode:hover {
+  border-color: var(--color-primary);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.point-card.selected {
+  border-color: var(--color-primary);
+  border-width: 2px;
+  background: rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.point-card.selected::before {
+  content: "✓";
+  position: absolute;
+  top: var(--spacing-md);
+  right: var(--spacing-md);
+  width: 28px;
+  height: 28px;
+  background: var(--color-primary);
+  color: white;
+  border-radius: 50%;
+  display: block;
+  text-align: center;
+  line-height: 28px;
+  font-weight: bold;
+  font-size: var(--font-size-lg);
+  z-index: 10;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .selection-actions {
+    flex-wrap: wrap;
+  }
+
+  .btn-toolbar-primary {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .btn-toolbar-secondary {
+    width: 100%;
+  }
 }

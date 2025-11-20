@@ -24,7 +24,7 @@ export interface Share {
     email: string;
     username?: string;
   } | null;
-  permission_level: "view" | "edit" | "transfer";
+  permission_level: "view" | "edit" | "manage";
   is_active: boolean;
   invitation_token: string;
   invitation_sent_at: string | null;
@@ -34,11 +34,11 @@ export interface Share {
 
 export interface CreateShareData {
   recipient_email: string;
-  permission_level: "view" | "edit" | "transfer";
+  permission_level: "view" | "edit" | "manage";
 }
 
 export interface UpdateShareData {
-  permission_level: "view" | "edit" | "transfer";
+  permission_level: "view" | "edit" | "manage";
 }
 
 /**

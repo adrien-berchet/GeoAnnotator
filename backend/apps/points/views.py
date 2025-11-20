@@ -103,6 +103,18 @@ class GPSPointViewSet(viewsets.ModelViewSet):
             point_type=serializer.validated_data.get("type_id"),
         )
 
+        # Apply auto-share rules for newly created point
+        from apps.sharing.services import AutoShareService
+
+        try:
+            AutoShareService.apply_auto_share_rules(point)
+        except Exception as e:
+            # Log error but don't fail point creation
+            import logging
+
+            logger = logging.getLogger(__name__)
+            logger.error(f"Failed to apply auto-share rules for point {point.id}: {e}")
+
         # Return created point
         response_serializer = GPSPointSerializer(point, context={"request": request})
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)

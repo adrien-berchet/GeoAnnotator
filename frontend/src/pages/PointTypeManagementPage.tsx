@@ -376,7 +376,7 @@ export default function PointTypeManagementPage() {
                 setNewTypeIcon("");
                 setCreateError(null);
               }}
-              className="btn-primary"
+              className="btn btn-primary"
               aria-label={t("types.addNewType", "Add new point type")}
             >
               + {t("types.addNewType", "Add New Type")}
@@ -426,7 +426,7 @@ export default function PointTypeManagementPage() {
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="btn-secondary"
+                      className="btn btn-secondary"
                       disabled={creating || uploading}
                     >
                       {uploading
@@ -500,7 +500,7 @@ export default function PointTypeManagementPage() {
                               setUploading(false);
                             }
                           }}
-                          className="btn-secondary"
+                          className="btn btn-secondary"
                           disabled={uploading}
                           title={t(
                             "types.downloadIconTitle",
@@ -555,7 +555,7 @@ export default function PointTypeManagementPage() {
               <div className="form-actions">
                 <button
                   type="submit"
-                  className="btn-primary"
+                  className="btn btn-primary"
                   disabled={creating}
                 >
                   {creating
@@ -570,7 +570,7 @@ export default function PointTypeManagementPage() {
                     setNewTypeIcon("");
                     setCreateError(null);
                   }}
-                  className="btn-secondary"
+                  className="btn btn-secondary"
                   disabled={creating}
                 >
                   {t("common.cancel", "Cancel")}
@@ -704,14 +704,14 @@ export default function PointTypeManagementPage() {
                               <button
                                 onClick={() => handleUpdate(type.id)}
                                 disabled={updating}
-                                className="btn-success"
+                                className="btn btn-success"
                               >
                                 {t("common.save", "Save")}
                               </button>
                               <button
                                 onClick={handleCancelEdit}
                                 disabled={updating}
-                                className="btn-secondary"
+                                className="btn btn-secondary"
                               >
                                 {t("common.cancel", "Cancel")}
                               </button>
@@ -722,7 +722,7 @@ export default function PointTypeManagementPage() {
                                 onClick={() =>
                                   navigate(`/map?types=${type.id}`)
                                 }
-                                className="btn-view"
+                                className="btn btn-view btn-sm"
                                 aria-label={`${t("types.viewOnMap", "View")} ${getPointTypeName(type, language)} ${t("types.onMap", "on map")}`}
                                 title={t("types.viewOnMap", "View on map")}
                               >
@@ -732,7 +732,7 @@ export default function PointTypeManagementPage() {
                                 onClick={() =>
                                   navigate(`/points?types=${type.id}`)
                                 }
-                                className="btn-view"
+                                className="btn btn-view btn-sm"
                                 aria-label={`${t("types.view", "View")} ${getPointTypeName(type, language)} ${t("types.list", "list")}`}
                                 title={t(
                                   "types.viewPointsList",
@@ -745,7 +745,7 @@ export default function PointTypeManagementPage() {
                                 <>
                                   <button
                                     onClick={() => handleStartEdit(type)}
-                                    className="btn-edit"
+                                    className="btn btn-info btn-sm"
                                     aria-label={`${t("common.edit", "Edit")} ${getPointTypeName(type, language)}`}
                                   >
                                     {t("common.edit", "Edit")}
@@ -758,7 +758,7 @@ export default function PointTypeManagementPage() {
                                       )
                                     }
                                     disabled={deleting === type.id}
-                                    className="btn-delete"
+                                    className="btn btn-danger btn-sm"
                                     aria-label={`${t("common.delete", "Delete")} ${getPointTypeName(type, language)}`}
                                   >
                                     {deleting === type.id
@@ -801,7 +801,7 @@ export default function PointTypeManagementPage() {
                                   onClick={() =>
                                     editFileInputRef.current?.click()
                                   }
-                                  className="btn-secondary btn-sm"
+                                  className="btn btn-secondary btn-sm"
                                   disabled={updating || uploading}
                                 >
                                   {uploading ? "Uploading..." : "Choose File"}
@@ -872,7 +872,7 @@ export default function PointTypeManagementPage() {
                                           setUploading(false);
                                         }
                                       }}
-                                      className="btn-secondary btn-sm"
+                                      className="btn btn-secondary btn-sm"
                                       disabled={uploading}
                                       title="Download and save this icon locally"
                                     >

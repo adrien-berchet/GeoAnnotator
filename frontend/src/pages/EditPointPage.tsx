@@ -87,20 +87,36 @@ export function EditPointPage() {
           setHasLock(true);
           setError(""); // Clear any previous errors
         }
-      } catch (lockErr) {
-        // Lock acquisition failed (409 conflict or other error)
-        const errorMsg = getErrorMessage(lockErr);
+      } catch (lockErr: unknown) {
+        // Lock acquisition failed
         console.error("Lock acquisition error:", lockErr);
 
-        // Extract user information from error if available
-        if (data.editing_lock_user) {
+        // Check error status to distinguish between permission and lock issues
+        const maybeAxiosError = lockErr as { response?: { status?: number } };
+        const status = maybeAxiosError?.response?.status;
+
+        if (status === 403) {
+          // Permission denied
           setError(
-            `This point is currently being edited by ${data.editing_lock_user.email}. Please try again later.`,
+            "You do not have permission to edit this point. Only users with edit or manage permissions can modify this point.",
           );
+        } else if (status === 409) {
+          // Point locked by another user
+          if (data.editing_lock_user) {
+            setError(
+              `This point is currently being edited by ${data.editing_lock_user.email}. Please try again later.`,
+            );
+          } else {
+            setError(
+              "This point is currently locked by another user. Please try again later.",
+            );
+          }
         } else {
+          // Other error
+          const errorMsg = getErrorMessage(lockErr);
           setError(
             errorMsg ||
-              "Unable to acquire editing lock. The point may be locked by another user.",
+              "Unable to acquire editing lock. Please try again later.",
           );
         }
         setHasLock(false);
@@ -249,9 +265,19 @@ export function EditPointPage() {
       {/* Lock warning */}
       {!hasLock && !isLoading && (
         <div className="warning-message">
-          <strong>⚠️ Editing Locked</strong>
-          {point.editing_lock_user ? (
+          {error && error.includes("permission") ? (
             <>
+              <strong>⚠️ No Edit Permission</strong>
+              <p>
+                You do not have permission to edit this point.
+                <br />
+                Only users with edit or manage permissions can modify this
+                point.
+              </p>
+            </>
+          ) : point.editing_lock_user ? (
+            <>
+              <strong>⚠️ Editing Locked</strong>
               <p>
                 This point is currently being edited by{" "}
                 <strong>{point.editing_lock_user.email}</strong>.
@@ -270,6 +296,7 @@ export function EditPointPage() {
             </>
           ) : (
             <>
+              <strong>⚠️ Editing Locked</strong>
               <p>
                 Unable to acquire the editing lock. The point may be locked by
                 another user.

@@ -171,6 +171,14 @@ export function PointDetailPage() {
           >
             ✏️ {t("common.edit", "Edit")}
           </button>
+          {!point.shared_by && (
+            <button
+              onClick={() => navigate(`/points/${id}/sharing`)}
+              className="btn btn-secondary"
+            >
+              🤝 {t("pointDetail.manageSharing", "Manage Sharing")}
+            </button>
+          )}
           <button
             onClick={handleDeletePoint}
             className="btn btn-danger"
@@ -211,7 +219,9 @@ export function PointDetailPage() {
               <span className="metadata-label">
                 🏷️ {t("points.type", "Type")}
               </span>
-              <span className="metadata-value">
+              <span
+                className={`metadata-value ${point.shared_by ? "shared" : ""}`}
+              >
                 {point.type.icon && (
                   <img
                     src={point.type.icon}
@@ -229,6 +239,15 @@ export function PointDetailPage() {
                 )}
                 {point.type.names[language] ||
                   point.type.names[point.type.creation_language]}
+                {point.shared_by && (
+                  <span
+                    className="shared-indicator"
+                    title={`From ${point.shared_by}`}
+                  >
+                    {" "}
+                    🔒
+                  </span>
+                )}
               </span>
             </div>
           )}
@@ -252,6 +271,15 @@ export function PointDetailPage() {
               </span>
             </div>
           )}
+
+          {point.shared_by && (
+            <div className="metadata-item">
+              <span className="metadata-label">
+                🤝 {t("pointDetail.sharedBy", "Shared by")}
+              </span>
+              <span className="metadata-value">{point.shared_by}</span>
+            </div>
+          )}
         </div>
 
         {point.description && (
@@ -263,10 +291,24 @@ export function PointDetailPage() {
 
         {point.tags && point.tags.length > 0 && (
           <div className="point-tags">
-            <h3>{t("points.tags", "Tags")}</h3>
+            <h3>
+              {t("points.tags", "Tags")}
+              {point.shared_by && (
+                <span
+                  className="shared-indicator"
+                  title={`From ${point.shared_by}`}
+                >
+                  {" "}
+                  (read-only)
+                </span>
+              )}
+            </h3>
             <div className="tags-list">
               {point.tags.map((tag) => (
-                <span key={tag.id} className="tag">
+                <span
+                  key={tag.id}
+                  className={`tag ${point.shared_by ? "shared" : ""}`}
+                >
                   {tag.name}
                 </span>
               ))}

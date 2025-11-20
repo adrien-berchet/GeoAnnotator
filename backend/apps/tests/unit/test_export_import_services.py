@@ -25,7 +25,7 @@ def test_export_geojson_with_annotations(gps_point_alice, text_annotation, tag_h
     assert feature["type"] == "Feature"
     assert feature["geometry"]["type"] == "Point"
     assert feature["properties"]["title"] == gps_point_alice.title
-    assert feature["properties"]["owner"] == gps_point_alice.owner.email
+    assert feature["properties"]["owner"] == gps_point_alice.owner.username
     assert "created_at" in feature["properties"]
     assert "updated_at" in feature["properties"]
     # tags
