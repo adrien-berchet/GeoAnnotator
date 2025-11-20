@@ -158,3 +158,97 @@ export async function batchSharePoints(
   );
   return response.data;
 }
+
+/**
+ * Auto-share rule interface
+ */
+export interface AutoShareRule {
+  id: string;
+  friend: string; // User ID
+  permission_level: "view" | "edit" | "manage";
+  share_all: boolean;
+  point_types: Array<{
+    id: string;
+    names: Record<string, string>;
+    icon: string;
+  }>;
+  tags: Array<{
+    id: string;
+    name: string;
+  }>;
+  match_all_tags: boolean;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Create auto-share rule request
+ */
+export interface CreateAutoShareRuleRequest {
+  permission_level: "view" | "edit" | "manage";
+  share_all?: boolean;
+  point_type_ids?: string[];
+  tag_ids?: string[];
+  match_all_tags?: boolean;
+  is_active?: boolean;
+}
+
+/**
+ * Update auto-share rule request
+ */
+export interface UpdateAutoShareRuleRequest {
+  permission_level?: "view" | "edit" | "manage";
+  is_active?: boolean;
+}
+
+/**
+ * Get auto-share rules for a friend
+ */
+export async function getAutoShareRules(friendshipId: string): Promise<AutoShareRule[]> {
+  const response = await apiClient.get<AutoShareRule[]>(
+    `/sharing/friendships/${friendshipId}/auto-share-rules/`
+  );
+  return response.data;
+}
+
+/**
+ * Create auto-share rule for a friend
+ */
+export async function createAutoShareRule(
+  friendshipId: string,
+  request: CreateAutoShareRuleRequest
+): Promise<AutoShareRule> {
+  const response = await apiClient.post<AutoShareRule>(
+    `/sharing/friendships/${friendshipId}/auto-share-rules/`,
+    request
+  );
+  return response.data;
+}
+
+/**
+ * Update auto-share rule
+ */
+export async function updateAutoShareRule(
+  friendshipId: string,
+  ruleId: string,
+  request: UpdateAutoShareRuleRequest
+): Promise<AutoShareRule> {
+  const response = await apiClient.patch<AutoShareRule>(
+    `/sharing/friendships/${friendshipId}/auto-share-rules/${ruleId}/`,
+    request
+  );
+  return response.data;
+}
+
+/**
+ * Delete auto-share rule
+ */
+export async function deleteAutoShareRule(
+  friendshipId: string,
+  ruleId: string
+): Promise<void> {
+  await apiClient.delete(
+    `/sharing/friendships/${friendshipId}/auto-share-rules/${ruleId}/`
+  );
+}

@@ -267,12 +267,12 @@ class Share(models.Model):
         """
         Check if this share has at least the specified permission level.
 
-        Permission hierarchy: view < edit < transfer
+        Permission hierarchy: view < edit < manage
         """
         levels = {
             self.PERMISSION_VIEW: 1,
             self.PERMISSION_EDIT: 2,
-            self.PERMISSION_TRANSFER: 3,
+            self.PERMISSION_MANAGE: 3,
         }
         return levels.get(self.permission_level, 0) >= levels.get(permission_level, 0)
 
@@ -291,3 +291,179 @@ class Share(models.Model):
     def __str__(self):
         status = "✓" if self.accepted_at else "⏳"
         return f"{status} {self.gps_point.title} → {self.recipient_email} ({self.permission_level})"
+
+
+class AutoShareRule(models.Model):
+    """
+    Automatic sharing rule for newly created points.
+
+    When a point is created, it will automatically be shared with the specified
+    friend if it matches the rule conditions (type and/or tags).
+
+    Rules can specify:
+    - share_all=True: Share all new points (ignores type/tag filters)
+    - Specific point types (any match)
+    - Specific tags (ALL must match - AND logic)
+    - Combination of type + tags (both conditions must match)
+
+    When multiple rules match, the highest permission level is used.
+    Rules only apply to points created AFTER the rule creation.
+    """
+
+    # Max rules per friend
+    MAX_RULES_PER_FRIEND = 50
+
+    id = models.UUIDField(
+        primary_key=True, default=uuid.uuid4, editable=False, help_text="Unique rule identifier"
+    )
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="auto_share_rules",
+        help_text="User who owns the points and created the rule",
+    )
+
+    friend = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="auto_share_rules_received",
+        help_text="Friend who will receive auto-shared points",
+    )
+
+    permission_level = models.CharField(
+        max_length=20,
+        choices=Share.PERMISSION_CHOICES,
+        default=Share.PERMISSION_VIEW,
+        help_text="Permission level for auto-shared points (view/edit/manage)",
+    )
+
+    share_all = models.BooleanField(
+        default=False,
+        help_text="Share all new points (ignores point_types and tags filters)",
+    )
+
+    point_types = models.ManyToManyField(
+        "points.PointType",
+        blank=True,
+        related_name="auto_share_rules",
+        help_text="Point types to match (any match if specified)",
+    )
+
+    tags = models.ManyToManyField(
+        "points.Tag",
+        blank=True,
+        related_name="auto_share_rules",
+        help_text="Tags to match (ALL must match - AND logic)",
+    )
+
+    match_all_tags = models.BooleanField(
+        default=True,
+        help_text="Require ALL specified tags to be present (AND logic)",
+    )
+
+    is_active = models.BooleanField(
+        default=True,
+        db_index=True,
+        help_text="Rule is active and will be applied to new points",
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True, help_text="Rule creation timestamp"
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True, help_text="Last modification timestamp"
+    )
+
+    class Meta:
+        db_table = "auto_share_rules"
+        verbose_name = "Auto Share Rule"
+        verbose_name_plural = "Auto Share Rules"
+        indexes = [
+            models.Index(fields=["user", "friend"], name="idx_autoshare_user_friend"),
+            models.Index(fields=["user", "is_active"], name="idx_autoshare_user_active"),
+            models.Index(fields=["friend"], name="idx_autoshare_friend"),
+        ]
+        ordering = ["-created_at"]
+
+    def clean(self):
+        """Validate rule constraints."""
+        from django.core.exceptions import ValidationError
+
+        # User cannot create rule for themselves
+        if self.user == self.friend:
+            raise ValidationError("Cannot create auto-share rule for yourself")
+
+        # Check max rules per friend
+        if self.pk is None:  # Only on creation
+            existing_count = AutoShareRule.objects.filter(
+                user=self.user, friend=self.friend, is_active=True
+            ).count()
+
+            if existing_count >= self.MAX_RULES_PER_FRIEND:
+                raise ValidationError(
+                    f"Cannot create more than {self.MAX_RULES_PER_FRIEND} active rules per friend"
+                )
+
+        # If share_all is True, point_types and tags should be empty
+        # (can't validate M2M in clean, will validate in serializer)
+
+    def matches_point(self, point):
+        """
+        Check if a point matches this rule's conditions.
+
+        Args:
+            point: GPSPoint instance
+
+        Returns:
+            bool: True if point matches rule conditions
+        """
+        # Share all points
+        if self.share_all:
+            return True
+
+        # Get rule filters
+        rule_types = list(self.point_types.all())
+        rule_tags = list(self.tags.all())
+
+        # No filters specified - doesn't match anything
+        if not rule_types and not rule_tags:
+            return False
+
+        # Check type match (if types specified)
+        type_matches = not rule_types or point.type in rule_types
+
+        # Check tags match (if tags specified)
+        if rule_tags:
+            point_tags = set(point.tags.all())
+            rule_tags_set = set(rule_tags)
+
+            # AND logic: ALL rule tags must be present in point
+            if self.match_all_tags:
+                tags_match = rule_tags_set.issubset(point_tags)
+            else:
+                # OR logic: ANY rule tag must be present (not used based on requirements)
+                tags_match = bool(rule_tags_set.intersection(point_tags))
+        else:
+            tags_match = True  # No tag filter
+
+        # Both conditions must match
+        return type_matches and tags_match
+
+    def __str__(self):
+        if self.share_all:
+            condition = "all points"
+        else:
+            parts = []
+            type_count = self.point_types.count()
+            tag_count = self.tags.count()
+
+            if type_count:
+                parts.append(f"{type_count} type(s)")
+            if tag_count:
+                parts.append(f"{tag_count} tag(s)")
+
+            condition = " + ".join(parts) if parts else "no conditions"
+
+        return f"{self.user.username} → {self.friend.username}: {condition} ({self.permission_level})"

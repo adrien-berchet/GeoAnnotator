@@ -45,5 +45,22 @@ batch_urlpatterns = [
     ),
 ]
 
+# Auto-share rules URLs - nested under friendships
+# Accessible at /api/v1/sharing/friendships/<friendship_id>/auto-share-rules/
+auto_share_rule_urlpatterns = [
+    path(
+        "friendships/<uuid:friendship_id>/auto-share-rules/",
+        views.AutoShareRuleViewSet.as_view({"get": "list", "post": "create"}),
+        name="auto-share-rule-list",
+    ),
+    path(
+        "friendships/<uuid:friendship_id>/auto-share-rules/<uuid:pk>/",
+        views.AutoShareRuleViewSet.as_view(
+            {"get": "retrieve", "patch": "partial_update", "delete": "destroy"}
+        ),
+        name="auto-share-rule-detail",
+    ),
+]
+
 # Combine all patterns
-urlpatterns = urlpatterns + friendship_urlpatterns + batch_urlpatterns
+urlpatterns = urlpatterns + friendship_urlpatterns + batch_urlpatterns + auto_share_rule_urlpatterns

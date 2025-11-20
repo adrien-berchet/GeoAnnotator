@@ -11,16 +11,20 @@ from rest_framework.response import Response
 
 from apps.points.models import GPSPoint
 
+from .models import AutoShareRule
 from .models import Friendship
 from .models import Share
 from .serializers import AcceptShareSerializer
 from .serializers import AddFriendSerializer
+from .serializers import AutoShareRuleSerializer
 from .serializers import BatchShareSerializer
+from .serializers import CreateAutoShareRuleSerializer
 from .serializers import CreateShareSerializer
 from .serializers import FriendDetailSerializer
 from .serializers import FriendSerializer
 from .serializers import FriendshipSerializer
 from .serializers import ShareSerializer
+from .serializers import UpdateAutoShareRuleSerializer
 from .serializers import UpdateShareSerializer
 from .services import BatchShareService
 from .services import FriendshipService
@@ -418,3 +422,177 @@ class BatchShareView(viewsets.ViewSet):
         else:
             # Partial success
             return Response(result, status=status.HTTP_207_MULTI_STATUS)
+
+
+class AutoShareRuleViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for AutoShareRule CRUD operations.
+
+    Endpoints (nested under friendships):
+    - GET /api/v1/friendships/{friendship_id}/auto-share-rules/ - List rules for a friend
+    - POST /api/v1/friendships/{friendship_id}/auto-share-rules/ - Create new rule
+    - GET /api/v1/friendships/{friendship_id}/auto-share-rules/{id}/ - Get rule detail
+    - PATCH /api/v1/friendships/{friendship_id}/auto-share-rules/{id}/ - Update rule
+    - DELETE /api/v1/friendships/{friendship_id}/auto-share-rules/{id}/ - Delete rule
+    """
+
+    permission_classes = [IsAuthenticated]
+    pagination_class = None
+
+    def get_serializer_class(self):
+        if self.action == "create":
+            return CreateAutoShareRuleSerializer
+        elif self.action in ["update", "partial_update"]:
+            return UpdateAutoShareRuleSerializer
+        return AutoShareRuleSerializer
+
+    def get_queryset(self):
+        """Return auto-share rules for current user and specific friend."""
+        user = self.request.user
+        friendship_id = self.kwargs.get("friendship_id")
+
+        if friendship_id:
+            # Get friend from friendship
+            try:
+                friendship = Friendship.objects.get(id=friendship_id, user=user)
+                friend = friendship.friend
+            except Friendship.DoesNotExist:
+                return AutoShareRule.objects.none()
+
+            # Return rules for this specific friend
+            return AutoShareRule.objects.filter(
+                user=user, friend=friend
+            ).select_related("friend").prefetch_related("point_types", "tags")
+
+        # Return all rules for user
+        return AutoShareRule.objects.filter(user=user).select_related(
+            "friend"
+        ).prefetch_related("point_types", "tags")
+
+    def list(self, request, friendship_id=None):
+        """List auto-share rules for a friend."""
+        if not friendship_id:
+            return Response(
+                {"error": "friendship_id is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Verify friendship exists
+        try:
+            friendship = Friendship.objects.get(id=friendship_id, user=request.user)
+        except Friendship.DoesNotExist:
+            return Response(
+                {"error": "Friendship not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        queryset = self.get_queryset()
+        serializer = AutoShareRuleSerializer(
+            queryset, many=True, context={"request": request}
+        )
+        return Response(serializer.data)
+
+    def create(self, request, friendship_id=None):
+        """Create new auto-share rule."""
+        if not friendship_id:
+            return Response(
+                {"error": "friendship_id is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Verify friendship exists and get friend
+        try:
+            friendship = Friendship.objects.get(id=friendship_id, user=request.user)
+            friend = friendship.friend
+        except Friendship.DoesNotExist:
+            return Response(
+                {"error": "Friendship not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Override friend field with friend from friendship
+        data = request.data.copy()
+        data["friend"] = str(friend.id)
+
+        serializer = CreateAutoShareRuleSerializer(
+            data=data, context={"request": request}
+        )
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            rule = serializer.save()
+            response_serializer = AutoShareRuleSerializer(
+                rule, context={"request": request}
+            )
+            return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+
+        except ValueError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    def retrieve(self, request, pk=None, friendship_id=None):
+        """Get rule detail."""
+        try:
+            rule = self.get_object()
+        except AutoShareRule.DoesNotExist:
+            return Response(
+                {"error": "Rule not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Verify rule belongs to user
+        if rule.user != request.user:
+            return Response(
+                {"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN
+            )
+
+        serializer = AutoShareRuleSerializer(rule, context={"request": request})
+        return Response(serializer.data)
+
+    def update(self, request, pk=None, friendship_id=None):
+        """Update rule (full update)."""
+        return self.partial_update(request, pk, friendship_id)
+
+    def partial_update(self, request, pk=None, friendship_id=None):
+        """Update rule (partial update)."""
+        try:
+            rule = self.get_object()
+        except AutoShareRule.DoesNotExist:
+            return Response(
+                {"error": "Rule not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Verify rule belongs to user
+        if rule.user != request.user:
+            return Response(
+                {"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN
+            )
+
+        serializer = UpdateAutoShareRuleSerializer(
+            rule, data=request.data, partial=True, context={"request": request}
+        )
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            rule = serializer.save()
+            response_serializer = AutoShareRuleSerializer(
+                rule, context={"request": request}
+            )
+            return Response(response_serializer.data)
+
+        except ValueError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, pk=None, friendship_id=None):
+        """Delete rule."""
+        try:
+            rule = self.get_object()
+        except AutoShareRule.DoesNotExist:
+            return Response(
+                {"error": "Rule not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Verify rule belongs to user
+        if rule.user != request.user:
+            return Response(
+                {"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN
+            )
+
+        rule.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

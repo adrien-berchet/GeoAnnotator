@@ -14,6 +14,7 @@ from django.utils import timezone
 from apps.authentication.models import User
 from apps.points.models import GPSPoint
 
+from .models import AutoShareRule
 from .models import Friendship
 from .models import Share
 
@@ -803,3 +804,184 @@ class BatchShareService:
             "total_attempted": len(point_ids) * len(usernames),
             "results": results,
         }
+
+
+class AutoShareService:
+    """Service for automatic sharing based on rules."""
+
+    @staticmethod
+    def apply_auto_share_rules(point: GPSPoint) -> dict:
+        """
+        Apply auto-share rules for a newly created point.
+
+        Evaluates all active rules for the point owner and creates shares
+        with friends based on matching rules.
+
+        When multiple rules match for the same friend:
+        - Uses the highest permission level
+
+        Skips auto-sharing if:
+        - Point already manually shared with friend
+        - Friend doesn't exist or friendship removed
+
+        Args:
+            point: Newly created GPSPoint object
+
+        Returns:
+            dict with results: {
+                'shares_created': int,
+                'skipped_count': int,
+                'error_count': int,
+                'results': [
+                    {
+                        'friend_username': str,
+                        'status': 'success' | 'skipped' | 'error',
+                        'reason': str (if skipped or error),
+                        'share_id': str (if success),
+                        'permission_level': str (if success)
+                    }
+                ]
+            }
+        """
+        results = []
+        shares_created = 0
+        skipped_count = 0
+        error_count = 0
+
+        # Get all active rules for the point owner
+        active_rules = AutoShareRule.objects.filter(
+            user=point.owner, is_active=True
+        ).select_related("friend").prefetch_related("point_types", "tags")
+
+        if not active_rules:
+            return {
+                "shares_created": 0,
+                "skipped_count": 0,
+                "error_count": 0,
+                "results": [],
+            }
+
+        # Group rules by friend and find highest permission for each
+        friend_rules = {}  # friend_id -> (friend, highest_permission, matching_rules)
+
+        for rule in active_rules:
+            # Check if rule matches the point
+            if not rule.matches_point(point):
+                continue
+
+            friend = rule.friend
+            friend_id = friend.id
+
+            # Get permission hierarchy value
+            hierarchy = {"view": 0, "edit": 1, "manage": 2}
+            current_permission = rule.permission_level
+            current_level = hierarchy.get(current_permission, 0)
+
+            # Track highest permission for this friend
+            if friend_id not in friend_rules:
+                friend_rules[friend_id] = (friend, current_permission, [rule])
+            else:
+                existing_friend, existing_permission, existing_rules = friend_rules[friend_id]
+                existing_level = hierarchy.get(existing_permission, 0)
+
+                if current_level > existing_level:
+                    friend_rules[friend_id] = (friend, current_permission, [rule])
+                elif current_level == existing_level:
+                    # Same permission level, just track the rule
+                    existing_rules.append(rule)
+                    friend_rules[friend_id] = (existing_friend, existing_permission, existing_rules)
+
+        # Create shares for each friend
+        for friend_id, (friend, permission_level, matching_rules) in friend_rules.items():
+            # Check if friendship still exists
+            if not FriendshipService.are_friends(point.owner, friend):
+                results.append(
+                    {
+                        "friend_username": friend.username,
+                        "status": "skipped",
+                        "reason": "Friendship no longer exists",
+                    }
+                )
+                skipped_count += 1
+                continue
+
+            # Check if already manually shared
+            existing_share = Share.objects.filter(
+                gps_point=point, recipient_user=friend
+            ).first()
+
+            if existing_share:
+                results.append(
+                    {
+                        "friend_username": friend.username,
+                        "status": "skipped",
+                        "reason": "Already shared manually",
+                    }
+                )
+                skipped_count += 1
+                continue
+
+            # Create auto-share
+            try:
+                share = Share.objects.create(
+                    gps_point=point,
+                    owner=point.owner,
+                    recipient_email=friend.email,
+                    recipient_user=friend,
+                    permission_level=permission_level,
+                    accepted_at=timezone.now(),  # Auto-accept for friends
+                )
+
+                results.append(
+                    {
+                        "friend_username": friend.username,
+                        "status": "success",
+                        "share_id": str(share.id),
+                        "permission_level": permission_level,
+                    }
+                )
+                shares_created += 1
+
+                # TODO: Send notification to friend about auto-shared point
+
+            except Exception as e:
+                results.append(
+                    {
+                        "friend_username": friend.username,
+                        "status": "error",
+                        "reason": str(e),
+                    }
+                )
+                error_count += 1
+
+        return {
+            "shares_created": shares_created,
+            "skipped_count": skipped_count,
+            "error_count": error_count,
+            "results": results,
+        }
+
+    @staticmethod
+    def get_matching_rules_for_point(point: GPSPoint) -> list[AutoShareRule]:
+        """
+        Get all active rules that would match a given point.
+
+        Useful for previewing which friends will receive a point.
+
+        Args:
+            point: GPSPoint object
+
+        Returns:
+            List of matching AutoShareRule objects
+        """
+        # Get all active rules for the point owner
+        active_rules = AutoShareRule.objects.filter(
+            user=point.owner, is_active=True
+        ).select_related("friend").prefetch_related("point_types", "tags")
+
+        matching_rules = []
+        for rule in active_rules:
+            if rule.matches_point(point):
+                matching_rules.append(rule)
+
+        return matching_rules

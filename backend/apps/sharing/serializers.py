@@ -6,6 +6,7 @@ Handles point sharing, permissions, and email invitations.
 
 from datetime import timedelta
 
+from django.db import models
 from django.utils import timezone
 from rest_framework import serializers
 
@@ -14,6 +15,7 @@ from apps.points.serializers import GPSPointListSerializer
 from apps.points.serializers import GPSPointSerializer
 from apps.points.serializers import PointTypeSerializer
 from apps.points.serializers import TagSerializer
+from apps.sharing.models import AutoShareRule
 from apps.sharing.models import Friendship
 from apps.sharing.models import Share
 
@@ -472,3 +474,250 @@ class BatchShareSerializer(serializers.Serializer):
         )
 
         return result
+
+
+class AutoShareRuleSerializer(serializers.ModelSerializer):
+    """
+    Auto-share rule serializer with full details.
+
+    Returns rule configuration with nested point types and tags.
+    """
+
+    point_types = PointTypeSerializer(many=True, read_only=True)
+    tags = TagSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = AutoShareRule
+        fields = [
+            "id",
+            "friend",
+            "permission_level",
+            "share_all",
+            "point_types",
+            "tags",
+            "match_all_tags",
+            "is_active",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "created_at",
+            "updated_at",
+        ]
+
+
+class CreateAutoShareRuleSerializer(serializers.ModelSerializer):
+    """
+    Create auto-share rule serializer.
+
+    Accepts friend ID, permission level, and optional filters (point types, tags).
+    Validates:
+    - Max 50 rules per friend
+    - share_all cannot be combined with type/tag filters
+    - Must have at least one filter if share_all=False
+    """
+
+    point_type_ids = serializers.ListField(
+        child=serializers.UUIDField(),
+        required=False,
+        allow_empty=True,
+        write_only=True,
+        help_text="List of point type IDs to match (any match)",
+    )
+
+    tag_ids = serializers.ListField(
+        child=serializers.UUIDField(),
+        required=False,
+        allow_empty=True,
+        write_only=True,
+        help_text="List of tag IDs to match (ALL must match - AND logic)",
+    )
+
+    class Meta:
+        model = AutoShareRule
+        fields = [
+            "friend",
+            "permission_level",
+            "share_all",
+            "point_type_ids",
+            "tag_ids",
+            "match_all_tags",
+            "is_active",
+        ]
+
+    def validate_permission_level(self, value):
+        """Validate permission level is valid."""
+        if value not in ["view", "edit", "manage"]:
+            raise serializers.ValidationError(
+                f"Invalid permission level: {value}. Must be one of: view, edit, manage"
+            )
+        return value
+
+    def validate(self, attrs):
+        """
+        Validate rule creation:
+        - Friend must exist and be an actual friend
+        - Cannot create rule for yourself
+        - Max 50 rules per friend
+        - share_all cannot be combined with filters
+        - Must have at least one filter if share_all=False
+        """
+        user = self.context["request"].user
+        friend = attrs.get("friend")
+
+        # Cannot create rule for yourself
+        if friend == user:
+            raise serializers.ValidationError(
+                {
+                    "error": "SELF_RULE",
+                    "friend": "Cannot create auto-share rule for yourself",
+                }
+            )
+
+        # Check if friend exists in friendships
+        from apps.sharing.models import Friendship
+
+        friendship_exists = Friendship.objects.filter(user=user, friend=friend).exists()
+        if not friendship_exists:
+            raise serializers.ValidationError(
+                {
+                    "error": "NOT_FRIEND",
+                    "friend": "User is not in your friends list",
+                }
+            )
+
+        # Check max rules per friend
+        existing_count = AutoShareRule.objects.filter(
+            user=user, friend=friend, is_active=True
+        ).count()
+
+        if existing_count >= AutoShareRule.MAX_RULES_PER_FRIEND:
+            raise serializers.ValidationError(
+                {
+                    "error": "MAX_RULES_EXCEEDED",
+                    "friend": f"Cannot create more than {AutoShareRule.MAX_RULES_PER_FRIEND} active rules per friend",
+                }
+            )
+
+        # Validate share_all constraints
+        share_all = attrs.get("share_all", False)
+        point_type_ids = attrs.get("point_type_ids", [])
+        tag_ids = attrs.get("tag_ids", [])
+
+        if share_all:
+            # share_all cannot be combined with filters
+            if point_type_ids or tag_ids:
+                raise serializers.ValidationError(
+                    {
+                        "error": "INVALID_FILTERS",
+                        "share_all": "Cannot specify point types or tags when share_all is True",
+                    }
+                )
+        else:
+            # Must have at least one filter
+            if not point_type_ids and not tag_ids:
+                raise serializers.ValidationError(
+                    {
+                        "error": "NO_FILTERS",
+                        "message": "Must specify at least one point type or tag, or set share_all to True",
+                    }
+                )
+
+        # Validate point types exist and belong to user
+        if point_type_ids:
+            from apps.points.models import PointType
+
+            point_types = PointType.objects.filter(
+                id__in=point_type_ids, status="active"
+            ).filter(
+                models.Q(owner=user) | models.Q(owner__isnull=True)  # User's types or base types
+            )
+
+            if point_types.count() != len(point_type_ids):
+                raise serializers.ValidationError(
+                    {
+                        "error": "INVALID_POINT_TYPES",
+                        "point_type_ids": "Some point types do not exist or are not accessible",
+                    }
+                )
+
+            attrs["_point_types"] = list(point_types)
+
+        # Validate tags exist and belong to user
+        if tag_ids:
+            from apps.points.models import Tag
+
+            tags = Tag.objects.filter(id__in=tag_ids, owner=user)
+
+            if tags.count() != len(tag_ids):
+                raise serializers.ValidationError(
+                    {
+                        "error": "INVALID_TAGS",
+                        "tag_ids": "Some tags do not exist or do not belong to you",
+                    }
+                )
+
+            attrs["_tags"] = list(tags)
+
+        return attrs
+
+    def create(self, validated_data):
+        """Create auto-share rule and associate with point types and tags."""
+        user = self.context["request"].user
+
+        # Extract M2M data
+        point_types = validated_data.pop("_point_types", [])
+        tags = validated_data.pop("_tags", [])
+        validated_data.pop("point_type_ids", None)
+        validated_data.pop("tag_ids", None)
+
+        # Set user
+        validated_data["user"] = user
+
+        # Create rule
+        rule = super().create(validated_data)
+
+        # Associate M2M relations
+        if point_types:
+            rule.point_types.set(point_types)
+        if tags:
+            rule.tags.set(tags)
+
+        return rule
+
+
+class UpdateAutoShareRuleSerializer(serializers.ModelSerializer):
+    """
+    Update auto-share rule serializer.
+
+    Allows updating permission level and active status only.
+    Point types and tags cannot be updated - delete and recreate rule instead.
+    """
+
+    class Meta:
+        model = AutoShareRule
+        fields = ["permission_level", "is_active"]
+
+    def validate_permission_level(self, value):
+        """Validate permission level is valid."""
+        if value not in ["view", "edit", "manage"]:
+            raise serializers.ValidationError(
+                f"Invalid permission level: {value}. Must be one of: view, edit, manage"
+            )
+        return value
+
+    def validate(self, attrs):
+        """Validate user owns the rule."""
+        rule = self.instance
+        user = self.context["request"].user
+
+        if rule.user != user:
+            raise serializers.ValidationError(
+                {
+                    "error": "ACCESS_DENIED",
+                    "message": "You do not have permission to update this rule",
+                }
+            )
+
+        return attrs
