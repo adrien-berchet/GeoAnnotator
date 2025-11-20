@@ -95,6 +95,15 @@
   background: var(--color-info-hover, #0284c7);
 }
 
+.btn-view {
+  background: #1976d2;
+  color: white;
+}
+
+.btn-view:hover:not(:disabled) {
+  background: #1565c0;
+}
+
 .btn-sm {
   padding: var(--spacing-sm) var(--spacing-lg);
   font-size: var(--font-size-xs);

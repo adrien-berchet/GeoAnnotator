@@ -237,7 +237,7 @@ export default function TagManagementPage() {
                         onClick={() =>
                           navigate(`/map?tags=${encodeURIComponent(tag.name)}`)
                         }
-                        className="btn btn-primary btn-sm"
+                        className="btn btn-view btn-sm"
                         title={t("tags.viewOnMap", "View on map")}
                       >
                         🗺️ {t("nav.map", "Map")}
@@ -248,7 +248,7 @@ export default function TagManagementPage() {
                             `/points?tags=${encodeURIComponent(tag.name)}`,
                           )
                         }
-                        className="btn btn-primary btn-sm"
+                        className="btn btn-view btn-sm"
                         title={t("tags.viewPointsList", "View points list")}
                       >
                         📋 {t("tags.list", "List")}
