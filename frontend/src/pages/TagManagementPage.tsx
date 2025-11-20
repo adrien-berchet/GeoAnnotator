@@ -213,7 +213,7 @@ export default function TagManagementPage() {
                       <button
                         onClick={() => handleUpdate(tag.id)}
                         disabled={updating || !editingTagName.trim()}
-                        className="save-button"
+                        className="btn btn-success btn-sm"
                       >
                         {updating
                           ? t("tags.saving", "Saving...")
@@ -222,7 +222,7 @@ export default function TagManagementPage() {
                       <button
                         onClick={handleCancelEdit}
                         disabled={updating}
-                        className="cancel-button"
+                        className="btn btn-secondary btn-sm"
                       >
                         {t("common.cancel", "Cancel")}
                       </button>
@@ -237,7 +237,7 @@ export default function TagManagementPage() {
                         onClick={() =>
                           navigate(`/map?tags=${encodeURIComponent(tag.name)}`)
                         }
-                        className="btn-view"
+                        className="btn btn-primary btn-sm"
                         title={t("tags.viewOnMap", "View on map")}
                       >
                         🗺️ {t("nav.map", "Map")}
@@ -248,7 +248,7 @@ export default function TagManagementPage() {
                             `/points?tags=${encodeURIComponent(tag.name)}`,
                           )
                         }
-                        className="btn-view"
+                        className="btn btn-primary btn-sm"
                         title={t("tags.viewPointsList", "View points list")}
                       >
                         📋 {t("tags.list", "List")}
@@ -256,14 +256,14 @@ export default function TagManagementPage() {
                       <button
                         onClick={() => handleStartEdit(tag)}
                         disabled={deleting === tag.id}
-                        className="edit-button"
+                        className="btn btn-info btn-sm"
                       >
                         {t("common.edit", "Edit")}
                       </button>
                       <button
                         onClick={() => handleDelete(tag.id)}
                         disabled={deleting === tag.id}
-                        className="delete-button"
+                        className="btn btn-danger btn-sm"
                       >
                         {deleting === tag.id
                           ? t("tags.deleting", "Deleting...")

@@ -225,52 +225,6 @@
   flex-shrink: 0;
 }
 
-/* Match button styles from PointTypeManagementPage */
-.btn-view,
-.edit-button,
-.delete-button {
-  padding: var(--spacing-sm) var(--spacing-lg);
-  border: none;
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  cursor: pointer;
-  transition: all var(--transition-base);
-}
-
-.btn-view {
-  background-color: #1976d2;
-  color: var(--color-primary-contrast);
-}
-
-.btn-view:hover:not(:disabled) {
-  background-color: #1565c0;
-}
-
-.edit-button {
-  background-color: #0288d1;
-  color: var(--color-primary-contrast);
-}
-
-.edit-button:hover:not(:disabled) {
-  background-color: #0277bd;
-}
-
-.delete-button {
-  background-color: #d32f2f;
-  color: var(--color-primary-contrast);
-}
-
-.delete-button:hover:not(:disabled) {
-  background-color: #c62828;
-}
-
-.edit-button:disabled,
-.delete-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
 /* Edit Mode */
 .tag-edit-mode {
   display: flex;
@@ -305,46 +259,6 @@
   gap: var(--spacing-sm);
 }
 
-.save-button,
-.cancel-button {
-  padding: var(--spacing-sm) var(--spacing-lg);
-  border: none;
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  cursor: pointer;
-  transition: all var(--transition-base);
-}
-
-.save-button {
-  background-color: #388e3c;
-  color: var(--color-primary-contrast);
-}
-
-.save-button:hover:not(:disabled) {
-  background-color: #2e7d32;
-}
-
-.save-button:disabled {
-  background-color: var(--color-border-secondary);
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-.cancel-button {
-  background-color: #757575;
-  color: var(--color-primary-contrast);
-}
-
-.cancel-button:hover:not(:disabled) {
-  background-color: #616161;
-}
-
-.cancel-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
 /* Note: Dark mode is handled automatically by CSS variables in variables.css */
 
 /* Responsive */
@@ -370,8 +284,7 @@
   }
 
   .create-button,
-  .save-button,
-  .cancel-button {
+  .btn-sm {
     width: 100%;
   }
 }

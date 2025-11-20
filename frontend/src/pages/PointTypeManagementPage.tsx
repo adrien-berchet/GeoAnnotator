@@ -722,7 +722,7 @@ export default function PointTypeManagementPage() {
                                 onClick={() =>
                                   navigate(`/map?types=${type.id}`)
                                 }
-                                className="btn btn-info btn-sm"
+                                className="btn btn-primary btn-sm"
                                 aria-label={`${t("types.viewOnMap", "View")} ${getPointTypeName(type, language)} ${t("types.onMap", "on map")}`}
                                 title={t("types.viewOnMap", "View on map")}
                               >
@@ -732,7 +732,7 @@ export default function PointTypeManagementPage() {
                                 onClick={() =>
                                   navigate(`/points?types=${type.id}`)
                                 }
-                                className="btn btn-info btn-sm"
+                                className="btn btn-primary btn-sm"
                                 aria-label={`${t("types.view", "View")} ${getPointTypeName(type, language)} ${t("types.list", "list")}`}
                                 title={t(
                                   "types.viewPointsList",
