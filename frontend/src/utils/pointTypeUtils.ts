@@ -2,7 +2,15 @@
  * Utility functions for point types.
  */
 
-import type { PointType } from "../types/point";
+/**
+ * Minimal interface for objects that can be used with getPointTypeName.
+ * This allows the function to work with both full PointType objects
+ * and simplified type information from API responses.
+ */
+export interface PointTypeNameable {
+  names: Record<string, string>;
+  creation_language?: string;
+}
 
 /**
  * Get the name of a point type in the specified language with fallback logic.
@@ -13,12 +21,12 @@ import type { PointType } from "../types/point";
  * 3. Creation language
  * 4. First available language
  *
- * @param pointType - The point type object
+ * @param pointType - The point type object (or a simplified version with names)
  * @param languageCode - The preferred language code (default: 'en')
  * @returns The name in the best available language
  */
 export function getPointTypeName(
-  pointType: PointType,
+  pointType: PointTypeNameable,
   languageCode: string = "en",
 ): string {
   if (!pointType.names || Object.keys(pointType.names).length === 0) {
@@ -54,7 +62,7 @@ export function getPointTypeName(
  * @param pointType - The point type object
  * @returns Array of language codes
  */
-export function getAvailableLanguages(pointType: PointType): string[] {
+export function getAvailableLanguages(pointType: PointTypeNameable): string[] {
   if (!pointType.names) {
     return [];
   }
@@ -69,7 +77,7 @@ export function getAvailableLanguages(pointType: PointType): string[] {
  * @returns True if translation exists
  */
 export function hasTranslation(
-  pointType: PointType,
+  pointType: PointTypeNameable,
   languageCode: string,
 ): boolean {
   return !!(pointType.names && pointType.names[languageCode]);

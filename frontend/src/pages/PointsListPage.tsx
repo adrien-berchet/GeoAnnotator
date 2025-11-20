@@ -31,7 +31,6 @@ export function PointsListPage() {
   const [selectedTypeIds, setSelectedTypeIds] = useState<string[]>([]);
   const [selectedPointIds, setSelectedPointIds] = useState<string[]>([]);
   const [isSharePanelOpen, setIsSharePanelOpen] = useState(false);
-  const [isSharing, setIsSharing] = useState(false);
   const [sharingModeActive, setSharingModeActive] = useState(false);
   const [lastClickedIndex, setLastClickedIndex] = useState<number | null>(null);
   const navigate = useNavigate();
@@ -260,7 +259,6 @@ export function PointsListPage() {
   };
 
   const handleShare = async (usernames: string[], permissionLevel: string) => {
-    setIsSharing(true);
     setError("");
 
     try {
@@ -319,8 +317,6 @@ export function PointsListPage() {
         const errorMsg = getErrorMessage(err);
         alert(`Error sharing points: ${errorMsg}`);
       }
-    } finally {
-      setIsSharing(false);
     }
   };
 

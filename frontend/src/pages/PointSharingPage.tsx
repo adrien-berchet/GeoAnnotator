@@ -25,7 +25,6 @@ export function PointSharingPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [isSharePanelOpen, setIsSharePanelOpen] = useState(false);
-  const [isSharing, setIsSharing] = useState(false);
   const [isUnsharing, setIsUnsharing] = useState<string | null>(null);
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
 
@@ -101,7 +100,6 @@ export function PointSharingPage() {
   const handleShare = async (usernames: string[], permissionLevel: string) => {
     if (!id) return;
 
-    setIsSharing(true);
     setError("");
 
     try {
@@ -129,21 +127,6 @@ export function PointSharingPage() {
     } catch (err) {
       setError(getErrorMessage(err));
       alert(`Error sharing point: ${getErrorMessage(err)}`);
-    } finally {
-      setIsSharing(false);
-    }
-  };
-
-  const getPermissionBadgeClass = (level: string) => {
-    switch (level) {
-      case "view":
-        return "permission-badge view";
-      case "edit":
-        return "permission-badge edit";
-      case "manage":
-        return "permission-badge manage";
-      default:
-        return "permission-badge";
     }
   };
 
