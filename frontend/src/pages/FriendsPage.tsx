@@ -120,9 +120,7 @@ export function FriendsPage() {
 
       {/* Friends List */}
       <div className="friends-list-section">
-        <h2>
-          Your Friends ({friends.length})
-        </h2>
+        <h2>Your Friends ({friends.length})</h2>
 
         {friends.length === 0 ? (
           <div className="empty-state">
@@ -169,9 +167,7 @@ export function FriendsPage() {
                 </div>
 
                 <div className="friend-card-footer">
-                  <span className="view-details-link">
-                    View details →
-                  </span>
+                  <span className="view-details-link">View details →</span>
                 </div>
               </div>
             ))}

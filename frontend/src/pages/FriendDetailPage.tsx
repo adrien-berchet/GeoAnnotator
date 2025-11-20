@@ -4,7 +4,7 @@
  * Shows details of a specific friend and points shared with them.
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   getFriendDetail,
@@ -47,7 +47,7 @@ export function FriendDetailPage() {
   const navigate = useNavigate();
   const { language } = useLanguage();
 
-  const loadFriendDetail = async () => {
+  const loadFriendDetail = useCallback(async () => {
     if (!friendId) return;
 
     setIsLoading(true);
@@ -61,9 +61,9 @@ export function FriendDetailPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [friendId]);
 
-  const loadAutoShareRules = async () => {
+  const loadAutoShareRules = useCallback(async () => {
     if (!friendId) return;
 
     setIsLoadingRules(true);
@@ -76,12 +76,12 @@ export function FriendDetailPage() {
     } finally {
       setIsLoadingRules(false);
     }
-  };
+  }, [friendId]);
 
   useEffect(() => {
     loadFriendDetail();
     loadAutoShareRules();
-  }, [friendId]);
+  }, [loadFriendDetail, loadAutoShareRules]);
 
   const handleRemoveFriend = async () => {
     if (!friendId || !friendDetail) return;
@@ -99,7 +99,10 @@ export function FriendDetailPage() {
     }
   };
 
-  const handlePermissionChange = async (shareId: string, newPermission: string) => {
+  const handlePermissionChange = async (
+    shareId: string,
+    newPermission: string,
+  ) => {
     setIsUpdating(shareId);
 
     try {
@@ -116,7 +119,11 @@ export function FriendDetailPage() {
   };
 
   const handleUnshare = async (point: FriendDetail["shared_points"][0]) => {
-    if (!confirm(`Are you sure you want to unshare "${point.title}" with ${friendDetail?.username}?`)) {
+    if (
+      !confirm(
+        `Are you sure you want to unshare "${point.title}" with ${friendDetail?.username}?`,
+      )
+    ) {
       return;
     }
 
@@ -142,8 +149,6 @@ export function FriendDetailPage() {
       await createAutoShareRule(friendId, request);
       await loadAutoShareRules();
       setShowRuleForm(false);
-    } catch (err) {
-      throw err; // Let the form handle the error
     } finally {
       setIsSubmittingRule(false);
     }
@@ -151,7 +156,7 @@ export function FriendDetailPage() {
 
   const handleUpdateRule = async (
     ruleId: string,
-    request: UpdateAutoShareRuleRequest
+    request: UpdateAutoShareRuleRequest,
   ) => {
     if (!friendId) return;
 
@@ -237,7 +242,9 @@ export function FriendDetailPage() {
           <span className="stat-label">Points shared with them</span>
         </div>
         <div className="stat-card">
-          <span className="stat-value">{friendDetail.shares_received_count}</span>
+          <span className="stat-value">
+            {friendDetail.shares_received_count}
+          </span>
           <span className="stat-label">Points received from them</span>
         </div>
         <div className="stat-card">
@@ -308,13 +315,8 @@ export function FriendDetailPage() {
           <div className="empty-state">
             <div className="empty-state-icon">📍</div>
             <h3>No points shared yet</h3>
-            <p>
-              You haven't shared any points with {friendDetail.username}.
-            </p>
-            <button
-              onClick={() => navigate("/points")}
-              className="btn-primary"
-            >
+            <p>You haven't shared any points with {friendDetail.username}.</p>
+            <button onClick={() => navigate("/points")} className="btn-primary">
               Go to Points
             </button>
           </div>
@@ -385,7 +387,9 @@ export function FriendDetailPage() {
                     <td>
                       <select
                         value={point.permission_level}
-                        onChange={(e) => handlePermissionChange(point.share_id, e.target.value)}
+                        onChange={(e) =>
+                          handlePermissionChange(point.share_id, e.target.value)
+                        }
                         className={`permission-select ${point.permission_level}`}
                         disabled={isUpdating === point.share_id}
                       >
@@ -394,7 +398,9 @@ export function FriendDetailPage() {
                         <option value="manage">Manage</option>
                       </select>
                     </td>
-                    <td className="point-date">{formatDate(point.created_at)}</td>
+                    <td className="point-date">
+                      {formatDate(point.created_at)}
+                    </td>
                     <td className="point-actions">
                       <button
                         onClick={() => navigate(`/points/${point.id}`)}
@@ -405,9 +411,14 @@ export function FriendDetailPage() {
                       <button
                         onClick={() => handleUnshare(point)}
                         className="btn-small btn-danger"
-                        disabled={isUnsharing === point.share_id || isUpdating === point.share_id}
+                        disabled={
+                          isUnsharing === point.share_id ||
+                          isUpdating === point.share_id
+                        }
                       >
-                        {isUnsharing === point.share_id ? "Unsharing..." : "Unshare"}
+                        {isUnsharing === point.share_id
+                          ? "Unsharing..."
+                          : "Unshare"}
                       </button>
                     </td>
                   </tr>
@@ -420,21 +431,24 @@ export function FriendDetailPage() {
 
       {/* Remove Friend Confirmation Dialog */}
       {showRemoveDialog && (
-        <div className="dialog-backdrop" onClick={() => setShowRemoveDialog(false)}>
+        <div
+          className="dialog-backdrop"
+          onClick={() => setShowRemoveDialog(false)}
+        >
           <div className="dialog" onClick={(e) => e.stopPropagation()}>
             <h2>Remove {friendDetail.username}?</h2>
             <p>
-              This will remove {friendDetail.username} from your friends list and
-              revoke all shared points in both directions.
+              This will remove {friendDetail.username} from your friends list
+              and revoke all shared points in both directions.
             </p>
             <div className="dialog-stats">
               <p>
-                <strong>{friendDetail.shares_sent_count}</strong> points you shared
-                with them will be unshared
+                <strong>{friendDetail.shares_sent_count}</strong> points you
+                shared with them will be unshared
               </p>
               <p>
-                <strong>{friendDetail.shares_received_count}</strong> points they
-                shared with you will be unshared
+                <strong>{friendDetail.shares_received_count}</strong> points
+                they shared with you will be unshared
               </p>
             </div>
             <p className="warning-text">This action cannot be undone.</p>

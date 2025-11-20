@@ -67,9 +67,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name="friendship",
-            constraint=models.UniqueConstraint(
-                fields=("user", "friend"), name="unique_friendship"
-            ),
+            constraint=models.UniqueConstraint(fields=("user", "friend"), name="unique_friendship"),
         ),
         migrations.AddConstraint(
             model_name="friendship",

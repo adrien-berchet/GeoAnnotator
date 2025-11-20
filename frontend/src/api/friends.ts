@@ -101,9 +101,11 @@ export async function addFriend(username: string): Promise<Friendship> {
 /**
  * Get friend detail with shared points
  */
-export async function getFriendDetail(friendshipId: string): Promise<FriendDetail> {
+export async function getFriendDetail(
+  friendshipId: string,
+): Promise<FriendDetail> {
   const response = await apiClient.get<FriendDetail>(
-    `/sharing/friendships/${friendshipId}/`
+    `/sharing/friendships/${friendshipId}/`,
   );
   return response.data;
 }
@@ -112,10 +114,10 @@ export async function getFriendDetail(friendshipId: string): Promise<FriendDetai
  * Remove a friend and revoke all shares
  */
 export async function removeFriend(
-  friendshipId: string
+  friendshipId: string,
 ): Promise<RemoveFriendResponse> {
   const response = await apiClient.delete<RemoveFriendResponse>(
-    `/sharing/friendships/${friendshipId}/`
+    `/sharing/friendships/${friendshipId}/`,
   );
   return response.data;
 }
@@ -150,11 +152,11 @@ export interface BatchShareResponse {
  * Share multiple points with multiple users
  */
 export async function batchSharePoints(
-  request: BatchShareRequest
+  request: BatchShareRequest,
 ): Promise<BatchShareResponse> {
   const response = await apiClient.post<BatchShareResponse>(
     "/sharing/batch/",
-    request
+    request,
   );
   return response.data;
 }
@@ -205,9 +207,11 @@ export interface UpdateAutoShareRuleRequest {
 /**
  * Get auto-share rules for a friend
  */
-export async function getAutoShareRules(friendshipId: string): Promise<AutoShareRule[]> {
+export async function getAutoShareRules(
+  friendshipId: string,
+): Promise<AutoShareRule[]> {
   const response = await apiClient.get<AutoShareRule[]>(
-    `/sharing/friendships/${friendshipId}/auto-share-rules/`
+    `/sharing/friendships/${friendshipId}/auto-share-rules/`,
   );
   return response.data;
 }
@@ -217,11 +221,11 @@ export async function getAutoShareRules(friendshipId: string): Promise<AutoShare
  */
 export async function createAutoShareRule(
   friendshipId: string,
-  request: CreateAutoShareRuleRequest
+  request: CreateAutoShareRuleRequest,
 ): Promise<AutoShareRule> {
   const response = await apiClient.post<AutoShareRule>(
     `/sharing/friendships/${friendshipId}/auto-share-rules/`,
-    request
+    request,
   );
   return response.data;
 }
@@ -232,11 +236,11 @@ export async function createAutoShareRule(
 export async function updateAutoShareRule(
   friendshipId: string,
   ruleId: string,
-  request: UpdateAutoShareRuleRequest
+  request: UpdateAutoShareRuleRequest,
 ): Promise<AutoShareRule> {
   const response = await apiClient.patch<AutoShareRule>(
     `/sharing/friendships/${friendshipId}/auto-share-rules/${ruleId}/`,
-    request
+    request,
   );
   return response.data;
 }
@@ -246,9 +250,9 @@ export async function updateAutoShareRule(
  */
 export async function deleteAutoShareRule(
   friendshipId: string,
-  ruleId: string
+  ruleId: string,
 ): Promise<void> {
   await apiClient.delete(
-    `/sharing/friendships/${friendshipId}/auto-share-rules/${ruleId}/`
+    `/sharing/friendships/${friendshipId}/auto-share-rules/${ruleId}/`,
   );
 }

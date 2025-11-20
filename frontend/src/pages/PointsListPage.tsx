@@ -226,9 +226,7 @@ export function PointsListPage() {
     } else {
       // Normal click: toggle single point
       setSelectedPointIds((prev) =>
-        isSelected
-          ? prev.filter((id) => id !== pointId)
-          : [...prev, pointId]
+        isSelected ? prev.filter((id) => id !== pointId) : [...prev, pointId],
       );
     }
 
@@ -294,17 +292,25 @@ export function PointsListPage() {
       setSelectedPointIds([]);
       setSharingModeActive(false);
       setLastClickedIndex(null);
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Check if this is a batch share response with detailed results
-      if (err?.response?.data?.results && Array.isArray(err.response.data.results)) {
-        const errorResults = err.response.data.results.filter(
-          (r: any) => r.status === "error"
+      type BatchShareErrorResult = { status?: string; error?: string };
+      type BatchShareErrorShape = {
+        response?: { data?: { results?: BatchShareErrorResult[] } };
+      };
+
+      const maybe = err as BatchShareErrorShape;
+      const results = maybe?.response?.data?.results;
+
+      if (results && Array.isArray(results)) {
+        const errorResults = results.filter(
+          (r: BatchShareErrorResult) => r.status === "error",
         );
 
         if (errorResults.length > 0) {
           // Get unique error messages
           const errorMessages = new Set<string>();
-          errorResults.forEach((r: any) => {
+          errorResults.forEach((r: BatchShareErrorResult) => {
             if (r.error) errorMessages.add(r.error);
           });
 
@@ -451,7 +457,10 @@ export function PointsListPage() {
               : t("map.point", "point")}
           </span>
           {!sharingModeActive && points.length > 0 && (
-            <button onClick={handleEnterSharingMode} className="btn-primary btn-share-mode">
+            <button
+              onClick={handleEnterSharingMode}
+              className="btn-primary btn-share-mode"
+            >
               Share Points
             </button>
           )}
@@ -479,7 +488,10 @@ export function PointsListPage() {
               >
                 Share Selected
               </button>
-              <button onClick={handleExitSharingMode} className="btn-toolbar btn-toolbar-secondary">
+              <button
+                onClick={handleExitSharingMode}
+                className="btn-toolbar btn-toolbar-secondary"
+              >
                 Cancel
               </button>
             </div>
@@ -515,7 +527,6 @@ export function PointsListPage() {
                 }
               }}
             >
-
               <div className="point-card-header">
                 <h3 className="point-card-title">
                   {point.title || "Untitled Point"}
@@ -525,7 +536,10 @@ export function PointsListPage() {
                     <span className="point-badge public">🌐 Public</span>
                   )}
                   {!point.shared_by && point.share_count > 0 && (
-                    <span className="point-badge shared" title={`Shared with ${point.share_count} user${point.share_count !== 1 ? 's' : ''}`}>
+                    <span
+                      className="point-badge shared"
+                      title={`Shared with ${point.share_count} user${point.share_count !== 1 ? "s" : ""}`}
+                    >
                       🤝 {point.share_count}
                     </span>
                   )}

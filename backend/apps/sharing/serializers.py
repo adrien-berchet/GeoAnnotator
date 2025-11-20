@@ -332,9 +332,7 @@ class AddFriendSerializer(serializers.Serializer):
         try:
             User.objects.get(username=value)
         except User.DoesNotExist:
-            raise serializers.ValidationError(
-                f"User with username '{value}' not found"
-            ) from None
+            raise serializers.ValidationError(f"User with username '{value}' not found") from None
 
         return value
 
@@ -373,6 +371,7 @@ class SharedPointWithPermissionSerializer(serializers.Serializer):
 
     Includes both point data and the associated share's permission level and ID.
     """
+
     id = serializers.UUIDField(read_only=True)
     title = serializers.CharField(read_only=True)
     latitude = serializers.FloatField(read_only=True)
@@ -385,11 +384,11 @@ class SharedPointWithPermissionSerializer(serializers.Serializer):
 
     def get_share_id(self, obj):
         """Get the share ID for this point."""
-        return getattr(obj, 'share_id', None)
+        return getattr(obj, "share_id", None)
 
     def get_permission_level(self, obj):
         """Get the permission level for this point."""
-        return getattr(obj, 'permission_level', None)
+        return getattr(obj, "permission_level", None)
 
 
 class FriendDetailSerializer(serializers.Serializer):
@@ -628,9 +627,7 @@ class CreateAutoShareRuleSerializer(serializers.ModelSerializer):
         if point_type_ids:
             from apps.points.models import PointType
 
-            point_types = PointType.objects.filter(
-                id__in=point_type_ids, status="active"
-            ).filter(
+            point_types = PointType.objects.filter(id__in=point_type_ids, status="active").filter(
                 models.Q(owner=user) | models.Q(owner__isnull=True)  # User's types or base types
             )
 

@@ -460,11 +460,11 @@ class GPSPointSerializer(serializers.ModelSerializer):
         # Check if point was shared with user
         from apps.sharing.models import Share
 
-        share = Share.objects.filter(
-            gps_point=obj,
-            recipient_user=user,
-            is_active=True
-        ).select_related("owner").first()
+        share = (
+            Share.objects.filter(gps_point=obj, recipient_user=user, is_active=True)
+            .select_related("owner")
+            .first()
+        )
 
         if share and share.owner:
             return share.owner.username

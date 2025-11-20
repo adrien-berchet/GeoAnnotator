@@ -87,17 +87,20 @@ export function EditPointPage() {
           setHasLock(true);
           setError(""); // Clear any previous errors
         }
-      } catch (lockErr: any) {
+      } catch (lockErr: unknown) {
         // Lock acquisition failed
         console.error("Lock acquisition error:", lockErr);
 
         // Check error status to distinguish between permission and lock issues
-        if (lockErr?.response?.status === 403) {
+        const maybeAxiosError = lockErr as { response?: { status?: number } };
+        const status = maybeAxiosError?.response?.status;
+
+        if (status === 403) {
           // Permission denied
           setError(
             "You do not have permission to edit this point. Only users with edit or manage permissions can modify this point.",
           );
-        } else if (lockErr?.response?.status === 409) {
+        } else if (status === 409) {
           // Point locked by another user
           if (data.editing_lock_user) {
             setError(
@@ -268,7 +271,8 @@ export function EditPointPage() {
               <p>
                 You do not have permission to edit this point.
                 <br />
-                Only users with edit or manage permissions can modify this point.
+                Only users with edit or manage permissions can modify this
+                point.
               </p>
             </>
           ) : point.editing_lock_user ? (

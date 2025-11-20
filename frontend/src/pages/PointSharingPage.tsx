@@ -60,7 +60,7 @@ export function PointSharingPage() {
 
     if (
       !confirm(
-        `Are you sure you want to unshare this point with ${recipientName}?`
+        `Are you sure you want to unshare this point with ${recipientName}?`,
       )
     ) {
       return;
@@ -80,7 +80,10 @@ export function PointSharingPage() {
     }
   };
 
-  const handlePermissionChange = async (share: Share, newPermission: string) => {
+  const handlePermissionChange = async (
+    share: Share,
+    newPermission: string,
+  ) => {
     setIsUpdating(share.id);
 
     try {
@@ -116,7 +119,7 @@ export function PointSharingPage() {
         alert(`Failed to share: ${result.error_count} errors`);
       } else {
         alert(
-          `Partially successful: ${result.success_count} succeeded, ${result.error_count} failed`
+          `Partially successful: ${result.success_count} succeeded, ${result.error_count} failed`,
         );
       }
 
@@ -141,7 +144,10 @@ export function PointSharingPage() {
       <div className="error-container">
         <h2>Error loading point</h2>
         <p>{error || "Point not found"}</p>
-        <button onClick={() => navigate(`/points/${id}`)} className="btn-primary">
+        <button
+          onClick={() => navigate(`/points/${id}`)}
+          className="btn-primary"
+        >
           Back to Point
         </button>
       </div>
@@ -154,7 +160,10 @@ export function PointSharingPage() {
       <div className="error-container">
         <h2>Access Denied</h2>
         <p>Only the point owner can manage sharing.</p>
-        <button onClick={() => navigate(`/points/${id}`)} className="btn-primary">
+        <button
+          onClick={() => navigate(`/points/${id}`)}
+          className="btn-primary"
+        >
           Back to Point
         </button>
       </div>
@@ -219,7 +228,9 @@ export function PointSharingPage() {
                     <td>
                       <select
                         value={share.permission_level}
-                        onChange={(e) => handlePermissionChange(share, e.target.value)}
+                        onChange={(e) =>
+                          handlePermissionChange(share, e.target.value)
+                        }
                         className={`permission-select ${share.permission_level}`}
                         disabled={isUpdating === share.id}
                       >
@@ -235,7 +246,9 @@ export function PointSharingPage() {
                       <button
                         onClick={() => handleUnshare(share)}
                         className="btn-small btn-danger"
-                        disabled={isUnsharing === share.id || isUpdating === share.id}
+                        disabled={
+                          isUnsharing === share.id || isUpdating === share.id
+                        }
                       >
                         {isUnsharing === share.id ? "Unsharing..." : "Unshare"}
                       </button>

@@ -5,13 +5,19 @@
  */
 
 import { useState } from "react";
-import type { AutoShareRule, UpdateAutoShareRuleRequest } from "../../api/friends";
+import type {
+  AutoShareRule,
+  UpdateAutoShareRuleRequest,
+} from "../../api/friends";
 import { getErrorMessage } from "../../api/client";
 import "./AutoShareRulesList.css";
 
 interface AutoShareRulesListProps {
   rules: AutoShareRule[];
-  onUpdateRule: (ruleId: string, request: UpdateAutoShareRuleRequest) => Promise<void>;
+  onUpdateRule: (
+    ruleId: string,
+    request: UpdateAutoShareRuleRequest,
+  ) => Promise<void>;
   onDeleteRule: (ruleId: string) => Promise<void>;
 }
 
@@ -39,7 +45,10 @@ export function AutoShareRulesList({
     }
   };
 
-  const handleChangePermission = async (rule: AutoShareRule, newPermission: "view" | "edit" | "manage") => {
+  const handleChangePermission = async (
+    rule: AutoShareRule,
+    newPermission: "view" | "edit" | "manage",
+  ) => {
     if (newPermission === rule.permission_level) return;
 
     setUpdatingRuleId(rule.id);
@@ -108,11 +117,7 @@ export function AutoShareRulesList({
 
   return (
     <div className="rules-list">
-      {error && (
-        <div className="rules-error">
-          {error}
-        </div>
-      )}
+      {error && <div className="rules-error">{error}</div>}
 
       {rules.map((rule) => {
         const isUpdating = updatingRuleId === rule.id;
@@ -151,9 +156,7 @@ export function AutoShareRulesList({
             </div>
 
             <div className="rule-body">
-              <div className="rule-description">
-                {getRuleDescription(rule)}
-              </div>
+              <div className="rule-description">{getRuleDescription(rule)}</div>
 
               <div className="rule-permission">
                 <label className="rule-permission-label">Permission:</label>
@@ -163,7 +166,7 @@ export function AutoShareRulesList({
                   onChange={(e) =>
                     handleChangePermission(
                       rule,
-                      e.target.value as "view" | "edit" | "manage"
+                      e.target.value as "view" | "edit" | "manage",
                     )
                   }
                   disabled={isProcessing}
@@ -176,9 +179,7 @@ export function AutoShareRulesList({
             </div>
 
             {rule.share_all && (
-              <div className="rule-badge share-all-badge">
-                Share All
-              </div>
+              <div className="rule-badge share-all-badge">Share All</div>
             )}
           </div>
         );

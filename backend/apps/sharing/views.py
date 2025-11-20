@@ -26,7 +26,6 @@ from .serializers import FriendshipSerializer
 from .serializers import ShareSerializer
 from .serializers import UpdateAutoShareRuleSerializer
 from .serializers import UpdateShareSerializer
-from .services import BatchShareService
 from .services import FriendshipService
 from .services import PermissionService
 from .services import ShareService
@@ -265,25 +264,19 @@ class FriendshipViewSet(viewsets.ModelViewSet):
         # Get friends with share stats from service
         friends = FriendshipService.get_friends(user)
 
-        serializer = FriendSerializer(
-            friends, many=True, context={"request": request}
-        )
+        serializer = FriendSerializer(friends, many=True, context={"request": request})
         return Response(serializer.data)
 
     def create(self, request):
         """Add a friend by username."""
-        serializer = AddFriendSerializer(
-            data=request.data, context={"request": request}
-        )
+        serializer = AddFriendSerializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
 
         try:
             friendship = serializer.save()
 
             # Return the created friendship
-            response_serializer = FriendshipSerializer(
-                friendship, context={"request": request}
-            )
+            response_serializer = FriendshipSerializer(friendship, context={"request": request})
             return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
         except ValueError as e:
@@ -295,9 +288,7 @@ class FriendshipViewSet(viewsets.ModelViewSet):
             friendship = self.get_object()
             friend = friendship.friend
         except Friendship.DoesNotExist:
-            return Response(
-                {"error": "Friendship not found"}, status=status.HTTP_404_NOT_FOUND
-            )
+            return Response({"error": "Friendship not found"}, status=status.HTTP_404_NOT_FOUND)
 
         # Get shared points with this friend, annotated with share info
         shared_points_queryset = FriendshipService.get_shared_points_with_friend(
@@ -319,7 +310,6 @@ class FriendshipViewSet(viewsets.ModelViewSet):
                 shared_points_list.append(point)
 
         # Get share counts
-        from django.db.models import Count, Q
 
         shares_sent_count = Share.objects.filter(
             owner=request.user, recipient_user=friend, is_active=True
@@ -353,9 +343,7 @@ class FriendshipViewSet(viewsets.ModelViewSet):
             friendship = self.get_object()
             friend = friendship.friend
         except Friendship.DoesNotExist:
-            return Response(
-                {"error": "Friendship not found"}, status=status.HTTP_404_NOT_FOUND
-            )
+            return Response({"error": "Friendship not found"}, status=status.HTTP_404_NOT_FOUND)
 
         try:
             # Remove friend via service (handles bidirectional removal and share revocation)
@@ -407,9 +395,7 @@ class BatchShareView(viewsets.ViewSet):
             "results": [...]
         }
         """
-        serializer = BatchShareSerializer(
-            data=request.data, context={"request": request}
-        )
+        serializer = BatchShareSerializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
 
         result = serializer.save()
@@ -460,14 +446,18 @@ class AutoShareRuleViewSet(viewsets.ModelViewSet):
                 return AutoShareRule.objects.none()
 
             # Return rules for this specific friend
-            return AutoShareRule.objects.filter(
-                user=user, friend=friend
-            ).select_related("friend").prefetch_related("point_types", "tags")
+            return (
+                AutoShareRule.objects.filter(user=user, friend=friend)
+                .select_related("friend")
+                .prefetch_related("point_types", "tags")
+            )
 
         # Return all rules for user
-        return AutoShareRule.objects.filter(user=user).select_related(
-            "friend"
-        ).prefetch_related("point_types", "tags")
+        return (
+            AutoShareRule.objects.filter(user=user)
+            .select_related("friend")
+            .prefetch_related("point_types", "tags")
+        )
 
     def list(self, request, friendship_id=None):
         """List auto-share rules for a friend."""
@@ -479,16 +469,12 @@ class AutoShareRuleViewSet(viewsets.ModelViewSet):
 
         # Verify friendship exists
         try:
-            friendship = Friendship.objects.get(id=friendship_id, user=request.user)
+            Friendship.objects.get(id=friendship_id, user=request.user)
         except Friendship.DoesNotExist:
-            return Response(
-                {"error": "Friendship not found"}, status=status.HTTP_404_NOT_FOUND
-            )
+            return Response({"error": "Friendship not found"}, status=status.HTTP_404_NOT_FOUND)
 
         queryset = self.get_queryset()
-        serializer = AutoShareRuleSerializer(
-            queryset, many=True, context={"request": request}
-        )
+        serializer = AutoShareRuleSerializer(queryset, many=True, context={"request": request})
         return Response(serializer.data)
 
     def create(self, request, friendship_id=None):
@@ -504,24 +490,18 @@ class AutoShareRuleViewSet(viewsets.ModelViewSet):
             friendship = Friendship.objects.get(id=friendship_id, user=request.user)
             friend = friendship.friend
         except Friendship.DoesNotExist:
-            return Response(
-                {"error": "Friendship not found"}, status=status.HTTP_404_NOT_FOUND
-            )
+            return Response({"error": "Friendship not found"}, status=status.HTTP_404_NOT_FOUND)
 
         # Override friend field with friend from friendship
         data = request.data.copy()
         data["friend"] = str(friend.id)
 
-        serializer = CreateAutoShareRuleSerializer(
-            data=data, context={"request": request}
-        )
+        serializer = CreateAutoShareRuleSerializer(data=data, context={"request": request})
         serializer.is_valid(raise_exception=True)
 
         try:
             rule = serializer.save()
-            response_serializer = AutoShareRuleSerializer(
-                rule, context={"request": request}
-            )
+            response_serializer = AutoShareRuleSerializer(rule, context={"request": request})
             return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
         except ValueError as e:
@@ -532,15 +512,11 @@ class AutoShareRuleViewSet(viewsets.ModelViewSet):
         try:
             rule = self.get_object()
         except AutoShareRule.DoesNotExist:
-            return Response(
-                {"error": "Rule not found"}, status=status.HTTP_404_NOT_FOUND
-            )
+            return Response({"error": "Rule not found"}, status=status.HTTP_404_NOT_FOUND)
 
         # Verify rule belongs to user
         if rule.user != request.user:
-            return Response(
-                {"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN
-            )
+            return Response({"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
 
         serializer = AutoShareRuleSerializer(rule, context={"request": request})
         return Response(serializer.data)
@@ -554,15 +530,11 @@ class AutoShareRuleViewSet(viewsets.ModelViewSet):
         try:
             rule = self.get_object()
         except AutoShareRule.DoesNotExist:
-            return Response(
-                {"error": "Rule not found"}, status=status.HTTP_404_NOT_FOUND
-            )
+            return Response({"error": "Rule not found"}, status=status.HTTP_404_NOT_FOUND)
 
         # Verify rule belongs to user
         if rule.user != request.user:
-            return Response(
-                {"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN
-            )
+            return Response({"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
 
         serializer = UpdateAutoShareRuleSerializer(
             rule, data=request.data, partial=True, context={"request": request}
@@ -571,9 +543,7 @@ class AutoShareRuleViewSet(viewsets.ModelViewSet):
 
         try:
             rule = serializer.save()
-            response_serializer = AutoShareRuleSerializer(
-                rule, context={"request": request}
-            )
+            response_serializer = AutoShareRuleSerializer(rule, context={"request": request})
             return Response(response_serializer.data)
 
         except ValueError as e:
@@ -584,15 +554,11 @@ class AutoShareRuleViewSet(viewsets.ModelViewSet):
         try:
             rule = self.get_object()
         except AutoShareRule.DoesNotExist:
-            return Response(
-                {"error": "Rule not found"}, status=status.HTTP_404_NOT_FOUND
-            )
+            return Response({"error": "Rule not found"}, status=status.HTTP_404_NOT_FOUND)
 
         # Verify rule belongs to user
         if rule.user != request.user:
-            return Response(
-                {"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN
-            )
+            return Response({"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
 
         rule.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)

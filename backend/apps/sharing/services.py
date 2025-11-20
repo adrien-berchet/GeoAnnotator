@@ -849,9 +849,11 @@ class AutoShareService:
         error_count = 0
 
         # Get all active rules for the point owner
-        active_rules = AutoShareRule.objects.filter(
-            user=point.owner, is_active=True
-        ).select_related("friend").prefetch_related("point_types", "tags")
+        active_rules = (
+            AutoShareRule.objects.filter(user=point.owner, is_active=True)
+            .select_related("friend")
+            .prefetch_related("point_types", "tags")
+        )
 
         if not active_rules:
             return {
@@ -892,7 +894,7 @@ class AutoShareService:
                     friend_rules[friend_id] = (existing_friend, existing_permission, existing_rules)
 
         # Create shares for each friend
-        for friend_id, (friend, permission_level, matching_rules) in friend_rules.items():
+        for friend, permission_level, _matching_rules in friend_rules.values():
             # Check if friendship still exists
             if not FriendshipService.are_friends(point.owner, friend):
                 results.append(
@@ -906,9 +908,7 @@ class AutoShareService:
                 continue
 
             # Check if already manually shared
-            existing_share = Share.objects.filter(
-                gps_point=point, recipient_user=friend
-            ).first()
+            existing_share = Share.objects.filter(gps_point=point, recipient_user=friend).first()
 
             if existing_share:
                 results.append(
@@ -975,9 +975,11 @@ class AutoShareService:
             List of matching AutoShareRule objects
         """
         # Get all active rules for the point owner
-        active_rules = AutoShareRule.objects.filter(
-            user=point.owner, is_active=True
-        ).select_related("friend").prefetch_related("point_types", "tags")
+        active_rules = (
+            AutoShareRule.objects.filter(user=point.owner, is_active=True)
+            .select_related("friend")
+            .prefetch_related("point_types", "tags")
+        )
 
         matching_rules = []
         for rule in active_rules:

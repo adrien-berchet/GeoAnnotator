@@ -70,13 +70,15 @@ export function AutoShareRuleForm({
     setSelectedTypeIds((prev) =>
       prev.includes(typeId)
         ? prev.filter((id) => id !== typeId)
-        : [...prev, typeId]
+        : [...prev, typeId],
     );
   };
 
   const handleToggleTag = (tagId: string) => {
     setSelectedTagIds((prev) =>
-      prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId]
+      prev.includes(tagId)
+        ? prev.filter((id) => id !== tagId)
+        : [...prev, tagId],
     );
   };
 
@@ -85,9 +87,13 @@ export function AutoShareRuleForm({
     setError("");
 
     // Validation
-    if (!shareAll && selectedTypeIds.length === 0 && selectedTagIds.length === 0) {
+    if (
+      !shareAll &&
+      selectedTypeIds.length === 0 &&
+      selectedTagIds.length === 0
+    ) {
       setError(
-        "Please select at least one point type or tag, or enable 'Share All'"
+        "Please select at least one point type or tag, or enable 'Share All'",
       );
       return;
     }

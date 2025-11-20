@@ -36,7 +36,10 @@ class Friendship(models.Model):
     """
 
     id = models.UUIDField(
-        primary_key=True, default=uuid.uuid4, editable=False, help_text="Unique friendship identifier"
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+        help_text="Unique friendship identifier",
     )
 
     user = models.ForeignKey(
@@ -61,13 +64,10 @@ class Friendship(models.Model):
         verbose_name_plural = "Friendships"
         constraints = [
             # Prevent duplicate friendships
-            models.UniqueConstraint(
-                fields=["user", "friend"], name="unique_friendship"
-            ),
+            models.UniqueConstraint(fields=["user", "friend"], name="unique_friendship"),
             # Prevent self-friendship
             models.CheckConstraint(
-                check=~models.Q(user=models.F("friend")),
-                name="no_self_friendship"
+                check=~models.Q(user=models.F("friend")), name="no_self_friendship"
             ),
         ]
         indexes = [
@@ -87,13 +87,9 @@ class Friendship(models.Model):
 
         # Check for reverse friendship to maintain bidirectional consistency
         if self.pk is None:  # Only on creation
-            reverse_exists = Friendship.objects.filter(
-                user=self.friend, friend=self.user
-            ).exists()
+            reverse_exists = Friendship.objects.filter(user=self.friend, friend=self.user).exists()
             if reverse_exists:
-                raise ValidationError(
-                    "Friendship already exists in the reverse direction"
-                )
+                raise ValidationError("Friendship already exists in the reverse direction")
 
     def __str__(self):
         return f"{self.user.username} ↔ {self.friend.username}"
@@ -368,13 +364,9 @@ class AutoShareRule(models.Model):
         help_text="Rule is active and will be applied to new points",
     )
 
-    created_at = models.DateTimeField(
-        auto_now_add=True, help_text="Rule creation timestamp"
-    )
+    created_at = models.DateTimeField(auto_now_add=True, help_text="Rule creation timestamp")
 
-    updated_at = models.DateTimeField(
-        auto_now=True, help_text="Last modification timestamp"
-    )
+    updated_at = models.DateTimeField(auto_now=True, help_text="Last modification timestamp")
 
     class Meta:
         db_table = "auto_share_rules"
@@ -466,4 +458,6 @@ class AutoShareRule(models.Model):
 
             condition = " + ".join(parts) if parts else "no conditions"
 
-        return f"{self.user.username} → {self.friend.username}: {condition} ({self.permission_level})"
+        return (
+            f"{self.user.username} → {self.friend.username}: {condition} ({self.permission_level})"
+        )

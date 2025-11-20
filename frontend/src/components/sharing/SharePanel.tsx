@@ -25,7 +25,9 @@ export function SharePanel({
   const [friends, setFriends] = useState<Friend[]>([]);
   const [selectedFriends, setSelectedFriends] = useState<string[]>([]);
   const [newUsernames, setNewUsernames] = useState("");
-  const [permissionLevel, setPermissionLevel] = useState<"view" | "edit" | "manage">("view");
+  const [permissionLevel, setPermissionLevel] = useState<
+    "view" | "edit" | "manage"
+  >("view");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -53,7 +55,7 @@ export function SharePanel({
     setSelectedFriends((prev) =>
       prev.includes(username)
         ? prev.filter((u) => u !== username)
-        : [...prev, username]
+        : [...prev, username],
     );
   };
 
@@ -223,7 +225,8 @@ export function SharePanel({
             className="btn-primary"
             disabled={totalRecipients === 0}
           >
-            Share with {totalRecipients || 0} user{totalRecipients !== 1 ? "s" : ""}
+            Share with {totalRecipients || 0} user
+            {totalRecipients !== 1 ? "s" : ""}
           </button>
         </div>
       </div>
