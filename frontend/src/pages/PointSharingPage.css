@@ -178,6 +178,51 @@
   color: #831843;
 }
 
+/* Permission Select */
+.permission-select {
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 120px;
+}
+
+.permission-select:hover {
+  opacity: 0.8;
+}
+
+.permission-select:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.permission-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.permission-select.view {
+  background: #dbeafe;
+  color: #1e40af;
+  border-color: #93c5fd;
+}
+
+.permission-select.edit {
+  background: #fef3c7;
+  color: #92400e;
+  border-color: #fde68a;
+}
+
+.permission-select.transfer {
+  background: #fce7f3;
+  color: #831843;
+  border-color: #f9a8d4;
+}
+
 /* Status Badges */
 .status-badge {
   display: inline-flex;

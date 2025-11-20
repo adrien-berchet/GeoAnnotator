@@ -7,7 +7,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getPoint } from "../api/points";
-import { getPointShares, deleteShare } from "../api/sharing";
+import { getPointShares, deleteShare, updateShare } from "../api/sharing";
 import { batchSharePoints } from "../api/friends";
 import { getErrorMessage } from "../api/client";
 import { LoadingSpinner } from "../components/common/LoadingSpinner";
@@ -27,6 +27,7 @@ export function PointSharingPage() {
   const [isSharePanelOpen, setIsSharePanelOpen] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
   const [isUnsharing, setIsUnsharing] = useState<string | null>(null);
+  const [isUpdating, setIsUpdating] = useState<string | null>(null);
 
   const loadData = async () => {
     if (!id) return;
@@ -77,6 +78,23 @@ export function PointSharingPage() {
       alert(`Error unsharing: ${getErrorMessage(err)}`);
     } finally {
       setIsUnsharing(null);
+    }
+  };
+
+  const handlePermissionChange = async (share: Share, newPermission: string) => {
+    setIsUpdating(share.id);
+
+    try {
+      await updateShare(share.id, {
+        permission_level: newPermission as "view" | "edit" | "transfer",
+      });
+      // Reload shares to reflect the change
+      const updatedShares = await getPointShares(id!);
+      setShares(updatedShares);
+    } catch (err) {
+      alert(`Error updating permission: ${getErrorMessage(err)}`);
+    } finally {
+      setIsUpdating(null);
     }
   };
 
@@ -216,9 +234,16 @@ export function PointSharingPage() {
                       )}
                     </td>
                     <td>
-                      <span className={getPermissionBadgeClass(share.permission_level)}>
-                        {share.permission_level}
-                      </span>
+                      <select
+                        value={share.permission_level}
+                        onChange={(e) => handlePermissionChange(share, e.target.value)}
+                        className={`permission-select ${share.permission_level}`}
+                        disabled={isUpdating === share.id}
+                      >
+                        <option value="view">View</option>
+                        <option value="edit">Edit</option>
+                        <option value="transfer">Transfer</option>
+                      </select>
                     </td>
                     <td className="date-cell">
                       {new Date(share.created_at).toLocaleDateString()}
@@ -227,7 +252,7 @@ export function PointSharingPage() {
                       <button
                         onClick={() => handleUnshare(share)}
                         className="btn-small btn-danger"
-                        disabled={isUnsharing === share.id}
+                        disabled={isUnsharing === share.id || isUpdating === share.id}
                       >
                         {isUnsharing === share.id ? "Unsharing..." : "Unshare"}
                       </button>
