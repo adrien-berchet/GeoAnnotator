@@ -413,7 +413,7 @@
   font-size: 0.8125rem;
 }
 
-/* Buttons */
+/* Buttons - improved readability with explicit colors */
 .btn-primary,
 .btn-secondary,
 .btn-edit,
@@ -421,71 +421,178 @@
 .btn-success,
 .btn-view {
   padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 4px;
+  border: 2px solid transparent;
+  border-radius: 6px;
   cursor: pointer;
   font-size: 0.875rem;
-  font-weight: 500;
-  transition: background-color 0.2s;
+  font-weight: 600;
+  transition: all 0.2s ease;
 }
 
 .btn-primary {
-  background-color: var(--color-primary);
-  color: white;
+  background: #3b82f6;
+  color: #ffffff;
+  border-color: #3b82f6;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background-color: var(--color-primary-hover);
+  background: #2563eb;
+  border-color: #2563eb;
 }
 
 .btn-secondary {
-  background-color: #757575;
-  color: white;
+  background: #ffffff;
+  color: #374151;
+  border-color: #d1d5db;
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background-color: #616161;
+  background: #f3f4f6;
+  border-color: #9ca3af;
+  color: #1f2937;
 }
 
 .btn-edit {
-  background-color: #0288d1;
-  color: white;
+  background: #0ea5e9;
+  color: #ffffff;
+  border-color: #0ea5e9;
 }
 
 .btn-edit:hover:not(:disabled) {
-  background-color: #0277bd;
+  background: #0284c7;
+  border-color: #0284c7;
 }
 
 .btn-delete {
-  background-color: #d32f2f;
-  color: white;
+  background: #ef4444;
+  color: #ffffff;
+  border-color: #ef4444;
 }
 
 .btn-delete:hover:not(:disabled) {
-  background-color: #c62828;
+  background: #dc2626;
+  border-color: #dc2626;
 }
 
 .btn-success {
-  background-color: #388e3c;
-  color: white;
+  background: #10b981;
+  color: #ffffff;
+  border-color: #10b981;
 }
 
 .btn-success:hover:not(:disabled) {
-  background-color: #2e7d32;
+  background: #059669;
+  border-color: #059669;
 }
 
 .btn-view {
-  background-color: #1976d2;
-  color: white;
+  background: #6366f1;
+  color: #ffffff;
+  border-color: #6366f1;
 }
 
 .btn-view:hover:not(:disabled) {
-  background-color: #1565c0;
+  background: #4f46e5;
+  border-color: #4f46e5;
 }
 
 button:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
+}
+
+.btn-primary:disabled {
+  background: #9ca3af;
+  border-color: #9ca3af;
+  color: #ffffff;
+}
+
+.btn-secondary:disabled {
+  background: #e5e7eb;
+  border-color: #d1d5db;
+  color: #9ca3af;
+}
+
+/* Dark mode specific button styles */
+@media (prefers-color-scheme: dark) {
+  .btn-primary {
+    background: #3b82f6;
+    color: #ffffff;
+    border-color: #3b82f6;
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    background: #60a5fa;
+    border-color: #60a5fa;
+  }
+
+  .btn-primary:disabled {
+    background: #4b5563;
+    border-color: #4b5563;
+    color: #9ca3af;
+  }
+
+  .btn-secondary {
+    background: #374151;
+    color: #f3f4f6;
+    border-color: #6b7280;
+  }
+
+  .btn-secondary:hover:not(:disabled) {
+    background: #4b5563;
+    border-color: #9ca3af;
+    color: #ffffff;
+  }
+
+  .btn-secondary:disabled {
+    background: #1f2937;
+    border-color: #374151;
+    color: #6b7280;
+  }
+
+  .btn-edit {
+    background: #06b6d4;
+    color: #ffffff;
+    border-color: #06b6d4;
+  }
+
+  .btn-edit:hover:not(:disabled) {
+    background: #22d3ee;
+    border-color: #22d3ee;
+  }
+
+  .btn-delete {
+    background: #ef4444;
+    color: #ffffff;
+    border-color: #ef4444;
+  }
+
+  .btn-delete:hover:not(:disabled) {
+    background: #f87171;
+    border-color: #f87171;
+  }
+
+  .btn-success {
+    background: #10b981;
+    color: #ffffff;
+    border-color: #10b981;
+  }
+
+  .btn-success:hover:not(:disabled) {
+    background: #34d399;
+    border-color: #34d399;
+  }
+
+  .btn-view {
+    background: #6366f1;
+    color: #ffffff;
+    border-color: #6366f1;
+  }
+
+  .btn-view:hover:not(:disabled) {
+    background: #818cf8;
+    border-color: #818cf8;
+  }
 }
 
 /* Responsive */
