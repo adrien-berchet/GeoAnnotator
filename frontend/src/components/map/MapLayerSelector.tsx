@@ -11,7 +11,6 @@ import "./MapLayerSelector.css";
  * Maximum zoom level for all map layers.
  * Tiles will be stretched beyond their native zoom to reach this level.
  */
-// eslint-disable-next-line react-refresh/only-export-components
 export const MAX_ZOOM = 22;
 
 export interface TileLayer {
