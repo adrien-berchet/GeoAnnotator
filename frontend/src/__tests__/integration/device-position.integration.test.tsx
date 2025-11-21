@@ -47,42 +47,23 @@ vi.mock("react-leaflet", () => ({
   }: {
     children?: React.ReactNode;
     eventHandlers?: { click?: () => void };
-    icon?: { options?: { html?: string } };
+    icon?: { options?: { html?: string; className?: string } };
     position?: [number, number];
   }) => {
-    // Don't add onClick handler - it causes infinite loops
-    // Instead, the test will need to trigger the modal directly or via other means
+    // Extract blue-dot class from icon HTML if present
+    const iconHtml = icon?.options?.html || "";
+    const isBlueDot = iconHtml.includes('data-testid="blue-dot"');
+    const className = icon?.options?.className || "";
 
-    // Render the icon's HTML if it exists (for divIcon)
-    let iconHtml = icon?.options?.html;
-    if (iconHtml && position) {
-      // Add data-lat and data-lng attributes to the blue-dot element in the HTML
-      iconHtml = iconHtml.replace(
-        'data-testid="blue-dot"',
-        `data-testid="blue-dot" data-lat="${position[0]}" data-lng="${position[1]}"`,
-      );
-      return (
-        <div
-          data-testid="marker"
-          data-click-handler={eventHandlers?.click ? "true" : "false"}
-          dangerouslySetInnerHTML={{ __html: iconHtml }}
-        />
-      );
-    }
-    if (iconHtml) {
-      return (
-        <div
-          data-testid="marker"
-          data-click-handler={eventHandlers?.click ? "true" : "false"}
-          dangerouslySetInnerHTML={{ __html: iconHtml }}
-        />
-      );
-    }
     return (
       <div
         data-testid="marker"
         data-click-handler={eventHandlers?.click ? "true" : "false"}
+        data-lat={position?.[0]}
+        data-lng={position?.[1]}
+        className={className}
       >
+        {isBlueDot && <div data-testid="blue-dot" />}
         {children}
       </div>
     );
@@ -99,6 +80,7 @@ vi.mock("react-leaflet", () => ({
   useMap: () => ({
     setView: vi.fn(),
     flyTo: vi.fn(),
+    remove: vi.fn(),
     on: vi.fn(),
     off: vi.fn(),
   }),

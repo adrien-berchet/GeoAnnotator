@@ -153,6 +153,19 @@ export function MapPage() {
   }, []);
 
   /**
+   * Cleanup map instance on unmount to prevent memory leaks.
+   */
+  useEffect(() => {
+    return () => {
+      if (mapInstance) {
+        mapInstance.off(); // Remove all event listeners
+        mapInstance.remove(); // Destroy the map instance
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /**
    * Apply filter when selected tags or types change.
    */
   useEffect(() => {
