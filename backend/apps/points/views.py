@@ -685,3 +685,123 @@ class PointTypeViewSet(viewsets.ModelViewSet):
         icon_url = f"{request_host}/{media_url}{saved_path}"
 
         return Response({"icon_url": icon_url}, status=status.HTTP_201_CREATED)
+
+
+class BatchPointOperationsView(viewsets.ViewSet):
+    """
+    ViewSet for batch point operations.
+
+    Endpoints:
+    - POST /api/points/batch/update-type/ - Update type for multiple points
+    - POST /api/points/batch/add-tags/ - Add tags to multiple points
+    - POST /api/points/batch/delete/ - Delete multiple points
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    @action(detail=False, methods=["post"], url_path="update-type")
+    def update_type(self, request):
+        """
+        Batch update point type.
+
+        Request body:
+        {
+            "point_ids": ["uuid1", "uuid2", ...],
+            "type_id": "uuid"
+        }
+
+        Response:
+        {
+            "success_count": int,
+            "error_count": int,
+            "skipped_count": int,
+            "total_attempted": int,
+            "results": [...]
+        }
+        """
+        from .serializers import BatchUpdateTypeSerializer
+
+        serializer = BatchUpdateTypeSerializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+
+        result = serializer.save()
+
+        # Return appropriate status code based on results
+        if result["error_count"] == 0 and result["skipped_count"] == 0:
+            return Response(result, status=status.HTTP_200_OK)
+        elif result["success_count"] == 0:
+            return Response(result, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            # Partial success
+            return Response(result, status=status.HTTP_207_MULTI_STATUS)
+
+    @action(detail=False, methods=["post"], url_path="add-tags")
+    def add_tags(self, request):
+        """
+        Batch add tags to points.
+
+        Request body:
+        {
+            "point_ids": ["uuid1", "uuid2", ...],
+            "tags": ["tag1", "tag2", ...]
+        }
+
+        Response:
+        {
+            "success_count": int,
+            "error_count": int,
+            "skipped_count": int,
+            "total_attempted": int,
+            "results": [...]
+        }
+        """
+        from .serializers import BatchAddTagsSerializer
+
+        serializer = BatchAddTagsSerializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+
+        result = serializer.save()
+
+        # Return appropriate status code based on results
+        if result["error_count"] == 0 and result["skipped_count"] == 0:
+            return Response(result, status=status.HTTP_200_OK)
+        elif result["success_count"] == 0:
+            return Response(result, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            # Partial success
+            return Response(result, status=status.HTTP_207_MULTI_STATUS)
+
+    @action(detail=False, methods=["post"], url_path="delete")
+    def delete_points(self, request):
+        """
+        Batch delete points.
+
+        Request body:
+        {
+            "point_ids": ["uuid1", "uuid2", ...]
+        }
+
+        Response:
+        {
+            "success_count": int,
+            "error_count": int,
+            "skipped_count": int,
+            "total_attempted": int,
+            "results": [...]
+        }
+        """
+        from .serializers import BatchDeletePointsSerializer
+
+        serializer = BatchDeletePointsSerializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+
+        result = serializer.save()
+
+        # Return appropriate status code based on results
+        if result["error_count"] == 0 and result["skipped_count"] == 0:
+            return Response(result, status=status.HTTP_200_OK)
+        elif result["success_count"] == 0:
+            return Response(result, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            # Partial success
+            return Response(result, status=status.HTTP_207_MULTI_STATUS)

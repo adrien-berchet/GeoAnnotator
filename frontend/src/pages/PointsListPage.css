@@ -568,17 +568,23 @@
   }
 }
 
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  gap: var(--spacing-md);
+}
+
 /* Point Card Selection */
 .point-card {
   position: relative;
 }
 
-.point-card.sharing-mode {
+.point-card.selection-mode {
   cursor: pointer;
   user-select: none;
 }
 
-.point-card.sharing-mode:hover {
+.point-card.selection-mode:hover {
   border-color: var(--color-primary);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }

@@ -6,12 +6,20 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { getPoints, searchPointsByTags, getTags } from "../api/points";
+import {
+  getPoints,
+  searchPointsByTags,
+  getTags,
+  batchUpdatePointType,
+  batchAddTags,
+  batchDeletePoints,
+} from "../api/points";
 import { getPointTypes } from "../api/types";
 import { getErrorMessage } from "../api/client";
 import { LoadingSpinner } from "../components/common/LoadingSpinner";
 import { FilterPanel } from "../components/common/FilterPanel";
 import { SharePanel } from "../components/sharing/SharePanel";
+import { BulkEditPanel } from "../components/points/BulkEditPanel";
 import { useLanguage } from "../contexts/LanguageContext";
 import type { GPSPoint, Tag, PointType } from "../types/point";
 import { batchSharePoints } from "../api/friends";
@@ -31,7 +39,11 @@ export function PointsListPage() {
   const [selectedTypeIds, setSelectedTypeIds] = useState<string[]>([]);
   const [selectedPointIds, setSelectedPointIds] = useState<string[]>([]);
   const [isSharePanelOpen, setIsSharePanelOpen] = useState(false);
-  const [sharingModeActive, setSharingModeActive] = useState(false);
+  const [isBulkEditPanelOpen, setIsBulkEditPanelOpen] = useState(false);
+  const [selectionModeActive, setSelectionModeActive] = useState(false);
+  const [selectionMode, setSelectionMode] = useState<"share" | "edit" | null>(
+    null,
+  );
   const [lastClickedIndex, setLastClickedIndex] = useState<number | null>(null);
   const navigate = useNavigate();
 
@@ -243,17 +255,28 @@ export function PointsListPage() {
   };
 
   const handleEnterSharingMode = () => {
-    setSharingModeActive(true);
+    setSelectionModeActive(true);
+    setSelectionMode("share");
   };
 
-  const handleExitSharingMode = () => {
-    setSharingModeActive(false);
+  const handleEnterBulkEditMode = () => {
+    setSelectionModeActive(true);
+    setSelectionMode("edit");
+  };
+
+  const handleExitSelectionMode = () => {
+    setSelectionModeActive(false);
+    setSelectionMode(null);
     setSelectedPointIds([]);
     setLastClickedIndex(null);
   };
 
   const handleShareSelected = () => {
     setIsSharePanelOpen(true);
+  };
+
+  const handleBulkEditSelected = () => {
+    setIsBulkEditPanelOpen(true);
   };
 
   const handleShare = async (usernames: string[], permissionLevel: string) => {
@@ -287,11 +310,9 @@ export function PointsListPage() {
         alert("No changes made");
       }
 
-      // Close panel, clear selection, and exit sharing mode
+      // Close panel and exit selection mode
       setIsSharePanelOpen(false);
-      setSelectedPointIds([]);
-      setSharingModeActive(false);
-      setLastClickedIndex(null);
+      handleExitSelectionMode();
     } catch (err: unknown) {
       // Check if this is a batch share response with detailed results
       type BatchShareErrorResult = { status?: string; error?: string };
@@ -323,6 +344,134 @@ export function PointsListPage() {
         const errorMsg = getErrorMessage(err);
         alert(`Error sharing points: ${errorMsg}`);
       }
+    }
+  };
+
+  const handleUpdateType = async (typeId: string) => {
+    setError("");
+
+    try {
+      const result = await batchUpdatePointType({
+        point_ids: selectedPointIds,
+        type_id: typeId,
+      });
+
+      // Show success/error summary
+      const messages = [];
+
+      if (result.success_count > 0) {
+        messages.push(`${result.success_count} updated successfully`);
+      }
+
+      if (result.skipped_count > 0) {
+        messages.push(`${result.skipped_count} skipped (no permission)`);
+      }
+
+      if (result.error_count > 0) {
+        messages.push(`${result.error_count} failed`);
+      }
+
+      if (messages.length > 0) {
+        alert(messages.join(", "));
+      }
+
+      // Reload points to reflect changes
+      await loadPoints();
+
+      // Close panel and exit selection mode
+      setIsBulkEditPanelOpen(false);
+      handleExitSelectionMode();
+    } catch (err) {
+      const errorMsg = getErrorMessage(err);
+      alert(`Error updating points: ${errorMsg}`);
+    }
+  };
+
+  const handleAddTags = async (tags: string[]) => {
+    setError("");
+
+    try {
+      const result = await batchAddTags({
+        point_ids: selectedPointIds,
+        tags,
+      });
+
+      // Show success/error summary
+      const messages = [];
+
+      if (result.success_count > 0) {
+        messages.push(`${result.success_count} updated successfully`);
+      }
+
+      if (result.skipped_count > 0) {
+        messages.push(`${result.skipped_count} skipped (no permission)`);
+      }
+
+      if (result.error_count > 0) {
+        messages.push(`${result.error_count} failed`);
+      }
+
+      if (messages.length > 0) {
+        alert(messages.join(", "));
+      }
+
+      // Reload points to reflect changes
+      await loadPoints();
+
+      // Close panel and exit selection mode
+      setIsBulkEditPanelOpen(false);
+      handleExitSelectionMode();
+    } catch (err) {
+      const errorMsg = getErrorMessage(err);
+      alert(`Error adding tags: ${errorMsg}`);
+    }
+  };
+
+  const handleDeletePoints = async () => {
+    // Show confirmation dialog
+    const confirmed = window.confirm(
+      `Are you sure you want to delete ${selectedPointIds.length} point${selectedPointIds.length !== 1 ? "s" : ""}? They will be moved to trash.`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setError("");
+
+    try {
+      const result = await batchDeletePoints({
+        point_ids: selectedPointIds,
+      });
+
+      // Show success/error summary
+      const messages = [];
+
+      if (result.success_count > 0) {
+        messages.push(`${result.success_count} deleted successfully`);
+      }
+
+      if (result.skipped_count > 0) {
+        messages.push(`${result.skipped_count} skipped (no permission)`);
+      }
+
+      if (result.error_count > 0) {
+        messages.push(`${result.error_count} failed`);
+      }
+
+      if (messages.length > 0) {
+        alert(messages.join(", "));
+      }
+
+      // Reload points to reflect changes
+      await loadPoints();
+
+      // Close panel and exit selection mode
+      setIsBulkEditPanelOpen(false);
+      handleExitSelectionMode();
+    } catch (err) {
+      const errorMsg = getErrorMessage(err);
+      alert(`Error deleting points: ${errorMsg}`);
     }
   };
 
@@ -456,18 +605,26 @@ export function PointsListPage() {
               ? t("map.points", "points")
               : t("map.point", "point")}
           </span>
-          {!sharingModeActive && points.length > 0 && (
-            <button
-              onClick={handleEnterSharingMode}
-              className="btn-primary btn-share-mode"
-            >
-              Share Points
-            </button>
+          {!selectionModeActive && points.length > 0 && (
+            <div className="action-buttons">
+              <button
+                onClick={handleEnterSharingMode}
+                className="btn-primary btn-share-mode"
+              >
+                Share Points
+              </button>
+              <button
+                onClick={handleEnterBulkEditMode}
+                className="btn-primary btn-edit-mode"
+              >
+                Bulk Edit
+              </button>
+            </div>
           )}
         </div>
 
         {/* Selection Toolbar */}
-        {points.length > 0 && sharingModeActive && (
+        {points.length > 0 && selectionModeActive && (
           <div className="selection-toolbar">
             <div className="selection-actions">
               <button onClick={handleSelectAll} className="btn-select">
@@ -481,15 +638,26 @@ export function PointsListPage() {
                   {selectedPointIds.length} selected
                 </span>
               )}
+              {selectionMode === "share" && (
+                <button
+                  onClick={handleShareSelected}
+                  className="btn-toolbar btn-toolbar-primary"
+                  disabled={selectedPointIds.length === 0}
+                >
+                  Share Selected
+                </button>
+              )}
+              {selectionMode === "edit" && (
+                <button
+                  onClick={handleBulkEditSelected}
+                  className="btn-toolbar btn-toolbar-primary"
+                  disabled={selectedPointIds.length === 0}
+                >
+                  Edit Selected
+                </button>
+              )}
               <button
-                onClick={handleShareSelected}
-                className="btn-toolbar btn-toolbar-primary"
-                disabled={selectedPointIds.length === 0}
-              >
-                Share Selected
-              </button>
-              <button
-                onClick={handleExitSharingMode}
+                onClick={handleExitSelectionMode}
                 className="btn-toolbar btn-toolbar-secondary"
               >
                 Cancel
@@ -518,9 +686,9 @@ export function PointsListPage() {
           {points.map((point, index) => (
             <div
               key={point.id}
-              className={`point-card ${selectedPointIds.includes(point.id) ? "selected" : ""} ${sharingModeActive ? "sharing-mode" : ""}`}
+              className={`point-card ${selectedPointIds.includes(point.id) ? "selected" : ""} ${selectionModeActive ? "selection-mode" : ""}`}
               onClick={(e) => {
-                if (sharingModeActive) {
+                if (selectionModeActive) {
                   handleTogglePoint(index, e);
                 } else {
                   navigate(`/points/${point.id}`);
@@ -601,6 +769,16 @@ export function PointsListPage() {
         selectedPointIds={selectedPointIds}
         onClose={() => setIsSharePanelOpen(false)}
         onShare={handleShare}
+      />
+
+      {/* Bulk Edit Panel */}
+      <BulkEditPanel
+        isOpen={isBulkEditPanelOpen}
+        selectedPointIds={selectedPointIds}
+        onClose={() => setIsBulkEditPanelOpen(false)}
+        onUpdateType={handleUpdateType}
+        onAddTags={handleAddTags}
+        onDelete={handleDeletePoints}
       />
     </div>
   );
