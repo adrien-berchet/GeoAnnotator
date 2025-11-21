@@ -45,6 +45,7 @@ export function MapPage() {
   const [points, setPoints] = useState<GPSPoint[]>([]);
   const [allPoints, setAllPoints] = useState<GPSPoint[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showLoadingIndicator, setShowLoadingIndicator] = useState(false);
   const [error, setError] = useState("");
 
   // Search state
@@ -151,6 +152,24 @@ export function MapPage() {
     return () => window.removeEventListener("resize", handleResize);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    let timeoutId: number | undefined;
+
+    if (isLoading) {
+      timeoutId = window.setTimeout(() => {
+        setShowLoadingIndicator(true);
+      }, 500);
+    } else {
+      setShowLoadingIndicator(false);
+    }
+
+    return () => {
+      if (timeoutId !== undefined) {
+        window.clearTimeout(timeoutId);
+      }
+    };
+  }, [isLoading]);
 
   /**
    * Cleanup map instance on unmount to prevent memory leaks.
@@ -449,7 +468,7 @@ export function MapPage() {
   return (
     <div className="map-page">
       {/* Loading indicator for points (non-blocking) */}
-      {isLoading && (
+      {isLoading && showLoadingIndicator && (
         <div
           style={{
             position: "absolute",
