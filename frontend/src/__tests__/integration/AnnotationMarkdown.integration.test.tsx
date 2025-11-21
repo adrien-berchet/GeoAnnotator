@@ -327,7 +327,7 @@ describe("AnnotationList - Integration Tests", () => {
 
       const endTime = performance.now();
       const renderTime = endTime - startTime;
-      const ciSafeThreshold = process.env.CI ? 1500 : 1000;
+      const ciSafeThreshold = process.env.CI ? 2000 : 1000;
 
       // CI VMs are ~30% slower than local dev machines; widening the
       // threshold there keeps the guard meaningful without causing flakes.

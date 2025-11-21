@@ -15,6 +15,7 @@ from io import StringIO
 import gpxpy
 import gpxpy.gpx
 import simplekml
+from django.db import models
 from django.http import HttpResponse
 
 from apps.annotations.models import Annotation
@@ -42,6 +43,20 @@ class ExportService:
         features = []
 
         for point in points:
+            # Get point type information
+            point_type_name = None
+            point_type_icon = None
+            if point.type:
+                # Use English name as fallback if available
+                point_type_name = (
+                    point.type.names.get("en")
+                    or point.type.names.get(point.type.creation_language)
+                    or list(point.type.names.values())[0]
+                    if point.type.names
+                    else None
+                )
+                point_type_icon = point.type.icon
+
             feature = {
                 "type": "Feature",
                 "id": str(point.id),
@@ -52,6 +67,8 @@ class ExportService:
                     "is_public": point.is_public,
                     "owner": point.owner.username,
                     "tags": [tag.name for tag in point.tags.all()],
+                    "point_type": point_type_name,
+                    "point_type_icon": point_type_icon,
                     "created_at": point.created_at.isoformat(),
                     "updated_at": point.updated_at.isoformat(),
                 },
@@ -140,6 +157,26 @@ class ExportService:
                 value=", ".join([tag.name for tag in point.tags.all()]),
             )
 
+            # Add point type if available
+            if point.type:
+                point_type_name = (
+                    point.type.names.get("en")
+                    or point.type.names.get(point.type.creation_language)
+                    or list(point.type.names.values())[0]
+                    if point.type.names
+                    else None
+                )
+                if point_type_name:
+                    pnt.extendeddata.newdata(
+                        name="point_type",
+                        value=point_type_name,
+                    )
+                if point.type.icon:
+                    pnt.extendeddata.newdata(
+                        name="point_type_icon",
+                        value=point.type.icon,
+                    )
+
         return kml.kml()
 
     @staticmethod
@@ -167,6 +204,7 @@ class ExportService:
                 "is_public",
                 "owner",
                 "tags",
+                "point_type",
                 "created_at",
                 "updated_at",
             ]
@@ -174,6 +212,18 @@ class ExportService:
 
         # Data rows
         for point in points:
+            # Get point type name
+            point_type_name = ""
+            if point.type:
+                # Use English name as fallback if available
+                point_type_name = (
+                    point.type.names.get("en")
+                    or point.type.names.get(point.type.creation_language)
+                    or list(point.type.names.values())[0]
+                    if point.type.names
+                    else ""
+                )
+
             writer.writerow(
                 [
                     str(point.id),
@@ -184,6 +234,7 @@ class ExportService:
                     point.is_public,
                     point.owner.username,
                     "|".join([tag.name for tag in point.tags.all()]),
+                    point_type_name,
                     point.created_at.isoformat(),
                     point.updated_at.isoformat(),
                 ]
@@ -371,10 +422,37 @@ class ImportService:
                     ).first()
 
                     if existing:
+                        # Get or create point type
+                        point_type = None
+                        point_type_name = properties.get("point_type")
+                        if point_type_name:
+                            from apps.points.models import PointType
+
+                            # Try to find existing type (base type or user's custom type)
+                            point_type = (
+                                PointType.objects.filter(names__en=point_type_name, status="active")
+                                .filter(models.Q(type_choice="base") | models.Q(owner=user))
+                                .first()
+                            )
+
+                            if not point_type:
+                                # Create new custom type with default marker
+                                point_type = PointType.objects.create(
+                                    type_choice="custom",
+                                    names={"en": point_type_name},
+                                    creation_language="en",
+                                    icon=properties.get("point_type_icon", "📍"),
+                                    owner=user,
+                                    visibility="private",
+                                    status="active",
+                                )
+
                         # Update existing point
                         existing.title = properties.get("title", "Imported Point")
                         existing.description = properties.get("description")
                         existing.is_public = properties.get("is_public", False)
+                        if point_type:
+                            existing.type = point_type
                         existing.save()
 
                         # Update tags
@@ -389,6 +467,31 @@ class ImportService:
                         result["created_point_ids"].append(str(existing.id))
                         continue
 
+                # Get or create point type
+                point_type = None
+                point_type_name = properties.get("point_type")
+                if point_type_name:
+                    from apps.points.models import PointType
+
+                    # Try to find existing type (base type or user's custom type)
+                    point_type = (
+                        PointType.objects.filter(names__en=point_type_name, status="active")
+                        .filter(models.Q(type_choice="base") | models.Q(owner=user))
+                        .first()
+                    )
+
+                    if not point_type:
+                        # Create new custom type with default marker
+                        point_type = PointType.objects.create(
+                            type_choice="custom",
+                            names={"en": point_type_name},
+                            creation_language="en",
+                            icon=properties.get("point_type_icon", "📍"),
+                            owner=user,
+                            visibility="private",
+                            status="active",
+                        )
+
                 # Create point
 
                 point = PointService.create_point(
@@ -400,6 +503,11 @@ class ImportService:
                     tags=properties.get("tags", []),
                     is_public=properties.get("is_public", False),
                 )
+
+                # Set point type if found/created
+                if point_type:
+                    point.type = point_type
+                    point.save(update_fields=["type"])
 
                 result["imported_points"] += 1
                 result["created_point_ids"].append(str(point.id))
@@ -472,6 +580,31 @@ class ImportService:
                     is_public = row.get("is_public", "false").lower() in ["true", "1", "yes"]
                     tags = [t.strip() for t in row.get("tags", "").split("|") if t.strip()]
 
+                    # Get or create point type
+                    point_type = None
+                    point_type_name = row.get("point_type", "").strip()
+                    if point_type_name:
+                        from apps.points.models import PointType
+
+                        # Try to find existing type (base type or user's custom type)
+                        point_type = (
+                            PointType.objects.filter(names__en=point_type_name, status="active")
+                            .filter(models.Q(type_choice="base") | models.Q(owner=user))
+                            .first()
+                        )
+
+                        if not point_type:
+                            # Create new custom type with default marker
+                            point_type = PointType.objects.create(
+                                type_choice="custom",
+                                names={"en": point_type_name},
+                                creation_language="en",
+                                icon="📍",
+                                owner=user,
+                                visibility="private",
+                                status="active",
+                            )
+
                     # Check for duplicates
                     if merge_strategy == "skip":
                         from django.contrib.gis.geos import Point
@@ -499,6 +632,8 @@ class ImportService:
                             existing.title = title
                             existing.description = description
                             existing.is_public = is_public
+                            if point_type:
+                                existing.type = point_type
                             existing.save()
 
                             # Update tags
@@ -526,6 +661,11 @@ class ImportService:
                         tags=tags,
                         is_public=is_public,
                     )
+
+                    # Set point type if found/created
+                    if point_type:
+                        point.type = point_type
+                        point.save(update_fields=["type"])
 
                     result["imported_points"] += 1
                     result["created_point_ids"].append(str(point.id))
@@ -726,6 +866,32 @@ class ImportService:
                     tags_str = extended_data.get("tags", "")
                     tags = [t.strip() for t in tags_str.replace(",", "|").split("|") if t.strip()]
 
+                    # Get or create point type
+                    point_type = None
+                    point_type_name = extended_data.get("point_type", "").strip()
+                    if point_type_name:
+                        from apps.points.models import PointType
+
+                        # Try to find existing type (base type or user's custom type)
+                        point_type = (
+                            PointType.objects.filter(names__en=point_type_name, status="active")
+                            .filter(models.Q(type_choice="base") | models.Q(owner=user))
+                            .first()
+                        )
+
+                        if not point_type:
+                            # Create new custom type with default marker
+                            point_type_icon = extended_data.get("point_type_icon", "📍")
+                            point_type = PointType.objects.create(
+                                type_choice="custom",
+                                names={"en": point_type_name},
+                                creation_language="en",
+                                icon=point_type_icon,
+                                owner=user,
+                                visibility="private",
+                                status="active",
+                            )
+
                     # Check for duplicates
                     if merge_strategy == "skip":
                         from django.contrib.gis.geos import Point
@@ -753,6 +919,8 @@ class ImportService:
                             existing.title = title
                             existing.description = description
                             existing.is_public = is_public
+                            if point_type:
+                                existing.type = point_type
                             existing.save()
 
                             # Update tags
@@ -780,6 +948,11 @@ class ImportService:
                         tags=tags,
                         is_public=is_public,
                     )
+
+                    # Set point type if found/created
+                    if point_type:
+                        point.type = point_type
+                        point.save(update_fields=["type"])
 
                     result["imported_points"] += 1
                     result["created_point_ids"].append(str(point.id))
