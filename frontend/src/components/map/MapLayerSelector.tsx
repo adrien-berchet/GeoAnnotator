@@ -7,13 +7,34 @@
 import { useState } from "react";
 import "./MapLayerSelector.css";
 
+/**
+ * Maximum zoom level for all map layers.
+ * Tiles will be stretched beyond their native zoom to reach this level.
+ */
+export const MAX_ZOOM = 22;
+
 export interface TileLayer {
   id: string;
   name: string;
   url: string;
   attribution: string;
   maxZoom: number;
+  maxNativeZoom?: number;
 }
+
+/**
+ * Default tile layer (OpenStreetMap).
+ */
+// eslint-disable-next-line react-refresh/only-export-components
+export const DEFAULT_TILE_LAYER: TileLayer = {
+  id: "osm",
+  name: "Street Map",
+  url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+  attribution:
+    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  maxZoom: MAX_ZOOM,
+  maxNativeZoom: 19,
+};
 
 /**
  * Available tile layers for the map.
@@ -21,20 +42,14 @@ export interface TileLayer {
  */
 // eslint-disable-next-line react-refresh/only-export-components
 export const TILE_LAYERS: TileLayer[] = [
-  {
-    id: "osm",
-    name: "Street Map",
-    url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-    attribution:
-      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    maxZoom: 19,
-  },
+  DEFAULT_TILE_LAYER,
   {
     id: "satellite",
     name: "Satellite",
     url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
     attribution: '&copy; <a href="https://www.esri.com/">Esri</a>',
-    maxZoom: 19,
+    maxZoom: MAX_ZOOM,
+    maxNativeZoom: 19,
   },
   {
     id: "topo",
@@ -42,7 +57,8 @@ export const TILE_LAYERS: TileLayer[] = [
     url: "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
     attribution:
       '&copy; <a href="https://opentopomap.org">OpenTopoMap</a> contributors',
-    maxZoom: 17,
+    maxZoom: MAX_ZOOM,
+    maxNativeZoom: 17,
   },
   {
     id: "cycle",
@@ -50,7 +66,8 @@ export const TILE_LAYERS: TileLayer[] = [
     url: "https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png",
     attribution:
       '&copy; <a href="https://www.cyclosm.org">CyclOSM</a> contributors',
-    maxZoom: 20,
+    maxZoom: MAX_ZOOM,
+    maxNativeZoom: 20,
   },
 ];
 
