@@ -13,7 +13,6 @@ import { MarkerClusterGroup } from "../components/map/MarkerClusterGroup";
 import { BlueDot } from "../components/map/BlueDot";
 import { RecenterButton } from "../components/map/RecenterButton";
 import { CreatePointModal } from "../components/map/CreatePointModal";
-import { LoadingSpinner } from "../components/common/LoadingSpinner";
 import { FilterPanel } from "../components/common/FilterPanel";
 import { Notification } from "../components/common/Notification";
 import { MapSearchBar } from "../components/map/MapSearchBar";
@@ -404,15 +403,6 @@ export function MapPage() {
     console.log("Point clicked:", point);
   };
 
-  if (isLoading) {
-    return (
-      <LoadingSpinner
-        size="large"
-        message={t("map.loading", "Loading map...")}
-      />
-    );
-  }
-
   if (error) {
     return (
       <div className="error-container">
@@ -427,6 +417,39 @@ export function MapPage() {
 
   return (
     <div className="map-page">
+      {/* Loading indicator for points (non-blocking) */}
+      {isLoading && (
+        <div
+          style={{
+            position: "absolute",
+            top: "4.5rem",
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 1000,
+            background: "rgba(255, 255, 255, 0.95)",
+            padding: "0.5rem 1rem",
+            borderRadius: "0.5rem",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.5rem",
+            fontSize: "0.875rem",
+          }}
+        >
+          <div
+            style={{
+              width: "1rem",
+              height: "1rem",
+              border: "2px solid #e0e0e0",
+              borderTop: "2px solid #2196f3",
+              borderRadius: "50%",
+              animation: "spin 1s linear infinite",
+            }}
+          />
+          {t("map.loadingPoints", "Loading points...")}
+        </div>
+      )}
+
       <MapView
         onMapReady={handleMapReady}
         tileLayer={currentTileLayer}
