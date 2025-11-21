@@ -13,13 +13,13 @@ import { MarkerClusterGroup } from "../components/map/MarkerClusterGroup";
 import { BlueDot } from "../components/map/BlueDot";
 import { RecenterButton } from "../components/map/RecenterButton";
 import { CreatePointModal } from "../components/map/CreatePointModal";
-import { LoadingSpinner } from "../components/common/LoadingSpinner";
 import { FilterPanel } from "../components/common/FilterPanel";
 import { Notification } from "../components/common/Notification";
 import { MapSearchBar } from "../components/map/MapSearchBar";
 import {
   MapLayerSelector,
   TILE_LAYERS,
+  MAX_ZOOM,
   type TileLayer,
 } from "../components/map/MapLayerSelector";
 import { getPoints, searchPointsByTags, getTags } from "../api/points";
@@ -45,6 +45,7 @@ export function MapPage() {
   const [points, setPoints] = useState<GPSPoint[]>([]);
   const [allPoints, setAllPoints] = useState<GPSPoint[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showLoadingIndicator, setShowLoadingIndicator] = useState(false);
   const [error, setError] = useState("");
 
   // Search state
@@ -78,22 +79,8 @@ export function MapPage() {
   const [showGeolocationNotification, setShowGeolocationNotification] =
     useState(false);
 
-  // Initial map center state
-  const [initialCenter, setInitialCenter] = useState<[number, number]>([
-    48.8566, 2.3522,
-  ]); // Default to Paris
-
-  /**
-   * Load tags, types, and points on mount, and restore filter from URL.
-   * Also load user's default map type preference at the start of a new session.
-   */
-  useEffect(() => {
-    loadTags();
-    loadTypes();
-    loadPoints();
-    loadDefaultMapType();
-
-    // Load last map center from localStorage
+  // Initial map center and zoom state - load from localStorage if available
+  const [initialCenter] = useState<[number, number]>(() => {
     const savedCenter = localStorage.getItem("mapLastCenter");
     if (savedCenter) {
       try {
@@ -104,12 +91,39 @@ export function MapPage() {
           typeof center[0] === "number" &&
           typeof center[1] === "number"
         ) {
-          setInitialCenter(center);
+          return center;
         }
       } catch (err) {
         console.warn("Invalid map center in localStorage:", err);
       }
     }
+    return [48.8566, 2.3522]; // Default to Paris
+  });
+
+  const [initialZoom] = useState<number>(() => {
+    const savedZoom = localStorage.getItem("mapLastZoom");
+    if (savedZoom) {
+      try {
+        const zoom = parseInt(savedZoom, 10);
+        if (!isNaN(zoom) && zoom >= 0 && zoom <= MAX_ZOOM) {
+          return zoom;
+        }
+      } catch (err) {
+        console.warn("Invalid map zoom in localStorage:", err);
+      }
+    }
+    return 13; // Default zoom level
+  });
+
+  /**
+   * Load tags, types, and points on mount, and restore filter from URL.
+   * Also load user's default map type preference at the start of a new session.
+   */
+  useEffect(() => {
+    loadTags();
+    loadTypes();
+    loadPoints();
+    loadDefaultMapType();
 
     // Restore filter from URL
     const tagsParam = searchParams.get("tags");
@@ -136,6 +150,37 @@ export function MapPage() {
     window.addEventListener("resize", handleResize);
 
     return () => window.removeEventListener("resize", handleResize);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    let timeoutId: number | undefined;
+
+    if (isLoading) {
+      timeoutId = window.setTimeout(() => {
+        setShowLoadingIndicator(true);
+      }, 500);
+    } else {
+      setShowLoadingIndicator(false);
+    }
+
+    return () => {
+      if (timeoutId !== undefined) {
+        window.clearTimeout(timeoutId);
+      }
+    };
+  }, [isLoading]);
+
+  /**
+   * Cleanup map instance on unmount to prevent memory leaks.
+   */
+  useEffect(() => {
+    return () => {
+      if (mapInstance) {
+        mapInstance.off(); // Remove all event listeners
+        mapInstance.remove(); // Destroy the map instance
+      }
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -241,6 +286,8 @@ export function MapPage() {
     setError("");
 
     try {
+      // TODO: Comment this delay after testing the loading spinner
+      // await new Promise((resolve) => setTimeout(resolve, 5000));
       const data = await getPoints();
       setAllPoints(data);
       setPoints(data);
@@ -353,13 +400,15 @@ export function MapPage() {
       }
     });
 
-    // Save map center to localStorage on move end
+    // Save map center and zoom to localStorage on move end
     mapInstance.on("moveend", () => {
       const center = mapInstance.getCenter();
+      const zoom = mapInstance.getZoom();
       localStorage.setItem(
         "mapLastCenter",
         JSON.stringify([center.lat, center.lng]),
       );
+      localStorage.setItem("mapLastZoom", zoom.toString());
     });
   };
 
@@ -404,15 +453,6 @@ export function MapPage() {
     console.log("Point clicked:", point);
   };
 
-  if (isLoading) {
-    return (
-      <LoadingSpinner
-        size="large"
-        message={t("map.loading", "Loading map...")}
-      />
-    );
-  }
-
   if (error) {
     return (
       <div className="error-container">
@@ -427,10 +467,44 @@ export function MapPage() {
 
   return (
     <div className="map-page">
+      {/* Loading indicator for points (non-blocking) */}
+      {isLoading && showLoadingIndicator && (
+        <div
+          style={{
+            position: "absolute",
+            top: "4.5rem",
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 1000,
+            background: "rgba(255, 255, 255, 0.95)",
+            padding: "0.5rem 1rem",
+            borderRadius: "0.5rem",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.5rem",
+            fontSize: "0.875rem",
+          }}
+        >
+          <div
+            style={{
+              width: "1rem",
+              height: "1rem",
+              border: "2px solid #e0e0e0",
+              borderTop: "2px solid #2196f3",
+              borderRadius: "50%",
+              animation: "spin 1s linear infinite",
+            }}
+          />
+          {t("map.loadingPoints", "Loading points...")}
+        </div>
+      )}
+
       <MapView
         onMapReady={handleMapReady}
         tileLayer={currentTileLayer}
         center={initialCenter}
+        zoom={initialZoom}
       >
         {/* Render point markers with clustering */}
         <MarkerClusterGroup

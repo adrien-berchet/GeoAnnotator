@@ -1,6 +1,14 @@
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 import path from "path";
+import os from "node:os";
+
+// Cap Vitest worker threads to keep per-worker jsdom memory spikes under control.
+const availableCpus =
+  typeof os.availableParallelism === "function"
+    ? os.availableParallelism()
+    : os.cpus().length;
+const maxThreads = Math.max(Math.min(availableCpus - 1, 4), 1);
 
 export default defineConfig({
   plugins: [react()],
@@ -8,10 +16,11 @@ export default defineConfig({
     globals: true,
     environment: "jsdom",
     setupFiles: "./src/test/setup.ts",
-    pool: "forks",
+    maxConcurrency: maxThreads,
     poolOptions: {
-      forks: {
-        singleFork: true,
+      threads: {
+        minThreads: 1,
+        maxThreads,
       },
     },
     coverage: {
