@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { renderHook, waitFor } from "@testing-library/react";
+import { cleanup, renderHook, waitFor } from "@testing-library/react";
 import {
   useDevicePosition,
   GeolocationErrorType,
@@ -45,6 +45,7 @@ describe("useDevicePosition", () => {
   });
 
   afterEach(() => {
+    cleanup();
     Object.defineProperty(navigator, "geolocation", {
       configurable: true,
       value: originalGeolocation,
