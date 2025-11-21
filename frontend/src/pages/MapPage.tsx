@@ -19,6 +19,7 @@ import { MapSearchBar } from "../components/map/MapSearchBar";
 import {
   MapLayerSelector,
   TILE_LAYERS,
+  MAX_ZOOM,
   type TileLayer,
 } from "../components/map/MapLayerSelector";
 import { getPoints, searchPointsByTags, getTags } from "../api/points";
@@ -77,22 +78,8 @@ export function MapPage() {
   const [showGeolocationNotification, setShowGeolocationNotification] =
     useState(false);
 
-  // Initial map center state
-  const [initialCenter, setInitialCenter] = useState<[number, number]>([
-    48.8566, 2.3522,
-  ]); // Default to Paris
-
-  /**
-   * Load tags, types, and points on mount, and restore filter from URL.
-   * Also load user's default map type preference at the start of a new session.
-   */
-  useEffect(() => {
-    loadTags();
-    loadTypes();
-    loadPoints();
-    loadDefaultMapType();
-
-    // Load last map center from localStorage
+  // Initial map center and zoom state - load from localStorage if available
+  const [initialCenter] = useState<[number, number]>(() => {
     const savedCenter = localStorage.getItem("mapLastCenter");
     if (savedCenter) {
       try {
@@ -103,12 +90,39 @@ export function MapPage() {
           typeof center[0] === "number" &&
           typeof center[1] === "number"
         ) {
-          setInitialCenter(center);
+          return center;
         }
       } catch (err) {
         console.warn("Invalid map center in localStorage:", err);
       }
     }
+    return [48.8566, 2.3522]; // Default to Paris
+  });
+
+  const [initialZoom] = useState<number>(() => {
+    const savedZoom = localStorage.getItem("mapLastZoom");
+    if (savedZoom) {
+      try {
+        const zoom = parseInt(savedZoom, 10);
+        if (!isNaN(zoom) && zoom >= 0 && zoom <= MAX_ZOOM) {
+          return zoom;
+        }
+      } catch (err) {
+        console.warn("Invalid map zoom in localStorage:", err);
+      }
+    }
+    return 13; // Default zoom level
+  });
+
+  /**
+   * Load tags, types, and points on mount, and restore filter from URL.
+   * Also load user's default map type preference at the start of a new session.
+   */
+  useEffect(() => {
+    loadTags();
+    loadTypes();
+    loadPoints();
+    loadDefaultMapType();
 
     // Restore filter from URL
     const tagsParam = searchParams.get("tags");
@@ -240,6 +254,8 @@ export function MapPage() {
     setError("");
 
     try {
+      // TODO: Comment this delay after testing the loading spinner
+      // await new Promise((resolve) => setTimeout(resolve, 5000));
       const data = await getPoints();
       setAllPoints(data);
       setPoints(data);
@@ -352,13 +368,15 @@ export function MapPage() {
       }
     });
 
-    // Save map center to localStorage on move end
+    // Save map center and zoom to localStorage on move end
     mapInstance.on("moveend", () => {
       const center = mapInstance.getCenter();
+      const zoom = mapInstance.getZoom();
       localStorage.setItem(
         "mapLastCenter",
         JSON.stringify([center.lat, center.lng]),
       );
+      localStorage.setItem("mapLastZoom", zoom.toString());
     });
   };
 
@@ -454,6 +472,7 @@ export function MapPage() {
         onMapReady={handleMapReady}
         tileLayer={currentTileLayer}
         center={initialCenter}
+        zoom={initialZoom}
       >
         {/* Render point markers with clustering */}
         <MarkerClusterGroup
