@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+/* eslint-env node */
+/* global console */
 /**
  * Simple script to check if memory leaks exist in production build.
  *
