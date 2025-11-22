@@ -18,7 +18,6 @@ interface BulkEditPanelProps {
   onClose: () => void;
   onUpdateType: (typeId: string) => void;
   onAddTags: (tags: string[]) => void;
-  onDelete: () => void;
 }
 
 export function BulkEditPanel({
@@ -27,7 +26,6 @@ export function BulkEditPanel({
   onClose,
   onUpdateType,
   onAddTags,
-  onDelete,
 }: BulkEditPanelProps) {
   const { language } = useLanguage();
   const [availableTypes, setAvailableTypes] = useState<PointType[]>([]);
@@ -92,11 +90,6 @@ export function BulkEditPanel({
     }
 
     onAddTags(allTags);
-    handleClearAll();
-  };
-
-  const handleDelete = () => {
-    onDelete();
     handleClearAll();
   };
 
@@ -226,19 +219,6 @@ export function BulkEditPanel({
               disabled={selectedTags.length === 0 && !newTagsInput.trim()}
             >
               Add Tags
-            </button>
-          </div>
-
-          {/* Delete Section */}
-          <div className="bulk-edit-section bulk-edit-danger">
-            <h3>Delete Points</h3>
-            <p className="section-description">
-              Permanently delete all selected points (they will be moved to
-              trash)
-            </p>
-            <button onClick={handleDelete} className="btn-danger">
-              Delete {selectedPointIds.length} Point
-              {selectedPointIds.length !== 1 ? "s" : ""}
             </button>
           </div>
 

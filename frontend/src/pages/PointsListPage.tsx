@@ -648,13 +648,22 @@ export function PointsListPage() {
                 </button>
               )}
               {selectionMode === "edit" && (
-                <button
-                  onClick={handleBulkEditSelected}
-                  className="btn-toolbar btn-toolbar-primary"
-                  disabled={selectedPointIds.length === 0}
-                >
-                  Edit Selected
-                </button>
+                <>
+                  <button
+                    onClick={handleBulkEditSelected}
+                    className="btn-toolbar btn-toolbar-primary"
+                    disabled={selectedPointIds.length === 0}
+                  >
+                    Edit Selected
+                  </button>
+                  <button
+                    onClick={handleDeletePoints}
+                    className="btn-toolbar btn-toolbar-danger"
+                    disabled={selectedPointIds.length === 0}
+                  >
+                    Delete Selected
+                  </button>
+                </>
               )}
               <button
                 onClick={handleExitSelectionMode}
@@ -778,7 +787,6 @@ export function PointsListPage() {
         onClose={() => setIsBulkEditPanelOpen(false)}
         onUpdateType={handleUpdateType}
         onAddTags={handleAddTags}
-        onDelete={handleDeletePoints}
       />
     </div>
   );

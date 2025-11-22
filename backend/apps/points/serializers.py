@@ -934,13 +934,13 @@ class BatchDeletePointsSerializer(serializers.Serializer):
             try:
                 point = GPSPoint.objects.get(id=point_id)
 
-                # Check if user has manage permission (required for delete)
-                if not PermissionService.can_manage(point, user):
+                # Check if user is owner (only owner can delete)
+                if not PermissionService.is_owner(point, user):
                     results.append(
                         {
                             "point_id": str(point_id),
                             "status": "skipped",
-                            "error": "No manage permission",
+                            "error": "Only owner can delete",
                         }
                     )
                     skipped_count += 1
