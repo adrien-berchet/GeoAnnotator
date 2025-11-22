@@ -37,14 +37,14 @@
 }
 
 .btn-secondary {
-  background: var(--color-bg-primary);
-  color: var(--color-text-primary);
+  background: red !important;  /* TEMPORARY TEST - should be very obvious */
+  color: white !important;
   border: 2px solid var(--color-border-secondary);
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: var(--color-bg-hover);
-  color: var(--color-text-primary);
+  background: darkred !important;  /* TEMPORARY TEST */
+  color: white !important;
   border-color: var(--color-border-tertiary);
 }
 
