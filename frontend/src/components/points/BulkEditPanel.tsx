@@ -4,7 +4,7 @@
  * Slide-in drawer for bulk editing points (type, tags, delete)
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { getPointTypes } from "../../api/types";
 import { getTags } from "../../api/points";
 import { getErrorMessage } from "../../api/client";
@@ -35,12 +35,34 @@ export function BulkEditPanel({
   const [newTagsInput, setNewTagsInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
+  const typeDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isOpen) {
       loadTypesAndTags();
     }
   }, [isOpen]);
+
+  // Close type dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        typeDropdownRef.current &&
+        !typeDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsTypeDropdownOpen(false);
+      }
+    };
+
+    if (isTypeDropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isTypeDropdownOpen]);
 
   const loadTypesAndTags = async () => {
     setIsLoading(true);
@@ -98,6 +120,34 @@ export function BulkEditPanel({
     setSelectedTags([]);
     setNewTagsInput("");
     setError("");
+    setIsTypeDropdownOpen(false);
+  };
+
+  const renderTypeIcon = (type: PointType) => {
+    if (!type.icon || type.icon === "/icons/default.svg") {
+      return <span className="type-icon-emoji">📍</span>;
+    }
+
+    // Check if it's a URL or emoji
+    if (
+      type.icon.startsWith("http") ||
+      type.icon.startsWith("/") ||
+      type.icon.startsWith("data:")
+    ) {
+      return (
+        <img
+          src={type.icon}
+          alt=""
+          className="type-icon-img"
+          onError={(e) => {
+            e.currentTarget.style.display = "none";
+          }}
+        />
+      );
+    }
+
+    // It's an emoji
+    return <span className="type-icon-emoji">{type.icon}</span>;
   };
 
   return (
@@ -143,21 +193,60 @@ export function BulkEditPanel({
             ) : availableTypes.length === 0 ? (
               <div className="empty-message">No types available</div>
             ) : (
-              <div className="type-selector">
-                <select
-                  className="type-select"
-                  value={selectedTypeId}
-                  onChange={(e) => setSelectedTypeId(e.target.value)}
-                >
-                  <option value="">Select a type...</option>
-                  {availableTypes.map((type) => (
-                    <option key={type.id} value={type.id}>
-                      {type.icon}{" "}
-                      {type.names[language] ||
-                        type.names[type.creation_language]}
-                    </option>
-                  ))}
-                </select>
+              <div className="type-selector-container">
+                <div className="custom-type-dropdown" ref={typeDropdownRef}>
+                  <button
+                    type="button"
+                    className="type-dropdown-button"
+                    onClick={() =>
+                      setIsTypeDropdownOpen(!isTypeDropdownOpen)
+                    }
+                  >
+                    {selectedTypeId ? (
+                      <span className="type-dropdown-selected">
+                        {renderTypeIcon(
+                          availableTypes.find((t) => t.id === selectedTypeId)!,
+                        )}
+                        <span className="type-name">
+                          {availableTypes.find((t) => t.id === selectedTypeId)
+                            ?.names[language] ||
+                            availableTypes.find((t) => t.id === selectedTypeId)
+                              ?.names[
+                              availableTypes.find(
+                                (t) => t.id === selectedTypeId,
+                              )?.creation_language || "en"
+                            ]}
+                        </span>
+                      </span>
+                    ) : (
+                      <span className="type-dropdown-placeholder">
+                        Select a type...
+                      </span>
+                    )}
+                    <span className="type-dropdown-arrow">▼</span>
+                  </button>
+
+                  {isTypeDropdownOpen && (
+                    <ul className="type-dropdown-list">
+                      {availableTypes.map((type) => (
+                        <li
+                          key={type.id}
+                          className={`type-dropdown-option ${selectedTypeId === type.id ? "selected" : ""}`}
+                          onClick={() => {
+                            setSelectedTypeId(type.id);
+                            setIsTypeDropdownOpen(false);
+                          }}
+                        >
+                          {renderTypeIcon(type)}
+                          <span className="type-name">
+                            {type.names[language] ||
+                              type.names[type.creation_language]}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
                 <button
                   onClick={handleUpdateType}
                   className="btn-action"

@@ -128,29 +128,111 @@
   color: var(--color-text-secondary);
 }
 
-/* Type Selector */
-.type-selector {
+/* Type Selector Container */
+.type-selector-container {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
 }
 
-.type-select {
+.custom-type-dropdown {
+  position: relative;
+  width: 100%;
+}
+
+.type-dropdown-button {
   width: 100%;
   padding: 0.75rem;
   border: 1px solid var(--color-border-primary);
   border-radius: 6px;
-  font-family: inherit;
-  font-size: 1rem;
   background: var(--color-bg-primary);
   color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: 1rem;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.2s ease;
 }
 
-.type-select:focus {
+.type-dropdown-button:hover {
+  border-color: var(--color-primary);
+}
+
+.type-dropdown-button:focus {
   outline: none;
   border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.type-dropdown-selected,
+.type-dropdown-placeholder {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.type-dropdown-placeholder {
+  color: var(--color-text-secondary);
+}
+
+.type-dropdown-arrow {
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+}
+
+.type-dropdown-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 0.25rem;
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border-primary);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  max-height: 250px;
+  overflow-y: auto;
+  z-index: 100;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.type-dropdown-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.type-dropdown-option:hover {
+  background: var(--color-bg-secondary);
+}
+
+.type-dropdown-option.selected {
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--color-primary);
+}
+
+.type-icon-emoji {
+  font-size: 1.25rem;
+  line-height: 1;
+  display: inline-block;
+}
+
+.type-icon-img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  display: inline-block;
+}
+
+.type-name {
+  flex: 1;
 }
 
 /* Tags List */
