@@ -147,44 +147,45 @@
   border-top: 1px solid var(--color-border, #e5e7eb);
 }
 
-.btn-primary,
-.btn-secondary {
+/* Scoped button styles to avoid conflicts with global .btn-secondary */
+.auto-share-rule-form .btn-primary,
+.auto-share-rule-form .btn-secondary {
   padding: 0.625rem 1.25rem;
   border-radius: 6px;
   font-size: 0.9375rem;
   font-weight: 500;
   cursor: pointer;
-  border: none;
   transition: all 0.2s;
 }
 
-.btn-primary {
+.auto-share-rule-form .btn-primary {
   background: var(--color-primary, #3b82f6);
   color: white;
+  border: none;
 }
 
-.btn-primary:hover:not(:disabled) {
+.auto-share-rule-form .btn-primary:hover:not(:disabled) {
   background: var(--color-primary-dark, #2563eb);
 }
 
-.btn-primary:disabled {
+.auto-share-rule-form .btn-primary:disabled {
   background: var(--color-border, #e5e7eb);
   color: var(--color-text-secondary, #6b7280);
   cursor: not-allowed;
 }
 
-.btn-secondary {
-  background: white;
-  color: var(--color-text-primary, #1f2937);
-  border: 1px solid var(--color-border, #d1d5db);
+.auto-share-rule-form .btn-secondary {
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  border: 2px solid var(--color-border-secondary);
 }
 
-.btn-secondary:hover:not(:disabled) {
-  background: var(--color-background-hover, #f9fafb);
-  border-color: var(--color-text-secondary, #9ca3af);
+.auto-share-rule-form .btn-secondary:hover:not(:disabled) {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-border-tertiary);
 }
 
-.btn-secondary:disabled {
+.auto-share-rule-form .btn-secondary:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
