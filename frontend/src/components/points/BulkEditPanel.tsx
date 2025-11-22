@@ -198,9 +198,7 @@ export function BulkEditPanel({
                   <button
                     type="button"
                     className="type-dropdown-button"
-                    onClick={() =>
-                      setIsTypeDropdownOpen(!isTypeDropdownOpen)
-                    }
+                    onClick={() => setIsTypeDropdownOpen(!isTypeDropdownOpen)}
                   >
                     {selectedTypeId ? (
                       <span className="type-dropdown-selected">

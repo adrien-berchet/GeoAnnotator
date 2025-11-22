@@ -448,9 +448,7 @@ export function PointsListPage() {
       );
     }
 
-    const confirmed = window.confirm(
-      `Are you sure?\n\n${messages.join("\n")}`,
-    );
+    const confirmed = window.confirm(`Are you sure?\n\n${messages.join("\n")}`);
 
     if (!confirmed) {
       return;
