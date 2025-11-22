@@ -37,15 +37,15 @@
 }
 
 .btn-secondary {
-  background: red !important;  /* TEMPORARY TEST - should be very obvious */
-  color: white !important;
-  border: 2px solid var(--color-border-secondary);
+  background: #ffffff;
+  color: #374151;
+  border: 2px solid #d1d5db;
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: darkred !important;  /* TEMPORARY TEST */
-  color: white !important;
-  border-color: var(--color-border-tertiary);
+  background: #f3f4f6;
+  color: #1f2937;
+  border-color: #9ca3af;
 }
 
 .btn-success {
@@ -113,6 +113,21 @@
 .btn-lg {
   padding: var(--spacing-lg) var(--spacing-2xl);
   font-size: var(--font-size-base);
+}
+
+/* Dark mode overrides for secondary buttons */
+@media (prefers-color-scheme: dark) {
+  .btn-secondary {
+    background: #374151;
+    color: #f3f4f6;
+    border-color: #6b7280;
+  }
+
+  .btn-secondary:hover:not(:disabled) {
+    background: #4b5563;
+    color: #ffffff;
+    border-color: #9ca3af;
+  }
 }
 
 /* === CARDS === */
