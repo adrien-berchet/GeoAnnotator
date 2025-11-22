@@ -300,8 +300,8 @@
   color: var(--color-text-secondary);
 }
 
-/* Buttons */
-.btn-action {
+/* Buttons - scoped to bulk edit panel to avoid conflicts */
+.bulk-edit-content .btn-action {
   width: 100%;
   padding: 0.75rem 1.5rem;
   border-radius: 6px;
@@ -314,30 +314,13 @@
   border: none;
 }
 
-.btn-action:hover:not(:disabled) {
+.bulk-edit-content .btn-action:hover:not(:disabled) {
   background: var(--color-primary-hover);
 }
 
-.btn-action:disabled {
+.bulk-edit-content .btn-action:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-}
-
-.btn-danger {
-  width: 100%;
-  padding: 0.75rem 1.5rem;
-  border-radius: 6px;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  background: var(--color-danger);
-  color: white;
-  border: none;
-}
-
-.btn-danger:hover {
-  background: var(--color-danger-hover);
 }
 
 .bulk-edit-danger {
