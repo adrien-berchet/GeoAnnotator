@@ -116,18 +116,16 @@
 }
 
 /* Dark mode overrides for secondary buttons */
-@media (prefers-color-scheme: dark) {
-  .btn-secondary {
-    background: #374151;
-    color: #f3f4f6;
-    border-color: #6b7280;
-  }
+[data-theme="dark"] .btn-secondary {
+  background: #374151;
+  color: #f3f4f6;
+  border-color: #6b7280;
+}
 
-  .btn-secondary:hover:not(:disabled) {
-    background: #4b5563;
-    color: #ffffff;
-    border-color: #9ca3af;
-  }
+[data-theme="dark"] .btn-secondary:hover:not(:disabled) {
+  background: #4b5563;
+  color: #ffffff;
+  border-color: #9ca3af;
 }
 
 /* === CARDS === */
