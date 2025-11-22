@@ -273,15 +273,15 @@ export function BulkEditPanel({
                 No existing tags. Enter new tags below.
               </div>
             ) : (
-              <div className="tags-list">
+              <div className="bulk-edit-tags-list">
                 {availableTags.map((tag) => (
-                  <label key={tag.id} className="tag-option">
+                  <label key={tag.id} className="bulk-edit-tag-option">
                     <input
                       type="checkbox"
                       checked={selectedTags.includes(tag.name)}
                       onChange={() => handleToggleTag(tag.name)}
                     />
-                    <span className="tag-name">{tag.name}</span>
+                    <span className="bulk-edit-tag-name">{tag.name}</span>
                   </label>
                 ))}
               </div>

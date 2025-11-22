@@ -236,7 +236,7 @@
 }
 
 /* Tags List */
-.tags-list {
+.bulk-edit-tags-list {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -246,7 +246,7 @@
   margin-bottom: 1rem;
 }
 
-.tag-option {
+.bulk-edit-tag-option {
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -258,19 +258,19 @@
   transition: all 0.2s ease;
 }
 
-.tag-option:hover {
+.bulk-edit-tag-option:hover {
   background: var(--color-bg-secondary);
   border-color: var(--color-primary);
 }
 
-.tag-option input[type="checkbox"] {
+.bulk-edit-tag-option input[type="checkbox"] {
   cursor: pointer;
   accent-color: var(--color-primary);
   width: 18px;
   height: 18px;
 }
 
-.tag-name {
+.bulk-edit-tag-name {
   flex: 1;
   font-weight: 500;
   color: var(--color-text-primary);
