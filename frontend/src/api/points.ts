@@ -195,14 +195,15 @@ export async function batchAddTags(data: {
 }
 
 /**
- * Batch delete points.
+ * Batch delete/unshare points.
+ * Owned points are deleted (moved to trash), shared points are unshared.
  */
 export async function batchDeletePoints(data: {
   point_ids: string[];
 }): Promise<{
-  success_count: number;
+  deleted_count: number;
+  unshared_count: number;
   error_count: number;
-  skipped_count: number;
   total_attempted: number;
   results: Array<{ point_id: string; status: string; error?: string }>;
 }> {

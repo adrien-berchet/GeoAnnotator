@@ -305,6 +305,12 @@
   cursor: help;
 }
 
+.point-badge.shared-with-me {
+  background: #e0e7ff;
+  color: #4338ca;
+  cursor: help;
+}
+
 .point-card-location,
 .point-list-location {
   font-size: var(--font-size-sm);

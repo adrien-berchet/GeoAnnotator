@@ -918,7 +918,13 @@ class BatchDeletePointsSerializer(serializers.Serializer):
     )
 
     def save(self):
-        """Batch delete points with permission checks."""
+        """
+        Batch delete/unshare points with permission checks.
+
+        For owned points: moves to trash (soft delete)
+        For shared points: removes the share (unshares from user)
+        """
+        from apps.sharing.models import Share
         from apps.sharing.services import PermissionService
         from apps.trash.services import TrashService
 
@@ -926,31 +932,41 @@ class BatchDeletePointsSerializer(serializers.Serializer):
         point_ids = self.validated_data["point_ids"]
 
         results = []
-        success_count = 0
+        deleted_count = 0
+        unshared_count = 0
         error_count = 0
-        skipped_count = 0
 
         for point_id in point_ids:
             try:
                 point = GPSPoint.objects.get(id=point_id)
 
-                # Check if user is owner (only owner can delete)
-                if not PermissionService.is_owner(point, user):
-                    results.append(
-                        {
-                            "point_id": str(point_id),
-                            "status": "skipped",
-                            "error": "Only owner can delete",
-                        }
-                    )
-                    skipped_count += 1
-                    continue
+                # Check if user is owner
+                if PermissionService.is_owner(point, user):
+                    # User owns the point - delete it (move to trash)
+                    TrashService.move_to_trash(point, user)
+                    results.append({"point_id": str(point_id), "status": "deleted"})
+                    deleted_count += 1
+                else:
+                    # User doesn't own the point - check if it's shared with them
+                    share = Share.objects.filter(
+                        gps_point=point, recipient_user=user, is_active=True
+                    ).first()
 
-                # Move to trash (soft delete)
-                TrashService.move_to_trash(point, user)
-
-                results.append({"point_id": str(point_id), "status": "success"})
-                success_count += 1
+                    if share:
+                        # Unshare the point (remove from user's view)
+                        share.delete()
+                        results.append({"point_id": str(point_id), "status": "unshared"})
+                        unshared_count += 1
+                    else:
+                        # User has no relationship with this point
+                        results.append(
+                            {
+                                "point_id": str(point_id),
+                                "status": "error",
+                                "error": "Point not found or no access",
+                            }
+                        )
+                        error_count += 1
 
             except GPSPoint.DoesNotExist:
                 results.append(
@@ -959,9 +975,9 @@ class BatchDeletePointsSerializer(serializers.Serializer):
                 error_count += 1
 
         return {
-            "success_count": success_count,
+            "deleted_count": deleted_count,
+            "unshared_count": unshared_count,
             "error_count": error_count,
-            "skipped_count": skipped_count,
             "total_attempted": len(point_ids),
             "results": results,
         }

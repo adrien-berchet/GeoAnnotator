@@ -428,9 +428,28 @@ export function PointsListPage() {
   };
 
   const handleDeletePoints = async () => {
-    // Show confirmation dialog
+    // Count owned vs shared points
+    const selectedPoints = points.filter((p) =>
+      selectedPointIds.includes(p.id),
+    );
+    const ownedPoints = selectedPoints.filter((p) => !p.shared_by);
+    const sharedPoints = selectedPoints.filter((p) => p.shared_by);
+
+    // Build confirmation message
+    const messages = [];
+    if (ownedPoints.length > 0) {
+      messages.push(
+        `${ownedPoints.length} owned point${ownedPoints.length !== 1 ? "s" : ""} will be deleted (moved to trash)`,
+      );
+    }
+    if (sharedPoints.length > 0) {
+      messages.push(
+        `${sharedPoints.length} shared point${sharedPoints.length !== 1 ? "s" : ""} will be removed from your view`,
+      );
+    }
+
     const confirmed = window.confirm(
-      `Are you sure you want to delete ${selectedPointIds.length} point${selectedPointIds.length !== 1 ? "s" : ""}? They will be moved to trash.`,
+      `Are you sure?\n\n${messages.join("\n")}`,
     );
 
     if (!confirmed) {
@@ -445,22 +464,22 @@ export function PointsListPage() {
       });
 
       // Show success/error summary
-      const messages = [];
+      const resultMessages = [];
 
-      if (result.success_count > 0) {
-        messages.push(`${result.success_count} deleted successfully`);
+      if (result.deleted_count > 0) {
+        resultMessages.push(`${result.deleted_count} deleted successfully`);
       }
 
-      if (result.skipped_count > 0) {
-        messages.push(`${result.skipped_count} skipped (no permission)`);
+      if (result.unshared_count > 0) {
+        resultMessages.push(`${result.unshared_count} removed from your view`);
       }
 
       if (result.error_count > 0) {
-        messages.push(`${result.error_count} failed`);
+        resultMessages.push(`${result.error_count} failed`);
       }
 
-      if (messages.length > 0) {
-        alert(messages.join(", "));
+      if (resultMessages.length > 0) {
+        alert(resultMessages.join(", "));
       }
 
       // Reload points to reflect changes
@@ -711,6 +730,14 @@ export function PointsListPage() {
                 <div className="point-badges">
                   {point.is_public && (
                     <span className="point-badge public">🌐 Public</span>
+                  )}
+                  {point.shared_by && (
+                    <span
+                      className="point-badge shared-with-me"
+                      title={`Shared with you by ${point.shared_by}`}
+                    >
+                      👤 {point.shared_by}
+                    </span>
                   )}
                   {!point.shared_by && point.share_count > 0 && (
                     <span
