@@ -743,3 +743,241 @@ class GPSPointListSerializer(serializers.ModelSerializer):
         from apps.sharing.models import Share
 
         return Share.objects.filter(gps_point=obj, is_active=True).count()
+
+
+class BatchUpdateTypeSerializer(serializers.Serializer):
+    """
+    Batch update point type serializer.
+
+    Updates the type of multiple points at once.
+    """
+
+    point_ids = serializers.ListField(
+        child=serializers.UUIDField(),
+        allow_empty=False,
+        help_text="List of point IDs to update",
+    )
+    type_id = serializers.UUIDField(
+        required=True,
+        allow_null=False,
+        help_text="ID of the type to set for all points",
+    )
+
+    def validate_type_id(self, value):
+        """Validate that type exists and belongs to user or is a base type."""
+        user = self.context["request"].user
+
+        try:
+            point_type = PointType.objects.get(id=value, status="active")
+
+            # Type must belong to user or be a base type (owner=None)
+            if point_type.owner is not None and point_type.owner != user:
+                raise serializers.ValidationError("You can only use your own types or base types.")
+
+            return point_type
+        except PointType.DoesNotExist:
+            raise serializers.ValidationError("Point type not found or has been deleted.") from None
+
+    def save(self):
+        """Batch update point types with permission checks."""
+        from apps.sharing.services import PermissionService
+
+        user = self.context["request"].user
+        point_ids = self.validated_data["point_ids"]
+        point_type = self.validated_data["type_id"]
+
+        results = []
+        success_count = 0
+        error_count = 0
+        skipped_count = 0
+
+        for point_id in point_ids:
+            try:
+                point = GPSPoint.objects.get(id=point_id)
+
+                # Check if user has edit permission
+                if not PermissionService.can_edit(point, user):
+                    results.append(
+                        {
+                            "point_id": str(point_id),
+                            "status": "skipped",
+                            "error": "No edit permission",
+                        }
+                    )
+                    skipped_count += 1
+                    continue
+
+                # Update type
+                point.type = point_type
+                point.save(update_fields=["type", "updated_at"])
+
+                results.append({"point_id": str(point_id), "status": "success"})
+                success_count += 1
+
+            except GPSPoint.DoesNotExist:
+                results.append(
+                    {"point_id": str(point_id), "status": "error", "error": "Point not found"}
+                )
+                error_count += 1
+
+        return {
+            "success_count": success_count,
+            "error_count": error_count,
+            "skipped_count": skipped_count,
+            "total_attempted": len(point_ids),
+            "results": results,
+        }
+
+
+class BatchAddTagsSerializer(serializers.Serializer):
+    """
+    Batch add tags to points serializer.
+
+    Adds tags to multiple points at once (union operation).
+    """
+
+    point_ids = serializers.ListField(
+        child=serializers.UUIDField(),
+        allow_empty=False,
+        help_text="List of point IDs to add tags to",
+    )
+    tags = serializers.ListField(
+        child=serializers.CharField(max_length=50),
+        allow_empty=False,
+        help_text="List of tag names to add to all points",
+    )
+
+    def save(self):
+        """Batch add tags to points with permission checks."""
+        from apps.sharing.services import PermissionService
+
+        user = self.context["request"].user
+        point_ids = self.validated_data["point_ids"]
+        tag_names = self.validated_data["tags"]
+
+        # Get or create all tags first
+        tags = []
+        for tag_name in tag_names:
+            tag, _ = Tag.objects.get_or_create(name=tag_name.lower().strip(), owner=user)
+            tags.append(tag)
+
+        results = []
+        success_count = 0
+        error_count = 0
+        skipped_count = 0
+
+        for point_id in point_ids:
+            try:
+                point = GPSPoint.objects.get(id=point_id)
+
+                # Check if user has edit permission
+                if not PermissionService.can_edit(point, user):
+                    results.append(
+                        {
+                            "point_id": str(point_id),
+                            "status": "skipped",
+                            "error": "No edit permission",
+                        }
+                    )
+                    skipped_count += 1
+                    continue
+
+                # Add tags (union - doesn't remove existing tags)
+                for tag in tags:
+                    point.tags.add(tag)
+
+                results.append({"point_id": str(point_id), "status": "success"})
+                success_count += 1
+
+            except GPSPoint.DoesNotExist:
+                results.append(
+                    {"point_id": str(point_id), "status": "error", "error": "Point not found"}
+                )
+                error_count += 1
+
+        return {
+            "success_count": success_count,
+            "error_count": error_count,
+            "skipped_count": skipped_count,
+            "total_attempted": len(point_ids),
+            "results": results,
+        }
+
+
+class BatchDeletePointsSerializer(serializers.Serializer):
+    """
+    Batch delete points serializer.
+
+    Deletes (moves to trash) multiple points at once.
+    """
+
+    point_ids = serializers.ListField(
+        child=serializers.UUIDField(),
+        allow_empty=False,
+        help_text="List of point IDs to delete",
+    )
+
+    def save(self):
+        """
+        Batch delete/unshare points with permission checks.
+
+        For owned points: moves to trash (soft delete)
+        For shared points: removes the share (unshares from user)
+        """
+        from apps.sharing.models import Share
+        from apps.sharing.services import PermissionService
+        from apps.trash.services import TrashService
+
+        user = self.context["request"].user
+        point_ids = self.validated_data["point_ids"]
+
+        results = []
+        deleted_count = 0
+        unshared_count = 0
+        error_count = 0
+
+        for point_id in point_ids:
+            try:
+                point = GPSPoint.objects.get(id=point_id)
+
+                # Check if user is owner
+                if PermissionService.is_owner(point, user):
+                    # User owns the point - delete it (move to trash)
+                    TrashService.move_to_trash(point, user)
+                    results.append({"point_id": str(point_id), "status": "deleted"})
+                    deleted_count += 1
+                else:
+                    # User doesn't own the point - check if it's shared with them
+                    share = Share.objects.filter(
+                        gps_point=point, recipient_user=user, is_active=True
+                    ).first()
+
+                    if share:
+                        # Unshare the point (remove from user's view)
+                        share.delete()
+                        results.append({"point_id": str(point_id), "status": "unshared"})
+                        unshared_count += 1
+                    else:
+                        # User has no relationship with this point
+                        results.append(
+                            {
+                                "point_id": str(point_id),
+                                "status": "error",
+                                "error": "Point not found or no access",
+                            }
+                        )
+                        error_count += 1
+
+            except GPSPoint.DoesNotExist:
+                results.append(
+                    {"point_id": str(point_id), "status": "error", "error": "Point not found"}
+                )
+                error_count += 1
+
+        return {
+            "deleted_count": deleted_count,
+            "unshared_count": unshared_count,
+            "error_count": error_count,
+            "total_attempted": len(point_ids),
+            "results": results,
+        }

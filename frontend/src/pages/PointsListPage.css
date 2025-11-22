@@ -305,6 +305,12 @@
   cursor: help;
 }
 
+.point-badge.shared-with-me {
+  background: #e0e7ff;
+  color: #4338ca;
+  cursor: help;
+}
+
 .point-card-location,
 .point-list-location {
   font-size: var(--font-size-sm);
@@ -536,6 +542,24 @@
   color: #1f2937;
 }
 
+.btn-toolbar-danger {
+  background: #ef4444;
+  color: #ffffff;
+  border-color: #ef4444;
+}
+
+.btn-toolbar-danger:hover:not(:disabled) {
+  background: #dc2626;
+  border-color: #dc2626;
+}
+
+.btn-toolbar-danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #fca5a5;
+  border-color: #fca5a5;
+}
+
 /* Dark mode specific overrides for toolbar buttons */
 @media (prefers-color-scheme: dark) {
   .btn-toolbar-primary {
@@ -566,6 +590,29 @@
     border-color: #9ca3af;
     color: #ffffff;
   }
+
+  .btn-toolbar-danger {
+    background: #ef4444;
+    color: #ffffff;
+    border-color: #ef4444;
+  }
+
+  .btn-toolbar-danger:hover:not(:disabled) {
+    background: #dc2626;
+    border-color: #dc2626;
+  }
+
+  .btn-toolbar-danger:disabled {
+    background: #991b1b;
+    border-color: #991b1b;
+    color: #9ca3af;
+  }
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  gap: var(--spacing-md);
 }
 
 /* Point Card Selection */
@@ -573,12 +620,12 @@
   position: relative;
 }
 
-.point-card.sharing-mode {
+.point-card.selection-mode {
   cursor: pointer;
   user-select: none;
 }
 
-.point-card.sharing-mode:hover {
+.point-card.selection-mode:hover {
   border-color: var(--color-primary);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }

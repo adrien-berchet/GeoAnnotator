@@ -159,3 +159,54 @@ export async function searchPointsByTags(
   });
   return response.data;
 }
+
+/**
+ * Batch update point type.
+ */
+export async function batchUpdatePointType(data: {
+  point_ids: string[];
+  type_id: string;
+}): Promise<{
+  success_count: number;
+  error_count: number;
+  skipped_count: number;
+  total_attempted: number;
+  results: Array<{ point_id: string; status: string; error?: string }>;
+}> {
+  const response = await apiClient.post("/points/batch/update-type/", data);
+  return response.data;
+}
+
+/**
+ * Batch add tags to points.
+ */
+export async function batchAddTags(data: {
+  point_ids: string[];
+  tags: string[];
+}): Promise<{
+  success_count: number;
+  error_count: number;
+  skipped_count: number;
+  total_attempted: number;
+  results: Array<{ point_id: string; status: string; error?: string }>;
+}> {
+  const response = await apiClient.post("/points/batch/add-tags/", data);
+  return response.data;
+}
+
+/**
+ * Batch delete/unshare points.
+ * Owned points are deleted (moved to trash), shared points are unshared.
+ */
+export async function batchDeletePoints(data: {
+  point_ids: string[];
+}): Promise<{
+  deleted_count: number;
+  unshared_count: number;
+  error_count: number;
+  total_attempted: number;
+  results: Array<{ point_id: string; status: string; error?: string }>;
+}> {
+  const response = await apiClient.post("/points/batch/delete/", data);
+  return response.data;
+}

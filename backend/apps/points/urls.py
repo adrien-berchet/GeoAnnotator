@@ -37,4 +37,20 @@ urlpatterns = [
         views.GPSPointViewSet.as_view({"post": "acquire_lock", "delete": "release_lock"}),
         name="lock",
     ),
+    # Batch operations
+    path(
+        "batch/update-type/",
+        views.BatchPointOperationsView.as_view({"post": "update_type"}),
+        name="batch-update-type",
+    ),
+    path(
+        "batch/add-tags/",
+        views.BatchPointOperationsView.as_view({"post": "add_tags"}),
+        name="batch-add-tags",
+    ),
+    path(
+        "batch/delete/",
+        views.BatchPointOperationsView.as_view({"post": "delete_points"}),
+        name="batch-delete",
+    ),
 ]
