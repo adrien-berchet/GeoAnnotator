@@ -680,6 +680,26 @@ export function PointsListPage() {
             )}
           </form>
 
+          {/* Filter Button */}
+          {(availableTags.length > 0 ||
+            availableTypes.length > 0 ||
+            availableOwners.length > 0) && (
+            <button
+              type="button"
+              className={`filter-toggle-button ${isFilterPanelOpen ? "active" : ""}`}
+              onClick={handleOpenFilterPanel}
+              title={t("points.filterByTagsTypes", "Filter by tags and types")}
+            >
+              🔍 {t("common.filter", "Filters")}{" "}
+              {selectedTagNames.length +
+                selectedTypeIds.length +
+                selectedOwnerEmails.length >
+                0 &&
+                `(${selectedTagNames.length + selectedTypeIds.length + selectedOwnerEmails.length})`}
+              {isLoading && <span className="loading-indicator">⟳</span>}
+            </button>
+          )}
+
           {/* Sort Dropdown */}
           <div className="sort-controls">
             <label htmlFor="sort-select" className="sort-label">
@@ -725,26 +745,6 @@ export function PointsListPage() {
               {sortOrder === "asc" ? "↑" : "↓"}
             </button>
           </div>
-
-          {/* Filter Button */}
-          {(availableTags.length > 0 ||
-            availableTypes.length > 0 ||
-            availableOwners.length > 0) && (
-            <button
-              type="button"
-              className={`filter-toggle-button ${isFilterPanelOpen ? "active" : ""}`}
-              onClick={handleOpenFilterPanel}
-              title={t("points.filterByTagsTypes", "Filter by tags and types")}
-            >
-              🔍 {t("common.filter", "Filters")}{" "}
-              {selectedTagNames.length +
-                selectedTypeIds.length +
-                selectedOwnerEmails.length >
-                0 &&
-                `(${selectedTagNames.length + selectedTypeIds.length + selectedOwnerEmails.length})`}
-              {isLoading && <span className="loading-indicator">⟳</span>}
-            </button>
-          )}
         </div>
 
         {/* Filter Panel (Drawer) */}

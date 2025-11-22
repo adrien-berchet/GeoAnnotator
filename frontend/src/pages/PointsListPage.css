@@ -107,7 +107,8 @@
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border-primary);
   box-shadow: var(--shadow-md);
-  height: 100%;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .sort-label {
