@@ -783,9 +783,9 @@ class BatchPointOperationsView(viewsets.ViewSet):
 
         Response:
         {
-            "success_count": int,
+            "deleted_count": int,
+            "unshared_count": int,
             "error_count": int,
-            "skipped_count": int,
             "total_attempted": int,
             "results": [...]
         }
@@ -798,9 +798,9 @@ class BatchPointOperationsView(viewsets.ViewSet):
         result = serializer.save()
 
         # Return appropriate status code based on results
-        if result["error_count"] == 0 and result["skipped_count"] == 0:
+        if result["error_count"] == 0:
             return Response(result, status=status.HTTP_200_OK)
-        elif result["success_count"] == 0:
+        elif result["deleted_count"] == 0 and result["unshared_count"] == 0:
             return Response(result, status=status.HTTP_400_BAD_REQUEST)
         else:
             # Partial success
