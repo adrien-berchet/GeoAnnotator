@@ -13,11 +13,14 @@ interface FilterPanelProps {
   isOpen: boolean;
   availableTags: Tag[];
   availableTypes: PointType[];
+  availableOwners: string[];
   selectedTags: string[];
   selectedTypes: string[];
+  selectedOwners: string[];
   onClose: () => void;
   onToggleTag: (tagName: string) => void;
   onToggleType: (typeId: string) => void;
+  onToggleOwner: (ownerEmail: string) => void;
   onClearAll: () => void;
 }
 
@@ -25,15 +28,21 @@ export function FilterPanel({
   isOpen,
   availableTags,
   availableTypes,
+  availableOwners,
   selectedTags,
   selectedTypes,
+  selectedOwners,
   onClose,
   onToggleTag,
   onToggleType,
+  onToggleOwner,
   onClearAll,
 }: FilterPanelProps) {
   const { language } = useLanguage();
-  const hasActiveFilters = selectedTags.length > 0 || selectedTypes.length > 0;
+  const hasActiveFilters =
+    selectedTags.length > 0 ||
+    selectedTypes.length > 0 ||
+    selectedOwners.length > 0;
 
   return (
     <>
@@ -127,6 +136,32 @@ export function FilterPanel({
               )}
             </div>
           </div>
+
+          {/* Owners Section */}
+          <div className="filter-section-container">
+            <h3 className="filter-section-title">Owners</h3>
+            <div className="filter-section-scroll">
+              {availableOwners.length === 0 ? (
+                <div className="filter-empty">No owners available</div>
+              ) : (
+                <div className="filter-list">
+                  {availableOwners.map((ownerEmail) => (
+                    <button
+                      key={ownerEmail}
+                      type="button"
+                      className={`filter-option ${selectedOwners.includes(ownerEmail) ? "selected" : ""}`}
+                      onClick={() => onToggleOwner(ownerEmail)}
+                    >
+                      <span className="filter-checkbox">
+                        {selectedOwners.includes(ownerEmail) ? "✓" : ""}
+                      </span>
+                      <span className="filter-name">{ownerEmail}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Footer */}
@@ -138,7 +173,7 @@ export function FilterPanel({
           >
             Clear All{" "}
             {hasActiveFilters &&
-              `(${selectedTags.length + selectedTypes.length})`}
+              `(${selectedTags.length + selectedTypes.length + selectedOwners.length})`}
           </button>
         </div>
       </div>
