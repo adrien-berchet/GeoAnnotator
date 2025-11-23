@@ -301,7 +301,14 @@ class Tag(models.Model):
 
     Tags are unique per user (case-insensitive).
     Each user can only access tags they created.
-    Examples: "forest", "hiking", "restaurant"
+
+    Tag names support:
+    - Letters (uppercase/lowercase, with accents)
+    - Numbers
+    - Spaces
+    - Special characters and emoji
+
+    Examples: "forest", "Café", "hiking 2024", "Étoile ⭐"
     """
 
     id = models.UUIDField(
@@ -309,7 +316,7 @@ class Tag(models.Model):
     )
 
     name = models.CharField(
-        max_length=50, help_text="Tag name (alphanumeric, hyphens, underscores only)"
+        max_length=50, help_text="Tag name (max 50 characters, case-insensitive uniqueness)"
     )
 
     owner = models.ForeignKey(
@@ -336,6 +343,39 @@ class Tag(models.Model):
             models.Index(fields=["owner"], name="idx_tag_owner"),
         ]
         ordering = ["name"]
+
+    @classmethod
+    def get_or_create_tag(cls, name, owner):
+        """
+        Get or create a tag with case-insensitive matching.
+
+        Handles the race condition where a tag might exist with different casing
+        or be created by another request between get and create operations.
+
+        The original casing is preserved when storing. If a tag already exists
+        with different casing, the existing tag is returned.
+
+        Args:
+            name: Tag name (will be stored with original casing)
+            owner: Tag owner (User instance)
+
+        Returns:
+            Tag: The existing or newly created tag instance
+        """
+        from django.db import IntegrityError
+
+        trimmed_name = name.strip()
+
+        # Try to get existing tag (case-insensitive)
+        try:
+            return cls.objects.get(name__iexact=trimmed_name, owner=owner)
+        except cls.DoesNotExist:
+            try:
+                return cls.objects.create(name=trimmed_name, owner=owner)
+            except IntegrityError:
+                # Race condition: tag was created between get and create
+                # Try one more time to get it
+                return cls.objects.get(name__iexact=trimmed_name, owner=owner)
 
     def __str__(self):
         return f"{self.name} ({self.owner.email})"

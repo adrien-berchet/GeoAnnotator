@@ -585,7 +585,7 @@ class CreateGPSPointSerializer(serializers.ModelSerializer):
         # Create/get tags and associate
         user = self.context["request"].user
         for tag_name in tag_names:
-            tag, _ = Tag.objects.get_or_create(name=tag_name.lower().strip(), owner=user)
+            tag = Tag.get_or_create_tag(name=tag_name, owner=user)
             point.tags.add(tag)
 
         return point
@@ -657,7 +657,7 @@ class UpdateGPSPointSerializer(serializers.ModelSerializer):
             instance.tags.clear()
             user = self.context["request"].user
             for tag_name in tag_names:
-                tag, _ = Tag.objects.get_or_create(name=tag_name.lower().strip(), owner=user)
+                tag = Tag.get_or_create_tag(name=tag_name, owner=user)
                 instance.tags.add(tag)
 
         return instance
@@ -858,7 +858,7 @@ class BatchAddTagsSerializer(serializers.Serializer):
         # Get or create all tags first
         tags = []
         for tag_name in tag_names:
-            tag, _ = Tag.objects.get_or_create(name=tag_name.lower().strip(), owner=user)
+            tag = Tag.get_or_create_tag(name=tag_name, owner=user)
             tags.append(tag)
 
         results = []
