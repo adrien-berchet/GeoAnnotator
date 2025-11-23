@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { getPoints } from "../../api/points";
 import { getErrorMessage } from "../../api/client";
 import { LoadingSpinner } from "../common/LoadingSpinner";
+import { SanitizedHTML } from "../common/SanitizedHTML";
 import type { GPSPoint, PointsFilter } from "../../types/point";
 
 interface PointListProps {
@@ -134,13 +135,12 @@ export function PointList({ filter, onPointSelect }: PointListProps) {
           </div>
 
           {point.description && (
-            <div
+            <SanitizedHTML
+              html={
+                point.description.substring(0, 150) +
+                (point.description.length > 150 ? "..." : "")
+              }
               className="point-list-description"
-              dangerouslySetInnerHTML={{
-                __html:
-                  point.description.substring(0, 150) +
-                  (point.description.length > 150 ? "..." : ""),
-              }}
             />
           )}
 

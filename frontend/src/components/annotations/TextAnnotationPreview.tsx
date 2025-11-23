@@ -5,6 +5,7 @@
  */
 
 import type { Annotation } from "../../types/annotation";
+import { SanitizedHTML } from "../common/SanitizedHTML";
 
 interface TextAnnotationPreviewProps {
   annotation: Annotation;
@@ -22,18 +23,11 @@ export function TextAnnotationPreview({
 
   /**
    * Format text with basic HTML rendering.
+   * Converts newlines to <br> tags. Sanitization is handled by SanitizedHTML component.
    */
-  const formatText = (text: string): { __html: string } => {
-    // Escape HTML tags for safety, then apply basic formatting
-    const escaped = text
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
-
-    // Convert newlines to <br>
-    const formatted = escaped.replace(/\n/g, "<br>");
-
-    return { __html: formatted };
+  const formatText = (text: string): string => {
+    // Convert newlines to <br> tags
+    return text.replace(/\n/g, "<br>");
   };
 
   /**
@@ -61,9 +55,9 @@ export function TextAnnotationPreview({
         </div>
       </div>
 
-      <div
+      <SanitizedHTML
+        html={formatText(annotation.text_content)}
         className="preview-content"
-        dangerouslySetInnerHTML={formatText(annotation.text_content)}
       />
 
       <div className="preview-meta">

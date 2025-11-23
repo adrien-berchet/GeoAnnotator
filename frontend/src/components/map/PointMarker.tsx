@@ -10,6 +10,7 @@ import { Link } from "react-router-dom";
 import type { GPSPoint } from "../../types/point";
 import { getPointTypeName } from "../../utils/pointTypeUtils";
 import { useLanguage } from "../../contexts/LanguageContext";
+import { SanitizedHTML } from "../common/SanitizedHTML";
 import "./PointMarker.css";
 
 interface PointMarkerProps {
@@ -106,9 +107,9 @@ export function PointMarker({ point, onClick }: PointMarkerProps) {
 
           {/* Description if present */}
           {point.description && (
-            <div
+            <SanitizedHTML
+              html={point.description}
               className="point-popup-description"
-              dangerouslySetInnerHTML={{ __html: point.description }}
             />
           )}
 

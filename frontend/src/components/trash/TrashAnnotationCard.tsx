@@ -12,6 +12,7 @@ import {
   permanentlyDeleteAnnotation,
 } from "../../api/trash";
 import { useLanguage } from "../../contexts/LanguageContext";
+import { SanitizedHTML } from "../common/SanitizedHTML";
 import "./TrashCard.css";
 
 interface TrashAnnotationCardProps {
@@ -126,11 +127,9 @@ export function TrashAnnotationCard({
       return (
         <div className="annotation-preview-content text">
           <span className="icon">📝</span>
-          <div
+          <SanitizedHTML
+            html={annotation.text_content?.substring(0, 150) + "..." || ""}
             className="text-preview"
-            dangerouslySetInnerHTML={{
-              __html: annotation.text_content?.substring(0, 150) + "..." || "",
-            }}
           />
         </div>
       );
