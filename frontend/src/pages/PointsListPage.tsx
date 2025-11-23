@@ -4,7 +4,7 @@
  * Displays all user's points in a list/grid view with search and filters.
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   getPoints,
@@ -27,7 +27,7 @@ import "./PointsListPage.css";
 
 export function PointsListPage() {
   const { t, language } = useLanguage();
-  const [points, setPoints] = useState<GPSPoint[]>([]);
+  const [filteredPoints, setFilteredPoints] = useState<GPSPoint[]>([]);
   const [availableTags, setAvailableTags] = useState<Tag[]>([]);
   const [availableTypes, setAvailableTypes] = useState<PointType[]>([]);
   const [availableOwners, setAvailableOwners] = useState<string[]>([]);
@@ -103,6 +103,11 @@ export function PointsListPage() {
     return sorted;
   };
 
+  // Compute sorted points from filtered points (instant, no API call)
+  const points = useMemo(() => {
+    return sortPoints(filteredPoints, sortBy, sortOrder);
+  }, [filteredPoints, sortBy, sortOrder, language]);
+
   const loadTags = async () => {
     try {
       const data = await getTags();
@@ -164,10 +169,7 @@ export function PointsListPage() {
         results = results.filter((p) => ownerEmails.includes(p.owner.email));
       }
 
-      // Client-side sorting
-      results = sortPoints(results, sortBy, sortOrder);
-
-      setPoints(results);
+      setFilteredPoints(results);
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
@@ -184,7 +186,7 @@ export function PointsListPage() {
   useEffect(() => {
     loadPoints();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchQuery, tagsFilter, typesFilter, ownersFilter, sortBy, sortOrder]);
+  }, [searchQuery, tagsFilter, typesFilter, ownersFilter]);
 
   useEffect(() => {
     // Sync searchInput with URL params
@@ -696,12 +698,6 @@ export function PointsListPage() {
                 selectedOwnerEmails.length >
                 0 &&
                 `(${selectedTagNames.length + selectedTypeIds.length + selectedOwnerEmails.length})`}
-              <span
-                className="loading-indicator"
-                style={{ visibility: isLoading ? 'visible' : 'hidden' }}
-              >
-                ⟳
-              </span>
             </button>
           )}
 
