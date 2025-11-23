@@ -230,13 +230,13 @@ export function MapPage() {
     const uniqueOwners = Array.from(
       new Set(filteredPoints.map((p) => p.owner.email)),
     ).sort();
-    const uniqueUsernames = uniqueOwners.map((email) => email.split('@')[0]);
+    const uniqueUsernames = uniqueOwners.map((email) => email.split("@")[0]);
     setAvailableOwners(uniqueUsernames);
 
     // Apply owner filter if owners are selected (convert usernames to emails)
     if (selectedOwners.length > 0) {
       filteredPoints = filteredPoints.filter((point) =>
-        selectedOwners.includes(point.owner.email.split('@')[0])
+        selectedOwners.includes(point.owner.email.split("@")[0]),
       );
     }
 
@@ -602,7 +602,8 @@ export function MapPage() {
           title={t("map.filterPoints", "Filter points")}
         >
           🔍 {t("common.filter", "Filters")}{" "}
-          {selectedTags.length + selectedTypes.length + selectedOwners.length > 0 &&
+          {selectedTags.length + selectedTypes.length + selectedOwners.length >
+            0 &&
             `(${selectedTags.length + selectedTypes.length + selectedOwners.length})`}
         </button>
 
