@@ -127,7 +127,6 @@ export function PointsListPage() {
   };
 
   const loadPoints = async () => {
-    setIsLoading(true);
     setError("");
 
     try {
@@ -177,7 +176,6 @@ export function PointsListPage() {
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
-      setIsLoading(false);
       setIsInitialLoad(false);
     }
   };
