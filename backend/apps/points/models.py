@@ -301,7 +301,14 @@ class Tag(models.Model):
 
     Tags are unique per user (case-insensitive).
     Each user can only access tags they created.
-    Examples: "forest", "hiking", "restaurant"
+
+    Tag names support:
+    - Letters (uppercase/lowercase, with accents)
+    - Numbers
+    - Spaces
+    - Special characters and emoji
+
+    Examples: "forest", "Café", "hiking 2024", "Étoile ⭐"
     """
 
     id = models.UUIDField(
@@ -309,7 +316,8 @@ class Tag(models.Model):
     )
 
     name = models.CharField(
-        max_length=50, help_text="Tag name (alphanumeric, hyphens, underscores only)"
+        max_length=50,
+        help_text="Tag name (max 50 characters, stored as lowercase)"
     )
 
     owner = models.ForeignKey(
