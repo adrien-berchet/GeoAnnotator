@@ -110,6 +110,7 @@
   flex-shrink: 0;
   white-space: nowrap;
   line-height: 1;
+  min-height: 0;
 }
 
 .sort-label {
@@ -118,11 +119,13 @@
   color: var(--color-text-secondary);
   white-space: nowrap;
   margin: 0;
+  padding: 0;
   line-height: 1;
 }
 
 .sort-select {
-  padding: 0 var(--spacing-sm);
+  padding: 0;
+  margin: 0;
   border: none;
   background: transparent;
   font-size: var(--font-size-sm);
@@ -131,8 +134,11 @@
   outline: none;
   font-weight: var(--font-weight-medium);
   line-height: 1;
-  height: auto;
-  margin: 0;
+  height: 1em;
+  vertical-align: baseline;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
 }
 
 .sort-select:hover {
@@ -141,6 +147,7 @@
 
 .sort-order-button {
   padding: 0;
+  margin: 0;
   background: transparent;
   color: var(--color-text-primary);
   border: none;
@@ -152,6 +159,7 @@
   justify-content: center;
   min-width: 20px;
   line-height: 1;
+  height: 1em;
 }
 
 .sort-order-button:hover {
