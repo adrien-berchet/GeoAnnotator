@@ -25,13 +25,59 @@ import type { GPSPoint, Tag, PointType } from "../types/point";
 import { batchSharePoints } from "../api/friends";
 import "./PointsListPage.css";
 
+// Helper function to sort points
+function sortPoints(
+  pointsToSort: GPSPoint[],
+  field: string,
+  order: string,
+  language: string,
+): GPSPoint[] {
+  const sorted = [...pointsToSort].sort((a, b) => {
+    let comparison = 0;
+
+    switch (field) {
+      case "title":
+        comparison = a.title.localeCompare(b.title);
+        break;
+      case "created_at":
+        comparison =
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        break;
+      case "updated_at":
+        comparison =
+          new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime();
+        break;
+      case "owner":
+        comparison = a.owner.email.localeCompare(b.owner.email);
+        break;
+      case "type": {
+        // Points without type should be at the beginning
+        if (!a.type && !b.type) return 0;
+        if (!a.type) return -1;
+        if (!b.type) return 1;
+        const aTypeName =
+          a.type.names[language] || a.type.names[a.type.creation_language];
+        const bTypeName =
+          b.type.names[language] || b.type.names[b.type.creation_language];
+        comparison = aTypeName.localeCompare(bTypeName);
+        break;
+      }
+      default:
+        comparison = 0;
+    }
+
+    return order === "asc" ? comparison : -comparison;
+  });
+
+  return sorted;
+}
+
 export function PointsListPage() {
   const { t, language } = useLanguage();
   const [filteredPoints, setFilteredPoints] = useState<GPSPoint[]>([]);
   const [availableTags, setAvailableTags] = useState<Tag[]>([]);
   const [availableTypes, setAvailableTypes] = useState<PointType[]>([]);
   const [availableOwners, setAvailableOwners] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [error, setError] = useState("");
   const [searchParams, setSearchParams] = useSearchParams();
@@ -57,55 +103,9 @@ export function PointsListPage() {
   const sortOrder = searchParams.get("order") || "desc";
   const isFilterPanelOpen = searchParams.get("filterOpen") === "true";
 
-  // Helper function to sort points
-  const sortPoints = (
-    pointsToSort: GPSPoint[],
-    field: string,
-    order: string,
-  ): GPSPoint[] => {
-    const sorted = [...pointsToSort].sort((a, b) => {
-      let comparison = 0;
-
-      switch (field) {
-        case "title":
-          comparison = a.title.localeCompare(b.title);
-          break;
-        case "created_at":
-          comparison =
-            new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-          break;
-        case "updated_at":
-          comparison =
-            new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime();
-          break;
-        case "owner":
-          comparison = a.owner.email.localeCompare(b.owner.email);
-          break;
-        case "type": {
-          // Points without type should be at the beginning
-          if (!a.type && !b.type) return 0;
-          if (!a.type) return -1;
-          if (!b.type) return 1;
-          const aTypeName =
-            a.type.names[language] || a.type.names[a.type.creation_language];
-          const bTypeName =
-            b.type.names[language] || b.type.names[b.type.creation_language];
-          comparison = aTypeName.localeCompare(bTypeName);
-          break;
-        }
-        default:
-          comparison = 0;
-      }
-
-      return order === "asc" ? comparison : -comparison;
-    });
-
-    return sorted;
-  };
-
   // Compute sorted points from filtered points (instant, no API call)
   const points = useMemo(() => {
-    return sortPoints(filteredPoints, sortBy, sortOrder);
+    return sortPoints(filteredPoints, sortBy, sortOrder, language);
   }, [filteredPoints, sortBy, sortOrder, language]);
 
   const loadTags = async () => {
