@@ -337,6 +337,36 @@ class Tag(models.Model):
         ]
         ordering = ["name"]
 
+    @classmethod
+    def get_or_create_tag(cls, name, owner):
+        """
+        Get or create a tag with case-insensitive matching.
+
+        Handles the race condition where a tag might exist with different casing
+        or be created by another request between get and create operations.
+
+        Args:
+            name: Tag name (will be normalized to lowercase)
+            owner: Tag owner (User instance)
+
+        Returns:
+            Tag: The existing or newly created tag instance
+        """
+        from django.db import IntegrityError
+
+        normalized_name = name.lower().strip()
+
+        # Try to get existing tag (case-insensitive)
+        try:
+            return cls.objects.get(name__iexact=normalized_name, owner=owner)
+        except cls.DoesNotExist:
+            try:
+                return cls.objects.create(name=normalized_name, owner=owner)
+            except IntegrityError:
+                # Race condition: tag was created between get and create
+                # Try one more time to get it
+                return cls.objects.get(name__iexact=normalized_name, owner=owner)
+
     def __str__(self):
         return f"{self.name} ({self.owner.email})"
 
