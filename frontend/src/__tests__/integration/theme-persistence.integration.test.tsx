@@ -299,6 +299,7 @@ describe("Theme Persistence Integration", () => {
       expect(screen.getByTestId("theme-mode")).toHaveTextContent("auto");
       expect(screen.getByTestId("resolved-theme")).toHaveTextContent("light");
       expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "[ERROR]",
         "Failed to load theme from backend:",
         expect.any(Error),
       );
@@ -364,6 +365,7 @@ describe("Theme Persistence Integration", () => {
       });
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "[ERROR]",
         "Failed to persist theme to backend:",
         expect.any(Error),
       );
