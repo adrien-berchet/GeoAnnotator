@@ -696,7 +696,12 @@ export function PointsListPage() {
                 selectedOwnerEmails.length >
                 0 &&
                 `(${selectedTagNames.length + selectedTypeIds.length + selectedOwnerEmails.length})`}
-              {isLoading && <span className="loading-indicator">⟳</span>}
+              <span
+                className="loading-indicator"
+                style={{ visibility: isLoading ? 'visible' : 'hidden' }}
+              >
+                ⟳
+              </span>
             </button>
           )}
 
