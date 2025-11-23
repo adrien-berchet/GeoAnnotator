@@ -317,7 +317,7 @@ class Tag(models.Model):
 
     name = models.CharField(
         max_length=50,
-        help_text="Tag name (max 50 characters, stored as lowercase)"
+        help_text="Tag name (max 50 characters, case-insensitive uniqueness)"
     )
 
     owner = models.ForeignKey(
@@ -353,8 +353,11 @@ class Tag(models.Model):
         Handles the race condition where a tag might exist with different casing
         or be created by another request between get and create operations.
 
+        The original casing is preserved when storing. If a tag already exists
+        with different casing, the existing tag is returned.
+
         Args:
-            name: Tag name (will be normalized to lowercase)
+            name: Tag name (will be stored with original casing)
             owner: Tag owner (User instance)
 
         Returns:
@@ -362,18 +365,18 @@ class Tag(models.Model):
         """
         from django.db import IntegrityError
 
-        normalized_name = name.lower().strip()
+        trimmed_name = name.strip()
 
         # Try to get existing tag (case-insensitive)
         try:
-            return cls.objects.get(name__iexact=normalized_name, owner=owner)
+            return cls.objects.get(name__iexact=trimmed_name, owner=owner)
         except cls.DoesNotExist:
             try:
-                return cls.objects.create(name=normalized_name, owner=owner)
+                return cls.objects.create(name=trimmed_name, owner=owner)
             except IntegrityError:
                 # Race condition: tag was created between get and create
                 # Try one more time to get it
-                return cls.objects.get(name__iexact=normalized_name, owner=owner)
+                return cls.objects.get(name__iexact=trimmed_name, owner=owner)
 
     def __str__(self):
         return f"{self.name} ({self.owner.email})"
