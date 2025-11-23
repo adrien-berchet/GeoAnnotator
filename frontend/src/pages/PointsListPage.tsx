@@ -161,12 +161,16 @@ export function PointsListPage() {
       const uniqueOwners = Array.from(
         new Set(results.map((p) => p.owner.email)),
       ).sort();
-      setAvailableOwners(uniqueOwners);
+      // Extract usernames from emails (part before @)
+      const uniqueUsernames = uniqueOwners.map((email) => email.split('@')[0]);
+      setAvailableOwners(uniqueUsernames);
 
-      // Client-side owner filter
+      // Client-side owner filter (convert usernames back to emails for filtering)
       if (ownersFilter) {
-        const ownerEmails = ownersFilter.split(",").map((e) => e.trim());
-        results = results.filter((p) => ownerEmails.includes(p.owner.email));
+        const ownerUsernames = ownersFilter.split(",").map((u) => u.trim());
+        results = results.filter((p) =>
+          ownerUsernames.includes(p.owner.email.split('@')[0])
+        );
       }
 
       setFilteredPoints(results);
