@@ -713,24 +713,13 @@ export function PointsListPage() {
             >
               <option value="created_at">
                 {t("points.sortCreatedAt", "Date Created")}{" "}
-                {sortBy === "created_at" && (sortOrder === "desc" ? "↓" : "↑")}
               </option>
               <option value="updated_at">
                 {t("points.sortUpdatedAt", "Date Updated")}{" "}
-                {sortBy === "updated_at" && (sortOrder === "desc" ? "↓" : "↑")}
               </option>
-              <option value="title">
-                {t("points.sortTitle", "Title")}{" "}
-                {sortBy === "title" && (sortOrder === "desc" ? "↓" : "↑")}
-              </option>
-              <option value="owner">
-                {t("points.sortOwner", "Owner")}{" "}
-                {sortBy === "owner" && (sortOrder === "desc" ? "↓" : "↑")}
-              </option>
-              <option value="type">
-                {t("points.sortType", "Type")}{" "}
-                {sortBy === "type" && (sortOrder === "desc" ? "↓" : "↑")}
-              </option>
+              <option value="title">{t("points.sortTitle", "Title")} </option>
+              <option value="owner">{t("points.sortOwner", "Owner")} </option>
+              <option value="type">{t("points.sortType", "Type")} </option>
             </select>
             <button
               type="button"
@@ -784,7 +773,8 @@ export function PointsListPage() {
             )}
             {ownersFilter && (
               <span>
-                {t("points.ownerFilter", "Owners")}: <strong>{ownersFilter}</strong>
+                {t("points.ownerFilter", "Owners")}:{" "}
+                <strong>{ownersFilter}</strong>
               </span>
             )}
             <span className="results-count">
