@@ -316,8 +316,7 @@ class Tag(models.Model):
     )
 
     name = models.CharField(
-        max_length=50,
-        help_text="Tag name (max 50 characters, case-insensitive uniqueness)"
+        max_length=50, help_text="Tag name (max 50 characters, case-insensitive uniqueness)"
     )
 
     owner = models.ForeignKey(
