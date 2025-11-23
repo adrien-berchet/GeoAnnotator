@@ -56,6 +56,8 @@ export function MapPage() {
   const [types, setTypes] = useState<PointType[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+  const [selectedOwners, setSelectedOwners] = useState<string[]>([]);
+  const [availableOwners, setAvailableOwners] = useState<string[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   // Controls visibility state for mobile
@@ -190,7 +192,7 @@ export function MapPage() {
   useEffect(() => {
     applyFilters();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedTags, selectedTypes, searchQuery, allPoints]);
+  }, [selectedTags, selectedTypes, selectedOwners, searchQuery, allPoints]);
 
   /**
    * Show geolocation error notification.
@@ -202,7 +204,7 @@ export function MapPage() {
   }, [geolocationError]);
 
   /**
-   * Apply tag, type, and search filters to points.
+   * Apply tag, type, owner, and search filters to points.
    */
   const applyFilters = async () => {
     let filteredPoints = allPoints;
@@ -221,6 +223,20 @@ export function MapPage() {
     if (selectedTypes.length > 0) {
       filteredPoints = filteredPoints.filter(
         (point) => point.type && selectedTypes.includes(point.type.id),
+      );
+    }
+
+    // Extract unique owners before applying owner filter (for display in FilterPanel)
+    const uniqueOwners = Array.from(
+      new Set(filteredPoints.map((p) => p.owner.email)),
+    ).sort();
+    const uniqueUsernames = uniqueOwners.map((email) => email.split('@')[0]);
+    setAvailableOwners(uniqueUsernames);
+
+    // Apply owner filter if owners are selected (convert usernames to emails)
+    if (selectedOwners.length > 0) {
+      filteredPoints = filteredPoints.filter((point) =>
+        selectedOwners.includes(point.owner.email.split('@')[0])
       );
     }
 
@@ -368,11 +384,23 @@ export function MapPage() {
   };
 
   /**
+   * Toggle owner selection.
+   */
+  const toggleOwner = (ownerUsername: string) => {
+    setSelectedOwners((prev) =>
+      prev.includes(ownerUsername)
+        ? prev.filter((o) => o !== ownerUsername)
+        : [...prev, ownerUsername],
+    );
+  };
+
+  /**
    * Clear all filters.
    */
   const clearAllFilters = () => {
     setSelectedTags([]);
     setSelectedTypes([]);
+    setSelectedOwners([]);
   };
 
   /**
@@ -574,8 +602,8 @@ export function MapPage() {
           title={t("map.filterPoints", "Filter points")}
         >
           🔍 {t("common.filter", "Filters")}{" "}
-          {selectedTags.length + selectedTypes.length > 0 &&
-            `(${selectedTags.length + selectedTypes.length})`}
+          {selectedTags.length + selectedTypes.length + selectedOwners.length > 0 &&
+            `(${selectedTags.length + selectedTypes.length + selectedOwners.length})`}
         </button>
 
         <div className="points-count">
@@ -587,6 +615,8 @@ export function MapPage() {
             ` (${t("map.filteredByTags", "filtered by {count} tag(s)").replace("{count}", String(selectedTags.length))})`}
           {selectedTypes.length > 0 &&
             ` (${t("map.filteredByTypes", "filtered by {count} type(s)").replace("{count}", String(selectedTypes.length))})`}
+          {selectedOwners.length > 0 &&
+            ` (${t("map.filteredByOwners", "filtered by {count} owner(s)").replace("{count}", String(selectedOwners.length))})`}
           {searchQuery &&
             ` (${t("map.searchQuery", "search")}: "${searchQuery}")`}
         </div>
@@ -600,11 +630,14 @@ export function MapPage() {
         isOpen={isFilterOpen}
         availableTags={tags}
         availableTypes={types}
+        availableOwners={availableOwners}
         selectedTags={selectedTags}
         selectedTypes={selectedTypes}
+        selectedOwners={selectedOwners}
         onClose={() => setIsFilterOpen(false)}
         onToggleTag={toggleTag}
         onToggleType={toggleType}
+        onToggleOwner={toggleOwner}
         onClearAll={clearAllFilters}
       />
 
