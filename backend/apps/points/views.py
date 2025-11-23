@@ -32,6 +32,7 @@ from .models import GPSPoint
 from .models import PointType
 from .models import Tag
 from .models import UserTypeOrder
+from .pagination import LargeResultsSetPagination
 from .serializers import CreateGPSPointSerializer
 from .serializers import CreatePointTypeSerializer
 from .serializers import GPSPointSerializer
@@ -62,6 +63,7 @@ class GPSPointViewSet(viewsets.ModelViewSet):
     """
 
     permission_classes = [IsAuthenticated]
+    pagination_class = LargeResultsSetPagination
 
     def get_serializer_class(self):
         if self.action == "create":
