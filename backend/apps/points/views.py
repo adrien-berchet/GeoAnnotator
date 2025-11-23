@@ -36,7 +36,7 @@ from .models import GPSPoint
 from .models import PointType
 from .models import Tag
 from .models import UserTypeOrder
-from .pagination import LargeResultsSetPagination
+from .pagination import PointsCursorPagination
 from .serializers import CreateGPSPointSerializer
 from .serializers import CreatePointTypeSerializer
 from .serializers import GPSPointSerializer
@@ -54,8 +54,12 @@ class GPSPointViewSet(PermissionCheckMixin, viewsets.ModelViewSet):
     """
     ViewSet for GPS Point CRUD operations and spatial search.
 
+    Uses cursor-based pagination for efficient handling of large datasets.
+    Default page size: 100 items, max: 1000 items.
+
     Endpoints:
-    - GET /api/points/ - List user's accessible points
+    - GET /api/points/ - List user's accessible points (paginated)
+    - GET /api/points/?cursor=<cursor>&page_size=100 - Navigate pages
     - POST /api/points/ - Create new point
     - GET /api/points/{id}/ - Retrieve point detail
     - PUT/PATCH /api/points/{id}/ - Update point
@@ -70,7 +74,7 @@ class GPSPointViewSet(PermissionCheckMixin, viewsets.ModelViewSet):
     """
 
     permission_classes = [IsAuthenticated]
-    pagination_class = LargeResultsSetPagination
+    pagination_class = PointsCursorPagination
 
     def get_serializer_class(self):
         if self.action == "create":

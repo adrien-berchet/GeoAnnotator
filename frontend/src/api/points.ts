@@ -12,7 +12,7 @@ import type {
 } from "../types/point";
 
 /**
- * Paginated response from API.
+ * Paginated response from API (page number pagination).
  */
 interface PaginatedResponse<T> {
   count: number;
@@ -22,11 +22,35 @@ interface PaginatedResponse<T> {
 }
 
 /**
- * Get all points with optional filters.
- * Requests all results in a single batch using page_size parameter.
+ * Cursor paginated response from API.
  */
-export async function getPoints(filters?: PointsFilter): Promise<GPSPoint[]> {
+interface CursorPaginatedResponse<T> {
+  next: string | null;
+  previous: string | null;
+  results: T[];
+}
+
+/**
+ * Get points with cursor pagination (single page).
+ * More efficient for large datasets, scales beyond 10k items.
+ *
+ * @param cursor - Cursor string from previous response (optional)
+ * @param pageSize - Number of items per page (default: 100, max: 1000)
+ * @param filters - Optional filters
+ * @returns Paginated response with cursor for next page
+ */
+export async function getPointsPaginated(
+  cursor?: string | null,
+  pageSize: number = 100,
+  filters?: PointsFilter,
+): Promise<CursorPaginatedResponse<GPSPoint>> {
   const params = new URLSearchParams();
+
+  if (cursor) {
+    params.append("cursor", cursor);
+  }
+
+  params.append("page_size", Math.min(pageSize, 1000).toString());
 
   if (filters?.bbox) {
     params.append(
@@ -47,14 +71,60 @@ export async function getPoints(filters?: PointsFilter): Promise<GPSPoint[]> {
     params.append("is_public", filters.is_public.toString());
   }
 
-  // Request all results in one batch with a large page size
-  params.append("page_size", "10000");
-
-  const response = await apiClient.get<PaginatedResponse<GPSPoint>>(
+  const response = await apiClient.get<CursorPaginatedResponse<GPSPoint>>(
     `/points/?${params.toString()}`,
   );
 
-  return response.data.results;
+  return response.data;
+}
+
+/**
+ * Get all points with optional filters.
+ * Uses cursor pagination to fetch all results efficiently.
+ * Automatically follows pagination cursors until all data is fetched.
+ *
+ * @param filters - Optional filters
+ * @param onProgress - Optional callback for progress updates (current count, has more)
+ * @returns Array of all points matching the filters
+ */
+export async function getPoints(
+  filters?: PointsFilter,
+  onProgress?: (count: number, hasMore: boolean) => void,
+): Promise<GPSPoint[]> {
+  const allPoints: GPSPoint[] = [];
+  let cursor: string | null = null;
+  let hasMore = true;
+
+  // Fetch pages until no more results
+  while (hasMore) {
+    const response = await getPointsPaginated(cursor, 500, filters);
+
+    allPoints.push(...response.results);
+
+    cursor = response.next ? extractCursorFromUrl(response.next) : null;
+    hasMore = cursor !== null;
+
+    // Call progress callback if provided
+    if (onProgress) {
+      onProgress(allPoints.length, hasMore);
+    }
+  }
+
+  return allPoints;
+}
+
+/**
+ * Extract cursor parameter from pagination URL.
+ */
+function extractCursorFromUrl(url: string): string | null {
+  try {
+    const urlObj = new URL(url);
+    return urlObj.searchParams.get("cursor");
+  } catch {
+    // If URL parsing fails, try to extract cursor from query string
+    const match = url.match(/[?&]cursor=([^&]+)/);
+    return match ? decodeURIComponent(match[1]) : null;
+  }
 }
 
 /**
