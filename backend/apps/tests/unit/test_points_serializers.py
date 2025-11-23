@@ -201,7 +201,8 @@ def test_create_gpspoint_serializer_creates_with_tags(alice, api_request_factory
     p = ser.save()
     assert isinstance(p, GPSPoint)
     assert p.is_public is True
-    assert {t.name for t in p.tags.all()} == {"a", "b"}
+    # Tags preserve original casing
+    assert {t.name for t in p.tags.all()} == {"A", "b"}
 
 
 @pytest.mark.django_db
