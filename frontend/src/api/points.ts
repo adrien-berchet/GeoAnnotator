@@ -23,6 +23,7 @@ interface PaginatedResponse<T> {
 
 /**
  * Get all points with optional filters.
+ * Fetches all pages of results.
  */
 export async function getPoints(filters?: PointsFilter): Promise<GPSPoint[]> {
   const params = new URLSearchParams();
@@ -46,10 +47,17 @@ export async function getPoints(filters?: PointsFilter): Promise<GPSPoint[]> {
     params.append("is_public", filters.is_public.toString());
   }
 
-  const response = await apiClient.get<PaginatedResponse<GPSPoint>>(
-    `/points/?${params.toString()}`,
-  );
-  return response.data.results;
+  // Fetch all pages
+  let allResults: GPSPoint[] = [];
+  let nextUrl: string | null = `/points/?${params.toString()}`;
+
+  while (nextUrl) {
+    const response = await apiClient.get<PaginatedResponse<GPSPoint>>(nextUrl);
+    allResults = allResults.concat(response.data.results);
+    nextUrl = response.data.next;
+  }
+
+  return allResults;
 }
 
 /**
