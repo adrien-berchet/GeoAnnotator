@@ -10,6 +10,7 @@ import type {
   ResolvedTheme,
   ThemeContextValue,
 } from "@/types/settings";
+import { logger } from "@/utils/logger";
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
@@ -68,7 +69,7 @@ export function ThemeProvider({
         const settings = await getSettings();
         setThemeModeState(settings.theme_mode);
       } catch (error) {
-        console.error("Failed to load theme from backend:", error);
+        logger.error("Failed to load theme from backend:", error);
         // Fallback to default or initialTheme
         setThemeModeState(initialTheme);
       } finally {
@@ -123,7 +124,7 @@ export function ThemeProvider({
       try {
         await updateSettings({ theme_mode: mode });
       } catch (error) {
-        console.error("Failed to persist theme to backend:", error);
+        logger.error("Failed to persist theme to backend:", error);
         // UI already updated, so we don't revert on error
         // This provides optimistic updates for better UX
       }

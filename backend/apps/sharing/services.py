@@ -4,6 +4,7 @@ Sharing services.
 Handles permissions, email invitations, and share management.
 """
 
+import logging
 from datetime import timedelta
 
 from django.conf import settings
@@ -12,11 +13,15 @@ from django.db.models import Q
 from django.utils import timezone
 
 from apps.authentication.models import User
+from apps.core.exceptions import AutoShareRuleError
 from apps.points.models import GPSPoint
 
 from .models import AutoShareRule
 from .models import Friendship
 from .models import Share
+
+# Module-level logger
+logger = logging.getLogger(__name__)
 
 
 class PermissionService:
