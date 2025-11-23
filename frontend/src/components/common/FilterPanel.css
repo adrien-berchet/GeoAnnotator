@@ -86,13 +86,14 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow-y: auto; /* Allow scrolling when content exceeds available height */
+  overflow-x: hidden;
 }
 
 /* Section Container - Each section takes equal space */
 .filter-section-container {
   flex: 1;
-  min-height: 0;
+  min-height: 150px; /* Ensure section shows title + at least 1.5 items */
   display: flex;
   flex-direction: column;
   padding: var(--spacing-2xl) var(--spacing-2xl) 0 var(--spacing-2xl);
@@ -106,7 +107,8 @@
 .filter-section-scroll {
   flex: 1;
   overflow-y: auto;
-  min-height: 0;
+  min-height: 80px; /* Ensure at least ~1.5 items are visible */
+  max-height: 300px; /* Prevent sections from becoming too tall */
 }
 
 .filter-section-title {

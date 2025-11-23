@@ -23,6 +23,7 @@ interface PaginatedResponse<T> {
 
 /**
  * Get all points with optional filters.
+ * Requests all results in a single batch using page_size parameter.
  */
 export async function getPoints(filters?: PointsFilter): Promise<GPSPoint[]> {
   const params = new URLSearchParams();
@@ -46,9 +47,13 @@ export async function getPoints(filters?: PointsFilter): Promise<GPSPoint[]> {
     params.append("is_public", filters.is_public.toString());
   }
 
+  // Request all results in one batch with a large page size
+  params.append("page_size", "10000");
+
   const response = await apiClient.get<PaginatedResponse<GPSPoint>>(
     `/points/?${params.toString()}`,
   );
+
   return response.data.results;
 }
 

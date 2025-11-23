@@ -4,7 +4,7 @@
  * Displays all user's points in a list/grid view with search and filters.
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   getPoints,
@@ -25,18 +25,66 @@ import type { GPSPoint, Tag, PointType } from "../types/point";
 import { batchSharePoints } from "../api/friends";
 import "./PointsListPage.css";
 
+// Helper function to sort points
+function sortPoints(
+  pointsToSort: GPSPoint[],
+  field: string,
+  order: string,
+  language: string,
+): GPSPoint[] {
+  const sorted = [...pointsToSort].sort((a, b) => {
+    let comparison = 0;
+
+    switch (field) {
+      case "title":
+        comparison = a.title.localeCompare(b.title);
+        break;
+      case "created_at":
+        comparison =
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        break;
+      case "updated_at":
+        comparison =
+          new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime();
+        break;
+      case "owner":
+        comparison = a.owner.email.localeCompare(b.owner.email);
+        break;
+      case "type": {
+        // Points without type should be at the beginning
+        if (!a.type && !b.type) return 0;
+        if (!a.type) return -1;
+        if (!b.type) return 1;
+        const aTypeName =
+          a.type.names[language] || a.type.names[a.type.creation_language];
+        const bTypeName =
+          b.type.names[language] || b.type.names[b.type.creation_language];
+        comparison = aTypeName.localeCompare(bTypeName);
+        break;
+      }
+      default:
+        comparison = 0;
+    }
+
+    return order === "asc" ? comparison : -comparison;
+  });
+
+  return sorted;
+}
+
 export function PointsListPage() {
   const { t, language } = useLanguage();
-  const [points, setPoints] = useState<GPSPoint[]>([]);
+  const [filteredPoints, setFilteredPoints] = useState<GPSPoint[]>([]);
   const [availableTags, setAvailableTags] = useState<Tag[]>([]);
   const [availableTypes, setAvailableTypes] = useState<PointType[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [availableOwners, setAvailableOwners] = useState<string[]>([]);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [error, setError] = useState("");
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchInput, setSearchInput] = useState("");
   const [selectedTagNames, setSelectedTagNames] = useState<string[]>([]);
   const [selectedTypeIds, setSelectedTypeIds] = useState<string[]>([]);
+  const [selectedOwnerEmails, setSelectedOwnerEmails] = useState<string[]>([]);
   const [selectedPointIds, setSelectedPointIds] = useState<string[]>([]);
   const [isSharePanelOpen, setIsSharePanelOpen] = useState(false);
   const [isBulkEditPanelOpen, setIsBulkEditPanelOpen] = useState(false);
@@ -50,7 +98,15 @@ export function PointsListPage() {
   const searchQuery = searchParams.get("search") || "";
   const tagsFilter = searchParams.get("tags") || "";
   const typesFilter = searchParams.get("types") || "";
+  const ownersFilter = searchParams.get("owners") || "";
+  const sortBy = searchParams.get("sort") || "created_at";
+  const sortOrder = searchParams.get("order") || "desc";
   const isFilterPanelOpen = searchParams.get("filterOpen") === "true";
+
+  // Compute sorted points from filtered points (instant, no API call)
+  const points = useMemo(() => {
+    return sortPoints(filteredPoints, sortBy, sortOrder, language);
+  }, [filteredPoints, sortBy, sortOrder, language]);
 
   const loadTags = async () => {
     try {
@@ -71,7 +127,6 @@ export function PointsListPage() {
   };
 
   const loadPoints = async () => {
-    setIsLoading(true);
     setError("");
 
     try {
@@ -101,11 +156,26 @@ export function PointsListPage() {
         results = results.filter((p) => p.type && typeIds.includes(p.type.id));
       }
 
-      setPoints(results);
+      // Extract unique owners before applying owner filter
+      const uniqueOwners = Array.from(
+        new Set(results.map((p) => p.owner.email)),
+      ).sort();
+      // Extract usernames from emails (part before @)
+      const uniqueUsernames = uniqueOwners.map((email) => email.split("@")[0]);
+      setAvailableOwners(uniqueUsernames);
+
+      // Client-side owner filter (convert usernames back to emails for filtering)
+      if (ownersFilter) {
+        const ownerUsernames = ownersFilter.split(",").map((u) => u.trim());
+        results = results.filter((p) =>
+          ownerUsernames.includes(p.owner.email.split("@")[0]),
+        );
+      }
+
+      setFilteredPoints(results);
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
-      setIsLoading(false);
       setIsInitialLoad(false);
     }
   };
@@ -118,7 +188,7 @@ export function PointsListPage() {
   useEffect(() => {
     loadPoints();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchQuery, tagsFilter, typesFilter]);
+  }, [searchQuery, tagsFilter, typesFilter, ownersFilter]);
 
   useEffect(() => {
     // Sync searchInput with URL params
@@ -129,7 +199,8 @@ export function PointsListPage() {
     // Sync filters with URL params
     setSelectedTagNames(tagsFilter ? tagsFilter.split(",") : []);
     setSelectedTypeIds(typesFilter ? typesFilter.split(",") : []);
-  }, [tagsFilter, typesFilter]);
+    setSelectedOwnerEmails(ownersFilter ? ownersFilter.split(",") : []);
+  }, [tagsFilter, typesFilter, ownersFilter]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -177,6 +248,11 @@ export function PointsListPage() {
       newParams.set("types", selectedTypeIds.join(","));
     }
 
+    // Keep owners filter if present
+    if (selectedOwnerEmails.length > 0) {
+      newParams.set("owners", selectedOwnerEmails.join(","));
+    }
+
     // Garder le panneau ouvert
     newParams.set("filterOpen", "true");
 
@@ -201,8 +277,61 @@ export function PointsListPage() {
       newParams.set("tags", selectedTagNames.join(","));
     }
 
+    // Keep owners filter if present
+    if (selectedOwnerEmails.length > 0) {
+      newParams.set("owners", selectedOwnerEmails.join(","));
+    }
+
     // Garder le panneau ouvert
     newParams.set("filterOpen", "true");
+
+    setSearchParams(newParams);
+  };
+
+  const handleToggleOwner = (ownerEmail: string) => {
+    const newSelectedOwners = selectedOwnerEmails.includes(ownerEmail)
+      ? selectedOwnerEmails.filter((e) => e !== ownerEmail)
+      : [...selectedOwnerEmails, ownerEmail];
+
+    const newParams = new URLSearchParams(searchParams);
+
+    if (newSelectedOwners.length > 0) {
+      newParams.set("owners", newSelectedOwners.join(","));
+    } else {
+      newParams.delete("owners");
+    }
+
+    // Keep tags filter if present
+    if (selectedTagNames.length > 0) {
+      newParams.set("tags", selectedTagNames.join(","));
+    }
+
+    // Keep types filter if present
+    if (selectedTypeIds.length > 0) {
+      newParams.set("types", selectedTypeIds.join(","));
+    }
+
+    // Garder le panneau ouvert
+    newParams.set("filterOpen", "true");
+
+    setSearchParams(newParams);
+  };
+
+  const handleSortChange = (field: string) => {
+    const newParams = new URLSearchParams(searchParams);
+
+    // If clicking the same field, toggle the order
+    if (field === sortBy) {
+      const newOrder = sortOrder === "asc" ? "desc" : "asc";
+      newParams.set("order", newOrder);
+    } else {
+      // New field: set default order based on field type
+      newParams.set("sort", field);
+      // Date fields default to desc (newest first), text fields to asc
+      const defaultOrder =
+        field === "created_at" || field === "updated_at" ? "desc" : "asc";
+      newParams.set("order", defaultOrder);
+    }
 
     setSearchParams(newParams);
   };
@@ -556,7 +685,9 @@ export function PointsListPage() {
           </form>
 
           {/* Filter Button */}
-          {(availableTags.length > 0 || availableTypes.length > 0) && (
+          {(availableTags.length > 0 ||
+            availableTypes.length > 0 ||
+            availableOwners.length > 0) && (
             <button
               type="button"
               className={`filter-toggle-button ${isFilterPanelOpen ? "active" : ""}`}
@@ -564,11 +695,48 @@ export function PointsListPage() {
               title={t("points.filterByTagsTypes", "Filter by tags and types")}
             >
               🔍 {t("common.filter", "Filters")}{" "}
-              {selectedTagNames.length + selectedTypeIds.length > 0 &&
-                `(${selectedTagNames.length + selectedTypeIds.length})`}
-              {isLoading && <span className="loading-indicator">⟳</span>}
+              {selectedTagNames.length +
+                selectedTypeIds.length +
+                selectedOwnerEmails.length >
+                0 &&
+                `(${selectedTagNames.length + selectedTypeIds.length + selectedOwnerEmails.length})`}
             </button>
           )}
+
+          {/* Sort Dropdown */}
+          <div className="sort-controls">
+            <label htmlFor="sort-select" className="sort-label">
+              Sort by:
+            </label>
+            <select
+              id="sort-select"
+              className="sort-select"
+              value={sortBy}
+              onChange={(e) => handleSortChange(e.target.value)}
+            >
+              <option value="created_at">
+                {t("points.sortCreatedAt", "Date Created")}{" "}
+              </option>
+              <option value="updated_at">
+                {t("points.sortUpdatedAt", "Date Updated")}{" "}
+              </option>
+              <option value="title">{t("points.sortTitle", "Title")} </option>
+              <option value="owner">{t("points.sortOwner", "Owner")} </option>
+              <option value="type">{t("points.sortType", "Type")} </option>
+            </select>
+            <button
+              type="button"
+              className="sort-order-button"
+              onClick={() => handleSortChange(sortBy)}
+              title={
+                sortOrder === "asc"
+                  ? t("points.sortAscending", "Ascending")
+                  : t("points.sortDescending", "Descending")
+              }
+            >
+              {sortOrder === "asc" ? "↑" : "↓"}
+            </button>
+          </div>
         </div>
 
         {/* Filter Panel (Drawer) */}
@@ -576,16 +744,19 @@ export function PointsListPage() {
           isOpen={isFilterPanelOpen}
           availableTags={availableTags}
           availableTypes={availableTypes}
+          availableOwners={availableOwners}
           selectedTags={selectedTagNames}
           selectedTypes={selectedTypeIds}
+          selectedOwners={selectedOwnerEmails}
           onClose={handleCloseFilterPanel}
           onToggleTag={handleToggleTag}
           onToggleType={handleToggleType}
+          onToggleOwner={handleToggleOwner}
           onClearAll={handleClearFilters}
         />
 
         {/* Results Info */}
-        {(searchQuery || tagsFilter || typesFilter) && (
+        {(searchQuery || tagsFilter || typesFilter || ownersFilter) && (
           <div className="results-info">
             {searchQuery && (
               <span>
@@ -601,6 +772,12 @@ export function PointsListPage() {
               <span>
                 {t("points.typeFilter", "Type Filter")}:{" "}
                 <strong>{t("points.active", "Active")}</strong>
+              </span>
+            )}
+            {ownersFilter && (
+              <span>
+                {t("points.ownerFilter", "Owners")}:{" "}
+                <strong>{ownersFilter}</strong>
               </span>
             )}
             <span className="results-count">
