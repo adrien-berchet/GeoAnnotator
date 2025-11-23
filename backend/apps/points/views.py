@@ -12,6 +12,7 @@ import requests
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
+from django.db.models import Count
 from django.db.models import F
 from django.db.models import IntegerField
 from django.db.models import OuterRef
@@ -79,7 +80,13 @@ class GPSPointViewSet(PermissionCheckMixin, viewsets.ModelViewSet):
         return GPSPointSerializer
 
     def get_queryset(self):
-        """Return points accessible to current user with optional search filtering."""
+        """
+        Return points accessible to current user with optional search filtering.
+
+        Optimizations:
+        - Annotates annotation_count and share_count to avoid N+1 queries
+        - Prefetches related objects (owner, type, tags) for efficiency
+        """
         user = self.request.user
         queryset = PermissionService.get_accessible_points(user, include_public=True)
 
@@ -91,6 +98,32 @@ class GPSPointViewSet(PermissionCheckMixin, viewsets.ModelViewSet):
                 | Q(description__icontains=search_query)
                 | Q(tags__name__icontains=search_query)
             ).distinct()
+
+        # Annotate counts to avoid N+1 queries in serializer
+        # Count only non-trashed annotations
+        queryset = queryset.annotate(
+            cached_annotation_count=Count(
+                "annotations",
+                filter=Q(annotations__trash_entry__isnull=True),
+                distinct=True,
+            ),
+            # Count active shares (only meaningful for owners, but computed for all)
+            cached_share_count=Count(
+                "shares",
+                filter=Q(shares__is_active=True),
+                distinct=True,
+            ),
+        )
+
+        # Prefetch related objects to avoid additional queries
+        queryset = queryset.select_related(
+            "owner",  # Point owner user
+            "type",  # Point type
+            "type__owner",  # Point type owner (for PointTypeSerializer)
+        ).prefetch_related(
+            "tags",  # Point tags
+            "tags__owner",  # Tag owners (for TagSerializer)
+        )
 
         return queryset
 

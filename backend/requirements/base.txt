@@ -36,6 +36,7 @@ mailjet-rest>=1.3  # Mailjet API client for HTTP email sending
 
 # Security
 django-fernet-fields-v2>=0.9  # Email encryption (compatible with Django 4.2+)
+django-ratelimit>=4.1  # Rate limiting for API endpoints
 
 # Background Tasks
 celery>=5.3  # Distributed task queue
