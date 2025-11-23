@@ -13,14 +13,14 @@ interface FilterPanelProps {
   isOpen: boolean;
   availableTags: Tag[];
   availableTypes: PointType[];
-  availableOwners: string[];
+  availableOwners?: string[];
   selectedTags: string[];
   selectedTypes: string[];
-  selectedOwners: string[];
+  selectedOwners?: string[];
   onClose: () => void;
   onToggleTag: (tagName: string) => void;
   onToggleType: (typeId: string) => void;
-  onToggleOwner: (ownerEmail: string) => void;
+  onToggleOwner?: (ownerEmail: string) => void;
   onClearAll: () => void;
 }
 
@@ -28,10 +28,10 @@ export function FilterPanel({
   isOpen,
   availableTags,
   availableTypes,
-  availableOwners,
+  availableOwners = [],
   selectedTags,
   selectedTypes,
-  selectedOwners,
+  selectedOwners = [],
   onClose,
   onToggleTag,
   onToggleType,
@@ -137,31 +137,33 @@ export function FilterPanel({
             </div>
           </div>
 
-          {/* Owners Section */}
-          <div className="filter-section-container">
-            <h3 className="filter-section-title">Owners</h3>
-            <div className="filter-section-scroll">
-              {availableOwners.length === 0 ? (
-                <div className="filter-empty">No owners available</div>
-              ) : (
-                <div className="filter-list">
-                  {availableOwners.map((ownerEmail) => (
-                    <button
-                      key={ownerEmail}
-                      type="button"
-                      className={`filter-option ${selectedOwners.includes(ownerEmail) ? "selected" : ""}`}
-                      onClick={() => onToggleOwner(ownerEmail)}
-                    >
-                      <span className="filter-checkbox">
-                        {selectedOwners.includes(ownerEmail) ? "✓" : ""}
-                      </span>
-                      <span className="filter-name">{ownerEmail}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
+          {/* Owners Section - only show if onToggleOwner handler is provided */}
+          {onToggleOwner && (
+            <div className="filter-section-container">
+              <h3 className="filter-section-title">Owners</h3>
+              <div className="filter-section-scroll">
+                {availableOwners.length === 0 ? (
+                  <div className="filter-empty">No owners available</div>
+                ) : (
+                  <div className="filter-list">
+                    {availableOwners.map((ownerEmail) => (
+                      <button
+                        key={ownerEmail}
+                        type="button"
+                        className={`filter-option ${selectedOwners.includes(ownerEmail) ? "selected" : ""}`}
+                        onClick={() => onToggleOwner(ownerEmail)}
+                      >
+                        <span className="filter-checkbox">
+                          {selectedOwners.includes(ownerEmail) ? "✓" : ""}
+                        </span>
+                        <span className="filter-name">{ownerEmail}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Footer */}
