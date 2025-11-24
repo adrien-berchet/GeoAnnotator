@@ -8,6 +8,7 @@
  */
 
 import * as Sentry from "@sentry/react";
+import { logger } from "./logger";
 
 /**
  * Initialize Sentry for error tracking.
@@ -26,7 +27,7 @@ export function initSentry() {
 
   // Only initialize Sentry if DSN is configured
   if (!sentryDsn) {
-    console.info("Sentry DSN not configured - error tracking disabled");
+    logger.info("Sentry DSN not configured - error tracking disabled");
     return;
   }
 
@@ -67,5 +68,5 @@ export function initSentry() {
     },
   });
 
-  console.info(`Sentry initialized for environment: ${environment}`);
+  logger.info(`Sentry initialized for environment: ${environment}`);
 }
