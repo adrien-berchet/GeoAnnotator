@@ -42,6 +42,9 @@ django-ratelimit>=4.1  # Rate limiting for API endpoints
 celery>=5.3  # Distributed task queue
 redis>=5.0  # Message broker for Celery
 
+# Monitoring & Observability
+sentry-sdk>=2.0  # Error tracking and performance monitoring
+
 # Utilities
 humanize>=4.10  # Human-readable numbers
 python-dateutil>=2.8

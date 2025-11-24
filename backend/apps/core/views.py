@@ -2,12 +2,18 @@
 Core utility views for system diagnostics.
 """
 
+import logging
 from django.conf import settings
+from django.db import connection
+from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.decorators import permission_classes
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAdminUser, AllowAny
 from rest_framework.response import Response
+
+logger = logging.getLogger(__name__)
+User = get_user_model()
 
 
 @api_view(["GET"])
@@ -72,3 +78,109 @@ def email_config_status(request):
         config["status"] = "unknown"
 
     return Response(config, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def health_check(request):
+    """
+    Comprehensive health check endpoint for container orchestration and monitoring.
+
+    Returns status of all critical services:
+    - Database connectivity
+    - Redis connectivity (if configured)
+    - Overall application health
+
+    GET /api/health/
+
+    Returns:
+        200: All services healthy
+        503: One or more services unhealthy
+    """
+    checks = {
+        "status": "healthy",
+        "database": _check_database(),
+        "redis": _check_redis(),
+    }
+
+    # Determine overall status
+    all_healthy = all(
+        check_result.get("healthy", False) for check_result in checks.values() if isinstance(check_result, dict)
+    )
+
+    if not all_healthy:
+        checks["status"] = "unhealthy"
+        return Response(checks, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+    return Response(checks, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+@permission_classes([IsAdminUser])
+def metrics(request):
+    """
+    Application metrics endpoint for monitoring and observability.
+
+    Returns key application statistics:
+    - Total number of GPS points
+    - Total number of users
+    - Total number of annotations
+    - Database connection status
+
+    GET /api/metrics/
+
+    Requires: Admin authentication
+    """
+    from apps.points.models import GPSPoint
+    from apps.annotations.models import Annotation
+
+    try:
+        metrics_data = {
+            "points_count": GPSPoint.objects.count(),
+            "users_count": User.objects.count(),
+            "annotations_count": Annotation.objects.count(),
+            "database_healthy": _check_database()["healthy"],
+        }
+
+        return Response(metrics_data, status=status.HTTP_200_OK)
+    except Exception as e:
+        logger.error("Failed to collect metrics", exc_info=True)
+        return Response(
+            {"error": "Failed to collect metrics", "detail": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+def _check_database():
+    """Check database connectivity."""
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+        return {"healthy": True, "message": "Database connection successful"}
+    except Exception as e:
+        logger.error("Database health check failed", exc_info=True)
+        return {"healthy": False, "message": f"Database error: {str(e)}"}
+
+
+def _check_redis():
+    """Check Redis connectivity (if Redis is configured)."""
+    try:
+        # Import redis module
+        import redis
+
+        # Try to get Redis configuration from settings
+        redis_url = getattr(settings, "CELERY_BROKER_URL", None)
+
+        if not redis_url:
+            return {"healthy": True, "message": "Redis not configured (optional)"}
+
+        # Try to connect to Redis
+        client = redis.from_url(redis_url, socket_connect_timeout=2)
+        client.ping()
+
+        return {"healthy": True, "message": "Redis connection successful"}
+    except ImportError:
+        return {"healthy": True, "message": "Redis module not installed (optional)"}
+    except Exception as e:
+        logger.warning("Redis health check failed", exc_info=True)
+        return {"healthy": False, "message": f"Redis error: {str(e)}"}

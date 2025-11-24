@@ -4,8 +4,10 @@
  * Provides environment-aware logging that:
  * - Suppresses debug/info logs in production
  * - Always shows warnings and errors
- * - Can be extended to send errors to monitoring services (e.g., Sentry)
+ * - Sends errors to Sentry in production
  */
+
+import * as Sentry from "@sentry/react";
 
 const isDevelopment = import.meta.env.MODE === "development";
 
@@ -51,18 +53,28 @@ export const logger = {
    * Error logging - always shown.
    * Use for errors that impact functionality.
    *
-   * In production, this could send to error tracking service:
-   * - Sentry
-   * - DataDog
-   * - LogRocket
+   * In production, errors are sent to Sentry for tracking and analysis.
    */
   error: (...args: unknown[]): void => {
     console.error("[ERROR]", ...args);
 
-    // TODO: Send to error tracking service in production
-    // if (!isDevelopment && window.Sentry) {
-    //   window.Sentry.captureException(args[0]);
-    // }
+    // Send to Sentry in production
+    if (!isDevelopment) {
+      const [firstArg, ...rest] = args;
+
+      // If first argument is an Error object, capture it
+      if (firstArg instanceof Error) {
+        Sentry.captureException(firstArg, {
+          extra: rest.length > 0 ? { additional: rest } : undefined,
+        });
+      } else {
+        // Otherwise, capture as a message with context
+        Sentry.captureMessage(String(firstArg), {
+          level: "error",
+          extra: { args: rest },
+        });
+      }
+    }
   },
 
   /**
