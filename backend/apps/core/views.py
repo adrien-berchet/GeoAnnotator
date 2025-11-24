@@ -3,13 +3,15 @@ Core utility views for system diagnostics.
 """
 
 import logging
+
 from django.conf import settings
-from django.db import connection
 from django.contrib.auth import get_user_model
+from django.db import connection
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.decorators import permission_classes
-from rest_framework.permissions import IsAdminUser, AllowAny
+from rest_framework.permissions import AllowAny
+from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 
 logger = logging.getLogger(__name__)
@@ -105,7 +107,9 @@ def health_check(request):
 
     # Determine overall status
     all_healthy = all(
-        check_result.get("healthy", False) for check_result in checks.values() if isinstance(check_result, dict)
+        check_result.get("healthy", False)
+        for check_result in checks.values()
+        if isinstance(check_result, dict)
     )
 
     if not all_healthy:
@@ -131,8 +135,8 @@ def metrics(request):
 
     Requires: Admin authentication
     """
-    from apps.points.models import GPSPoint
     from apps.annotations.models import Annotation
+    from apps.points.models import GPSPoint
 
     try:
         metrics_data = {

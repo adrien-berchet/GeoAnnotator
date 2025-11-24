@@ -13,7 +13,6 @@ from django.db.models import Q
 from django.utils import timezone
 
 from apps.authentication.models import User
-from apps.core.exceptions import AutoShareRuleError
 from apps.points.models import GPSPoint
 
 from .models import AutoShareRule

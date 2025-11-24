@@ -23,7 +23,6 @@ from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound
-from rest_framework.exceptions import PermissionDenied
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -161,7 +160,7 @@ class GPSPointViewSet(PermissionCheckMixin, viewsets.ModelViewSet):
                 },
                 exc_info=True,
             )
-        except Exception as e:
+        except Exception:
             # Catch any other unexpected errors
             logger.exception(
                 "Unexpected error applying auto-share rules",

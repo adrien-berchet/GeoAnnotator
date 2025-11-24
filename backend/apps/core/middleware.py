@@ -2,8 +2,8 @@
 Core middleware for request processing and monitoring.
 """
 
-import uuid
 import logging
+import uuid
 
 logger = logging.getLogger(__name__)
 

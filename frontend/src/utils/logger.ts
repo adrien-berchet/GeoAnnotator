@@ -89,7 +89,12 @@ export const logger = {
   /**
    * Log an API response (development only).
    */
-  apiResponse: (method: string, url: string, status: number, data?: unknown): void => {
+  apiResponse: (
+    method: string,
+    url: string,
+    status: number,
+    data?: unknown,
+  ): void => {
     if (isDevelopment) {
       console.log(`[API ${method}] ${status}`, url, data || "");
     }
