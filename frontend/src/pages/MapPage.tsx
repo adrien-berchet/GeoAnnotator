@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import type { Map as LeafletMap } from "leaflet";
 import { MapView } from "../components/map/MapView";
 import { PointMarker } from "../components/map/PointMarker";
@@ -43,7 +43,6 @@ export function MapPage() {
   const { t } = useLanguage();
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
   const [points, setPoints] = useState<GPSPoint[]>([]);
   const [allPoints, setAllPoints] = useState<GPSPoint[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -474,11 +473,11 @@ export function MapPage() {
   };
 
   /**
-   * Handle point click - navigate to detail page.
+   * Handle point click - opens popup with point information.
+   * The popup contains a link to navigate to the detail page.
    */
   const handlePointClick = (point: GPSPoint) => {
-    logger.debug("Point clicked, navigating to detail page:", point.id);
-    navigate(`/points/${point.id}`);
+    logger.debug("Point clicked:", point);
   };
 
   if (error) {
