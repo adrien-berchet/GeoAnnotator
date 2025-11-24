@@ -155,8 +155,9 @@ export const API_CONFIG = {
 1. **Removed obsolete TODOs:**
    - `frontend/src/pages/MapPage.tsx:306` - Testing delay comment (already commented out)
 
-2. **Implemented missing functionality:**
-   - `frontend/src/pages/MapPage.tsx:481` - Implemented point click navigation to detail page
+2. **Clarified existing functionality:**
+   - `frontend/src/pages/MapPage.tsx:481` - Documented that popup navigation is working as intended
+   - Point markers already show popup with information and link to detail page
 
 3. **Enhanced remaining TODOs with context and priorities:**
    - `backend/apps/sharing/serializers.py:170` - Invitation email (MEDIUM priority, with implementation details)
