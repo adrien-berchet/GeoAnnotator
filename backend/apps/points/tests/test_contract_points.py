@@ -340,35 +340,56 @@ class TestPointsContract:
         """
         Test updating point locked by another user.
 
+        Scenario: User1 creates a point, shares it with User2 (edit permission),
+        acquires lock, then User2 tries to update it.
+
         Expected:
-        - Status: 409 Conflict
-        - error: POINT_LOCKED
-        - details contains locked_by and lock_expires_at
+        - Status: 409 Conflict (user has permission but resource is locked)
+        - Error message about lock
+        - Details contain locked_by and lock_expires_at
         """
-        # Create point and acquire lock as user1
-        client1, _ = authenticated_user
+        from apps.sharing.models import Share
+
+        # Create point as user1
+        client1, user1_data = authenticated_user
         create_url = reverse("points:list")
         create_response = client1.post(create_url, valid_point_data, format="json")
         point_id = create_response.data["id"]
 
-        # Acquire lock
-        lock_url = reverse("points:lock", kwargs={"pk": point_id})
-        client1.post(lock_url)
-
-        # Try to update as user2
+        # Create user2
         user2 = create_verified_user("user2b", "user2@example.com", "SecurePass123")
         client2 = get_authenticated_client(user2)
 
-        # Share point with edit permission to user2 first
-        # (This will be tested in sharing contract tests)
-        # For now, assume user2 has edit permission
+        # Share point with user2 with EDIT permission
+        from apps.authentication.models import User
+        from apps.points.models import GPSPoint
 
+        point = GPSPoint.objects.get(pk=point_id)
+        user1 = User.objects.get(pk=user1_data["id"])
+        Share.objects.create(
+            gps_point=point,
+            owner=user1,
+            recipient_user=user2,
+            permission_level="edit",
+            is_active=True,
+        )
+
+        # Acquire lock as user1
+        lock_url = reverse("points:lock", kwargs={"pk": point_id})
+        lock_response = client1.post(lock_url)
+        assert lock_response.status_code == status.HTTP_200_OK
+
+        # Try to update as user2 (has edit permission but point is locked)
         update_url = reverse("points:detail", kwargs={"pk": point_id})
-        update_data = {"title": "Hacked Title"}
+        update_data = {"title": "Trying to update locked point"}
         response = client2.put(update_url, update_data, format="json")
 
-        # Should fail with 409 or 403 depending on implementation
-        assert response.status_code in [status.HTTP_409_CONFLICT, status.HTTP_403_FORBIDDEN]
+        # Should fail with 409 Conflict (user can edit but point is locked)
+        assert response.status_code == status.HTTP_409_CONFLICT
+        assert "error" in response.data
+        assert "locked" in response.data["error"].lower()
+        assert "locked_by" in response.data
+        assert "lock_expires_at" in response.data
 
     # T020: DELETE /points/{id} - Delete point (soft delete)
     def test_delete_point_success(self, authenticated_user, valid_point_data):
@@ -417,8 +438,9 @@ class TestPointsContract:
         delete_url = reverse("points:detail", kwargs={"pk": point_id})
         response = client2.delete(delete_url)
 
-        assert response.status_code == status.HTTP_403_FORBIDDEN
-        assert response.data["error"] == "ACCESS_DENIED"
+        # Should return 404 since user2 can't even see the private point
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert response.data["error"] == "POINT_NOT_FOUND"
 
     # T021: POST /points/{id}/lock - Acquire editing lock
     def test_acquire_lock_success(self, authenticated_user, valid_point_data):

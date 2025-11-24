@@ -90,7 +90,8 @@ class TestGPSPointCRUD:
     def test_update_without_permission_fails(self, authenticated_client_bob, gps_point_alice):
         url = reverse("points:detail", args=[gps_point_alice.id])
         resp = authenticated_client_bob.patch(url, {"title": "Fail"}, format="json")
-        assert resp.status_code == status.HTTP_403_FORBIDDEN
+        # Bob can't see Alice's private point → 404
+        assert resp.status_code == status.HTTP_404_NOT_FOUND
 
     def test_delete_own_point_moves_to_trash(self, authenticated_client_alice, gps_point_alice):
         url = reverse("points:detail", args=[gps_point_alice.id])
@@ -102,7 +103,8 @@ class TestGPSPointCRUD:
     def test_delete_non_owner_fails(self, authenticated_client_bob, gps_point_alice):
         url = reverse("points:detail", args=[gps_point_alice.id])
         resp = authenticated_client_bob.delete(url)
-        assert resp.status_code == status.HTTP_403_FORBIDDEN
+        # Bob can't see Alice's private point → 404
+        assert resp.status_code == status.HTTP_404_NOT_FOUND
 
 
 @pytest.mark.django_db

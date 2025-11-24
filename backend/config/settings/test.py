@@ -11,6 +11,10 @@ from .base import *
 # Disable debug for more realistic testing
 DEBUG = False
 
+# Rate limiting in tests: use very high limits instead of disabling
+# This ensures rate limiting code is actually tested while allowing all tests to pass
+RATE_LIMIT_TESTING_MULTIPLIER = 10000  # Multiply all rates by this factor in tests
+
 # Required for tests
 ALLOWED_HOSTS = ["*"]
 
