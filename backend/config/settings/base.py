@@ -237,16 +237,10 @@ CELERY_TIMEZONE = "UTC"
 # SSL/TLS configuration for external Redis (Upstash, Redis Cloud)
 # Required when using rediss:// (SSL) connections
 if CELERY_BROKER_URL.startswith("rediss://"):
-    import ssl
-
-    CELERY_BROKER_USE_SSL = {
-        "ssl_cert_reqs": ssl.CERT_REQUIRED,
-        "ssl_ca_certs": None,  # Use system CA certificates
-    }
-    CELERY_REDIS_BACKEND_USE_SSL = {
-        "ssl_cert_reqs": ssl.CERT_REQUIRED,
-        "ssl_ca_certs": None,
-    }
+    # For redis-py, use ssl.CERT_REQUIRED directly
+    # Don't set ssl_cert_reqs in broker config, let redis-py handle it
+    CELERY_BROKER_USE_SSL = True
+    CELERY_REDIS_BACKEND_USE_SSL = True
 
 # CORS settings
 CORS_ALLOW_ALL_ORIGINS = False  # Override in development
