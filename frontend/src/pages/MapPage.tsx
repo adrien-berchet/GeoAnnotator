@@ -496,33 +496,8 @@ export function MapPage() {
     <div className="map-page">
       {/* Loading indicator for points (non-blocking) */}
       {isLoading && showLoadingIndicator && (
-        <div
-          style={{
-            position: "absolute",
-            top: "4.5rem",
-            left: "50%",
-            transform: "translateX(-50%)",
-            zIndex: 1000,
-            background: "rgba(255, 255, 255, 0.95)",
-            padding: "0.5rem 1rem",
-            borderRadius: "0.5rem",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-            display: "flex",
-            alignItems: "center",
-            gap: "0.5rem",
-            fontSize: "0.875rem",
-          }}
-        >
-          <div
-            style={{
-              width: "1rem",
-              height: "1rem",
-              border: "2px solid #e0e0e0",
-              borderTop: "2px solid #2196f3",
-              borderRadius: "50%",
-              animation: "spin 1s linear infinite",
-            }}
-          />
+        <div className="map-loading-indicator">
+          <div className="map-loading-spinner" />
           {t("map.loadingPoints", "Loading points...")}
         </div>
       )}
