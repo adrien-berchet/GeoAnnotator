@@ -249,9 +249,12 @@ if len(SECRET_KEY) < 50:
    - `LoginView`: 5/minute per IP
    - `RefreshTokenView`: 30/minute per IP
    - `ConfirmEmailView`: 10/hour per IP
-4. Returns proper 429 JSON responses
+4. Applied rate limits to public system endpoints:
+   - `HealthCheckView`: 60/minute per IP (allows monitoring tools, prevents abuse)
+5. Refactored health check to class-based view for consistent rate limiting pattern
+6. Returns proper 429 JSON responses
 
-**Result:** Protection against API abuse, brute-force attacks, and credential stuffing.
+**Result:** Protection against API abuse, brute-force attacks, credential stuffing, and resource exhaustion on public endpoints.
 
 ---
 
@@ -777,8 +780,10 @@ class RequestIDMiddleware:
    - Free tier: 5k errors/month + 10k transactions/month
 
 2. **Health Check Endpoint** (`GET /api/v1/system/health/`):
+   - Implemented as `HealthCheckView` class-based view
    - Checks database and Redis connectivity
    - Returns 200 (healthy) or 503 (unhealthy)
+   - Rate limited to 60/min per IP to prevent abuse
    - Suitable for container orchestration and load balancers
 
 3. **Metrics Endpoint** (`GET /api/v1/system/metrics/`):
