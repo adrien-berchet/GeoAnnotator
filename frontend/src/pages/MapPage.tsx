@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import type { Map as LeafletMap } from "leaflet";
 import { MapView } from "../components/map/MapView";
 import { PointMarker } from "../components/map/PointMarker";
@@ -43,6 +43,7 @@ export function MapPage() {
   const { t } = useLanguage();
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [points, setPoints] = useState<GPSPoint[]>([]);
   const [allPoints, setAllPoints] = useState<GPSPoint[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -303,8 +304,6 @@ export function MapPage() {
     setError("");
 
     try {
-      // TODO: Comment this delay after testing the loading spinner
-      // await new Promise((resolve) => setTimeout(resolve, 5000));
       const data = await getPoints();
       setAllPoints(data);
       setPoints(data);
@@ -475,11 +474,11 @@ export function MapPage() {
   };
 
   /**
-   * Handle point click.
+   * Handle point click - navigate to detail page.
    */
   const handlePointClick = (point: GPSPoint) => {
-    // TODO: Navigate to point detail page
-    logger.debug("Point clicked:", point);
+    logger.debug("Point clicked, navigating to detail page:", point.id);
+    navigate(`/points/${point.id}`);
   };
 
   if (error) {

@@ -946,7 +946,10 @@ class AutoShareService:
                 )
                 shares_created += 1
 
-                # TODO: Send notification to friend about auto-shared point
+                # TODO: Implement notification system for auto-shared points
+                # Should notify friend via email or in-app notification that a new point
+                # has been automatically shared with them based on friendship settings.
+                # Priority: LOW - Nice-to-have feature enhancement
 
             except Exception as e:
                 results.append(
