@@ -7,13 +7,15 @@ import logging
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import connection
-from django_ratelimit.decorators import ratelimit
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from apps.core.ratelimit import ratelimit
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -83,19 +85,15 @@ def email_config_status(request):
     return Response(config, status=status.HTTP_200_OK)
 
 
-@api_view(["GET"])
-@permission_classes([AllowAny])
-@ratelimit(key="ip", rate="60/m", method="GET")
-def health_check(request):
+class HealthCheckView(APIView):
     """
+    GET /api/health/
     Comprehensive health check endpoint for container orchestration and monitoring.
 
     Returns status of all critical services:
     - Database connectivity
     - Redis connectivity (if configured)
     - Overall application health
-
-    GET /api/health/
 
     Rate limited to 60 requests per minute per IP to prevent abuse while
     allowing legitimate monitoring tools and container orchestrators.
@@ -105,33 +103,29 @@ def health_check(request):
         429: Rate limit exceeded
         503: One or more services unhealthy
     """
-    # Check if rate limited
-    if getattr(request, "limited", False):
-        return Response(
-            {
-                "error": "Rate limit exceeded",
-                "detail": "Too many health check requests. Please try again later.",
-            },
-            status=status.HTTP_429_TOO_MANY_REQUESTS,
+
+    permission_classes = [AllowAny]
+
+    @ratelimit(key="ip", rate="60/m", method="GET")
+    def get(self, request):
+        checks = {
+            "status": "healthy",
+            "database": _check_database(),
+            "redis": _check_redis(),
+        }
+
+        # Determine overall status
+        all_healthy = all(
+            check_result.get("healthy", False)
+            for check_result in checks.values()
+            if isinstance(check_result, dict)
         )
-    checks = {
-        "status": "healthy",
-        "database": _check_database(),
-        "redis": _check_redis(),
-    }
 
-    # Determine overall status
-    all_healthy = all(
-        check_result.get("healthy", False)
-        for check_result in checks.values()
-        if isinstance(check_result, dict)
-    )
+        if not all_healthy:
+            checks["status"] = "unhealthy"
+            return Response(checks, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
-    if not all_healthy:
-        checks["status"] = "unhealthy"
-        return Response(checks, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-
-    return Response(checks, status=status.HTTP_200_OK)
+        return Response(checks, status=status.HTTP_200_OK)
 
 
 @api_view(["GET"])
