@@ -26,6 +26,7 @@ import { getPoints, searchPointsByTags, getTags } from "../api/points";
 import { getPointTypes } from "../api/types";
 import { getErrorMessage } from "../api/client";
 import { getSettings } from "../api/settings";
+import { logger } from "../utils/logger";
 import type { GPSPoint, Tag, PointType } from "../types/point";
 import {
   useDevicePosition,
@@ -96,7 +97,7 @@ export function MapPage() {
           return center;
         }
       } catch (err) {
-        console.warn("Invalid map center in localStorage:", err);
+        logger.warn("Invalid map center in localStorage:", err);
       }
     }
     return [48.8566, 2.3522]; // Default to Paris
@@ -111,7 +112,7 @@ export function MapPage() {
           return zoom;
         }
       } catch (err) {
-        console.warn("Invalid map zoom in localStorage:", err);
+        logger.warn("Invalid map zoom in localStorage:", err);
       }
     }
     return 13; // Default zoom level
@@ -278,7 +279,7 @@ export function MapPage() {
       const data = await getTags();
       setTags(data);
     } catch (err) {
-      console.error("Error loading tags:", err);
+      logger.error("Error loading tags:", err);
     }
   };
 
@@ -290,7 +291,7 @@ export function MapPage() {
       const data = await getPointTypes();
       setTypes(data);
     } catch (err) {
-      console.error("Error loading types:", err);
+      logger.error("Error loading types:", err);
     }
   };
 
@@ -349,7 +350,7 @@ export function MapPage() {
       // Mark that we've loaded the preference for this user
       localStorage.setItem(lastUserKey, user.id);
     } catch (err) {
-      console.error("Error loading default map type:", err);
+      logger.error("Error loading default map type:", err);
       // Don't show error to user, just use the default map type
     }
   };
@@ -478,7 +479,7 @@ export function MapPage() {
    */
   const handlePointClick = (point: GPSPoint) => {
     // TODO: Navigate to point detail page
-    console.log("Point clicked:", point);
+    logger.debug("Point clicked:", point);
   };
 
   if (error) {

@@ -1,11 +1,13 @@
 /**
- * Test component to verify console.log works
+ * Test component to verify logger works
  */
 
-console.log("🔥🔥🔥 TEST: This file is loaded! 🔥🔥🔥");
+import { logger } from "@/utils/logger";
+
+logger.debug("🔥🔥🔥 TEST: This file is loaded! 🔥🔥🔥");
 
 export function ConsoleTest() {
-  console.log("🔥🔥🔥 TEST: ConsoleTest component rendering! 🔥🔥🔥");
+  logger.debug("🔥🔥🔥 TEST: ConsoleTest component rendering! 🔥🔥🔥");
 
   return (
     <div

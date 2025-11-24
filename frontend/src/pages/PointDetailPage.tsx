@@ -9,6 +9,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { getPoint, deletePoint } from "../api/points";
 import { getAnnotations } from "../api/annotations";
 import { getErrorMessage } from "../api/client";
+import { logger } from "../utils/logger";
 import { LoadingSpinner } from "../components/common/LoadingSpinner";
 import {
   AnnotationForm,
@@ -67,21 +68,21 @@ export function PointDetailPage() {
   };
 
   const handleAnnotationDeleted = async (annotationId: string) => {
-    console.log("🔄 Annotation deleted, reloading all annotations...");
+    logger.debug("🔄 Annotation deleted, reloading all annotations...");
 
     // Reload all annotations to get the updated trash status
     if (!id) return;
 
     try {
       const annotationsData = await getAnnotations(id);
-      console.log("📥 Reloaded annotations:", annotationsData);
-      console.log(
+      logger.debug("📥 Reloaded annotations:", annotationsData);
+      logger.debug(
         "📊 Trashed annotations after delete:",
         annotationsData.filter((a) => a.is_trashed),
       );
       setAnnotations(annotationsData);
     } catch (err) {
-      console.error("❌ Failed to reload annotations:", err);
+      logger.error("❌ Failed to reload annotations:", err);
       // Fallback: just filter out the annotation
       setAnnotations(annotations.filter((a) => a.id !== annotationId));
     }

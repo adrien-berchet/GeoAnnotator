@@ -46,6 +46,7 @@ import { LoadingSpinner } from "../common/LoadingSpinner";
 import { TrashedAnnotationBanner } from "./TrashedAnnotationBanner";
 import { useColorMode } from "../../hooks/useColorMode";
 import { rehypeExternalLinks } from "../../utils/rehypeExternalLinks";
+import { logger } from "../../utils/logger";
 import type { Annotation } from "../../types/annotation";
 import "./AnnotationListTrashed.css";
 
@@ -88,7 +89,7 @@ export function AnnotationList({
   pointId,
   onAnnotationDeleted,
 }: AnnotationListProps) {
-  console.log("🚀 AnnotationList component loaded for point:", pointId);
+  logger.debug("🚀 AnnotationList component loaded for point:", pointId);
 
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -105,8 +106,8 @@ export function AnnotationList({
 
     try {
       const data = await getAnnotations(pointId);
-      console.log("📥 Loaded annotations:", data);
-      console.log(
+      logger.debug("📥 Loaded annotations:", data);
+      logger.debug(
         "📊 Trashed annotations:",
         data.filter((a) => a.is_trashed),
       );
@@ -137,23 +138,23 @@ export function AnnotationList({
       return;
     }
 
-    console.log("🗑️ Deleting annotation:", annotationId);
+    logger.debug("🗑️ Deleting annotation:", annotationId);
     setDeletingId(annotationId);
 
     try {
       await deleteAnnotation(pointId, annotationId);
-      console.log("✅ Annotation deleted, reloading...");
+      logger.debug("✅ Annotation deleted, reloading...");
 
       // Reload annotations to show the deleted one as trashed
       await loadAnnotations();
-      console.log("✅ Annotations reloaded");
+      logger.debug("✅ Annotations reloaded");
 
       if (onAnnotationDeleted) {
         onAnnotationDeleted();
       }
     } catch (err) {
       const errorMsg = getErrorMessage(err);
-      console.error("❌ Delete error:", errorMsg);
+      logger.error("❌ Delete error:", errorMsg);
       // Check if already in trash
       if (
         errorMsg.includes("ALREADY_IN_TRASH") ||
@@ -212,7 +213,7 @@ export function AnnotationList({
 
   // Load annotations on mount
   useEffect(() => {
-    console.log(
+    logger.debug(
       "⚡ useEffect triggered - Loading annotations for point:",
       pointId,
     );
@@ -252,7 +253,7 @@ export function AnnotationList({
 
       <div className="annotations-grid">
         {annotations.map((annotation) => {
-          console.log(`🔍 Rendering annotation ${annotation.id.slice(0, 8)}:`, {
+          logger.debug(`🔍 Rendering annotation ${annotation.id.slice(0, 8)}:`, {
             is_trashed: annotation.is_trashed,
             trash_days_remaining: annotation.trash_days_remaining,
           });

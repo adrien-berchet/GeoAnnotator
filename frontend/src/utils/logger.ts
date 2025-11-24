@@ -27,6 +27,7 @@ export const logger = {
    */
   debug: (...args: unknown[]): void => {
     if (isDevelopment) {
+      // eslint-disable-next-line no-console
       console.debug("[DEBUG]", ...args);
     }
   },
@@ -37,6 +38,7 @@ export const logger = {
    */
   info: (...args: unknown[]): void => {
     if (isDevelopment) {
+      // eslint-disable-next-line no-console
       console.log("[INFO]", ...args);
     }
   },
@@ -82,6 +84,7 @@ export const logger = {
    */
   apiRequest: (method: string, url: string, data?: unknown): void => {
     if (isDevelopment) {
+      // eslint-disable-next-line no-console
       console.log(`[API ${method}]`, url, data || "");
     }
   },
@@ -96,6 +99,7 @@ export const logger = {
     data?: unknown,
   ): void => {
     if (isDevelopment) {
+      // eslint-disable-next-line no-console
       console.log(`[API ${method}] ${status}`, url, data || "");
     }
   },
