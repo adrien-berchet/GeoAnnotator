@@ -160,8 +160,22 @@ export function FriendDetailPage() {
   ) => {
     if (!friendId) return;
 
-    await updateAutoShareRule(friendId, ruleId, request);
-    await loadAutoShareRules();
+    // Optimistic update: update local state immediately
+    setAutoShareRules((prevRules) =>
+      prevRules.map((rule) =>
+        rule.id === ruleId ? { ...rule, ...request } : rule,
+      ),
+    );
+
+    try {
+      // Update on server
+      await updateAutoShareRule(friendId, ruleId, request);
+      // Success - state is already updated optimistically
+    } catch (err) {
+      // Revert optimistic update on error by reloading
+      await loadAutoShareRules();
+      throw err;
+    }
   };
 
   const handleDeleteRule = async (ruleId: string) => {

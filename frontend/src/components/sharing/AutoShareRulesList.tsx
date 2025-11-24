@@ -39,7 +39,7 @@ export function AutoShareRulesList({
         is_active: !rule.is_active,
       });
     } catch (err) {
-      setError(getErrorMessage(err));
+      setError(`Failed to update rule status: ${getErrorMessage(err)}`);
     } finally {
       setUpdatingRuleId(null);
     }
@@ -59,7 +59,7 @@ export function AutoShareRulesList({
         permission_level: newPermission,
       });
     } catch (err) {
-      setError(getErrorMessage(err));
+      setError(`Failed to update permission: ${getErrorMessage(err)}`);
     } finally {
       setUpdatingRuleId(null);
     }
@@ -76,7 +76,7 @@ export function AutoShareRulesList({
     try {
       await onDeleteRule(ruleId);
     } catch (err) {
-      setError(getErrorMessage(err));
+      setError(`Failed to delete rule: ${getErrorMessage(err)}`);
       setDeletingRuleId(null);
     }
   };
