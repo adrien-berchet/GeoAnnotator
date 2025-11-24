@@ -9,6 +9,7 @@ import MDEditor from "@uiw/react-md-editor";
 import type { Annotation } from "../../types/annotation";
 import { TextAnnotationEditor } from "./TextAnnotationEditor";
 import { useColorMode } from "../../hooks/useColorMode";
+import { logger } from "../../utils/logger";
 
 interface SortableAnnotationItemProps {
   annotation: Annotation;
@@ -65,7 +66,7 @@ export function SortableAnnotationItem({
     opacity: isDragging ? 0.5 : 1,
   };
 
-  console.log(`🔍 Rendering annotation ${annotation.id.slice(0, 8)}:`, {
+  logger.debug(`🔍 Rendering annotation ${annotation.id.slice(0, 8)}:`, {
     is_trashed: annotation.is_trashed,
     trash_days_remaining: annotation.trash_days_remaining,
   });

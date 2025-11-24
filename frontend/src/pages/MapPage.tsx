@@ -26,6 +26,7 @@ import { getPoints, searchPointsByTags, getTags } from "../api/points";
 import { getPointTypes } from "../api/types";
 import { getErrorMessage } from "../api/client";
 import { getSettings } from "../api/settings";
+import { logger } from "../utils/logger";
 import type { GPSPoint, Tag, PointType } from "../types/point";
 import {
   useDevicePosition,
@@ -96,7 +97,7 @@ export function MapPage() {
           return center;
         }
       } catch (err) {
-        console.warn("Invalid map center in localStorage:", err);
+        logger.warn("Invalid map center in localStorage:", err);
       }
     }
     return [48.8566, 2.3522]; // Default to Paris
@@ -111,7 +112,7 @@ export function MapPage() {
           return zoom;
         }
       } catch (err) {
-        console.warn("Invalid map zoom in localStorage:", err);
+        logger.warn("Invalid map zoom in localStorage:", err);
       }
     }
     return 13; // Default zoom level
@@ -278,7 +279,7 @@ export function MapPage() {
       const data = await getTags();
       setTags(data);
     } catch (err) {
-      console.error("Error loading tags:", err);
+      logger.error("Error loading tags:", err);
     }
   };
 
@@ -290,7 +291,7 @@ export function MapPage() {
       const data = await getPointTypes();
       setTypes(data);
     } catch (err) {
-      console.error("Error loading types:", err);
+      logger.error("Error loading types:", err);
     }
   };
 
@@ -302,8 +303,6 @@ export function MapPage() {
     setError("");
 
     try {
-      // TODO: Comment this delay after testing the loading spinner
-      // await new Promise((resolve) => setTimeout(resolve, 5000));
       const data = await getPoints();
       setAllPoints(data);
       setPoints(data);
@@ -349,7 +348,7 @@ export function MapPage() {
       // Mark that we've loaded the preference for this user
       localStorage.setItem(lastUserKey, user.id);
     } catch (err) {
-      console.error("Error loading default map type:", err);
+      logger.error("Error loading default map type:", err);
       // Don't show error to user, just use the default map type
     }
   };
@@ -473,14 +472,6 @@ export function MapPage() {
     setPoints([...points, point]);
   };
 
-  /**
-   * Handle point click.
-   */
-  const handlePointClick = (point: GPSPoint) => {
-    // TODO: Navigate to point detail page
-    console.log("Point clicked:", point);
-  };
-
   if (error) {
     return (
       <div className="error-container">
@@ -497,33 +488,8 @@ export function MapPage() {
     <div className="map-page">
       {/* Loading indicator for points (non-blocking) */}
       {isLoading && showLoadingIndicator && (
-        <div
-          style={{
-            position: "absolute",
-            top: "4.5rem",
-            left: "50%",
-            transform: "translateX(-50%)",
-            zIndex: 1000,
-            background: "rgba(255, 255, 255, 0.95)",
-            padding: "0.5rem 1rem",
-            borderRadius: "0.5rem",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-            display: "flex",
-            alignItems: "center",
-            gap: "0.5rem",
-            fontSize: "0.875rem",
-          }}
-        >
-          <div
-            style={{
-              width: "1rem",
-              height: "1rem",
-              border: "2px solid #e0e0e0",
-              borderTop: "2px solid #2196f3",
-              borderRadius: "50%",
-              animation: "spin 1s linear infinite",
-            }}
-          />
+        <div className="map-loading-indicator">
+          <div className="map-loading-spinner" />
           {t("map.loadingPoints", "Loading points...")}
         </div>
       )}
@@ -543,11 +509,7 @@ export function MapPage() {
           maxClusterRadius={50}
         >
           {points.map((point) => (
-            <PointMarker
-              key={point.id}
-              point={point}
-              onClick={handlePointClick}
-            />
+            <PointMarker key={point.id} point={point} />
           ))}
         </MarkerClusterGroup>
 

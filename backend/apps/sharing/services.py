@@ -4,6 +4,7 @@ Sharing services.
 Handles permissions, email invitations, and share management.
 """
 
+import logging
 from datetime import timedelta
 
 from django.conf import settings
@@ -17,6 +18,9 @@ from apps.points.models import GPSPoint
 from .models import AutoShareRule
 from .models import Friendship
 from .models import Share
+
+# Module-level logger
+logger = logging.getLogger(__name__)
 
 
 class PermissionService:
@@ -942,7 +946,10 @@ class AutoShareService:
                 )
                 shares_created += 1
 
-                # TODO: Send notification to friend about auto-shared point
+                # TODO: Implement notification system for auto-shared points
+                # Should notify friend via email or in-app notification that a new point
+                # has been automatically shared with them based on friendship settings.
+                # Priority: LOW - Nice-to-have feature enhancement
 
             except Exception as e:
                 results.append(

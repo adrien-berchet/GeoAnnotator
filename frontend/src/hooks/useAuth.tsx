@@ -8,6 +8,7 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import type { ReactNode } from "react";
 import type { User, AuthState } from "../types/auth";
+import { logger } from "../utils/logger";
 
 interface AuthContextType extends AuthState {
   login: (accessToken: string, refreshToken: string, user: User) => void;
@@ -60,7 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           });
         }
       } catch (error) {
-        console.error("Failed to initialize auth:", error);
+        logger.error("Failed to initialize auth:", error);
         setState({
           user: null,
           isAuthenticated: false,

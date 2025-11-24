@@ -19,6 +19,8 @@ from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import TokenError
 
+from apps.core.ratelimit import ratelimit
+
 from .models import User
 from .serializers import AccountDeletionConfirmSerializer
 from .serializers import AccountSerializer
@@ -44,11 +46,14 @@ class RegisterView(generics.CreateAPIView):
     """
     POST /api/auth/register
     Register a new user account.
+
+    Rate limit: 5 registrations per hour per IP address
     """
 
     permission_classes = [AllowAny]
     serializer_class = RegisterSerializer
 
+    @ratelimit(key="ip", rate="5/h", method="POST")
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -82,10 +87,13 @@ class ConfirmEmailView(APIView):
     """
     POST /api/auth/confirm-email
     Confirm user email with token from confirmation link.
+
+    Rate limit: 10 confirmations per hour per IP address
     """
 
     permission_classes = [AllowAny]
 
+    @ratelimit(key="ip", rate="10/h", method="POST")
     def post(self, request):
         token = request.data.get("token")
 
@@ -147,10 +155,13 @@ class LoginView(APIView):
     """
     POST /api/auth/login
     Authenticate user and return JWT tokens.
+
+    Rate limit: 5 login attempts per minute per IP address
     """
 
     permission_classes = [AllowAny]
 
+    @ratelimit(key="ip", rate="5/m", method="POST")
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -176,10 +187,13 @@ class RefreshTokenView(APIView):
     """
     POST /api/auth/refresh
     Refresh access token using refresh token.
+
+    Rate limit: 30 refresh requests per minute per IP address
     """
 
     permission_classes = [AllowAny]
 
+    @ratelimit(key="ip", rate="30/m", method="POST")
     def post(self, request):
         serializer = RefreshTokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)

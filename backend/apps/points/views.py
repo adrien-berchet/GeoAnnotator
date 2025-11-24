@@ -2,6 +2,7 @@
 GPS Point views for CRUD operations and spatial search.
 """
 
+import logging
 import os
 import uuid as uuid_lib
 from datetime import timedelta
@@ -11,6 +12,7 @@ import requests
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
+from django.db.models import Count
 from django.db.models import F
 from django.db.models import IntegerField
 from django.db.models import OuterRef
@@ -21,11 +23,12 @@ from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound
-from rest_framework.exceptions import PermissionDenied
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from apps.core.exceptions import AutoShareRuleError
+from apps.core.mixins import PermissionCheckMixin
 from apps.sharing.services import PermissionService
 
 from .models import GPSPoint
@@ -42,8 +45,11 @@ from .serializers import UpdateGPSPointSerializer
 from .services import EditingLockService
 from .services import PointService
 
+# Module-level logger
+logger = logging.getLogger(__name__)
 
-class GPSPointViewSet(viewsets.ModelViewSet):
+
+class GPSPointViewSet(PermissionCheckMixin, viewsets.ModelViewSet):
     """
     ViewSet for GPS Point CRUD operations and spatial search.
 
@@ -73,7 +79,13 @@ class GPSPointViewSet(viewsets.ModelViewSet):
         return GPSPointSerializer
 
     def get_queryset(self):
-        """Return points accessible to current user with optional search filtering."""
+        """
+        Return points accessible to current user with optional search filtering.
+
+        Optimizations:
+        - Annotates annotation_count and share_count to avoid N+1 queries
+        - Prefetches related objects (owner, type, tags) for efficiency
+        """
         user = self.request.user
         queryset = PermissionService.get_accessible_points(user, include_public=True)
 
@@ -85,6 +97,32 @@ class GPSPointViewSet(viewsets.ModelViewSet):
                 | Q(description__icontains=search_query)
                 | Q(tags__name__icontains=search_query)
             ).distinct()
+
+        # Annotate counts to avoid N+1 queries in serializer
+        # Count only non-trashed annotations
+        queryset = queryset.annotate(
+            cached_annotation_count=Count(
+                "annotations",
+                filter=Q(annotations__trash_entry__isnull=True),
+                distinct=True,
+            ),
+            # Count active shares (only meaningful for owners, but computed for all)
+            cached_share_count=Count(
+                "shares",
+                filter=Q(shares__is_active=True),
+                distinct=True,
+            ),
+        )
+
+        # Prefetch related objects to avoid additional queries
+        queryset = queryset.select_related(
+            "owner",  # Point owner user
+            "type",  # Point type
+            "type__owner",  # Point type owner (for PointTypeSerializer)
+        ).prefetch_related(
+            "tags",  # Point tags
+            "tags__owner",  # Tag owners (for TagSerializer)
+        )
 
         return queryset
 
@@ -110,12 +148,27 @@ class GPSPointViewSet(viewsets.ModelViewSet):
 
         try:
             AutoShareService.apply_auto_share_rules(point)
-        except Exception as e:
+        except AutoShareRuleError as e:
             # Log error but don't fail point creation
-            import logging
-
-            logger = logging.getLogger(__name__)
-            logger.error(f"Failed to apply auto-share rules for point {point.id}: {e}")
+            # Auto-sharing is a convenience feature, not critical
+            logger.error(
+                "Failed to apply auto-share rules",
+                extra={
+                    "point_id": str(point.id),
+                    "user_id": str(request.user.id),
+                    "error": str(e),
+                },
+                exc_info=True,
+            )
+        except Exception:
+            # Catch any other unexpected errors
+            logger.exception(
+                "Unexpected error applying auto-share rules",
+                extra={
+                    "point_id": str(point.id),
+                    "user_id": str(request.user.id),
+                },
+            )
 
         # Return created point
         response_serializer = GPSPointSerializer(point, context={"request": request})
@@ -123,35 +176,13 @@ class GPSPointViewSet(viewsets.ModelViewSet):
 
     def retrieve(self, request, pk=None):
         """Get point detail."""
-        # Get point without permission filter to distinguish 404 from 403
-        try:
-            point = GPSPoint.objects.get(pk=pk)
-        except GPSPoint.DoesNotExist:
-            raise NotFound("Point not found") from None
-
-        # Check if point is trashed
-        if hasattr(point, "trash_entry") and point.trash_entry:
-            raise NotFound("Point not found")
-
-        # Check view permission
-        # Return 404 instead of 403 to not reveal existence of private points
-        if not PermissionService.can_view(point, request.user):
-            raise NotFound("Point not found")
-
+        point = self.get_object_with_permission(pk, "can_view")
         serializer = GPSPointSerializer(point, context={"request": request})
         return Response(serializer.data)
 
     def update(self, request, pk=None, partial=False):
         """Update GPS point."""
-        # Get point without permission filter to distinguish 404 from 403
-        try:
-            point = GPSPoint.objects.get(pk=pk)
-        except GPSPoint.DoesNotExist:
-            raise NotFound("Point not found") from None
-
-        # Check edit permission
-        if not PermissionService.can_edit(point, request.user):
-            raise PermissionDenied("You do not have permission to edit this point")
+        point = self.get_object_with_permission(pk, "can_edit")
 
         # Check if point is locked by another user
         if EditingLockService.is_locked(point) and point.editing_lock_user != request.user:
@@ -188,15 +219,7 @@ class GPSPointViewSet(viewsets.ModelViewSet):
 
     def destroy(self, request, pk=None):
         """Delete GPS point (move to trash)."""
-        # Get point without permission filter to distinguish 404 from 403
-        try:
-            point = GPSPoint.objects.get(pk=pk)
-        except GPSPoint.DoesNotExist:
-            raise NotFound("Point not found") from None
-
-        # Check if owner (only owner can delete)
-        if not PermissionService.is_owner(point, request.user):
-            raise PermissionDenied("Only the owner can delete this point")
+        point = self.get_object_with_permission(pk, "is_owner")
 
         # Delete via service (moves to trash)
         PointService.delete_point(point, request.user)
@@ -438,7 +461,7 @@ class TagViewSet(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class PointTypeViewSet(viewsets.ModelViewSet):
+class PointTypeViewSet(PermissionCheckMixin, viewsets.ModelViewSet):
     """
     ViewSet for PointType CRUD operations and reordering.
 
@@ -496,6 +519,38 @@ class PointTypeViewSet(viewsets.ModelViewSet):
 
         return queryset
 
+    def _get_point_type_or_404(self, pk, require_ownership=False):
+        """
+        Get point type with permission check.
+
+        Args:
+            pk: Point type primary key
+            require_ownership: If True, user must own the type (for edit/delete)
+                             If False, user can access owned types OR base types (for view)
+
+        Returns:
+            PointType instance
+
+        Raises:
+            NotFound: If type doesn't exist, is deleted, or user lacks access
+        """
+        try:
+            point_type = PointType.objects.get(pk=pk, status="active")
+        except PointType.DoesNotExist:
+            raise NotFound("Point type not found") from None
+
+        # Check permission based on requirement
+        if require_ownership:
+            # For edit/delete: user must own the type
+            if point_type.owner != self.request.user:
+                raise NotFound("Point type not found")
+        else:
+            # For view: user must own the type OR it's a base type
+            if point_type.owner is not None and point_type.owner != self.request.user:
+                raise NotFound("Point type not found")
+
+        return point_type
+
     def create(self, request):
         """Create new point type for the authenticated user."""
         serializer = self.get_serializer(data=request.data, context={"request": request})
@@ -508,28 +563,13 @@ class PointTypeViewSet(viewsets.ModelViewSet):
 
     def retrieve(self, request, pk=None):
         """Get point type detail."""
-        try:
-            point_type = PointType.objects.get(pk=pk, status="active")
-        except PointType.DoesNotExist:
-            raise NotFound("Point type not found") from None
-
-        # Check permission: user must own the type or it's a base type
-        if point_type.owner is not None and point_type.owner != request.user:
-            raise NotFound("Point type not found")
-
+        point_type = self._get_point_type_or_404(pk, require_ownership=False)
         serializer = PointTypeSerializer(point_type, context={"request": request})
         return Response(serializer.data)
 
     def partial_update(self, request, pk=None):
         """Update point type (partial update only)."""
-        try:
-            point_type = PointType.objects.get(pk=pk, status="active")
-        except PointType.DoesNotExist:
-            raise NotFound("Point type not found") from None
-
-        # Check permission: user must own the type
-        if point_type.owner != request.user:
-            raise NotFound("Point type not found")
+        point_type = self._get_point_type_or_404(pk, require_ownership=True)
 
         serializer = PointTypeSerializer(
             point_type, data=request.data, partial=True, context={"request": request}
@@ -545,14 +585,7 @@ class PointTypeViewSet(viewsets.ModelViewSet):
 
         Switches all associated points to the default 'Point' type.
         """
-        try:
-            point_type = PointType.objects.get(pk=pk, status="active")
-        except PointType.DoesNotExist:
-            raise NotFound("Point type not found") from None
-
-        # Check permission: user must own the type
-        if point_type.owner != request.user:
-            raise NotFound("Point type not found")
+        point_type = self._get_point_type_or_404(pk, require_ownership=True)
 
         # Get or create default type
         default_type, _ = PointType.objects.get_or_create(

@@ -25,6 +25,32 @@ from apps.trash.models import AnnotationTrash
 from apps.trash.models import Trash
 
 
+@pytest.fixture(autouse=True)
+def mock_ratelimit_for_tests(monkeypatch):
+    """
+    Automatically multiply all rate limits by a large factor during tests.
+
+    This ensures that:
+    1. Rate limiting code is actually executed and tested
+    2. Tests don't fail due to exceeding rate limits
+    3. Production code remains clean without test-specific logic
+
+    The multiplier can be configured via RATE_LIMIT_TESTING_MULTIPLIER setting.
+    """
+    from apps.core import ratelimit as ratelimit_module
+
+    original_ratelimit = ratelimit_module.ratelimit
+    multiplier = getattr(settings, "RATE_LIMIT_TESTING_MULTIPLIER", 10000)
+
+    def ratelimit_with_multiplied_rate(key="ip", rate="5/m", method=None, block=True):
+        # Multiply the rate limit for tests
+        count, period = rate.split("/")
+        adjusted_rate = f"{int(count) * multiplier}/{period}"
+        return original_ratelimit(key=key, rate=adjusted_rate, method=method, block=block)
+
+    monkeypatch.setattr(ratelimit_module, "ratelimit", ratelimit_with_multiplied_rate)
+
+
 def create_verified_user(username: str, email: str, password: str) -> User:
     """
     Helper function to create a verified user for testing.

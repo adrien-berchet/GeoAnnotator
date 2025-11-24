@@ -438,8 +438,17 @@ class GPSPointSerializer(serializers.ModelSerializer):
         return None
 
     def get_annotation_count(self, obj):
-        """Get the count of non-deleted annotations for this point."""
-        # Exclude annotations that have a trash_entry (soft-deleted)
+        """
+        Get the count of non-deleted annotations for this point.
+
+        Uses cached_annotation_count from queryset annotation if available,
+        otherwise falls back to database query.
+        """
+        # Use cached count from queryset annotation (avoids N+1 query)
+        if hasattr(obj, "cached_annotation_count"):
+            return obj.cached_annotation_count
+
+        # Fallback for single object retrieval without annotation
         return obj.annotations.exclude(trash_entry__isnull=False).count()
 
     def get_shared_by(self, obj):
@@ -476,6 +485,7 @@ class GPSPointSerializer(serializers.ModelSerializer):
         Get the number of users this point is shared with.
 
         Returns count for owners, 0 for non-owners (they can't see this info).
+        Uses cached_share_count from queryset annotation if available.
         """
         user = self.context.get("request").user if self.context.get("request") else None
 
@@ -486,7 +496,11 @@ class GPSPointSerializer(serializers.ModelSerializer):
         if obj.owner != user:
             return 0
 
-        # Count active shares for this point
+        # Use cached count from queryset annotation (avoids N+1 query)
+        if hasattr(obj, "cached_share_count"):
+            return obj.cached_share_count
+
+        # Fallback for single object retrieval without annotation
         from apps.sharing.models import Share
 
         return Share.objects.filter(gps_point=obj, is_active=True).count()
@@ -720,8 +734,16 @@ class GPSPointListSerializer(serializers.ModelSerializer):
         return None
 
     def get_annotation_count(self, obj):
-        """Get the count of non-deleted annotations for this point."""
-        # Exclude annotations that have a trash_entry (soft-deleted)
+        """
+        Get the count of non-deleted annotations for this point.
+
+        Uses cached_annotation_count from queryset annotation if available.
+        """
+        # Use cached count from queryset annotation (avoids N+1 query)
+        if hasattr(obj, "cached_annotation_count"):
+            return obj.cached_annotation_count
+
+        # Fallback for single object retrieval without annotation
         return obj.annotations.exclude(trash_entry__isnull=False).count()
 
     def get_share_count(self, obj):
@@ -729,6 +751,7 @@ class GPSPointListSerializer(serializers.ModelSerializer):
         Get the number of users this point is shared with.
 
         Returns count for owners, 0 for non-owners (they can't see this info).
+        Uses cached_share_count from queryset annotation if available.
         """
         user = self.context.get("request").user if self.context.get("request") else None
 
@@ -739,7 +762,11 @@ class GPSPointListSerializer(serializers.ModelSerializer):
         if obj.owner != user:
             return 0
 
-        # Count active shares for this point
+        # Use cached count from queryset annotation (avoids N+1 query)
+        if hasattr(obj, "cached_share_count"):
+            return obj.cached_share_count
+
+        # Fallback for single object retrieval without annotation
         from apps.sharing.models import Share
 
         return Share.objects.filter(gps_point=obj, is_active=True).count()

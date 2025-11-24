@@ -19,6 +19,7 @@ import {
 } from "@/utils/i18n";
 import { getSettings, updateSettings } from "@/api/settings";
 import { useAuth } from "@/hooks/useAuth";
+import { logger } from "@/utils/logger";
 
 interface LanguageContextType {
   language: Language;
@@ -59,7 +60,7 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
           setLanguageState(initialLang);
         }
       } catch (error) {
-        console.error("Error loading language:", error);
+        logger.error("Error loading language:", error);
         // Fallback to browser/localStorage language
         const initialLang = getInitialLanguage();
         setLanguageState(initialLang);
@@ -86,7 +87,7 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
           await updateSettings({ language: newLanguage });
         }
       } catch (error) {
-        console.error("Error updating language:", error);
+        logger.error("Error updating language:", error);
         // Even if backend update fails, keep the language change in localStorage
         // This ensures the user preference is saved locally
       }

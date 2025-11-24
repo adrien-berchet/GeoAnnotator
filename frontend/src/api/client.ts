@@ -6,6 +6,7 @@
 
 import axios from "axios";
 import type { AxiosError, InternalAxiosRequestConfig } from "axios";
+import { logger } from "../utils/logger";
 
 /**
  * Base API URL from environment or default to localhost.
@@ -130,8 +131,8 @@ export function getErrorMessage(error: unknown): string {
       const data = axiosError.response.data;
 
       // Debug: log the error structure
-      console.log("Error response data:", data);
-      console.log("Error status:", axiosError.response.status);
+      logger.debug("Error response data:", data);
+      logger.debug("Error status:", axiosError.response.status);
 
       // Check for custom error format with details field
       if (data.details) {

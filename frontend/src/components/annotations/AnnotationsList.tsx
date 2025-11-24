@@ -26,6 +26,7 @@ import {
   reorderAnnotations,
 } from "../../api/annotations";
 import { getErrorMessage } from "../../api/client";
+import { logger } from "../../utils/logger";
 import type { Annotation } from "../../types/annotation";
 import { AnnotationPreview } from "./AnnotationPreview";
 import { SortableAnnotationItem } from "./SortableAnnotationItem";
@@ -48,9 +49,9 @@ export function AnnotationsList({
   onAnnotationsReordered,
 }: AnnotationsListProps) {
   const { t } = useLanguage();
-  console.log("🚀 AnnotationsList component loaded for point:", pointId);
-  console.log("📥 Received annotations:", annotations);
-  console.log(
+  logger.debug("🚀 AnnotationsList component loaded for point:", pointId);
+  logger.debug("📥 Received annotations:", annotations);
+  logger.debug(
     "📊 Trashed annotations:",
     annotations.filter((a) => a.is_trashed),
   );
@@ -96,7 +97,7 @@ export function AnnotationsList({
           const url = window.URL.createObjectURL(blob);
           blobUrls[annotation.id] = url;
         } catch (err) {
-          console.error(`Failed to load image ${annotation.id}:`, err);
+          logger.error(`Failed to load image ${annotation.id}:`, err);
         }
       }
 
@@ -156,7 +157,7 @@ export function AnnotationsList({
         onAnnotationsReordered(reorderedWithOrder);
       }
     } catch (err) {
-      console.error("Failed to save order:", err);
+      logger.error("Failed to save order:", err);
       setError(getErrorMessage(err));
       // Revert on error
       setLocalAnnotations(annotations);
@@ -175,20 +176,20 @@ export function AnnotationsList({
       return;
     }
 
-    console.log("🗑️ Deleting annotation:", annotationId);
+    logger.debug("🗑️ Deleting annotation:", annotationId);
     setDeletingId(annotationId);
     setError("");
 
     try {
       await deleteAnnotation(pointId, annotationId);
-      console.log("✅ Annotation deleted successfully");
+      logger.debug("✅ Annotation deleted successfully");
 
       // IMPORTANT: Ne pas retirer l'annotation, juste notifier le parent
       // Le parent devra recharger les annotations pour voir l'état "trashed"
       onAnnotationDeleted(annotationId);
     } catch (err) {
       const errorMsg = getErrorMessage(err);
-      console.error("❌ Delete error:", errorMsg);
+      logger.error("❌ Delete error:", errorMsg);
 
       // Check if already in trash
       if (

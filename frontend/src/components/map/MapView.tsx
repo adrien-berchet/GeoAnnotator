@@ -10,6 +10,7 @@ import L from "leaflet";
 import type { Map as LeafletMap } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { initializeLeaflet } from "../../utils/leaflet-config";
+import { logger } from "../../utils/logger";
 import type { TileLayer as TileLayerType } from "./MapLayerSelector";
 import { DEFAULT_TILE_LAYER } from "./MapLayerSelector";
 
@@ -60,7 +61,7 @@ function ScaleControlHandler() {
         }
       } catch (error) {
         // Silently ignore errors in test environment
-        console.debug("Could not add scale control:", error);
+        logger.debug("Could not add scale control:", error);
       }
     }
   }, [map]);

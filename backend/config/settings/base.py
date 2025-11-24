@@ -52,6 +52,7 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",  # Serve static files in production
     "corsheaders.middleware.CorsMiddleware",  # CORS before CommonMiddleware
+    "apps.core.middleware.RequestIDMiddleware",  # Request ID tracking for distributed tracing
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -260,3 +261,34 @@ CORS_ALLOWED_ORIGINS = [origin.strip() for origin in _cors_origins.split(",") if
 
 # Frontend URL for email confirmation links
 FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:3000")
+
+# Sentry Configuration for Error Tracking and Performance Monitoring
+# Get Sentry DSN from environment variable (optional)
+SENTRY_DSN = os.environ.get("SENTRY_DSN", "")
+SENTRY_ENVIRONMENT = os.environ.get("SENTRY_ENVIRONMENT", "development")
+SENTRY_TRACES_SAMPLE_RATE = float(
+    os.environ.get("SENTRY_TRACES_SAMPLE_RATE", "0.1")
+)  # 10% of transactions
+
+if SENTRY_DSN:
+    import sentry_sdk
+    from sentry_sdk.integrations.celery import CeleryIntegration
+    from sentry_sdk.integrations.django import DjangoIntegration
+    from sentry_sdk.integrations.redis import RedisIntegration
+
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        environment=SENTRY_ENVIRONMENT,
+        integrations=[
+            DjangoIntegration(),
+            RedisIntegration(),
+            CeleryIntegration(),
+        ],
+        # Set traces_sample_rate to capture performance data
+        # In production, you may want to lower this to reduce overhead
+        traces_sample_rate=SENTRY_TRACES_SAMPLE_RATE,
+        # Send all events to Sentry
+        send_default_pii=False,  # Don't send personally identifiable information
+        # Include request ID in breadcrumbs
+        before_send=lambda event, hint: event,
+    )
