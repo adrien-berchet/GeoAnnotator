@@ -1,6 +1,23 @@
 import { useState, useEffect, useRef, Fragment } from "react";
 import { useNavigate } from "react-router-dom";
 import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import {
   getPointTypes,
   createPointType,
   updatePointType,
@@ -20,12 +37,341 @@ import { getPointTypeName } from "../utils/pointTypeUtils";
 import TranslationManager from "../components/points/TranslationManager";
 import "./PointTypeManagementPage.css";
 
+// Sortable row component
+interface SortableTypeRowProps {
+  type: PointType;
+  language: string;
+  editingTypeId: string | null;
+  editingTypeNames: Record<string, string>;
+  editingTypeIcon: string;
+  editingIconFile: File | null;
+  editingIconLoadError: boolean;
+  updating: boolean;
+  deleting: string | null;
+  onStartEdit: (type: PointType) => void;
+  onCancelEdit: () => void;
+  onUpdate: (typeId: string) => void;
+  onDelete: (typeId: string, typeName: string) => void;
+  setEditingTypeNames: (names: Record<string, string>) => void;
+  setEditingTypeIcon: (icon: string) => void;
+  setEditingIconLoadError: (error: boolean) => void;
+  handleEditFileSelect: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleRemoveEditFile: () => void;
+  editFileInputRef: React.RefObject<HTMLInputElement | null>;
+  uploading: boolean;
+  setUploading: (uploading: boolean) => void;
+  setError: (error: string | null) => void;
+  t: (key: string, fallback?: string) => string;
+}
+
+function SortableTypeRow({
+  type,
+  language,
+  editingTypeId,
+  editingTypeNames,
+  editingTypeIcon,
+  editingIconFile,
+  editingIconLoadError,
+  updating,
+  deleting,
+  onStartEdit,
+  onCancelEdit,
+  onUpdate,
+  onDelete,
+  setEditingTypeNames,
+  setEditingTypeIcon,
+  setEditingIconLoadError,
+  handleEditFileSelect,
+  handleRemoveEditFile,
+  editFileInputRef,
+  uploading,
+  setUploading,
+  setError,
+  t,
+}: SortableTypeRowProps) {
+  const navigate = useNavigate();
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: type.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <Fragment>
+      <tr
+        ref={setNodeRef}
+        style={style}
+        className={`${!type.owner ? "base-type" : ""} ${isDragging ? "dragging" : ""}`}
+      >
+        <td>
+          <button
+            className="drag-handle"
+            {...attributes}
+            {...listeners}
+            aria-label="Drag to reorder"
+          >
+            ⋮
+          </button>
+        </td>
+        <td>
+          {editingTypeId === type.id ? (
+            <div className="icon-edit-preview">
+              {editingTypeIcon && editingTypeIcon !== "/icons/default.svg" ? (
+                editingTypeIcon.startsWith("http") ||
+                editingTypeIcon.startsWith("/") ||
+                editingTypeIcon.startsWith("data:") ? (
+                  editingIconLoadError ? (
+                    <span className="icon-error" title="Icon load error">
+                      ❌
+                    </span>
+                  ) : (
+                    <img
+                      src={editingTypeIcon}
+                      alt="Icon preview"
+                      className="type-icon"
+                      onLoad={() => setEditingIconLoadError(false)}
+                      onError={() => setEditingIconLoadError(true)}
+                    />
+                  )
+                ) : (
+                  <span className="type-icon-emoji">{editingTypeIcon}</span>
+                )
+              ) : (
+                <span className="type-icon-placeholder">📍</span>
+              )}
+            </div>
+          ) : type.icon && type.icon !== "/icons/default.svg" ? (
+            type.icon.startsWith("http") ||
+            type.icon.startsWith("/") ||
+            type.icon.startsWith("data:") ? (
+              <img
+                src={type.icon}
+                alt=""
+                className="type-icon"
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
+                }}
+              />
+            ) : (
+              <span className="type-icon-emoji">{type.icon}</span>
+            )
+          ) : (
+            <span className="type-icon-placeholder">📍</span>
+          )}
+        </td>
+        <td>
+          {editingTypeId === type.id ? (
+            <span className="type-name-editing">
+              {t("types.editingTranslations", "Editing translations below")}
+            </span>
+          ) : (
+            <span className="type-name">
+              {getPointTypeName(type, language)}
+            </span>
+          )}
+        </td>
+        <td>
+          <div className="action-buttons">
+            {editingTypeId === type.id ? (
+              <>
+                <button
+                  onClick={() => onUpdate(type.id)}
+                  disabled={updating}
+                  className="btn btn-success"
+                >
+                  {t("common.save", "Save")}
+                </button>
+                <button
+                  onClick={onCancelEdit}
+                  disabled={updating}
+                  className="btn btn-secondary"
+                >
+                  {t("common.cancel", "Cancel")}
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => navigate(`/map?types=${type.id}`)}
+                  className="btn btn-view btn-sm"
+                  aria-label={`${t("types.viewOnMap", "View")} ${getPointTypeName(type, language)} ${t("types.onMap", "on map")}`}
+                  title={t("types.viewOnMap", "View on map")}
+                >
+                  🗺️ {t("nav.map", "Map")}
+                </button>
+                <button
+                  onClick={() => navigate(`/points?types=${type.id}`)}
+                  className="btn btn-view btn-sm"
+                  aria-label={`${t("types.view", "View")} ${getPointTypeName(type, language)} ${t("types.list", "list")}`}
+                  title={t("types.viewPointsList", "View points list")}
+                >
+                  📋 {t("tags.list", "List")}
+                </button>
+                {type.owner && (
+                  <>
+                    <button
+                      onClick={() => onStartEdit(type)}
+                      className="btn btn-info btn-sm"
+                      aria-label={`${t("common.edit", "Edit")} ${getPointTypeName(type, language)}`}
+                    >
+                      {t("common.edit", "Edit")}
+                    </button>
+                    <button
+                      onClick={() =>
+                        onDelete(type.id, getPointTypeName(type, language))
+                      }
+                      disabled={deleting === type.id}
+                      className="btn btn-danger btn-sm"
+                      aria-label={`${t("common.delete", "Delete")} ${getPointTypeName(type, language)}`}
+                    >
+                      {deleting === type.id
+                        ? t("types.deleting", "Deleting...")
+                        : t("common.delete", "Delete")}
+                    </button>
+                  </>
+                )}
+              </>
+            )}
+          </div>
+        </td>
+      </tr>
+      {editingTypeId === type.id && (
+        <tr className="edit-translation-row">
+          <td colSpan={4}>
+            <div className="edit-section">
+              <TranslationManager
+                names={editingTypeNames}
+                onChange={setEditingTypeNames}
+                disabled={updating}
+              />
+
+              <div className="icon-edit-section">
+                <label>Edit Icon:</label>
+
+                {/* File upload section */}
+                <div className="icon-upload-controls">
+                  <input
+                    ref={editFileInputRef}
+                    id={`edit-icon-file-${type.id}`}
+                    type="file"
+                    accept=".svg,.png,.jpg,.jpeg,image/svg+xml,image/png,image/jpeg"
+                    onChange={handleEditFileSelect}
+                    disabled={updating || uploading}
+                    style={{ display: "none" }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => editFileInputRef.current?.click()}
+                    className="btn btn-secondary btn-sm"
+                    disabled={updating || uploading}
+                  >
+                    {uploading ? "Uploading..." : "Choose File"}
+                  </button>
+
+                  {editingIconFile && (
+                    <div className="file-preview">
+                      <span className="file-name">{editingIconFile.name}</span>
+                      <button
+                        type="button"
+                        onClick={handleRemoveEditFile}
+                        className="btn-icon"
+                        disabled={updating || uploading}
+                        aria-label="Remove file"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <div className="form-divider">
+                  <span>OR</span>
+                </div>
+
+                {/* Manual URL/emoji input */}
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "0.5rem",
+                    alignItems: "center",
+                    flex: 1,
+                  }}
+                >
+                  <input
+                    type="text"
+                    value={editingTypeIcon}
+                    onChange={(e) => {
+                      setEditingTypeIcon(e.target.value);
+                      setEditingIconLoadError(false);
+                    }}
+                    placeholder="Enter emoji (e.g., 🎨) or URL"
+                    maxLength={500}
+                    disabled={updating || uploading}
+                    style={{ flex: 1 }}
+                  />
+                  {/* Download button for external URLs with CORS issues */}
+                  {editingTypeIcon &&
+                    editingTypeIcon.startsWith("http") &&
+                    editingIconLoadError && (
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          try {
+                            setUploading(true);
+                            setError(null);
+                            const result =
+                              await downloadTypeIcon(editingTypeIcon);
+                            setEditingTypeIcon(result.icon_url);
+                            setEditingIconLoadError(false);
+                          } catch (err) {
+                            setError(getErrorMessage(err));
+                          } finally {
+                            setUploading(false);
+                          }
+                        }}
+                        className="btn btn-secondary btn-sm"
+                        disabled={uploading}
+                        title="Download and save this icon locally"
+                      >
+                        {uploading ? "Downloading..." : "Download"}
+                      </button>
+                    )}
+                </div>
+
+                <small className="form-help">
+                  Upload a file (SVG, PNG, JPG - max 1MB) or enter an emoji/URL
+                </small>
+              </div>
+            </div>
+          </td>
+        </tr>
+      )}
+    </Fragment>
+  );
+}
+
 export default function PointTypeManagementPage() {
   const { t, language } = useLanguage();
-  const navigate = useNavigate();
   const [types, setTypes] = useState<PointType[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
 
   // Create form
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -311,30 +657,34 @@ export default function PointTypeManagementPage() {
     }
   };
 
-  const moveType = (index: number, direction: "up" | "down") => {
-    const newTypes = [...types];
-    const targetIndex = direction === "up" ? index - 1 : index + 1;
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
 
-    if (targetIndex < 0 || targetIndex >= newTypes.length) {
+    if (!over || active.id === over.id) {
       return;
     }
 
-    [newTypes[index], newTypes[targetIndex]] = [
-      newTypes[targetIndex],
-      newTypes[index],
-    ];
-    // Met à jour le champ order localement
-    const updatedTypes = newTypes.map((type, idx) => ({ ...type, order: idx }));
-    setTypes(updatedTypes);
+    setTypes((items) => {
+      const oldIndex = items.findIndex((item) => item.id === active.id);
+      const newIndex = items.findIndex((item) => item.id === over.id);
 
-    // Update order on server - send ALL types (including base types)
-    const reorderData = updatedTypes.map((type) => ({
-      id: type.id,
-      order: type.order,
-    }));
+      const newTypes = arrayMove(items, oldIndex, newIndex);
+      const updatedTypes = newTypes.map((type, idx) => ({
+        ...type,
+        order: idx,
+      }));
 
-    reorderPointTypes(reorderData).catch((err) => {
-      setError(getErrorMessage(err));
+      // Update order on server - send ALL types (including base types)
+      const reorderData = updatedTypes.map((type) => ({
+        id: type.id,
+        order: type.order,
+      }));
+
+      reorderPointTypes(reorderData).catch((err) => {
+        setError(getErrorMessage(err));
+      });
+
+      return updatedTypes;
     });
   };
 
@@ -594,308 +944,57 @@ export default function PointTypeManagementPage() {
               )}
             </p>
           ) : (
-            <table className="types-table">
-              <thead>
-                <tr>
-                  <th>Order</th>
-                  <th>Icon</th>
-                  <th>Name</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {types.map((type, index) => (
-                  <Fragment key={type.id}>
-                    <tr className={!type.owner ? "base-type" : ""}>
-                      <td>
-                        <div className="order-controls">
-                          <button
-                            onClick={() => moveType(index, "up")}
-                            disabled={index === 0}
-                            aria-label="Move up"
-                            className="btn-icon"
-                          >
-                            ▲
-                          </button>
-                          <button
-                            onClick={() => moveType(index, "down")}
-                            disabled={index === types.length - 1}
-                            aria-label="Move down"
-                            className="btn-icon"
-                          >
-                            ▼
-                          </button>
-                        </div>
-                      </td>
-                      <td>
-                        {editingTypeId === type.id ? (
-                          <div className="icon-edit-preview">
-                            {editingTypeIcon &&
-                            editingTypeIcon !== "/icons/default.svg" ? (
-                              editingTypeIcon.startsWith("http") ||
-                              editingTypeIcon.startsWith("/") ||
-                              editingTypeIcon.startsWith("data:") ? (
-                                editingIconLoadError ? (
-                                  <span
-                                    className="icon-error"
-                                    title="Icon load error"
-                                  >
-                                    ❌
-                                  </span>
-                                ) : (
-                                  <img
-                                    src={editingTypeIcon}
-                                    alt="Icon preview"
-                                    className="type-icon"
-                                    onLoad={() =>
-                                      setEditingIconLoadError(false)
-                                    }
-                                    onError={() =>
-                                      setEditingIconLoadError(true)
-                                    }
-                                  />
-                                )
-                              ) : (
-                                <span className="type-icon-emoji">
-                                  {editingTypeIcon}
-                                </span>
-                              )
-                            ) : (
-                              <span className="type-icon-placeholder">📍</span>
-                            )}
-                          </div>
-                        ) : type.icon && type.icon !== "/icons/default.svg" ? (
-                          type.icon.startsWith("http") ||
-                          type.icon.startsWith("/") ||
-                          type.icon.startsWith("data:") ? (
-                            <img
-                              src={type.icon}
-                              alt=""
-                              className="type-icon"
-                              onError={(e) => {
-                                e.currentTarget.style.display = "none";
-                              }}
-                            />
-                          ) : (
-                            <span className="type-icon-emoji">{type.icon}</span>
-                          )
-                        ) : (
-                          <span className="type-icon-placeholder">📍</span>
-                        )}
-                      </td>
-                      <td>
-                        {editingTypeId === type.id ? (
-                          <span className="type-name-editing">
-                            {t(
-                              "types.editingTranslations",
-                              "Editing translations below",
-                            )}
-                          </span>
-                        ) : (
-                          <span className="type-name">
-                            {getPointTypeName(type, language)}
-                          </span>
-                        )}
-                      </td>
-                      <td>
-                        <div className="action-buttons">
-                          {editingTypeId === type.id ? (
-                            <>
-                              <button
-                                onClick={() => handleUpdate(type.id)}
-                                disabled={updating}
-                                className="btn btn-success"
-                              >
-                                {t("common.save", "Save")}
-                              </button>
-                              <button
-                                onClick={handleCancelEdit}
-                                disabled={updating}
-                                className="btn btn-secondary"
-                              >
-                                {t("common.cancel", "Cancel")}
-                              </button>
-                            </>
-                          ) : (
-                            <>
-                              <button
-                                onClick={() =>
-                                  navigate(`/map?types=${type.id}`)
-                                }
-                                className="btn btn-view btn-sm"
-                                aria-label={`${t("types.viewOnMap", "View")} ${getPointTypeName(type, language)} ${t("types.onMap", "on map")}`}
-                                title={t("types.viewOnMap", "View on map")}
-                              >
-                                🗺️ {t("nav.map", "Map")}
-                              </button>
-                              <button
-                                onClick={() =>
-                                  navigate(`/points?types=${type.id}`)
-                                }
-                                className="btn btn-view btn-sm"
-                                aria-label={`${t("types.view", "View")} ${getPointTypeName(type, language)} ${t("types.list", "list")}`}
-                                title={t(
-                                  "types.viewPointsList",
-                                  "View points list",
-                                )}
-                              >
-                                📋 {t("tags.list", "List")}
-                              </button>
-                              {type.owner && (
-                                <>
-                                  <button
-                                    onClick={() => handleStartEdit(type)}
-                                    className="btn btn-info btn-sm"
-                                    aria-label={`${t("common.edit", "Edit")} ${getPointTypeName(type, language)}`}
-                                  >
-                                    {t("common.edit", "Edit")}
-                                  </button>
-                                  <button
-                                    onClick={() =>
-                                      handleDelete(
-                                        type.id,
-                                        getPointTypeName(type, language),
-                                      )
-                                    }
-                                    disabled={deleting === type.id}
-                                    className="btn btn-danger btn-sm"
-                                    aria-label={`${t("common.delete", "Delete")} ${getPointTypeName(type, language)}`}
-                                  >
-                                    {deleting === type.id
-                                      ? t("types.deleting", "Deleting...")
-                                      : t("common.delete", "Delete")}
-                                  </button>
-                                </>
-                              )}
-                            </>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                    {editingTypeId === type.id && (
-                      <tr className="edit-translation-row">
-                        <td colSpan={4}>
-                          <div className="edit-section">
-                            <TranslationManager
-                              names={editingTypeNames}
-                              onChange={setEditingTypeNames}
-                              disabled={updating}
-                            />
-
-                            <div className="icon-edit-section">
-                              <label>Edit Icon:</label>
-
-                              {/* File upload section */}
-                              <div className="icon-upload-controls">
-                                <input
-                                  ref={editFileInputRef}
-                                  id={`edit-icon-file-${type.id}`}
-                                  type="file"
-                                  accept=".svg,.png,.jpg,.jpeg,image/svg+xml,image/png,image/jpeg"
-                                  onChange={handleEditFileSelect}
-                                  disabled={updating || uploading}
-                                  style={{ display: "none" }}
-                                />
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    editFileInputRef.current?.click()
-                                  }
-                                  className="btn btn-secondary btn-sm"
-                                  disabled={updating || uploading}
-                                >
-                                  {uploading ? "Uploading..." : "Choose File"}
-                                </button>
-
-                                {editingIconFile && (
-                                  <div className="file-preview">
-                                    <span className="file-name">
-                                      {editingIconFile.name}
-                                    </span>
-                                    <button
-                                      type="button"
-                                      onClick={handleRemoveEditFile}
-                                      className="btn-icon"
-                                      disabled={updating || uploading}
-                                      aria-label="Remove file"
-                                    >
-                                      ✕
-                                    </button>
-                                  </div>
-                                )}
-                              </div>
-
-                              <div className="form-divider">
-                                <span>OR</span>
-                              </div>
-
-                              {/* Manual URL/emoji input */}
-                              <div
-                                style={{
-                                  display: "flex",
-                                  gap: "0.5rem",
-                                  alignItems: "center",
-                                  flex: 1,
-                                }}
-                              >
-                                <input
-                                  type="text"
-                                  value={editingTypeIcon}
-                                  onChange={(e) => {
-                                    setEditingTypeIcon(e.target.value);
-                                    setEditingIconLoadError(false);
-                                  }}
-                                  placeholder="Enter emoji (e.g., 🎨) or URL"
-                                  maxLength={500}
-                                  disabled={updating || uploading}
-                                  style={{ flex: 1 }}
-                                />
-                                {/* Download button for external URLs with CORS issues */}
-                                {editingTypeIcon &&
-                                  editingTypeIcon.startsWith("http") &&
-                                  editingIconLoadError && (
-                                    <button
-                                      type="button"
-                                      onClick={async () => {
-                                        try {
-                                          setUploading(true);
-                                          setError(null);
-                                          const result =
-                                            await downloadTypeIcon(
-                                              editingTypeIcon,
-                                            );
-                                          setEditingTypeIcon(result.icon_url);
-                                          setEditingIconLoadError(false);
-                                        } catch (err) {
-                                          setError(getErrorMessage(err));
-                                        } finally {
-                                          setUploading(false);
-                                        }
-                                      }}
-                                      className="btn btn-secondary btn-sm"
-                                      disabled={uploading}
-                                      title="Download and save this icon locally"
-                                    >
-                                      {uploading
-                                        ? "Downloading..."
-                                        : "Download"}
-                                    </button>
-                                  )}
-                              </div>
-
-                              <small className="form-help">
-                                Upload a file (SVG, PNG, JPG - max 1MB) or enter
-                                an emoji/URL
-                              </small>
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </Fragment>
-                ))}
-              </tbody>
-            </table>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <table className="types-table">
+                <thead>
+                  <tr>
+                    <th>{t("types.reorder", "Reorder")}</th>
+                    <th>Icon</th>
+                    <th>Name</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <SortableContext
+                  items={types.map((t) => t.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <tbody>
+                    {types.map((type) => (
+                      <SortableTypeRow
+                        key={type.id}
+                        type={type}
+                        language={language}
+                        editingTypeId={editingTypeId}
+                        editingTypeNames={editingTypeNames}
+                        editingTypeIcon={editingTypeIcon}
+                        editingIconFile={editingIconFile}
+                        editingIconLoadError={editingIconLoadError}
+                        updating={updating}
+                        deleting={deleting}
+                        onStartEdit={handleStartEdit}
+                        onCancelEdit={handleCancelEdit}
+                        onUpdate={handleUpdate}
+                        onDelete={handleDelete}
+                        setEditingTypeNames={setEditingTypeNames}
+                        setEditingTypeIcon={setEditingTypeIcon}
+                        setEditingIconLoadError={setEditingIconLoadError}
+                        handleEditFileSelect={handleEditFileSelect}
+                        handleRemoveEditFile={handleRemoveEditFile}
+                        editFileInputRef={editFileInputRef}
+                        uploading={uploading}
+                        setUploading={setUploading}
+                        setError={setError}
+                        t={t}
+                      />
+                    ))}
+                  </tbody>
+                </SortableContext>
+              </table>
+            </DndContext>
           )}
         </div>
 
@@ -929,7 +1028,7 @@ export default function PointTypeManagementPage() {
             <li>
               {t(
                 "types.reorderInfo",
-                "Reorder types using the ▲▼ buttons to customize how they appear in dropdowns",
+                "Drag and drop types to reorder and customize how they appear in dropdowns",
               )}
             </li>
           </ul>

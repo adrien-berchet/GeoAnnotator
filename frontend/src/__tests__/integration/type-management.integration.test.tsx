@@ -410,8 +410,7 @@ describe("Type Management Integration Tests", () => {
   });
 
   describe("Reordering Types", () => {
-    it("should reorder types successfully using move buttons", async () => {
-      const user = userEvent.setup();
+    it("should have drag handles for reordering types", async () => {
       const typesApi = await import("../../api/types");
 
       vi.mocked(typesApi.getPointTypes).mockResolvedValue(mockTypes);
@@ -426,25 +425,19 @@ describe("Type Management Integration Tests", () => {
         expect(screen.getByText("Restaurant")).toBeInTheDocument();
       });
 
-      // Find all "Move down" buttons
-      const moveDownButtons = screen.getAllByRole("button", {
-        name: /move down/i,
+      // Find drag handles
+      const dragHandles = screen.getAllByRole("button", {
+        name: /drag to reorder/i,
       });
 
-      // Click the first non-disabled "Move down" button
-      const firstMoveDown = moveDownButtons.find(
-        (btn) => !(btn as HTMLButtonElement).disabled,
-      );
-      expect(firstMoveDown).toBeInTheDocument();
+      // Should have drag handles for all types (including base type)
+      expect(dragHandles.length).toBe(mockTypes.length);
 
-      if (firstMoveDown) {
-        await user.click(firstMoveDown);
-
-        // Verify reorderPointTypes was called
-        await waitFor(() => {
-          expect(typesApi.reorderPointTypes).toHaveBeenCalled();
-        });
-      }
+      // Verify they are present and not disabled
+      dragHandles.forEach((handle) => {
+        expect(handle).toBeInTheDocument();
+        expect(handle).not.toBeDisabled();
+      });
     });
   });
 
@@ -525,10 +518,12 @@ describe("Type Management Integration Tests", () => {
       const addButton = screen.getByRole("button", { name: /add new type/i });
       expect(addButton).toHaveAttribute("aria-label");
 
-      // Check move buttons have aria-labels
-      const moveUpButtons = screen.getAllByRole("button", { name: /move up/i });
-      expect(moveUpButtons.length).toBeGreaterThan(0);
-      moveUpButtons.forEach((btn) => {
+      // Check drag handles have aria-labels
+      const dragHandles = screen.getAllByRole("button", {
+        name: /drag to reorder/i,
+      });
+      expect(dragHandles.length).toBeGreaterThan(0);
+      dragHandles.forEach((btn) => {
         expect(btn).toHaveAttribute("aria-label");
       });
     });
