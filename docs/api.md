@@ -1342,7 +1342,5 @@ Interactive API documentation: `/api/docs/` (Swagger UI)
 
 ---
 
-**Last Updated**: 2025-11-12
-**API Version**: 1.0.0 (with Account Management endpoints)
-
-````
+**Last Updated**: 2025-11-26
+**API Version**: 1.0.0

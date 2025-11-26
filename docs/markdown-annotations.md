@@ -318,6 +318,6 @@ Raw HTML is sanitized for security. Use standard Markdown syntax instead.
 
 ---
 
-**Last Updated**: October 15, 2025
+**Last Updated**: November 2025
 **Version**: 1.0
 **Feature Status**: Production-ready
