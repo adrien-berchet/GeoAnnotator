@@ -161,28 +161,81 @@ sudo systemctl restart postgresql
 
 ## Celery & Redis Setup
 
-GeoAnnotator utilise Celery pour l'envoi asynchrone d'emails et les tâches planifiées (nettoyage des tokens, suppression des comptes).
+GeoAnnotator uses Celery for asynchronous email sending and scheduled tasks (token cleanup, account deletion).
 
-**⚠️ Important** : Sans Redis et Celery, les emails seront envoyés de manière synchrone (bloquante) et peuvent causer des timeouts en production.
+**⚠️ Important**: Without Redis and Celery, emails will be sent synchronously (blocking) and may cause timeouts in production.
 
-Pour une configuration complète de Celery et Redis, consultez la [documentation dédiée](./celery-redis-setup.md).
+**Quick Setup with Docker**: Redis and Celery are already included in `docker-compose.yml`. No additional configuration is needed.
 
-**Configuration rapide avec Docker** : Redis et Celery sont déjà inclus dans `docker-compose.yml`. Aucune configuration supplémentaire n'est nécessaire.
+**Manual Setup**:
 
-**Configuration manuelle** :
-1. Installer Redis : `sudo apt install redis-server`
-2. Configurer les variables d'environnement :
+1. **Install Redis**:
+   ```bash
+   sudo apt install redis-server
+   sudo systemctl enable redis-server
+   sudo systemctl start redis-server
+   ```
+
+2. **Configure environment variables**:
    ```env
    CELERY_BROKER_URL=redis://localhost:6379/0
    CELERY_RESULT_BACKEND=redis://localhost:6379/0
    ```
-3. Démarrer les workers :
+
+3. **Start Celery workers**:
    ```bash
+   # Worker for processing tasks
    celery -A config worker --loglevel=info
+
+   # Beat scheduler for periodic tasks (in a separate terminal)
    celery -A config beat --loglevel=info
    ```
 
-Voir [celery-redis-setup.md](./celery-redis-setup.md) pour plus de détails.
+4. **Setup systemd services** (recommended for production):
+
+   Create `/etc/systemd/system/celery-worker.service`:
+   ```ini
+   [Unit]
+   Description=Celery Worker for GeoAnnotator
+   After=network.target redis.service
+
+   [Service]
+   Type=forking
+   User=www-data
+   Group=www-data
+   WorkingDirectory=/path/to/geoannotator/backend
+   Environment="PATH=/path/to/geoannotator/backend/venv/bin"
+   EnvironmentFile=/path/to/geoannotator/.env
+   ExecStart=/path/to/geoannotator/backend/venv/bin/celery -A config worker --loglevel=info --detach
+
+   [Install]
+   WantedBy=multi-user.target
+   ```
+
+   Create `/etc/systemd/system/celery-beat.service`:
+   ```ini
+   [Unit]
+   Description=Celery Beat Scheduler for GeoAnnotator
+   After=network.target redis.service
+
+   [Service]
+   Type=forking
+   User=www-data
+   Group=www-data
+   WorkingDirectory=/path/to/geoannotator/backend
+   Environment="PATH=/path/to/geoannotator/backend/venv/bin"
+   EnvironmentFile=/path/to/geoannotator/.env
+   ExecStart=/path/to/geoannotator/backend/venv/bin/celery -A config beat --loglevel=info --detach
+
+   [Install]
+   WantedBy=multi-user.target
+   ```
+
+   Enable and start services:
+   ```bash
+   sudo systemctl enable celery-worker celery-beat
+   sudo systemctl start celery-worker celery-beat
+   ```
 
 ---
 
@@ -832,5 +885,5 @@ For deployment issues:
 
 ---
 
-**Last Updated**: 2025-10-06
+**Last Updated**: 2025-11-26
 **Version**: 1.0.0
