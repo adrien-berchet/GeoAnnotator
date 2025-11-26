@@ -17,6 +17,7 @@
   border: 2px solid var(--border-color, #e5e7eb);
   border-radius: 0.5rem;
   background: var(--background-color, #ffffff);
+  color: var(--color-text-primary, #1f2937);
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -52,4 +53,16 @@
   --background-color: #1f2937;
   --hover-background: #111827;
   --selected-background: #1e3a8a;
+  color: var(--color-text-primary, #f9fafb);
+}
+
+/* Also support prefers-color-scheme for automatic dark mode */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .theme-option {
+    --border-color: #374151;
+    --background-color: #1f2937;
+    --hover-background: #111827;
+    --selected-background: #1e3a8a;
+    color: var(--color-text-primary, #f9fafb);
+  }
 }
