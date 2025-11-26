@@ -253,10 +253,13 @@ export function AnnotationList({
 
       <div className="annotations-grid">
         {annotations.map((annotation) => {
-          logger.debug(`🔍 Rendering annotation ${annotation.id.slice(0, 8)}:`, {
-            is_trashed: annotation.is_trashed,
-            trash_days_remaining: annotation.trash_days_remaining,
-          });
+          logger.debug(
+            `🔍 Rendering annotation ${annotation.id.slice(0, 8)}:`,
+            {
+              is_trashed: annotation.is_trashed,
+              trash_days_remaining: annotation.trash_days_remaining,
+            },
+          );
 
           return (
             <div

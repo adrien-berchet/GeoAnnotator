@@ -21,8 +21,9 @@
 /* Map Controls Toggle Button */
 .map-controls-toggle {
   position: absolute;
-  bottom: 1rem;
-  left: 1rem;
+  bottom: 40px;
+  right: 8px;
+  left: auto;
   z-index: 1000;
   background: var(--color-bg-primary);
   padding: 0.5rem;
@@ -248,6 +249,7 @@
   0% {
     transform: rotate(0deg);
   }
+
   100% {
     transform: rotate(360deg);
   }
