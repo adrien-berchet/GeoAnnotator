@@ -240,7 +240,7 @@ if CELERY_BROKER_URL.startswith("rediss://"):
     # For redis-py, use ssl.CERT_REQUIRED directly
     # Don't set ssl_cert_reqs in broker config, let redis-py handle it
     CELERY_BROKER_USE_SSL = True
-    CELERY_REDIS_BACKEND_USE_SSL = True
+    # CELERY_REDIS_BACKEND_USE_SSL = True
 
 # CORS settings
 CORS_ALLOW_ALL_ORIGINS = False  # Override in development
