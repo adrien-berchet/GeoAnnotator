@@ -28,6 +28,8 @@ from .serializers import EmailChangeSerializer
 from .serializers import EmailConfirmSerializer
 from .serializers import LoginSerializer
 from .serializers import PasswordChangeSerializer
+from .serializers import PasswordResetConfirmSerializer
+from .serializers import PasswordResetRequestSerializer
 from .serializers import RefreshTokenSerializer
 from .serializers import RegisterSerializer
 from .serializers import UsernameUpdateSerializer
@@ -37,6 +39,7 @@ from .services import AccountDeletionTokenGenerator
 from .services import AuthenticationService
 from .services import EmailConfirmationService
 from .services import log_account_operation
+from .services import PasswordResetService
 from .services import send_deletion_confirmation
 from .services import soft_delete_user
 from .services import validate_username
@@ -607,3 +610,91 @@ class UsernameValidationAPIView(APIView):
             response_data["error"] = result["errors"][0]  # Return first error
 
         return Response(response_data, status=status.HTTP_200_OK)
+
+
+class PasswordResetRequestView(APIView):
+    """
+    POST /api/auth/password-reset/
+    Request password reset by email.
+
+    Rate limit: 3 requests per hour per IP address
+    """
+
+    permission_classes = [AllowAny]
+    serializer_class = PasswordResetRequestSerializer
+
+    @ratelimit(key="ip", rate="3/h", method="POST")
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        email = serializer.validated_data["email"]
+
+        # Find user by email_hash
+        email_hash = User.hash_email(email)
+        try:
+            user = User.objects.get(email_hash=email_hash)
+
+            # Generate reset token
+            token = PasswordResetService.generate_reset_token(user, request)
+
+            # Send reset email
+            PasswordResetService.send_reset_email(user, token)
+
+            # Log the request
+            log_account_operation(
+                user=user,
+                operation="PASSWORD_RESET_REQUESTED",
+                request=request,
+                details={"email": email},
+            )
+
+        except User.DoesNotExist:
+            # Don't reveal whether email exists (security best practice)
+            # Return success message regardless
+            pass
+
+        # Always return success to prevent email enumeration
+        return Response(
+            {
+                "message": "If an account with that email exists, "
+                "a password reset link has been sent."
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+class PasswordResetConfirmView(APIView):
+    """
+    POST /api/auth/password-reset/confirm/
+    Confirm password reset with token and new password.
+
+    Rate limit: 5 confirmations per hour per IP address
+    """
+
+    permission_classes = [AllowAny]
+    serializer_class = PasswordResetConfirmSerializer
+
+    @ratelimit(key="ip", rate="5/h", method="POST")
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        token = serializer.validated_data["token"]
+        new_password = serializer.validated_data["new_password"]
+
+        # Confirm password reset
+        success, error_message = PasswordResetService.confirm_password_reset(
+            token, new_password, request
+        )
+
+        if not success:
+            return Response(
+                {"detail": error_message},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        return Response(
+            {"message": "Password has been reset successfully. You can now log in."},
+            status=status.HTTP_200_OK,
+        )

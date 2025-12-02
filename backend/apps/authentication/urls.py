@@ -23,6 +23,13 @@ urlpatterns = [
     path("logout/", views.logout_view, name="logout"),
     path("profile/", views.UserProfileView.as_view(), name="profile"),
     path("verify/", views.VerifyCodeView.as_view(), name="verify"),
+    # Password reset endpoints
+    path("password-reset/", views.PasswordResetRequestView.as_view(), name="password-reset"),
+    path(
+        "password-reset/confirm/",
+        views.PasswordResetConfirmView.as_view(),
+        name="password-reset-confirm",
+    ),
     # Account management endpoints
     path("account/", views.AccountRetrieveAPIView.as_view(), name="account-retrieve"),
     path("account/update/", views.AccountUpdateAPIView.as_view(), name="account-update"),
