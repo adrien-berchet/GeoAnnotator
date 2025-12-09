@@ -41,8 +41,7 @@ services:
         sync: false  # Configure with Upstash/Redis Cloud connection string
       - key: CELERY_BROKER_URL
         sync: false  # Same as REDIS_URL
-      - key: CELERY_RESULT_BACKEND
-        sync: false  # Same as REDIS_URL
+      # CELERY_RESULT_BACKEND disabled to reduce Redis queries (saves ~500k queries/month)
 
       # Email Configuration - Mailjet API (HTTP instead of SMTP)
       # See docs/mailjet-setup.md for setup instructions

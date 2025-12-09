@@ -228,11 +228,38 @@ if not FERNET_KEY:
 # Use REDIS_URL as fallback if specific Celery URLs not set
 REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
 CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", REDIS_URL)
-CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", REDIS_URL)
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = "UTC"
+
+# IMPORTANT: Disable result backend to reduce Redis queries
+# Our tasks (email sending, cleanup) don't need to store results
+# This alone saves thousands of Redis commands per day
+CELERY_RESULT_BACKEND = None
+CELERY_TASK_IGNORE_RESULT = True
+
+# Reduce Redis polling frequency for Celery Beat scheduler
+# Since our scheduled tasks only run once daily, we don't need frequent checks
+# Default is 0 (as fast as possible), which causes excessive Redis queries
+CELERY_BEAT_MAX_LOOP_INTERVAL = 300  # Check schedule every 5 minutes max
+
+# Reduce Redis polling frequency for Celery Worker
+# These settings dramatically reduce Redis queries when the queue is empty
+CELERY_BROKER_TRANSPORT_OPTIONS = {
+    # How long to wait for a message before returning (seconds)
+    # Higher = fewer Redis queries when idle, but slower task pickup
+    "visibility_timeout": 43200,  # 12 hours (tasks won't be retried for 12h if worker dies)
+    # Socket timeout for Redis connections
+    "socket_timeout": 30,
+    # Connection timeout
+    "socket_connect_timeout": 30,
+}
+
+# Worker will wait longer between polling when queue is empty
+# This uses exponential backoff: starts at 0.1s, doubles up to max
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1  # Fetch one task at a time
 
 # SSL/TLS configuration for external Redis (Upstash, Redis Cloud)
 # Required when using rediss:// (SSL) connections
