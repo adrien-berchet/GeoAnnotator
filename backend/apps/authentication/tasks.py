@@ -18,7 +18,7 @@ from .models import User
 logger = logging.getLogger(__name__)
 
 
-@shared_task(bind=True, max_retries=3, default_retry_delay=60)
+@shared_task(bind=True, max_retries=3, default_retry_delay=60, ignore_result=True)
 def send_email_async(
     self,
     subject: str,
@@ -61,7 +61,7 @@ def send_email_async(
         raise self.retry(exc=exc) from exc
 
 
-@shared_task
+@shared_task(ignore_result=True)
 def cleanup_deleted_users():
     """
     Permanently delete users who have been soft-deleted for more than 30 days.
@@ -95,7 +95,7 @@ def cleanup_deleted_users():
     }
 
 
-@shared_task
+@shared_task(ignore_result=True)
 def cleanup_expired_confirmation_tokens():
     """
     Delete expired email confirmation tokens.

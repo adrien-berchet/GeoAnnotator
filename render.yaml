@@ -35,11 +35,7 @@ services:
           type: redis
           name: geoannotator-redis
           property: connectionString
-      - key: CELERY_RESULT_BACKEND
-        fromService:
-          type: redis
-          name: geoannotator-redis
-          property: connectionString
+      # CELERY_RESULT_BACKEND disabled to reduce Redis queries
       - key: EMAIL_BACKEND
         value: django.core.mail.backends.smtp.EmailBackend
       - key: EMAIL_HOST
@@ -101,11 +97,7 @@ services:
           type: redis
           name: geoannotator-redis
           property: connectionString
-      - key: CELERY_RESULT_BACKEND
-        fromService:
-          type: redis
-          name: geoannotator-redis
-          property: connectionString
+      # CELERY_RESULT_BACKEND disabled to reduce Redis queries
       - key: EMAIL_BACKEND
         value: django.core.mail.backends.smtp.EmailBackend
       - key: EMAIL_HOST
@@ -152,11 +144,7 @@ services:
           type: redis
           name: geoannotator-redis
           property: connectionString
-      - key: CELERY_RESULT_BACKEND
-        fromService:
-          type: redis
-          name: geoannotator-redis
-          property: connectionString
+      # CELERY_RESULT_BACKEND disabled to reduce Redis queries
 
   # Redis for Celery message broker
   # Note: Private service, only accessible by other Render services
