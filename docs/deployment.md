@@ -674,9 +674,14 @@ AWS_ACCESS_KEY_ID=your-access-key
 AWS_SECRET_ACCESS_KEY=your-secret-key
 AWS_S3_REGION_NAME=eu-west-3  # or your region
 
+# For MinIO (local development) - add endpoint URL
+AWS_S3_ENDPOINT_URL=http://localhost:9000  # Omit for AWS S3
+
 # Database Configuration (automatically detected)
 DATABASE_URL=postgresql://user:password@host:5432/dbname
 ```
+
+**Note**: The backup system supports both AWS S3 (production) and MinIO (local development). When using MinIO, set `AWS_S3_ENDPOINT_URL` to your MinIO server address.
 
 **Backup Location in S3:**
 

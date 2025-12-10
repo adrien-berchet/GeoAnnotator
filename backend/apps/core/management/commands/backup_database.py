@@ -319,12 +319,19 @@ class Command(BaseCommand):
 
         try:
             # Initialize S3 client
-            s3_client = boto3.client(
-                "s3",
-                aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-                aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-                region_name=getattr(settings, "AWS_S3_REGION_NAME", None),
-            )
+            s3_config = {
+                "aws_access_key_id": settings.AWS_ACCESS_KEY_ID,
+                "aws_secret_access_key": settings.AWS_SECRET_ACCESS_KEY,
+                "region_name": getattr(settings, "AWS_S3_REGION_NAME", None),
+            }
+
+            # Add endpoint_url for MinIO or S3-compatible storage (local development)
+            endpoint_url = getattr(settings, "AWS_S3_ENDPOINT_URL", None)
+            if endpoint_url:
+                s3_config["endpoint_url"] = endpoint_url
+                self._log(f"Using S3-compatible endpoint: {endpoint_url}")
+
+            s3_client = boto3.client("s3", **s3_config)
 
             # Upload file
             file_size = os.path.getsize(backup_file)
@@ -369,12 +376,19 @@ class Command(BaseCommand):
         self._log(f"Cleaning up backups older than {cutoff_date.date()}")
 
         try:
-            s3_client = boto3.client(
-                "s3",
-                aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-                aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-                region_name=getattr(settings, "AWS_S3_REGION_NAME", None),
-            )
+            # Initialize S3 client with same config as upload
+            s3_config = {
+                "aws_access_key_id": settings.AWS_ACCESS_KEY_ID,
+                "aws_secret_access_key": settings.AWS_SECRET_ACCESS_KEY,
+                "region_name": getattr(settings, "AWS_S3_REGION_NAME", None),
+            }
+
+            # Add endpoint_url for MinIO or S3-compatible storage
+            endpoint_url = getattr(settings, "AWS_S3_ENDPOINT_URL", None)
+            if endpoint_url:
+                s3_config["endpoint_url"] = endpoint_url
+
+            s3_client = boto3.client("s3", **s3_config)
 
             # List all backups
             response = s3_client.list_objects_v2(Bucket=bucket_name, Prefix=prefix)
