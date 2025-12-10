@@ -337,19 +337,26 @@ class Command(BaseCommand):
             file_size = os.path.getsize(backup_file)
             self._log(f"Uploading {self._format_size(file_size)}...")
 
+            # Prepare upload arguments
+            extra_args = {
+                "Metadata": {
+                    "backup-type": "database",
+                    "created-at": datetime.now().isoformat(),
+                    "database": connection.settings_dict.get("NAME", "unknown"),
+                },
+            }
+
+            # Add AWS-specific features only for real S3 (not MinIO)
+            if not endpoint_url:  # Using AWS S3
+                extra_args["ServerSideEncryption"] = "AES256"  # Encrypt at rest
+                extra_args["StorageClass"] = "STANDARD_IA"  # Infrequent Access (cheaper)
+                self._log("Using AWS S3 storage optimizations (encryption, STANDARD_IA)")
+
             s3_client.upload_file(
                 backup_file,
                 bucket_name,
                 s3_key,
-                ExtraArgs={
-                    "ServerSideEncryption": "AES256",  # Encrypt at rest
-                    "StorageClass": "STANDARD_IA",  # Infrequent Access (cheaper)
-                    "Metadata": {
-                        "backup-type": "database",
-                        "created-at": datetime.now().isoformat(),
-                        "database": connection.settings_dict.get("NAME", "unknown"),
-                    },
-                },
+                ExtraArgs=extra_args,
             )
 
             self._log("✓ Upload completed")
