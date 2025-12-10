@@ -44,6 +44,12 @@
   color: var(--color-primary);
 }
 
+.navbar-logo-icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
 /* Navigation Links */
 .navbar-links {
   display: flex;

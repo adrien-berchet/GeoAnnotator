@@ -49,7 +49,12 @@ export function Navbar() {
         {/* Logo and Brand */}
         <div className="navbar-brand">
           <Link to="/" className="navbar-logo">
-            📍 GeoAnnotator
+            <img
+              src="/GeoAnnotator.svg"
+              alt="GeoAnnotator"
+              className="navbar-logo-icon"
+            />
+            GeoAnnotator
           </Link>
         </div>
 
