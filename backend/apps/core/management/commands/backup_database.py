@@ -30,7 +30,6 @@ import subprocess
 import tempfile
 from datetime import datetime
 from datetime import timedelta
-from pathlib import Path
 from urllib.parse import urlparse
 
 import boto3
@@ -112,9 +111,7 @@ class Command(BaseCommand):
                 self.stdout.write(
                     self.style.SUCCESS(f"✓ Backup created: {os.path.basename(backup_file)}")
                 )
-                self.stdout.write(
-                    f"  Size: {self._format_size(os.path.getsize(backup_file))}"
-                )
+                self.stdout.write(f"  Size: {self._format_size(os.path.getsize(backup_file))}")
 
                 # Step 4: Upload to S3
                 s3_key = self._upload_to_s3(backup_file)
@@ -142,7 +139,7 @@ class Command(BaseCommand):
         except Exception as e:
             logger.exception("Unexpected error during backup")
             self.stdout.write(self.style.ERROR(f"\n✗ Unexpected error: {e}"))
-            raise CommandError(f"Backup failed: {e}")
+            raise CommandError(f"Backup failed: {e}") from e
 
     def _verify_prerequisites(self):
         """Verify that required tools and configuration are available."""
@@ -162,9 +159,9 @@ class Command(BaseCommand):
             raise CommandError(
                 "pg_dump not found. Please install postgresql-client: "
                 "apt-get install postgresql-client"
-            )
+            ) from None
         except subprocess.CalledProcessError as e:
-            raise CommandError(f"Error checking pg_dump: {e}")
+            raise CommandError(f"Error checking pg_dump: {e}") from e
 
         # Check S3 configuration
         if not hasattr(settings, "AWS_STORAGE_BUCKET_NAME") or not settings.AWS_STORAGE_BUCKET_NAME:
@@ -246,21 +243,27 @@ class Command(BaseCommand):
             else:
                 cmd = [
                     "pg_dump",
-                    "-h", db_config["host"],
-                    "-p", str(db_config["port"]),
-                    "-U", db_config["user"],
-                    "-d", db_config["name"],
+                    "-h",
+                    db_config["host"],
+                    "-p",
+                    str(db_config["port"]),
+                    "-U",
+                    db_config["user"],
+                    "-d",
+                    db_config["name"],
                     "--no-password",  # Use PGPASSWORD env var
                 ]
 
             # Add common options
-            cmd.extend([
-                "--format=plain",  # Plain SQL format
-                "--no-owner",  # Don't include ownership commands
-                "--no-acl",  # Don't include access control commands
-                "--clean",  # Include DROP commands
-                "--if-exists",  # Use IF EXISTS with DROP
-            ])
+            cmd.extend(
+                [
+                    "--format=plain",  # Plain SQL format
+                    "--no-owner",  # Don't include ownership commands
+                    "--no-acl",  # Don't include access control commands
+                    "--clean",  # Include DROP commands
+                    "--if-exists",  # Use IF EXISTS with DROP
+                ]
+            )
 
             # Set environment for pg_dump
             env = os.environ.copy()
@@ -300,7 +303,7 @@ class Command(BaseCommand):
                 os.remove(backup_path)
             if os.path.exists(temp_dir):
                 shutil.rmtree(temp_dir)
-            raise CommandError(f"Failed to create backup: {e}")
+            raise CommandError(f"Failed to create backup: {e}") from e
 
     def _upload_to_s3(self, backup_file):
         """
@@ -363,7 +366,7 @@ class Command(BaseCommand):
             return s3_key
 
         except ClientError as e:
-            raise CommandError(f"Failed to upload to S3: {e}")
+            raise CommandError(f"Failed to upload to S3: {e}") from e
 
     def _cleanup_old_backups(self):
         """
