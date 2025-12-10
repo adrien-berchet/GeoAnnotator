@@ -73,7 +73,7 @@ app.conf.beat_schedule = {
     },
     "backup-database-weekly": {
         "task": "apps.core.tasks.backup_database_task",
-        "schedule": crontab(hour=2, minute=0, day_of_week=0),  # Run weekly on Sunday at 2:00 AM
+        "schedule": crontab(hour=12, minute=0),  # Run daily at 12:00 PM
         "options": {
             "expires": 7200,  # Task expires after 2 hours if not executed
         },
