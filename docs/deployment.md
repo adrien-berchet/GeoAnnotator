@@ -652,46 +652,190 @@ sentry_sdk.init(
 
 ## Backup & Restore
 
-### Automated Daily Backups
+GeoAnnotator includes an automated backup system that creates compressed PostgreSQL backups and uploads them to S3-compatible storage.
 
-**Backup Script** (`/usr/local/bin/backup-geoannotator.sh`):
+### Automated Weekly Backups
+
+**How it works:**
+- **Scheduled Task**: Runs automatically every Sunday at 2:00 AM UTC via Celery Beat
+- **Backup Storage**: S3 bucket (configured via `AWS_STORAGE_BUCKET_NAME`)
+- **Retention**: 90 days (automatic cleanup of older backups)
+- **Compression**: gzip compression to minimize storage costs
+- **Encryption**: Server-side AES256 encryption on S3
+
+**Configuration:**
+
+Ensure these environment variables are set:
 
 ```bash
-#!/bin/bash
-BACKUP_DIR="/var/backups/geoannotator"
-DATE=$(date +%Y%m%d-%H%M%S)
+# S3 Configuration (required for backups)
+AWS_STORAGE_BUCKET_NAME=your-bucket-name
+AWS_ACCESS_KEY_ID=your-access-key
+AWS_SECRET_ACCESS_KEY=your-secret-key
+AWS_S3_REGION_NAME=eu-west-3  # or your region
 
-# Database backup
-docker-compose exec -T db pg_dump -U geoannotator geoannotator | gzip > "$BACKUP_DIR/db-$DATE.sql.gz"
-
-# Media files backup
-tar -czf "$BACKUP_DIR/media-$DATE.tar.gz" /path/to/media
-
-# Delete backups older than 30 days
-find "$BACKUP_DIR" -type f -mtime +30 -delete
-
-echo "Backup completed: $DATE"
+# Database Configuration (automatically detected)
+DATABASE_URL=postgresql://user:password@host:5432/dbname
 ```
 
-**Cron Job** (daily at 2 AM):
+**Backup Location in S3:**
+
+```
+s3://your-bucket-name/backups/database/
+  ├── backup_geoannotator_20250101_020000.sql.gz
+  ├── backup_geoannotator_20250108_020000.sql.gz
+  └── backup_geoannotator_20250115_020000.sql.gz
+```
+
+### Manual Backup
+
+**Create a backup immediately:**
 
 ```bash
-0 2 * * * /usr/local/bin/backup-geoannotator.sh >> /var/log/geoannotator/backup.log 2>&1
+# Docker environment
+docker-compose exec backend python manage.py backup_database --verbose
+
+# Production environment
+python manage.py backup_database --verbose
+```
+
+**Test backup without uploading (dry-run):**
+
+```bash
+python manage.py backup_database --dry-run --verbose
+```
+
+**Custom retention period:**
+
+```bash
+# Keep backups for 180 days instead of default 90
+python manage.py backup_database --retention-days 180
+```
+
+**Skip cleanup of old backups:**
+
+```bash
+python manage.py backup_database --skip-cleanup
 ```
 
 ### Restore from Backup
 
-**Database Restore**:
+**Step 1: Download backup from S3**
 
 ```bash
-gunzip -c /var/backups/geoannotator/db-20250101-020000.sql.gz | \
+# List available backups
+aws s3 ls s3://your-bucket-name/backups/database/
+
+# Download a specific backup
+aws s3 cp s3://your-bucket-name/backups/database/backup_geoannotator_20250101_020000.sql.gz .
+```
+
+**Step 2: Restore to database**
+
+```bash
+# Decompress and restore
+gunzip -c backup_geoannotator_20250101_020000.sql.gz | \
+  psql -h your-host -U your-user -d geoannotator
+
+# For Neon or managed databases with DATABASE_URL
+gunzip -c backup_geoannotator_20250101_020000.sql.gz | \
+  psql $DATABASE_URL
+
+# Docker environment (local development)
+gunzip -c backup_geoannotator_20250101_020000.sql.gz | \
   docker-compose exec -T db psql -U geoannotator geoannotator
 ```
 
-**Media Files Restore**:
+**Step 3: Verify restore**
 
 ```bash
-tar -xzf /var/backups/geoannotator/media-20250101-020000.tar.gz -C /path/to/restore
+# Check database tables
+psql -h your-host -U your-user -d geoannotator -c "\dt"
+
+# Check PostGIS extension
+psql -h your-host -U your-user -d geoannotator -c "SELECT PostGIS_version();"
+```
+
+### Backup Monitoring
+
+**Check Celery Beat logs:**
+
+```bash
+# Docker environment
+docker-compose logs celery-beat | grep backup
+
+# Production environment (Render.com or similar)
+# Check your hosting platform's logs for "backup_database_task"
+```
+
+**Verify backups in S3:**
+
+```bash
+# List recent backups
+aws s3 ls s3://your-bucket-name/backups/database/ --recursive --human-readable
+
+# Check backup metadata
+aws s3api head-object \
+  --bucket your-bucket-name \
+  --key backups/database/backup_geoannotator_20250101_020000.sql.gz
+```
+
+### Troubleshooting
+
+**Error: "pg_dump not found"**
+
+Install PostgreSQL client tools:
+
+```bash
+# Debian/Ubuntu
+apt-get install postgresql-client
+
+# Alpine (Docker)
+apk add postgresql-client
+```
+
+**Error: "AWS_STORAGE_BUCKET_NAME not configured"**
+
+Set the required S3 environment variables in your `.env` file or hosting platform.
+
+**Error: "Failed to upload to S3: NoSuchBucket"**
+
+Ensure your S3 bucket exists and the AWS credentials have write permissions:
+
+```bash
+# Create bucket if needed
+aws s3 mb s3://your-bucket-name --region eu-west-3
+
+# Test upload permissions
+echo "test" | aws s3 cp - s3://your-bucket-name/test.txt
+```
+
+**Backup not running automatically**
+
+Verify Celery Beat is running:
+
+```bash
+# Docker
+docker-compose ps celery-beat
+
+# Check Beat schedule
+docker-compose exec celery-beat celery -A config inspect scheduled
+```
+
+### Media Files Backup
+
+Media files (annotations, images, documents) are already stored in S3 (configured in production settings), so they don't need separate backups. S3 provides:
+
+- **Durability**: 99.999999999% (11 nines)
+- **Versioning**: Can be enabled on your S3 bucket
+- **Cross-region replication**: Optional for disaster recovery
+
+**Enable S3 versioning (recommended):**
+
+```bash
+aws s3api put-bucket-versioning \
+  --bucket your-bucket-name \
+  --versioning-configuration Status=Enabled
 ```
 
 ---

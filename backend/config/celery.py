@@ -71,6 +71,13 @@ app.conf.beat_schedule = {
             "expires": 3600,  # Task expires after 1 hour if not executed
         },
     },
+    "backup-database-weekly": {
+        "task": "apps.core.tasks.backup_database_task",
+        "schedule": crontab(hour=2, minute=0, day_of_week=0),  # Run weekly on Sunday at 2:00 AM
+        "options": {
+            "expires": 7200,  # Task expires after 2 hours if not executed
+        },
+    },
 }
 
 # Configure timezone for scheduled tasks
