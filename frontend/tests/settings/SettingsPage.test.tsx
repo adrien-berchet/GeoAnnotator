@@ -4,62 +4,37 @@
  * Tests the main settings page with loading, error, and success states.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { renderWithProviders } from "../../src/test/test-utils";
-import { SettingsPage } from "../../src/pages/SettingsPage";
-import * as settingsApi from "../../src/api/settings";
-import * as useAuthModule from "../../src/hooks/useAuth";
+import { createMemoryRouter, RouterProvider } from "react-router-dom";
+import { AuthProvider } from "@/hooks/useAuth";
+import { ThemeProvider } from "@/contexts/ThemeContext";
+import { SettingsPage } from "@/pages/SettingsPage";
+import * as settingsApi from "@/api/settings";
 
 // Mock the settings API
-vi.mock("../../src/api/settings");
-vi.mock("../../src/hooks/useAuth");
+vi.mock("@/api/settings");
 
-// Mock getSettings globally for LanguageProvider
-vi.mock("../../src/utils/i18n", () => ({
-  translate: (key: string, fallback?: string) => fallback || key,
-  getInitialLanguage: () => "en",
-  storeLanguage: vi.fn(),
-  getSupportedLanguages: () => ["en", "fr"],
-}));
-
-const mockGetSettings = settingsApi.getSettings as ReturnType<typeof vi.fn>;
-const mockUpdateSettings = settingsApi.updateSettings as ReturnType<
-  typeof vi.fn
->;
+const mockGetSettings = settingsApi.getSettings as any;
+const mockUpdateSettings = settingsApi.updateSettings as any;
 
 describe("SettingsPage Component", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-
-    // Mock getSettings for LanguageProvider (returns default settings)
-    mockGetSettings.mockResolvedValue({
-      id: "default",
-      language: "en",
-      theme_mode: "auto",
-      export_format: "geojson",
-      default_map_type: "osm",
-      created_at: "2025-01-01T00:00:00Z",
-      updated_at: "2025-01-01T00:00:00Z",
-    });
-
-    // Mock authenticated user for all tests
-    vi.mocked(useAuthModule.useAuth).mockReturnValue({
-      user: {
-        id: "1",
-        email: "test@example.com",
-        storage_used: 0,
-        storage_limit: 1000000,
-      },
-      isLoading: false,
-      isAuthenticated: true,
-      login: vi.fn(),
-      logout: vi.fn(),
-      updateUser: vi.fn(),
-      getAccessToken: vi.fn(),
-      getRefreshToken: vi.fn(),
-    });
   });
+
+  const renderWithRouter = (component: React.ReactElement) => {
+    const router = createMemoryRouter([{ path: "/", element: component }], {
+      initialEntries: ["/"],
+    });
+    return render(
+      <AuthProvider>
+        <ThemeProvider>
+          <RouterProvider router={router} />
+        </ThemeProvider>
+      </AuthProvider>,
+    );
+  };
 
   describe("Loading State", () => {
     it("should display loading spinner while fetching preferences", () => {
@@ -67,7 +42,7 @@ describe("SettingsPage Component", () => {
         () => new Promise(() => {}), // Never resolves
       );
 
-      renderWithProviders(<SettingsPage />, { useMemoryRouter: true });
+      renderWithRouter(<SettingsPage />);
 
       expect(
         screen.getByRole("status") || screen.getByTestId("loading-spinner"),
@@ -77,7 +52,7 @@ describe("SettingsPage Component", () => {
     it("should not display form during loading", () => {
       mockGetSettings.mockImplementation(() => new Promise(() => {}));
 
-      renderWithProviders(<SettingsPage />, { useMemoryRouter: true });
+      renderWithRouter(<SettingsPage />);
 
       expect(screen.queryByTestId("settings-form")).not.toBeInTheDocument();
     });
@@ -89,14 +64,14 @@ describe("SettingsPage Component", () => {
         id: "123",
         language: "en",
         theme_mode: "dark",
-        export_format: "kml",
+        default_map_type: "satellite",
         created_at: "2025-10-15T00:00:00Z",
         updated_at: "2025-10-15T00:00:00Z",
       };
 
       mockGetSettings.mockResolvedValueOnce(mockPreferences);
 
-      renderWithProviders(<SettingsPage />, { useMemoryRouter: true });
+      renderWithRouter(<SettingsPage />);
 
       await waitFor(() => {
         expect(
@@ -105,9 +80,9 @@ describe("SettingsPage Component", () => {
         ).toBeInTheDocument();
       });
 
-      // Check that current values are displayed (use getAllByText since labels appear multiple times)
-      expect(screen.getAllByText(/dark/i).length).toBeGreaterThan(0);
-      expect(screen.getAllByText(/kml/i).length).toBeGreaterThan(0);
+      // Check that current values are displayed
+      expect(screen.getByText(/dark/i)).toBeInTheDocument();
+      expect(screen.getByText(/satellite/i)).toBeInTheDocument();
     });
 
     it("should display all settings sections", async () => {
@@ -115,32 +90,28 @@ describe("SettingsPage Component", () => {
         id: "123",
         language: "en",
         theme_mode: "auto",
-        export_format: "geojson",
+        default_map_type: "osm",
         created_at: "2025-10-15T00:00:00Z",
         updated_at: "2025-10-15T00:00:00Z",
       };
 
       mockGetSettings.mockResolvedValueOnce(mockPreferences);
 
-      renderWithProviders(<SettingsPage />, { useMemoryRouter: true });
+      renderWithRouter(<SettingsPage />);
 
       // Wait for the form to load
       await waitFor(() => {
         expect(screen.getByTestId("settings-form")).toBeInTheDocument();
       });
 
-      // Check that all sections are displayed by looking for their controls
-      // Theme section
+      // Check that all sections are displayed
       expect(
-        screen.getByRole("radiogroup", { name: /theme/i }),
+        screen.getByRole("heading", { name: /appearance/i }),
       ).toBeInTheDocument();
-
-      // Language section - check for language-related text
-      const allText = screen.getAllByText(/language/i);
-      expect(allText.length).toBeGreaterThan(0);
-
-      // Export section - check for export format options
-      expect(screen.getAllByText(/geojson|kml|gpx/i).length).toBeGreaterThan(0);
+      expect(
+        screen.getByRole("heading", { name: /language/i }),
+      ).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: /map/i })).toBeInTheDocument();
     });
   });
 
@@ -150,13 +121,12 @@ describe("SettingsPage Component", () => {
         new Error("Failed to fetch settings"),
       );
 
-      renderWithProviders(<SettingsPage />, { useMemoryRouter: true });
+      renderWithRouter(<SettingsPage />);
 
       await waitFor(() => {
-        // Check for error message - could be translation key or actual message
-        // The error is in a div with class "settings-error" and contains a p with class "error-message"
-        const errorElement = screen.getByText(/settings.*error|error/i);
-        expect(errorElement).toBeInTheDocument();
+        expect(
+          screen.getByText(/failed to load settings/i),
+        ).toBeInTheDocument();
       });
     });
 
@@ -165,7 +135,7 @@ describe("SettingsPage Component", () => {
         new Error("Failed to fetch settings"),
       );
 
-      renderWithProviders(<SettingsPage />, { useMemoryRouter: true });
+      renderWithRouter(<SettingsPage />);
 
       await waitFor(() => {
         expect(
@@ -176,21 +146,20 @@ describe("SettingsPage Component", () => {
   });
 
   describe("Form Interaction", () => {
-    it("should enable save button when form is dirty", async () => {
+    it("should have save button disabled initially", async () => {
       const mockPreferences = {
         id: "123",
         language: "en",
         theme_mode: "auto",
-        export_format: "geojson",
+        default_map_type: "osm",
         created_at: "2025-10-15T00:00:00Z",
         updated_at: "2025-10-15T00:00:00Z",
       };
 
       mockGetSettings.mockResolvedValueOnce(mockPreferences);
-      mockUpdateSettings.mockResolvedValue(mockPreferences);
 
       const user = userEvent.setup();
-      renderWithProviders(<SettingsPage />, { useMemoryRouter: true });
+      renderWithRouter(<SettingsPage />);
 
       await waitFor(() => {
         expect(screen.getByTestId("settings-form")).toBeInTheDocument();
@@ -199,9 +168,11 @@ describe("SettingsPage Component", () => {
       const saveButton = screen.getByRole("button", { name: /save/i });
       expect(saveButton).toBeDisabled();
 
-      // Change export format to make form dirty (theme changes don't make it dirty)
-      const kmlButton = screen.getByRole("radio", { name: /kml/i });
-      await user.click(kmlButton);
+      // Change theme to make form dirty
+      const darkThemeButton = screen.getByRole("radio", {
+        name: /dark theme/i,
+      });
+      await user.click(darkThemeButton);
 
       expect(saveButton).not.toBeDisabled();
     });
@@ -211,14 +182,14 @@ describe("SettingsPage Component", () => {
         id: "123",
         language: "en",
         theme_mode: "auto",
-        export_format: "geojson",
+        default_map_type: "osm",
         created_at: "2025-10-15T00:00:00Z",
         updated_at: "2025-10-15T00:00:00Z",
       };
 
       mockGetSettings.mockResolvedValueOnce(mockPreferences);
 
-      renderWithProviders(<SettingsPage />, { useMemoryRouter: true });
+      renderWithRouter(<SettingsPage />);
 
       await waitFor(() => {
         const saveButton = screen.getByRole("button", { name: /save/i });
@@ -226,80 +197,19 @@ describe("SettingsPage Component", () => {
       });
     });
 
-    it("should save theme immediately and other settings on save button click", async () => {
+    it("should call updateSettings when save button is clicked", async () => {
       const mockPreferences = {
         id: "123",
         language: "en",
         theme_mode: "auto",
-        export_format: "geojson",
-        created_at: "2025-10-15T00:00:00Z",
-        updated_at: "2025-10-15T00:00:00Z",
-      };
-
-      const updatedTheme = {
-        ...mockPreferences,
-        theme_mode: "dark" as const,
-      };
-
-      const updatedOther = {
-        ...updatedTheme,
-        export_format: "kml" as const,
-        updated_at: "2025-10-15T12:00:00Z",
-      };
-
-      mockGetSettings.mockResolvedValueOnce(mockPreferences);
-      mockUpdateSettings
-        .mockResolvedValueOnce(updatedTheme) // Theme saved immediately
-        .mockResolvedValueOnce(updatedOther); // Other settings saved on button click
-
-      const user = userEvent.setup();
-      renderWithProviders(<SettingsPage />, { useMemoryRouter: true });
-
-      await waitFor(() => {
-        expect(screen.getByTestId("settings-form")).toBeInTheDocument();
-      });
-
-      // Change theme - saves immediately via ThemeContext
-      const darkThemeButton = screen.getByRole("radio", {
-        name: /dark theme/i,
-      });
-      await user.click(darkThemeButton);
-
-      await waitFor(() => {
-        expect(mockUpdateSettings).toHaveBeenCalledWith({
-          theme_mode: "dark",
-        });
-      });
-
-      // Change export format
-      const kmlButton = screen.getByRole("radio", { name: /kml/i });
-      await user.click(kmlButton);
-
-      // Click save - only saves language and export_format (theme already saved)
-      const saveButton = screen.getByRole("button", { name: /save/i });
-      await user.click(saveButton);
-
-      await waitFor(() => {
-        expect(mockUpdateSettings).toHaveBeenLastCalledWith({
-          language: "en",
-          export_format: "kml",
-        });
-      });
-    });
-
-    it("should display success message after saving non-theme settings", async () => {
-      const mockPreferences = {
-        id: "123",
-        language: "en",
-        theme_mode: "auto",
-        export_format: "geojson",
+        default_map_type: "osm",
         created_at: "2025-10-15T00:00:00Z",
         updated_at: "2025-10-15T00:00:00Z",
       };
 
       const updatedPreferences = {
         ...mockPreferences,
-        export_format: "kml" as const,
+        theme_mode: "dark" as const,
         updated_at: "2025-10-15T12:00:00Z",
       };
 
@@ -307,17 +217,63 @@ describe("SettingsPage Component", () => {
       mockUpdateSettings.mockResolvedValueOnce(updatedPreferences);
 
       const user = userEvent.setup();
-      renderWithProviders(<SettingsPage />, { useMemoryRouter: true });
+      renderWithRouter(<SettingsPage />);
 
       await waitFor(() => {
         expect(screen.getByTestId("settings-form")).toBeInTheDocument();
       });
 
-      // Change export format
-      const kmlButton = screen.getByRole("radio", { name: /kml/i });
-      await user.click(kmlButton);
+      // Change theme
+      const darkThemeButton = screen.getByRole("radio", {
+        name: /dark theme/i,
+      });
+      await user.click(darkThemeButton);
 
-      // Save
+      // Click save
+      const saveButton = screen.getByRole("button", { name: /save/i });
+      await user.click(saveButton);
+
+      await waitFor(() => {
+        expect(mockUpdateSettings).toHaveBeenCalledWith({
+          theme_mode: "dark",
+          language: "en",
+          default_map_type: "osm",
+        });
+      });
+    });
+
+    it("should display success message after save", async () => {
+      const mockPreferences = {
+        id: "123",
+        language: "en",
+        theme_mode: "auto",
+        default_map_type: "osm",
+        created_at: "2025-10-15T00:00:00Z",
+        updated_at: "2025-10-15T00:00:00Z",
+      };
+
+      const updatedPreferences = {
+        ...mockPreferences,
+        theme_mode: "dark" as const,
+        updated_at: "2025-10-15T12:00:00Z",
+      };
+
+      mockGetSettings.mockResolvedValueOnce(mockPreferences);
+      mockUpdateSettings.mockResolvedValueOnce(updatedPreferences);
+
+      const user = userEvent.setup();
+      renderWithRouter(<SettingsPage />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId("settings-form")).toBeInTheDocument();
+      });
+
+      // Change and save
+      const darkThemeButton = screen.getByRole("radio", {
+        name: /dark theme/i,
+      });
+      await user.click(darkThemeButton);
+
       const saveButton = screen.getByRole("button", { name: /save/i });
       await user.click(saveButton);
 
@@ -335,24 +291,25 @@ describe("SettingsPage Component", () => {
         id: "123",
         language: "en",
         theme_mode: "auto",
-        export_format: "geojson",
+        default_map_type: "osm",
         created_at: "2025-10-15T00:00:00Z",
         updated_at: "2025-10-15T00:00:00Z",
       };
 
       mockGetSettings.mockResolvedValueOnce(mockPreferences);
-      mockUpdateSettings.mockResolvedValue(mockPreferences); // For theme changes
 
       const user = userEvent.setup();
-      renderWithProviders(<SettingsPage />, { useMemoryRouter: true });
+      renderWithRouter(<SettingsPage />);
 
       await waitFor(() => {
         expect(screen.getByTestId("settings-form")).toBeInTheDocument();
       });
 
-      // Change export format to make form dirty (theme changes don't make it dirty)
-      const kmlButton = screen.getByRole("radio", { name: /kml/i });
-      await user.click(kmlButton);
+      // Make form dirty
+      const darkThemeButton = screen.getByRole("radio", {
+        name: /dark theme/i,
+      });
+      await user.click(darkThemeButton);
 
       // Try to navigate (will be blocked by useBlocker)
       // This test verifies the blocker is set up, actual navigation blocking
@@ -365,14 +322,14 @@ describe("SettingsPage Component", () => {
         id: "123",
         language: "en",
         theme_mode: "auto",
-        export_format: "geojson",
+        default_map_type: "osm",
         created_at: "2025-10-15T00:00:00Z",
         updated_at: "2025-10-15T00:00:00Z",
       };
 
       mockGetSettings.mockResolvedValueOnce(mockPreferences);
 
-      renderWithProviders(<SettingsPage />, { useMemoryRouter: true });
+      renderWithRouter(<SettingsPage />);
 
       await waitFor(() => {
         expect(screen.getByTestId("settings-form")).toBeInTheDocument();

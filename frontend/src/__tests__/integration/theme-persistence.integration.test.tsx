@@ -87,7 +87,6 @@ describe("Theme Persistence Integration", () => {
         theme_mode: "dark",
         language: "en",
         default_map_type: "osm",
-        export_format: "geojson",
         created_at: "2024-01-01T00:00:00Z",
         updated_at: "2024-01-01T00:00:00Z",
       };
@@ -176,7 +175,6 @@ describe("Theme Persistence Integration", () => {
         theme_mode: "auto",
         language: "en",
         default_map_type: "osm",
-        export_format: "geojson",
         created_at: "2024-01-01T00:00:00Z",
         updated_at: "2024-01-01T00:00:00Z",
       };
@@ -320,7 +318,6 @@ describe("Theme Persistence Integration", () => {
         theme_mode: "auto",
         language: "en",
         default_map_type: "osm",
-        export_format: "geojson",
         created_at: "2024-01-01T00:00:00Z",
         updated_at: "2024-01-01T00:00:00Z",
       };
