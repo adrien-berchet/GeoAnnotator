@@ -22,7 +22,7 @@ class TestUserPreferencesSerializer:
         # Signal auto-creates preferences, so we retrieve and update it
         preferences = user.preferences
         preferences.theme = "dark"
-        preferences.export_format = "kml"
+        preferences.default_map_type = "satellite"
         preferences.save()
 
         serializer = UserPreferencesSerializer(preferences)
@@ -31,7 +31,7 @@ class TestUserPreferencesSerializer:
         assert "id" in data
         assert data["language"] == "en"
         assert data["theme_mode"] == "dark"
-        assert data["export_format"] == "kml"
+        assert data["default_map_type"] == "satellite"
         assert "created_at" in data
         assert "updated_at" in data
 
@@ -39,12 +39,12 @@ class TestUserPreferencesSerializer:
         """Test deserialization with valid data."""
         from apps.settings.serializers import UserPreferencesSerializer
 
-        data = {"language": "en", "theme_mode": "light", "export_format": "csv"}
+        data = {"language": "en", "theme_mode": "light", "default_map_type": "satellite"}
 
         serializer = UserPreferencesSerializer(data=data)
         assert serializer.is_valid()
         assert serializer.validated_data["theme"] == "light"
-        assert serializer.validated_data["export_format"] == "csv"
+        assert serializer.validated_data["default_map_type"] == "satellite"
 
     def test_validation_invalid_theme_choice(self):
         """Test that invalid theme choice is rejected."""
@@ -55,16 +55,6 @@ class TestUserPreferencesSerializer:
         serializer = UserPreferencesSerializer(data=data, partial=True)
         assert not serializer.is_valid()
         assert "theme_mode" in serializer.errors
-
-    def test_validation_invalid_export_format_choice(self):
-        """Test that invalid export_format choice is rejected."""
-        from apps.settings.serializers import UserPreferencesSerializer
-
-        data = {"export_format": "invalid_format"}
-
-        serializer = UserPreferencesSerializer(data=data, partial=True)
-        assert not serializer.is_valid()
-        assert "export_format" in serializer.errors
 
     def test_partial_update(self):
         """Test partial update with only theme field."""
@@ -85,4 +75,4 @@ class TestUserPreferencesSerializer:
 
         assert updated_preferences.theme == "dark"
         assert updated_preferences.language == "en"  # Unchanged
-        assert updated_preferences.export_format == "geojson"  # Unchanged
+        assert updated_preferences.default_map_type == "osm"  # Unchanged

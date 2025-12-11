@@ -40,7 +40,7 @@ describe("Settings API Client", () => {
         id: "123e4567-e89b-12d3-a456-426614174000",
         language: "en",
         theme_mode: "dark",
-        export_format: "kml",
+        default_map_type: "satellite",
         created_at: "2025-10-15T00:00:00Z",
         updated_at: "2025-10-15T00:00:00Z",
       };
@@ -105,14 +105,14 @@ describe("Settings API Client", () => {
     it("should update user preferences successfully", async () => {
       const updates = {
         theme_mode: "dark" as const,
-        export_format: "kml" as const,
+        default_map_type: "satellite" as const,
       };
 
       const mockResponse: UserPreferences = {
         id: "123e4567-e89b-12d3-a456-426614174000",
         language: "en",
         theme_mode: "dark",
-        export_format: "kml",
+        default_map_type: "satellite",
         created_at: "2025-10-15T00:00:00Z",
         updated_at: "2025-10-15T12:00:00Z",
       };
@@ -134,28 +134,29 @@ describe("Settings API Client", () => {
         id: "123e4567-e89b-12d3-a456-426614174000",
         language: "en",
         theme_mode: "light",
-        export_format: "geojson",
+        default_map_type: "osm",
         created_at: "2025-10-15T00:00:00Z",
         updated_at: "2025-10-15T12:00:00Z",
       };
 
       mockedApiClient.patch.mockResolvedValueOnce({ data: mockResponse });
 
-      await updateSettings(updates);
+      const result = await updateSettings(updates);
 
       expect(mockedApiClient.patch).toHaveBeenCalledWith("/settings/", updates);
+      expect(result).toEqual(mockResponse);
     });
 
-    it("should send partial updates only", async () => {
+    it("should update map type independently", async () => {
       const updates = {
-        theme_mode: "light" as const,
+        default_map_type: "topo" as const,
       };
 
       const mockResponse: UserPreferences = {
         id: "123e4567-e89b-12d3-a456-426614174000",
         language: "en",
         theme_mode: "light",
-        export_format: "geojson",
+        default_map_type: "topo",
         created_at: "2025-10-15T00:00:00Z",
         updated_at: "2025-10-15T12:00:00Z",
       };
