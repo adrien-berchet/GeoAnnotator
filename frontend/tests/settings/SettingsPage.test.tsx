@@ -9,14 +9,17 @@ import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 import { SettingsPage } from "@/pages/SettingsPage";
 import * as settingsApi from "@/api/settings";
 
 // Mock the settings API
 vi.mock("@/api/settings");
 
-const mockGetSettings = settingsApi.getSettings as any;
-const mockUpdateSettings = settingsApi.updateSettings as any;
+const mockGetSettings = settingsApi.getSettings as ReturnType<typeof vi.fn>;
+const mockUpdateSettings = settingsApi.updateSettings as ReturnType<
+  typeof vi.fn
+>;
 
 describe("SettingsPage Component", () => {
   beforeEach(() => {
@@ -29,9 +32,11 @@ describe("SettingsPage Component", () => {
     });
     return render(
       <AuthProvider>
-        <ThemeProvider>
-          <RouterProvider router={router} />
-        </ThemeProvider>
+        <LanguageProvider>
+          <ThemeProvider>
+            <RouterProvider router={router} />
+          </ThemeProvider>
+        </LanguageProvider>
       </AuthProvider>,
     );
   };
@@ -168,11 +173,11 @@ describe("SettingsPage Component", () => {
       const saveButton = screen.getByRole("button", { name: /save/i });
       expect(saveButton).toBeDisabled();
 
-      // Change theme to make form dirty
-      const darkThemeButton = screen.getByRole("radio", {
-        name: /dark theme/i,
+      // Change map type to make form dirty
+      const satelliteRadio = screen.getByRole("radio", {
+        name: /satellite/i,
       });
-      await user.click(darkThemeButton);
+      await user.click(satelliteRadio);
 
       expect(saveButton).not.toBeDisabled();
     });
@@ -209,7 +214,7 @@ describe("SettingsPage Component", () => {
 
       const updatedPreferences = {
         ...mockPreferences,
-        theme_mode: "dark" as const,
+        default_map_type: "satellite" as const,
         updated_at: "2025-10-15T12:00:00Z",
       };
 
@@ -223,11 +228,11 @@ describe("SettingsPage Component", () => {
         expect(screen.getByTestId("settings-form")).toBeInTheDocument();
       });
 
-      // Change theme
-      const darkThemeButton = screen.getByRole("radio", {
-        name: /dark theme/i,
+      // Change map type
+      const satelliteRadio = screen.getByRole("radio", {
+        name: /satellite/i,
       });
-      await user.click(darkThemeButton);
+      await user.click(satelliteRadio);
 
       // Click save
       const saveButton = screen.getByRole("button", { name: /save/i });
@@ -235,9 +240,8 @@ describe("SettingsPage Component", () => {
 
       await waitFor(() => {
         expect(mockUpdateSettings).toHaveBeenCalledWith({
-          theme_mode: "dark",
           language: "en",
-          default_map_type: "osm",
+          default_map_type: "satellite",
         });
       });
     });
@@ -254,7 +258,7 @@ describe("SettingsPage Component", () => {
 
       const updatedPreferences = {
         ...mockPreferences,
-        theme_mode: "dark" as const,
+        default_map_type: "satellite" as const,
         updated_at: "2025-10-15T12:00:00Z",
       };
 
@@ -268,11 +272,11 @@ describe("SettingsPage Component", () => {
         expect(screen.getByTestId("settings-form")).toBeInTheDocument();
       });
 
-      // Change and save
-      const darkThemeButton = screen.getByRole("radio", {
-        name: /dark theme/i,
+      // Change map type and save
+      const satelliteRadio = screen.getByRole("radio", {
+        name: /satellite/i,
       });
-      await user.click(darkThemeButton);
+      await user.click(satelliteRadio);
 
       const saveButton = screen.getByRole("button", { name: /save/i });
       await user.click(saveButton);
@@ -306,10 +310,10 @@ describe("SettingsPage Component", () => {
       });
 
       // Make form dirty
-      const darkThemeButton = screen.getByRole("radio", {
-        name: /dark theme/i,
+      const satelliteRadio = screen.getByRole("radio", {
+        name: /satellite/i,
       });
-      await user.click(darkThemeButton);
+      await user.click(satelliteRadio);
 
       // Try to navigate (will be blocked by useBlocker)
       // This test verifies the blocker is set up, actual navigation blocking
