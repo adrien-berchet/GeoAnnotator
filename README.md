@@ -4,30 +4,63 @@ A comprehensive web application for geospatial annotation enabling field researc
 
 ## Features
 
-- 🗺️ **Interactive Leaflet Map** with clustering and bounding box search
-- 📍 **GPS Point Management** with create, read, update, delete operations
-- 📝 **Rich Annotations** supporting text with **Markdown formatting**, images, documents, and files
-- 👥 **Collaborative Sharing** with view/edit/transfer permissions
-- 📤 **Import/Export** in multiple formats (GeoJSON, GPX, KML, CSV, ZIP)
-- 🗑️ **30-Day Trash** with restoration capability
-- 🔒 **JWT Authentication** with 1-hour access tokens
+### Core Functionality
+- 🗺️ **Interactive Leaflet Map** with marker clustering, bounding box search, and multiple map layers (OpenStreetMap, Satellite, Terrain)
+- 📍 **GPS Point Management** with full CRUD operations, custom point types, and tag-based organization
+- 📝 **Rich Annotations** supporting text with **Markdown formatting**, images, documents, and file attachments
+- 🏷️ **Point Types** with customizable icons (emoji, uploaded images, or URLs), multi-language support, and drag-and-drop reordering
+- 🔖 **Tag Management** for organizing and filtering points
+
+### Collaboration & Sharing
+- 👥 **Point Sharing** with view/edit/transfer permissions
+- 👫 **Friends System** with add friend by username and shared content statistics
+- 📧 **Share Invitations** via email with secure acceptance workflow
+
+### Data Management
+- 📤 **Import/Export** in multiple formats:
+  - **GeoJSON** - Standard geographic format with full annotation support
+  - **GPX** - GPS Exchange Format for device compatibility
+  - **KML** - Google Earth format for visualization
+  - **CSV** - Spreadsheet format for data analysis
+  - **ZIP** - Complete archive with files and annotations
+- 🗑️ **30-Day Trash** with point restoration capability
+
+### User Settings & Account
+- 🎨 **Theme Settings** with light/dark mode and system preference support
+- 🌐 **Multi-language Support** (English, French) with automatic preference persistence
+- 🗺️ **Default Map Type** configuration
+- 👤 **Account Management** with username, email change (with confirmation), and password update
+- 🗑️ **Account Deletion** with 30-day grace period and email confirmation
+
+### Security & Performance
+- 🔒 **JWT Authentication** with 1-hour access tokens and 7-day refresh tokens
 - 💾 **Storage Quota** management (1GB/file, 2GB/user)
 - 🔐 **Editing Locks** for concurrent access prevention
+- 🔑 **Email Encryption** with Fernet encryption for stored emails
+- 📊 **Monitoring & Observability** with Sentry integration, health checks, and metrics
 
 ## Tech Stack
 
 ### Backend
 - **Django 4.2+** with Django REST Framework
-- **PostgreSQL 15+** with PostGIS extension
+- **PostgreSQL 15+** with PostGIS extension for geospatial data
 - **JWT Authentication** via djangorestframework-simplejwt
+- **Celery 5.3+** with Redis for background tasks (async email, scheduled cleanup)
+- **django-fernet-fields** for email encryption
+- **Sentry SDK** for error tracking and performance monitoring
+- **MinIO/S3** for file storage
 - **Python 3.11+**
 
 ### Frontend
-- **React 19+** with TypeScript
-- **Vite 7+** for fast development
+- **React 19+** with TypeScript 5.9+
+- **Vite 7+** for fast development and building
 - **Leaflet 1.9+** for interactive mapping
+- **@dnd-kit** for drag-and-drop functionality
+- **@uiw/react-md-editor** for Markdown editing
+- **@tanstack/react-query** for data fetching
 - **Axios** for API calls
 - **React Router 7+** for navigation
+- **Sentry** for error tracking
 
 ## Quick Start with Docker (Recommended)
 
@@ -59,7 +92,7 @@ This will:
 - Email: `admin@geoannotator.local`
 - Password: `admin123`
 
-See [QUICKSTART.md](QUICKSTART.md) for detailed instructions.
+See the [Deployment Guide](docs/deployment.md) for detailed production setup instructions.
 
 ## Prerequisites
 
@@ -81,7 +114,6 @@ See [QUICKSTART.md](QUICKSTART.md) for detailed instructions.
 ```bash
 git clone <repository-url>
 cd GeoAnnotator
-git checkout 001-build-a-web
 ```
 
 ### 2. Backend Setup
@@ -201,18 +233,21 @@ pre-commit run --all-files
 GeoAnnotator/
 ├── backend/
 │   ├── apps/
-│   │   ├── authentication/
-│   │   ├── points/
-│   │   ├── annotations/
-│   │   ├── sharing/
-│   │   ├── trash/
-│   │   └── export_import/
+│   │   ├── authentication/    # User auth, registration, JWT
+│   │   ├── points/            # GPS points, point types, tags
+│   │   ├── annotations/       # Text, image, document annotations
+│   │   ├── sharing/           # Point sharing, friends system
+│   │   ├── trash/             # Soft delete, restoration
+│   │   ├── export_import/     # GeoJSON, GPX, KML, CSV, ZIP
+│   │   ├── settings/          # User preferences
+│   │   └── core/              # Shared utilities, middleware
 │   ├── config/
 │   │   ├── settings/
 │   │   │   ├── base.py
 │   │   │   ├── development.py
 │   │   │   └── production.py
 │   │   ├── urls.py
+│   │   ├── celery.py          # Celery configuration
 │   │   └── wsgi.py
 │   ├── requirements/
 │   │   ├── base.txt
@@ -222,25 +257,38 @@ GeoAnnotator/
 │   └── pytest.ini
 ├── frontend/
 │   ├── src/
-│   │   ├── api/
-│   │   ├── components/
-│   │   ├── hooks/
-│   │   ├── store/
-│   │   ├── types/
-│   │   └── utils/
+│   │   ├── api/               # API client and endpoints
+│   │   ├── components/        # Reusable UI components
+│   │   │   ├── account/       # Account management components
+│   │   │   ├── annotations/   # Annotation display/editing
+│   │   │   ├── auth/          # Login, register forms
+│   │   │   ├── common/        # Shared components
+│   │   │   ├── layout/        # Navigation, header, footer
+│   │   │   ├── map/           # Map components
+│   │   │   ├── points/        # Point forms, type management
+│   │   │   ├── settings/      # Settings selectors
+│   │   │   ├── sharing/       # Share forms
+│   │   │   └── trash/         # Trash list
+│   │   ├── contexts/          # React contexts (Theme, Language, Auth)
+│   │   ├── hooks/             # Custom React hooks
+│   │   ├── pages/             # Page components
+│   │   ├── styles/            # Global CSS and theme variables
+│   │   ├── types/             # TypeScript type definitions
+│   │   └── utils/             # Utility functions
 │   ├── package.json
 │   ├── vite.config.ts
 │   └── vitest.config.ts
-├── specs/
-│   └── 001-build-a-web/
-│       ├── spec.md
-│       ├── plan.md
-│       ├── research.md
-│       ├── data-model.md
-│       ├── quickstart.md
-│       ├── tasks.md
-│       └── contracts/
-└── .pre-commit-config.yaml
+├── docs/
+│   ├── api.md                 # REST API documentation
+│   ├── deployment.md          # Production deployment guide
+│   ├── markdown-annotations.md # Markdown usage guide
+│   └── map-popup-design.md    # Map popup design docs
+├── docker-compose.yml         # Development stack
+├── docker-compose.prod.yml    # Production overrides
+├── Makefile                   # Development commands
+├── MONITORING.md              # Observability documentation
+├── CODE_QUALITY_REVIEW.md     # Code quality analysis
+└── .pre-commit-config.yaml    # Pre-commit hooks
 ```
 
 ## API Documentation
@@ -295,11 +343,10 @@ npm test src/components/auth/LoginForm.test.tsx
 
 ## Documentation
 
+- **[API Documentation](docs/api.md)** - Complete REST API reference with endpoints, request/response formats, and error codes
 - **[Markdown Annotations Guide](docs/markdown-annotations.md)** - Learn how to use Markdown formatting in text annotations
-- **[API Documentation](docs/api.md)** - REST API reference
-- **[Deployment Guide](docs/deployment.md)** - General production deployment instructions
-- **[Render.com + Neon Deployment](RENDER.md)** - Quick deploy with Blueprint (recommended)
-- **[Celery & Redis Setup](docs/celery-redis-setup.md)** - Async email configuration
+- **[Deployment Guide](docs/deployment.md)** - Production deployment instructions (Docker, manual, Nginx, SSL)
+- **[Monitoring & Observability](MONITORING.md)** - Sentry integration, health checks, metrics, and logging
 
 ## License
 

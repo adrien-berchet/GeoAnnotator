@@ -472,14 +472,6 @@ export function MapPage() {
     setPoints([...points, point]);
   };
 
-  /**
-   * Handle point click - opens popup with point information.
-   * The popup contains a link to navigate to the detail page.
-   */
-  const handlePointClick = (point: GPSPoint) => {
-    logger.debug("Point clicked:", point);
-  };
-
   if (error) {
     return (
       <div className="error-container">
@@ -517,11 +509,7 @@ export function MapPage() {
           maxClusterRadius={50}
         >
           {points.map((point) => (
-            <PointMarker
-              key={point.id}
-              point={point}
-              onClick={handlePointClick}
-            />
+            <PointMarker key={point.id} point={point} />
           ))}
         </MarkerClusterGroup>
 

@@ -7,9 +7,9 @@
 .rules-empty {
   padding: 2rem 1rem;
   text-align: center;
-  border: 2px dashed var(--color-border, #e5e7eb);
+  border: 2px dashed var(--color-border-primary, #e5e7eb);
   border-radius: 8px;
-  background: var(--color-background, #f9fafb);
+  background: var(--color-bg-tertiary, #f9fafb);
 }
 
 .rules-empty p {
@@ -39,16 +39,16 @@
 
 .rule-card {
   padding: 1rem;
-  border: 2px solid var(--color-border, #e5e7eb);
+  border: 2px solid var(--color-border-primary, #e5e7eb);
   border-radius: 8px;
-  background: white;
+  background: var(--color-bg-secondary, white);
   transition: all 0.2s;
   position: relative;
 }
 
 .rule-card.inactive {
   opacity: 0.6;
-  background: var(--color-background, #f9fafb);
+  background: var(--color-bg-tertiary, #f9fafb);
 }
 
 .rule-card:hover {
@@ -157,7 +157,7 @@ input:disabled + .toggle-slider {
   color: var(--color-text-primary, #1f2937);
   line-height: 1.5;
   padding: 0.5rem;
-  background: var(--color-background, #f9fafb);
+  background: var(--color-bg-tertiary, #f9fafb);
   border-radius: 4px;
 }
 

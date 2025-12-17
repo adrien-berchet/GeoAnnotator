@@ -188,6 +188,8 @@ def _check_redis():
             return {"healthy": True, "message": "Redis not configured (optional)"}
 
         # Try to connect to Redis
+        # For rediss:// URLs, redis-py will automatically use SSL
+        # Don't manually configure SSL parameters to avoid conflicts
         client = redis.from_url(redis_url, socket_connect_timeout=2)
         client.ping()
 

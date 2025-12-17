@@ -59,16 +59,23 @@ def log_email_config(sender, **kwargs):
 app.conf.beat_schedule = {
     "cleanup-deleted-users-daily": {
         "task": "apps.authentication.tasks.cleanup_deleted_users",
-        "schedule": crontab(hour=2, minute=0),  # Run daily at 2:00 AM
+        "schedule": crontab(hour=13, minute=0),  # Run daily at 13:00 PM
         "options": {
             "expires": 3600,  # Task expires after 1 hour if not executed
         },
     },
     "cleanup-expired-tokens-daily": {
         "task": "apps.authentication.tasks.cleanup_expired_confirmation_tokens",
-        "schedule": crontab(hour=3, minute=0),  # Run daily at 3:00 AM
+        "schedule": crontab(hour=13, minute=30),  # Run daily at 13:30 PM
         "options": {
             "expires": 3600,  # Task expires after 1 hour if not executed
+        },
+    },
+    "backup-database-weekly": {
+        "task": "apps.core.tasks.backup_database_task",
+        "schedule": crontab(hour=12, minute=0),  # Run daily at 12:00 PM
+        "options": {
+            "expires": 7200,  # Task expires after 2 hours if not executed
         },
     },
 }

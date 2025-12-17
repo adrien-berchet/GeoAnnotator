@@ -17,6 +17,10 @@ import {
 } from "../api/export";
 import { getPoints } from "../api/points";
 import type { GPSPoint } from "../types/point";
+import {
+  FormatDetailsModal,
+  type FormatType,
+} from "../components/FormatDetailsModal";
 import "./ImportExportPage.css";
 
 export function ImportExportPage() {
@@ -38,6 +42,9 @@ export function ImportExportPage() {
   const [isImporting, setIsImporting] = useState(false);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
+
+  // Format details modal state
+  const [selectedFormat, setSelectedFormat] = useState<FormatType | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -181,6 +188,14 @@ export function ImportExportPage() {
 
   const deselectAllPoints = () => {
     setSelectedPoints([]);
+  };
+
+  const handleFormatClick = (format: FormatType) => {
+    setSelectedFormat(format);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedFormat(null);
   };
 
   return (
@@ -514,8 +529,23 @@ export function ImportExportPage() {
       {/* Help Section */}
       <section className="help-section">
         <h2>ℹ️ {t("importExport.help", "Format Information")}</h2>
+        <p className="help-description">
+          {t(
+            "importExport.helpDescription",
+            "Click on any format below to view detailed schema information and examples.",
+          )}
+        </p>
         <div className="format-info-grid">
-          <div className="format-info">
+          <div
+            className="format-info format-info-clickable"
+            onClick={() => handleFormatClick("geojson")}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) =>
+              (e.key === "Enter" || e.key === " ") &&
+              handleFormatClick("geojson")
+            }
+          >
             <h3>GeoJSON</h3>
             <p>
               {t(
@@ -523,8 +553,19 @@ export function ImportExportPage() {
                 "Standard geographic data format. Supports all point data and annotation metadata.",
               )}
             </p>
+            <span className="format-info-link">
+              {t("importExport.viewDetails", "View details →")}
+            </span>
           </div>
-          <div className="format-info">
+          <div
+            className="format-info format-info-clickable"
+            onClick={() => handleFormatClick("gpx")}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) =>
+              (e.key === "Enter" || e.key === " ") && handleFormatClick("gpx")
+            }
+          >
             <h3>GPX</h3>
             <p>
               {t(
@@ -532,8 +573,19 @@ export function ImportExportPage() {
                 "GPS Exchange Format. Compatible with most GPS devices and mapping software.",
               )}
             </p>
+            <span className="format-info-link">
+              {t("importExport.viewDetails", "View details →")}
+            </span>
           </div>
-          <div className="format-info">
+          <div
+            className="format-info format-info-clickable"
+            onClick={() => handleFormatClick("kml")}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) =>
+              (e.key === "Enter" || e.key === " ") && handleFormatClick("kml")
+            }
+          >
             <h3>KML</h3>
             <p>
               {t(
@@ -541,8 +593,19 @@ export function ImportExportPage() {
                 "Google Earth format. Great for visualization in Google Earth and Google Maps.",
               )}
             </p>
+            <span className="format-info-link">
+              {t("importExport.viewDetails", "View details →")}
+            </span>
           </div>
-          <div className="format-info">
+          <div
+            className="format-info format-info-clickable"
+            onClick={() => handleFormatClick("csv")}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) =>
+              (e.key === "Enter" || e.key === " ") && handleFormatClick("csv")
+            }
+          >
             <h3>CSV</h3>
             <p>
               {t(
@@ -550,8 +613,19 @@ export function ImportExportPage() {
                 "Spreadsheet format. Easy to edit in Excel or Google Sheets.",
               )}
             </p>
+            <span className="format-info-link">
+              {t("importExport.viewDetails", "View details →")}
+            </span>
           </div>
-          <div className="format-info">
+          <div
+            className="format-info format-info-clickable"
+            onClick={() => handleFormatClick("zip")}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) =>
+              (e.key === "Enter" || e.key === " ") && handleFormatClick("zip")
+            }
+          >
             <h3>ZIP</h3>
             <p>
               {t(
@@ -559,9 +633,15 @@ export function ImportExportPage() {
                 "Archive containing GeoJSON and all annotation files (images, documents, etc.).",
               )}
             </p>
+            <span className="format-info-link">
+              {t("importExport.viewDetails", "View details →")}
+            </span>
           </div>
         </div>
       </section>
+
+      {/* Format Details Modal */}
+      <FormatDetailsModal format={selectedFormat} onClose={handleCloseModal} />
     </div>
   );
 }
