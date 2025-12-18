@@ -114,3 +114,31 @@ export async function getProfile(): Promise<User> {
   const response = await apiClient.get<User>("/auth/me/");
   return response.data;
 }
+
+/**
+ * Request password reset (sends email with reset link).
+ */
+export async function requestPasswordReset(email: string): Promise<{ message: string }> {
+  const response = await apiClient.post<{ message: string }>(
+    "/auth/password-reset/",
+    { email },
+  );
+  return response.data;
+}
+
+/**
+ * Confirm password reset with token and new password.
+ */
+export async function confirmPasswordReset(
+  token: string,
+  newPassword: string,
+): Promise<{ message: string }> {
+  const response = await apiClient.post<{ message: string }>(
+    "/auth/password-reset/confirm/",
+    {
+      token,
+      new_password: newPassword,
+    },
+  );
+  return response.data;
+}

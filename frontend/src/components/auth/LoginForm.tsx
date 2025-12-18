@@ -204,6 +204,11 @@ export function LoginForm() {
               autoComplete="current-password"
               required
             />
+            <div className="form-field-footer">
+              <a href="/reset-password" className="forgot-password-link">
+                Forgot password?
+              </a>
+            </div>
           </div>
 
           {/* Submit button */}
