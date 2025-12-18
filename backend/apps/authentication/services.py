@@ -900,7 +900,7 @@ class PasswordResetService:
         frontend_url = getattr(settings, "FRONTEND_URL", "http://localhost:5173")
 
         # Build reset link
-        reset_link = f"{frontend_url}/reset-password?token={token}"
+        reset_link = f"{frontend_url}/reset-password/confirm?token={token}"
 
         # Email context
         context = {
