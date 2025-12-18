@@ -6,7 +6,7 @@
 
 import { useState, useEffect } from "react";
 import type { FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { login, resendConfirmation } from "../../api/auth";
 import { getErrorMessage } from "../../api/client";
@@ -205,9 +205,9 @@ export function LoginForm() {
               required
             />
             <div className="form-field-footer">
-              <a href="/reset-password" className="forgot-password-link">
+              <Link to="/reset-password" className="forgot-password-link">
                 Forgot password?
-              </a>
+              </Link>
             </div>
           </div>
 
@@ -224,7 +224,7 @@ export function LoginForm() {
         {/* Register link */}
         <div className="form-footer">
           <p>
-            Don't have an account? <a href="/register">Register here</a>
+            Don't have an account? <Link to="/register">Register here</Link>
           </p>
         </div>
       </div>
