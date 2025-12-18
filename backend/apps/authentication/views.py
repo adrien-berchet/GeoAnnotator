@@ -527,12 +527,17 @@ class PasswordChangeAPIView(APIView):
 
         user_agent = request.headers.get("user-agent", "")
 
+        # Get frontend URL from settings
+        frontend_url = getattr(settings, "FRONTEND_URL", "http://localhost:5173")
+        reset_password_url = f"{frontend_url}/reset-password"
+
         # Email context
         context = {
             "user": user,
             "timestamp": timezone.now().strftime("%Y-%m-%d %H:%M:%S UTC"),
             "ip_address": ip_address,
             "user_agent": user_agent[:100] if user_agent else None,  # Truncate long user agents
+            "reset_password_url": reset_password_url,
         }
 
         # Render email templates
