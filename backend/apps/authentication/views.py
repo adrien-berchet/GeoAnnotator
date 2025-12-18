@@ -516,6 +516,7 @@ class PasswordChangeAPIView(APIView):
         from django.template.loader import render_to_string
         from django.utils import timezone
 
+        from .services import PasswordResetService
         from .tasks import send_email_async
 
         # Get request details for security audit
@@ -527,9 +528,12 @@ class PasswordChangeAPIView(APIView):
 
         user_agent = request.headers.get("user-agent", "")
 
+        # Generate a password reset token for compromised account recovery
+        reset_token = PasswordResetService.generate_reset_token(user, request)
+
         # Get frontend URL from settings
         frontend_url = getattr(settings, "FRONTEND_URL", "http://localhost:5173")
-        reset_password_url = f"{frontend_url}/reset-password"
+        reset_password_url = f"{frontend_url}/reset-password/confirm?token={reset_token}"
 
         # Email context
         context = {
