@@ -483,6 +483,8 @@ class PasswordChangeAPIView(APIView):
     """
     POST /api/account/password-change/
     Change user password (requires old password verification).
+
+    Sends security notification email after successful password change.
     """
 
     permission_classes = [IsAuthenticated]
@@ -502,7 +504,67 @@ class PasswordChangeAPIView(APIView):
         # Log operation
         log_account_operation(user, "PASSWORD_CHANGED", request)
 
+        # Send security notification email
+        self._send_password_change_notification(user, request)
+
         return Response({"detail": "Password changed successfully."}, status=status.HTTP_200_OK)
+
+    def _send_password_change_notification(self, user, request):
+        """Send security notification email after password change."""
+        from django.conf import settings
+        from django.core.mail import send_mail
+        from django.template.loader import render_to_string
+        from django.utils import timezone
+
+        from .tasks import send_email_async
+
+        # Get request details for security audit
+        x_forwarded_for = request.headers.get("x-forwarded-for")
+        if x_forwarded_for:
+            ip_address = x_forwarded_for.split(",")[0].strip()
+        else:
+            ip_address = request.META.get("REMOTE_ADDR", "Unknown")
+
+        user_agent = request.headers.get("user-agent", "")
+
+        # Email context
+        context = {
+            "user": user,
+            "timestamp": timezone.now().strftime("%Y-%m-%d %H:%M:%S UTC"),
+            "ip_address": ip_address,
+            "user_agent": user_agent[:100] if user_agent else None,  # Truncate long user agents
+        }
+
+        # Render email templates
+        html_message = render_to_string(
+            "emails/password_changed_notification.html", context
+        )
+        text_message = render_to_string("emails/password_changed_notification.txt", context)
+
+        # Send email (async if Celery available)
+        subject = "Password Changed - GeoAnnotator"
+        from_email = settings.DEFAULT_FROM_EMAIL
+        to_email = str(user.email)
+
+        try:
+            # Try async email sending via Celery
+            send_email_async.delay(
+                subject=subject,
+                message=text_message,
+                from_email=from_email,
+                recipient_list=[to_email],
+                html_message=html_message,
+            )
+        except Exception:
+            # Fallback to synchronous email
+            send_mail(
+                subject=subject,
+                message=text_message,
+                from_email=from_email,
+                recipient_list=[to_email],
+                html_message=html_message,
+                fail_silently=True,  # Don't fail password change if email fails
+            )
 
 
 class AccountDeletionRequestAPIView(APIView):
