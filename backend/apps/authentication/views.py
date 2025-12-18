@@ -38,8 +38,8 @@ from .serializers import UserSerializer
 from .services import AccountDeletionTokenGenerator
 from .services import AuthenticationService
 from .services import EmailConfirmationService
-from .services import log_account_operation
 from .services import PasswordResetService
+from .services import log_account_operation
 from .services import send_deletion_confirmation
 from .services import soft_delete_user
 from .services import validate_username
@@ -545,9 +545,7 @@ class PasswordChangeAPIView(APIView):
         }
 
         # Render email templates
-        html_message = render_to_string(
-            "emails/password_changed_notification.html", context
-        )
+        html_message = render_to_string("emails/password_changed_notification.html", context)
         text_message = render_to_string("emails/password_changed_notification.txt", context)
 
         # Send email (async if Celery available)

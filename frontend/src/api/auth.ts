@@ -118,7 +118,9 @@ export async function getProfile(): Promise<User> {
 /**
  * Request password reset (sends email with reset link).
  */
-export async function requestPasswordReset(email: string): Promise<{ message: string }> {
+export async function requestPasswordReset(
+  email: string,
+): Promise<{ message: string }> {
   const response = await apiClient.post<{ message: string }>(
     "/auth/password-reset/",
     { email },
