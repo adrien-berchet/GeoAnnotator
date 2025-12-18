@@ -27,10 +27,13 @@ export function PasswordResetRequestPage() {
       const prefersDark = window.matchMedia(
         "(prefers-color-scheme: dark)",
       ).matches;
-      document.documentElement.setAttribute(
-        "data-theme",
-        prefersDark ? "dark" : "light",
-      );
+      const expectedTheme = prefersDark ? "dark" : "light";
+      const currentTheme = document.documentElement.getAttribute("data-theme");
+
+      // Only update if theme is different to avoid flash
+      if (currentTheme !== expectedTheme) {
+        document.documentElement.setAttribute("data-theme", expectedTheme);
+      }
     };
 
     applySystemTheme();
