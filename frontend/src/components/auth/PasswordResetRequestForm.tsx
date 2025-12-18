@@ -8,7 +8,6 @@ import { useState, useEffect } from "react";
 import type { FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { requestPasswordReset } from "../../api/auth";
-import { getErrorMessage } from "../../api/client";
 import "./PasswordResetRequestForm.css";
 
 /**
@@ -76,12 +75,12 @@ export function PasswordResetRequestForm() {
 
     try {
       // Call password reset request API
-      const response = await requestPasswordReset(email);
+      await requestPasswordReset(email);
       setSuccess(true);
       setError("");
       // Clear email field for security
       setEmail("");
-    } catch (err) {
+    } catch {
       // Even if there's an error, we show success to prevent email enumeration
       // The backend always returns 200 for security reasons
       setSuccess(true);

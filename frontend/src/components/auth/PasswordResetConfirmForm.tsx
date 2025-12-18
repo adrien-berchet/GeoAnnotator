@@ -9,7 +9,6 @@ import type { FormEvent } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { confirmPasswordReset, requestPasswordReset } from "../../api/auth";
 import { getErrorMessage } from "../../api/client";
-import { LoadingSpinner } from "../common/LoadingSpinner";
 import "./PasswordResetConfirmForm.css";
 
 /**
@@ -143,7 +142,7 @@ export function PasswordResetConfirmForm() {
       await requestPasswordReset(resendEmail);
       setResendSuccess(true);
       setError("");
-    } catch (err) {
+    } catch {
       // Even if there's an error, we show success to prevent email enumeration
       setResendSuccess(true);
       setError("");
