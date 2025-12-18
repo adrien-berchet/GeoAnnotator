@@ -1,6 +1,7 @@
 from django.contrib import admin
 
 from .models import EmailConfirmation
+from .models import PasswordReset
 from .models import User
 
 
@@ -27,3 +28,23 @@ class EmailConfirmationAdmin(admin.ModelAdmin):
     list_filter = ("confirmation_type", "confirmed_at")
     ordering = ("-created_at",)
     readonly_fields = ("token", "new_email_hash", "created_at", "expires_at", "confirmed_at")
+
+
+@admin.register(PasswordReset)
+class PasswordResetAdmin(admin.ModelAdmin):
+    list_display = (
+        "user",
+        "created_at",
+        "expires_at",
+        "confirmed_at",
+        "is_expired",
+        "ip_address",
+    )
+    search_fields = ("user__email", "user__username", "ip_address")
+    list_filter = ("confirmed_at", "created_at")
+    ordering = ("-created_at",)
+    readonly_fields = ("token", "created_at", "expires_at", "confirmed_at", "ip_address")
+
+    def get_queryset(self, request):
+        """Optimize queryset with select_related."""
+        return super().get_queryset(request).select_related("user")

@@ -358,3 +358,61 @@ class UsernameValidationSerializer(serializers.Serializer):
     """
 
     username = serializers.CharField(required=False, allow_blank=True)
+
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    """
+    Password reset request serializer.
+
+    Accepts email address to send password reset link.
+    """
+
+    email = serializers.EmailField(required=True)
+
+    def validate_email(self, value):
+        """
+        Validate email exists in system.
+        """
+        from .models import User
+
+        # Normalize email
+        email_normalized = value.lower().strip()
+        email_hash = User.hash_email(email_normalized)
+
+        try:
+            User.objects.get(email_hash=email_hash)
+        except User.DoesNotExist:
+            # Don't reveal whether email exists (security best practice)
+            # Return success message regardless
+            pass
+
+        return email_normalized
+
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    """
+    Password reset confirmation serializer.
+
+    Validates token and new password for password reset.
+    """
+
+    token = serializers.CharField(max_length=128, required=True)
+    new_password = serializers.CharField(
+        write_only=True,
+        required=True,
+        validators=[validate_password],
+        style={"input_type": "password"},
+        min_length=8,
+        help_text="New password (minimum 8 characters, must contain uppercase, lowercase, and numbers)",
+    )
+
+    def validate_new_password(self, value):
+        """
+        Validate new password strength.
+        """
+        # Django's validate_password already runs
+        # Just ensure it meets minimum requirements
+        if len(value) < 8:
+            raise serializers.ValidationError("Password must be at least 8 characters long.")
+
+        return value
