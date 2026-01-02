@@ -6,17 +6,11 @@ import { useEffect, useState } from "react";
 import { useBlocker } from "react-router-dom";
 import ThemeSelector from "@/components/settings/ThemeSelector";
 import LanguageSelector from "@/components/settings/LanguageSelector";
-import ExportSettings from "@/components/settings/ExportSettings";
 import MapTypeSelector from "@/components/settings/MapTypeSelector";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getSettings, updateSettings } from "@/api/settings";
-import type {
-  UserPreferences,
-  ThemeMode,
-  ExportFormat,
-  MapType,
-} from "@/types/settings";
+import type { UserPreferences, ThemeMode, MapType } from "@/types/settings";
 import "./SettingsPage.css";
 
 export function SettingsPage() {
@@ -37,7 +31,6 @@ export function SettingsPage() {
   // Form state
   const [themeMode, setThemeMode] = useState<ThemeMode>(contextThemeMode);
   const [language, setLanguage] = useState<string>(contextLanguage);
-  const [exportFormat, setExportFormat] = useState<ExportFormat>("geojson");
   const [defaultMapType, setDefaultMapType] = useState<MapType>("osm");
 
   // Block navigation when there are unsaved changes
@@ -56,7 +49,6 @@ export function SettingsPage() {
       setPreferences(data);
       setThemeMode(data.theme_mode);
       setLanguage(data.language);
-      setExportFormat(data.export_format);
       setDefaultMapType(data.default_map_type);
     } catch (err) {
       setError(t("settings.errorLoading", "Failed to load settings"));
@@ -120,12 +112,6 @@ export function SettingsPage() {
     }
   };
 
-  const handleExportFormatChange = (format: ExportFormat) => {
-    setExportFormat(format);
-    setIsDirty(true);
-    setSuccessMessage(null);
-  };
-
   const handleMapTypeChange = (mapType: MapType) => {
     setDefaultMapType(mapType);
     setIsDirty(true);
@@ -139,7 +125,6 @@ export function SettingsPage() {
       // Theme is already persisted via context, only update other settings
       const updated = await updateSettings({
         language,
-        export_format: exportFormat,
         default_map_type: defaultMapType,
       });
       setPreferences(updated);
@@ -240,19 +225,6 @@ export function SettingsPage() {
             <LanguageSelector
               value={language}
               onChange={handleLanguageChange}
-            />
-          </div>
-        </section>
-
-        <section className="settings-section">
-          <h2>{t("settings.dataExport", "Data Export")}</h2>
-          <div className="setting-group">
-            <label htmlFor="export-settings" className="setting-label">
-              {t("settings.defaultExportFormat", "Default Export Format")}
-            </label>
-            <ExportSettings
-              value={exportFormat}
-              onChange={handleExportFormatChange}
             />
           </div>
         </section>

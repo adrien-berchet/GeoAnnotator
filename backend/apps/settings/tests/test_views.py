@@ -43,7 +43,7 @@ class TestGetUserPreferences:
         # Signal auto-creates preferences, so we retrieve and update them
         preferences = user.preferences
         preferences.theme = "dark"
-        preferences.export_format = "kml"
+        preferences.default_map_type = "satellite"
         preferences.save()
 
         url = "/api/v1/settings/"
@@ -51,7 +51,7 @@ class TestGetUserPreferences:
 
         assert response.status_code == status.HTTP_200_OK
         assert response.data["theme_mode"] == "dark"
-        assert response.data["export_format"] == "kml"
+        assert response.data["default_map_type"] == "satellite"
 
     def test_response_matches_schema(self, authenticated_client, user):
         """Test that response matches expected schema."""
@@ -66,7 +66,7 @@ class TestGetUserPreferences:
         assert "id" in response.data
         assert "language" in response.data
         assert "theme_mode" in response.data
-        assert "export_format" in response.data
+        assert "default_map_type" in response.data
         assert "created_at" in response.data
         assert "updated_at" in response.data
 
@@ -140,7 +140,7 @@ class TestPatchUserPreferences:
         assert "id" in response.data
         assert "language" in response.data
         assert "theme_mode" in response.data
-        assert "export_format" in response.data
+        assert "default_map_type" in response.data
         assert "created_at" in response.data
         assert "updated_at" in response.data
 
@@ -198,7 +198,7 @@ class TestSettingsIntegration:
         preferences = user.preferences
         assert preferences.language == "en"
         assert preferences.theme == "auto"
-        assert preferences.export_format == "geojson"
+        assert preferences.default_map_type == "osm"
 
     def test_preferences_persist_after_logout_login(self, api_client):
         """Test that preferences persist after logout/login."""
@@ -215,7 +215,7 @@ class TestSettingsIntegration:
         # "Login" and update
         api_client.force_authenticate(user=user)
         url = "/api/v1/settings/"
-        api_client.patch(url, {"export_format": "kml"}, format="json")
+        api_client.patch(url, {"default_map_type": "satellite"}, format="json")
 
         # "Logout"
         api_client.force_authenticate(user=None)
@@ -226,7 +226,7 @@ class TestSettingsIntegration:
 
         assert response.status_code == status.HTTP_200_OK
         assert response.data["theme_mode"] == "dark"
-        assert response.data["export_format"] == "kml"
+        assert response.data["default_map_type"] == "satellite"
 
     def test_per_user_isolation(self, api_client):
         """Test that User A changes don't affect User B."""
@@ -250,7 +250,7 @@ class TestSettingsIntegration:
         # User A updates their preferences
         api_client.force_authenticate(user=user_a)
         url = "/api/v1/settings/"
-        api_client.patch(url, {"export_format": "kml"}, format="json")
+        api_client.patch(url, {"default_map_type": "satellite"}, format="json")
 
         # User B's preferences should be unchanged
         api_client.force_authenticate(user=user_b)
@@ -258,4 +258,4 @@ class TestSettingsIntegration:
 
         assert response.status_code == status.HTTP_200_OK
         assert response.data["theme_mode"] == "light"
-        assert response.data["export_format"] == "geojson"  # Unchanged
+        assert response.data["default_map_type"] == "osm"  # Unchanged

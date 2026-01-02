@@ -27,7 +27,6 @@ class UserPreferencesSerializer(serializers.ModelSerializer):
             "id",
             "language",
             "theme_mode",
-            "export_format",
             "default_map_type",
             "created_at",
             "updated_at",
@@ -40,15 +39,6 @@ class UserPreferencesSerializer(serializers.ModelSerializer):
         if value not in valid_themes:
             raise serializers.ValidationError(
                 f"Invalid theme: {value}. Must be one of: {', '.join(valid_themes)}"
-            )
-        return value
-
-    def validate_export_format(self, value):
-        """Validate export_format field."""
-        valid_formats = dict(UserPreferences.EXPORT_FORMAT_CHOICES).keys()
-        if value not in valid_formats:
-            raise serializers.ValidationError(
-                f"Invalid export format: {value}. Must be one of: {', '.join(valid_formats)}"
             )
         return value
 

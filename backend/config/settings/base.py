@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "corsheaders",
     # Local apps
+    "apps.core",
     "apps.authentication",
     "apps.points",
     "apps.annotations",

@@ -51,6 +51,25 @@
   font-size: var(--font-size-sm);
 }
 
+/* Form field footer - for links below input fields */
+.form-field-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--spacing-xs);
+}
+
+.forgot-password-link {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+}
+
+.forgot-password-link:hover {
+  text-decoration: underline;
+  color: var(--color-primary-hover);
+}
+
 /* Resend confirmation notice */
 .resend-confirmation-notice {
   background-color: var(--color-bg-secondary);

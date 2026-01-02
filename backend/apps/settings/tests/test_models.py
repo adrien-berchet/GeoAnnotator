@@ -27,7 +27,7 @@ class TestUserPreferencesModel:
 
         assert preferences.language == "en"
         assert preferences.theme == "auto"
-        assert preferences.export_format == "geojson"
+        assert preferences.default_map_type == "osm"
 
     def test_one_to_one_relationship(self):
         """Test that User and UserPreferences have one-to-one relationship."""
@@ -54,11 +54,6 @@ class TestUserPreferencesModel:
 
         # Test invalid theme
         preferences = UserPreferences(user=user, theme="invalid")
-        with pytest.raises(ValidationError):
-            preferences.full_clean()
-
-        # Test invalid export_format
-        preferences = UserPreferences(user=user, export_format="invalid")
         with pytest.raises(ValidationError):
             preferences.full_clean()
 

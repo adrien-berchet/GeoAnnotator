@@ -28,6 +28,8 @@ from .serializers import EmailChangeSerializer
 from .serializers import EmailConfirmSerializer
 from .serializers import LoginSerializer
 from .serializers import PasswordChangeSerializer
+from .serializers import PasswordResetConfirmSerializer
+from .serializers import PasswordResetRequestSerializer
 from .serializers import RefreshTokenSerializer
 from .serializers import RegisterSerializer
 from .serializers import UsernameUpdateSerializer
@@ -36,6 +38,7 @@ from .serializers import UserSerializer
 from .services import AccountDeletionTokenGenerator
 from .services import AuthenticationService
 from .services import EmailConfirmationService
+from .services import PasswordResetService
 from .services import log_account_operation
 from .services import send_deletion_confirmation
 from .services import soft_delete_user
@@ -480,6 +483,8 @@ class PasswordChangeAPIView(APIView):
     """
     POST /api/account/password-change/
     Change user password (requires old password verification).
+
+    Sends security notification email after successful password change.
     """
 
     permission_classes = [IsAuthenticated]
@@ -499,7 +504,74 @@ class PasswordChangeAPIView(APIView):
         # Log operation
         log_account_operation(user, "PASSWORD_CHANGED", request)
 
+        # Send security notification email
+        self._send_password_change_notification(user, request)
+
         return Response({"detail": "Password changed successfully."}, status=status.HTTP_200_OK)
+
+    def _send_password_change_notification(self, user, request):
+        """Send security notification email after password change."""
+        from django.conf import settings
+        from django.core.mail import send_mail
+        from django.template.loader import render_to_string
+        from django.utils import timezone
+
+        from .services import PasswordResetService
+        from .tasks import send_email_async
+
+        # Get request details for security audit
+        x_forwarded_for = request.headers.get("x-forwarded-for")
+        if x_forwarded_for:
+            ip_address = x_forwarded_for.split(",")[0].strip()
+        else:
+            ip_address = request.META.get("REMOTE_ADDR", "Unknown")
+
+        user_agent = request.headers.get("user-agent", "")
+
+        # Generate a password reset token for compromised account recovery
+        reset_token = PasswordResetService.generate_reset_token(user, request)
+
+        # Get frontend URL from settings
+        frontend_url = getattr(settings, "FRONTEND_URL", "http://localhost:5173")
+        reset_password_url = f"{frontend_url}/reset-password/confirm?token={reset_token}"
+
+        # Email context
+        context = {
+            "user": user,
+            "timestamp": timezone.now().strftime("%Y-%m-%d %H:%M:%S UTC"),
+            "ip_address": ip_address,
+            "user_agent": user_agent[:100] if user_agent else None,  # Truncate long user agents
+            "reset_password_url": reset_password_url,
+        }
+
+        # Render email templates
+        html_message = render_to_string("emails/password_changed_notification.html", context)
+        text_message = render_to_string("emails/password_changed_notification.txt", context)
+
+        # Send email (async if Celery available)
+        subject = "Password Changed - GeoAnnotator"
+        from_email = settings.DEFAULT_FROM_EMAIL
+        to_email = str(user.email)
+
+        try:
+            # Try async email sending via Celery
+            send_email_async.delay(
+                subject=subject,
+                message=text_message,
+                from_email=from_email,
+                recipient_list=[to_email],
+                html_message=html_message,
+            )
+        except Exception:
+            # Fallback to synchronous email
+            send_mail(
+                subject=subject,
+                message=text_message,
+                from_email=from_email,
+                recipient_list=[to_email],
+                html_message=html_message,
+                fail_silently=True,  # Don't fail password change if email fails
+            )
 
 
 class AccountDeletionRequestAPIView(APIView):
@@ -607,3 +679,91 @@ class UsernameValidationAPIView(APIView):
             response_data["error"] = result["errors"][0]  # Return first error
 
         return Response(response_data, status=status.HTTP_200_OK)
+
+
+class PasswordResetRequestView(APIView):
+    """
+    POST /api/auth/password-reset/
+    Request password reset by email.
+
+    Rate limit: 3 requests per hour per IP address
+    """
+
+    permission_classes = [AllowAny]
+    serializer_class = PasswordResetRequestSerializer
+
+    @ratelimit(key="ip", rate="3/h", method="POST")
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        email = serializer.validated_data["email"]
+
+        # Find user by email_hash
+        email_hash = User.hash_email(email)
+        try:
+            user = User.objects.get(email_hash=email_hash)
+
+            # Generate reset token
+            token = PasswordResetService.generate_reset_token(user, request)
+
+            # Send reset email
+            PasswordResetService.send_reset_email(user, token)
+
+            # Log the request
+            log_account_operation(
+                user=user,
+                operation="PASSWORD_RESET_REQUESTED",
+                request=request,
+                details={"email": email},
+            )
+
+        except User.DoesNotExist:
+            # Don't reveal whether email exists (security best practice)
+            # Return success message regardless
+            pass
+
+        # Always return success to prevent email enumeration
+        return Response(
+            {
+                "message": "If an account with that email exists, "
+                "a password reset link has been sent."
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+class PasswordResetConfirmView(APIView):
+    """
+    POST /api/auth/password-reset/confirm/
+    Confirm password reset with token and new password.
+
+    Rate limit: 5 confirmations per hour per IP address
+    """
+
+    permission_classes = [AllowAny]
+    serializer_class = PasswordResetConfirmSerializer
+
+    @ratelimit(key="ip", rate="5/h", method="POST")
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        token = serializer.validated_data["token"]
+        new_password = serializer.validated_data["new_password"]
+
+        # Confirm password reset
+        success, error_message = PasswordResetService.confirm_password_reset(
+            token, new_password, request
+        )
+
+        if not success:
+            return Response(
+                {"detail": error_message},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        return Response(
+            {"message": "Password has been reset successfully. You can now log in."},
+            status=status.HTTP_200_OK,
+        )

@@ -23,10 +23,7 @@ export async function getSettings(): Promise<UserPreferences> {
  */
 export async function updateSettings(
   updates: Partial<
-    Pick<
-      UserPreferences,
-      "theme_mode" | "language" | "export_format" | "default_map_type"
-    >
+    Pick<UserPreferences, "theme_mode" | "language" | "default_map_type">
   >,
 ): Promise<UserPreferences> {
   const response = await apiClient.patch<UserPreferences>(

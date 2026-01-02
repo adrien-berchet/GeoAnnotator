@@ -8,7 +8,7 @@
 export type ThemeMode = "auto" | "light" | "dark";
 
 /**
- * Data export format options
+ * Data export format options (used on import/export flows)
  */
 export type ExportFormat = "geojson" | "gpx" | "kml" | "csv" | "zip";
 
@@ -29,7 +29,6 @@ export interface UserPreferences {
   id: string;
   theme_mode: ThemeMode;
   language: string;
-  export_format: ExportFormat;
   default_map_type: MapType;
   created_at: string;
   updated_at: string;

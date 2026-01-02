@@ -21,6 +21,8 @@ import { AccountPage } from "./pages/AccountPage";
 import { EmailConfirmPage } from "./pages/EmailConfirmPage";
 import { RegistrationConfirmPage } from "./pages/RegistrationConfirmPage";
 import { AccountDeleteConfirmPage } from "./pages/AccountDeleteConfirmPage";
+import { PasswordResetRequestPage } from "./pages/PasswordResetRequestPage";
+import { PasswordResetConfirmPage } from "./pages/PasswordResetConfirmPage";
 import { ProtectedRoute } from "./routes/ProtectedRoute";
 import { PublicRoute } from "./routes/PublicRoute";
 import { SharedPointsPage } from "./pages/PlaceholderPages";
@@ -64,6 +66,22 @@ export const router = createBrowserRouter([
         element: (
           <PublicRoute>
             <RegistrationConfirmPage />
+          </PublicRoute>
+        ),
+      },
+      {
+        path: "reset-password",
+        element: (
+          <PublicRoute>
+            <PasswordResetRequestPage />
+          </PublicRoute>
+        ),
+      },
+      {
+        path: "reset-password/confirm",
+        element: (
+          <PublicRoute>
+            <PasswordResetConfirmPage />
           </PublicRoute>
         ),
       },

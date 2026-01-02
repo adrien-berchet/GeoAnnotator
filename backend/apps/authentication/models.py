@@ -408,6 +408,71 @@ class EmailConfirmation(models.Model):
         return f"{status} {self.user} registration"
 
 
+class PasswordReset(models.Model):
+    """
+    Token storage for password reset flow.
+
+    Stores password reset requests until confirmed via token link.
+    Tokens expire after 24 hours for security.
+    """
+
+    user = models.ForeignKey(
+        "User",
+        on_delete=models.CASCADE,
+        related_name="password_resets",
+        help_text="User requesting password reset",
+    )
+
+    token = models.CharField(max_length=128, unique=True, help_text="HMAC-based reset token")
+
+    created_at = models.DateTimeField(auto_now_add=True, help_text="Token creation timestamp")
+
+    expires_at = models.DateTimeField(
+        help_text="Token expiration timestamp (created_at + 24 hours)"
+    )
+
+    confirmed_at = models.DateTimeField(
+        blank=True, null=True, help_text="Timestamp when confirmed, NULL if pending"
+    )
+
+    ip_address = models.GenericIPAddressField(
+        blank=True,
+        null=True,
+        help_text="IP address of the request (for security audit)",
+    )
+
+    class Meta:
+        db_table = "password_resets"
+        verbose_name = "Password Reset"
+        verbose_name_plural = "Password Resets"
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["user"], name="idx_pwd_reset_user"),
+            models.Index(fields=["token"], name="idx_pwd_reset_token"),
+        ]
+
+    @property
+    def is_expired(self):
+        """Check if token has expired."""
+        return timezone.now() > self.expires_at
+
+    @property
+    def is_confirmed(self):
+        """Check if password reset has been confirmed."""
+        return self.confirmed_at is not None
+
+    def save(self, *args, **kwargs):
+        """Set expires_at if not already set (24 hours from creation)."""
+        if not self.expires_at:
+            self.expires_at = timezone.now() + timedelta(hours=24)
+
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        status = "✓" if self.confirmed_at else ("⏰" if not self.is_expired else "❌")
+        return f"{status} Password reset for {self.user}"
+
+
 class AccountLog(models.Model):
     """
     Audit trail for sensitive account operations.
@@ -420,6 +485,8 @@ class AccountLog(models.Model):
         ("USERNAME_CHANGED", "Username Changed"),
         ("EMAIL_CHANGED", "Email Changed"),
         ("PASSWORD_CHANGED", "Password Changed"),
+        ("PASSWORD_RESET_REQUESTED", "Password Reset Requested"),
+        ("PASSWORD_RESET_CONFIRMED", "Password Reset Confirmed"),
         ("ACCOUNT_DELETED", "Account Deleted"),
         ("EMAIL_CHANGE_REQUESTED", "Email Change Requested"),
         ("EMAIL_CHANGE_CONFIRMED", "Email Change Confirmed"),

@@ -20,6 +20,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from apps.authentication.models import AccountLog
 from apps.authentication.models import EmailConfirmation
+from apps.authentication.models import PasswordReset
 from apps.authentication.models import User
 from apps.authentication.tasks import send_email_async
 from apps.sharing.models import Share
@@ -761,3 +762,178 @@ def log_account_operation(user, operation: str, request=None, details: dict = No
         user_agent=user_agent,
         details=details or {},
     )
+
+
+class PasswordResetService:
+    """Service for password reset flow with HMAC-based tokens."""
+
+    @staticmethod
+    def generate_reset_token(user: User, request=None) -> str:
+        """
+        Generate HMAC-based password reset token.
+
+        Args:
+            user: User object
+            request: Optional request object for IP logging
+
+        Returns:
+            str: HMAC-based token (128 characters)
+        """
+        # Generate token using HMAC with user ID, timestamp, and email
+        timestamp = str(timezone.now().timestamp())
+        message = f"{user.id}:{user.email}:{timestamp}:password_reset"
+        token = hmac.new(
+            settings.SECRET_KEY.encode(),
+            message.encode(),
+            hashlib.sha256,
+        ).hexdigest()
+
+        # Get IP address for audit trail
+        ip_address = None
+        if request:
+            x_forwarded_for = request.headers.get("x-forwarded-for")
+            if x_forwarded_for:
+                ip_address = x_forwarded_for.split(",")[0].strip()
+            else:
+                ip_address = request.META.get("REMOTE_ADDR")
+
+        # Delete any existing pending reset requests for this user
+        PasswordReset.objects.filter(
+            user=user,
+            confirmed_at__isnull=True,
+        ).delete()
+
+        # Create new password reset record
+        PasswordReset.objects.create(
+            user=user,
+            token=token,
+            ip_address=ip_address,
+        )
+
+        return token
+
+    @staticmethod
+    def validate_reset_token(token: str) -> tuple[bool, str | None, PasswordReset | None]:
+        """
+        Validate password reset token.
+
+        Args:
+            token: Reset token string
+
+        Returns:
+            tuple: (is_valid, error_message, reset_object)
+                - is_valid: True if token is valid
+                - error_message: Error message if invalid, None otherwise
+                - reset_object: PasswordReset object if valid, None otherwise
+        """
+        try:
+            reset = PasswordReset.objects.get(token=token)
+
+            # Check if already confirmed
+            if reset.is_confirmed:
+                return False, "This password reset link has already been used.", None
+
+            # Check if expired
+            if reset.is_expired:
+                return (
+                    False,
+                    "This password reset link has expired. Please request a new one.",
+                    None,
+                )
+
+            # Valid token
+            return True, None, reset
+
+        except PasswordReset.DoesNotExist:
+            return False, "Invalid password reset link.", None
+
+    @staticmethod
+    def confirm_password_reset(
+        token: str, new_password: str, request=None
+    ) -> tuple[bool, str | None]:
+        """
+        Confirm password reset with token and new password.
+
+        Args:
+            token: Reset token string
+            new_password: New password
+            request: Optional request object for logging
+
+        Returns:
+            tuple: (success, error_message)
+        """
+        is_valid, error_message, reset = PasswordResetService.validate_reset_token(token)
+
+        if not is_valid:
+            return False, error_message
+
+        user = reset.user
+
+        # Update user password
+        user.set_password(new_password)
+        user.save(update_fields=["password"])
+
+        # Mark reset as completed
+        reset.confirmed_at = timezone.now()
+        reset.save(update_fields=["confirmed_at"])
+
+        # Log the password reset
+        log_account_operation(
+            user=user,
+            operation="PASSWORD_RESET_CONFIRMED",
+            request=request,
+            details={"email": str(user.email)},
+        )
+
+        return True, None
+
+    @staticmethod
+    def send_reset_email(user: User, token: str) -> None:
+        """
+        Send password reset email to user with token link.
+
+        Args:
+            user: User object
+            token: Reset token
+        """
+        # Get frontend URL from settings
+        frontend_url = getattr(settings, "FRONTEND_URL", "http://localhost:5173")
+
+        # Build reset link
+        reset_link = f"{frontend_url}/reset-password/confirm?token={token}"
+
+        # Email context
+        context = {
+            "user": user,
+            "reset_link": reset_link,
+            "expiry_hours": 24,
+        }
+
+        # Render email templates
+        html_message = render_to_string("emails/password_reset.html", context)
+        text_message = render_to_string("emails/password_reset.txt", context)
+
+        # Send email (async if Celery available)
+        subject = "Reset Your Password"
+        from_email = settings.DEFAULT_FROM_EMAIL
+        to_email = str(user.email)
+
+        # Try async email sending via Celery
+        try:
+            send_email_async.delay(
+                subject=subject,
+                message=text_message,
+                from_email=from_email,
+                recipient_list=[to_email],
+                html_message=html_message,
+            )
+        except Exception:
+            # Fallback to synchronous email
+            send_mail(
+                subject=subject,
+                message=text_message,
+                from_email=from_email,
+                recipient_list=[to_email],
+                html_message=html_message,
+                fail_silently=False,
+            )
