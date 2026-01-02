@@ -12,7 +12,7 @@ from .base import *
 DEBUG = False
 
 # Production hosts (set via environment variable)
-ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "").split(",")
+ALLOWED_HOSTS = [host.strip() for host in os.environ.get("ALLOWED_HOSTS", "").split(",") if host.strip()]
 
 # Add production-specific apps
 INSTALLED_APPS += [
