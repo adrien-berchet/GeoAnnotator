@@ -250,16 +250,33 @@ CELERY_BROKER_TRANSPORT_OPTIONS = {
     # How long to wait for a message before returning (seconds)
     # Higher = fewer Redis queries when idle, but slower task pickup
     "visibility_timeout": 43200,  # 12 hours (tasks won't be retried for 12h if worker dies)
-    # Socket timeout for Redis connections
+    # Socket timeout - this affects the BRPOP blocking timeout
     "socket_timeout": 30,
     # Connection timeout
     "socket_connect_timeout": 30,
+    # Keep connection alive to reduce reconnection overhead
+    "socket_keepalive": True,
+    # Health check interval (seconds) - reduce frequency of health pings
+    "health_check_interval": 60,
 }
 
-# Worker will wait longer between polling when queue is empty
-# This uses exponential backoff: starts at 0.1s, doubles up to max
+# Disable broker heartbeat to reduce Redis queries
+# Heartbeat is useful for detecting dead connections quickly, but causes extra queries
+CELERY_BROKER_HEARTBEAT = 0  # Disable heartbeat
+
+# Worker configuration to reduce polling
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 CELERY_WORKER_PREFETCH_MULTIPLIER = 1  # Fetch one task at a time
+CELERY_WORKER_CONCURRENCY = 1  # Single worker process (overridden by --concurrency flag)
+
+# Disable worker gossip, mingle, and heartbeat to reduce Redis traffic
+# These are used for multi-worker coordination, not needed for single worker
+CELERY_WORKER_ENABLE_REMOTE_CONTROL = False  # Disable remote control commands
+CELERY_WORKER_SEND_TASK_EVENTS = False  # Don't send task events
+CELERY_TASK_SEND_SENT_EVENT = False  # Don't send task-sent events
+
+# Event loop settings - increase drain timeout to reduce polling frequency
+CELERY_BROKER_POOL_LIMIT = 1  # Single connection pool
 
 # SSL/TLS configuration for external Redis (Upstash, Redis Cloud)
 # Required when using rediss:// (SSL) connections

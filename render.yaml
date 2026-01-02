@@ -73,7 +73,8 @@ services:
     plan: starter  # Free tier with limitations (sleeps after 15min inactivity)
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
-    dockerCommand: celery -A config worker --loglevel=info --concurrency=2
+    # Using solo pool to minimize Redis queries; disabled gossip/mingle/heartbeat
+    dockerCommand: celery -A config worker --loglevel=info --pool=solo --without-gossip --without-mingle --without-heartbeat
     envVars:
       - key: PYTHON_VERSION
         value: 3.11

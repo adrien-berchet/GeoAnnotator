@@ -142,7 +142,8 @@ services:
       dockerfile: Dockerfile
       target: production
     container_name: geoannotator_celery_worker
-    command: celery -A config worker --loglevel=info
+    # Using solo pool to minimize Redis queries; disabled gossip/mingle/heartbeat
+    command: celery -A config worker --loglevel=info --pool=solo --without-gossip --without-mingle --without-heartbeat
     environment:
       DEBUG: ${DEBUG:-True}
       SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-production}
