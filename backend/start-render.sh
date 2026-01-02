@@ -47,8 +47,16 @@ echo "============================================================"
 echo ""
 
 # Start Celery Worker in background
+# Using solo pool (single process) to minimize Redis queries
+# Disabled: gossip, mingle, heartbeat - these cause extra Redis traffic
 echo "🔄 Starting Celery Worker..."
-celery -A config worker --loglevel=info --concurrency=2 &
+celery -A config worker \
+    --loglevel=info \
+    --pool=solo \
+    --without-gossip \
+    --without-mingle \
+    --without-heartbeat \
+    &
 CELERY_WORKER_PID=$!
 
 # Start Celery Beat in background
