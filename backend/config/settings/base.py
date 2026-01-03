@@ -259,6 +259,8 @@ CELERY_BROKER_TRANSPORT_OPTIONS = {
     "socket_keepalive": True,
     # Health check interval (seconds) - reduce frequency of health pings
     "health_check_interval": 60,
+    # Polling interval (seconds) - how often to check for new messages
+    "polling_interval": int(os.environ.get("CELERY_POLLING_INTERVAL", 10)),
 }
 
 # Disable broker heartbeat to reduce Redis queries
