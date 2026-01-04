@@ -3,6 +3,8 @@ Core utility views for system diagnostics.
 """
 
 import logging
+import time
+from threading import Lock
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -19,6 +21,12 @@ from apps.core.ratelimit import ratelimit
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
+
+# In-memory cache for database health check
+# Cache duration: 30 minutes (1800 seconds)
+DB_HEALTH_CACHE_DURATION = 1800
+_db_health_cache = {"result": None, "timestamp": 0}
+_db_health_cache_lock = Lock()
 
 
 @api_view(["GET"])
@@ -165,14 +173,40 @@ def metrics(request):
 
 
 def _check_database():
-    """Check database connectivity."""
+    """
+    Check database connectivity with caching.
+
+    Database health is cached for 30 minutes to reduce load on free-tier database.
+    Cache is per-process and thread-safe.
+    """
+    current_time = time.time()
+
+    # Check if we have a valid cached result
+    with _db_health_cache_lock:
+        if _db_health_cache["result"] is not None and (
+            current_time - _db_health_cache["timestamp"] < DB_HEALTH_CACHE_DURATION
+            and _db_health_cache["result"].get("healthy", False)
+        ):
+            # Return cached result with indicator
+            cached_result = _db_health_cache["result"].copy()
+            cached_result["cached"] = True
+            return cached_result
+
+    # Perform actual database check
     try:
         with connection.cursor() as cursor:
             cursor.execute("SELECT 1")
-        return {"healthy": True, "message": "Database connection successful"}
+        result = {"healthy": True, "message": "Database connection successful", "cached": False}
     except Exception as e:
         logger.error("Database health check failed", exc_info=True)
-        return {"healthy": False, "message": f"Database error: {str(e)}"}
+        result = {"healthy": False, "message": f"Database error: {str(e)}", "cached": False}
+
+    # Update cache
+    with _db_health_cache_lock:
+        _db_health_cache["result"] = result.copy()
+        _db_health_cache["timestamp"] = current_time
+
+    return result
 
 
 def _check_redis():
