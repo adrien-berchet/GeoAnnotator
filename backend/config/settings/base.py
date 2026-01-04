@@ -303,6 +303,12 @@ CORS_ALLOWED_ORIGINS = [origin.strip() for origin in _cors_origins.split(",") if
 # Frontend URL for email confirmation links
 FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:3000")
 
+# Health check configuration
+# Database health check cache duration (in seconds)
+# Default: 1800 seconds (30 minutes)
+# Set to 0 to disable caching (check database on every health check)
+DB_HEALTH_CACHE_DURATION = int(os.environ.get("DB_HEALTH_CACHE_DURATION", "1800"))
+
 # Sentry Configuration for Error Tracking and Performance Monitoring
 # Get Sentry DSN from environment variable (optional)
 SENTRY_DSN = os.environ.get("SENTRY_DSN", "")
