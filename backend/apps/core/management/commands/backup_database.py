@@ -270,6 +270,10 @@ class Command(BaseCommand):
             if "url" not in db_config and db_config.get("password"):
                 env["PGPASSWORD"] = db_config["password"]
 
+            # Ensure SSL is required for managed databases (e.g., Neon)
+            # This is required even when using individual connection parameters
+            env["PGSSLMODE"] = "require"
+
             # Run pg_dump and compress on-the-fly
             self._log(f"Running: {' '.join(cmd[:-1])} [password hidden]")
 
