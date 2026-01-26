@@ -279,14 +279,23 @@ GeoAnnotator/
 │   ├── vite.config.ts
 │   └── vitest.config.ts
 ├── docs/
-│   ├── api.md                 # REST API documentation
-│   ├── deployment.md          # Production deployment guide
-│   ├── markdown-annotations.md # Markdown usage guide
-│   └── map-popup-design.md    # Map popup design docs
+│   ├── api.md                           # REST API documentation
+│   ├── deployment.md                    # Production deployment guide
+│   ├── deployment-render-neon.md        # Render + Neon deployment
+│   ├── deployment-render.md             # Render deployment (French)
+│   ├── markdown-annotations.md          # Markdown usage guide
+│   ├── database-backup-troubleshooting.md # Backup error fixes
+│   ├── email-deliverability.md          # Email configuration
+│   ├── celery-redis-setup.md            # Background tasks setup
+│   ├── mailjet-setup.md                 # Mailjet email service
+│   └── [20+ other technical guides]
 ├── docker-compose.yml         # Development stack
 ├── docker-compose.prod.yml    # Production overrides
 ├── Makefile                   # Development commands
 ├── MONITORING.md              # Observability documentation
+├── RENDER.md                  # Quick deploy guide
+├── DOCKER.md                  # Docker usage guide
+├── QUICKSTART.md              # Local development setup
 ├── CODE_QUALITY_REVIEW.md     # Code quality analysis
 └── .pre-commit-config.yaml    # Pre-commit hooks
 ```
@@ -343,10 +352,22 @@ npm test src/components/auth/LoginForm.test.tsx
 
 ## Documentation
 
+> **📖 Complete Documentation Index**: See [docs/INDEX.md](docs/INDEX.md) for a comprehensive list of all 27 guides organized by category.
+
+### General
 - **[API Documentation](docs/api.md)** - Complete REST API reference with endpoints, request/response formats, and error codes
 - **[Markdown Annotations Guide](docs/markdown-annotations.md)** - Learn how to use Markdown formatting in text annotations
-- **[Deployment Guide](docs/deployment.md)** - Production deployment instructions (Docker, manual, Nginx, SSL)
 - **[Monitoring & Observability](MONITORING.md)** - Sentry integration, health checks, metrics, and logging
+
+### Deployment
+- **[Quick Deploy Guide](RENDER.md)** - Fast deployment to Render.com + Neon.tech
+- **[Complete Deployment Guide](docs/deployment-render-neon.md)** - Detailed setup for Render.com with Neon database
+- **[Deployment Guide](docs/deployment.md)** - Production deployment instructions (Docker, manual, Nginx, SSL)
+
+### Troubleshooting
+- **[Database Backup Troubleshooting](docs/database-backup-troubleshooting.md)** - Fix "Control plane request failed" and other backup errors
+- **[Email Deliverability Guide](docs/email-deliverability.md)** - Configure and troubleshoot email sending
+- **[Celery Redis Setup](docs/celery-redis-setup.md)** - Configure background task processing
 
 ## License
 
