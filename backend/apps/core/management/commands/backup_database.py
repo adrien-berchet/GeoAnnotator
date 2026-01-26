@@ -20,6 +20,17 @@ Requirements:
     - boto3 for S3 uploads
     - AWS credentials configured (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
     - S3 bucket configured (AWS_STORAGE_BUCKET_NAME)
+
+Important for Neon.tech and managed databases:
+    If using Neon.tech or other managed PostgreSQL with connection pooling,
+    set BACKUP_DATABASE_URL environment variable with the DIRECT connection URL
+    (not the pooled connection URL). The pooler URL will cause "Control plane
+    request failed" errors with pg_dump.
+
+    Example:
+        BACKUP_DATABASE_URL=postgresql://user:pass@ep-xxx.region.aws.neon.tech/db?sslmode=require&options=endpoint%3Dep-xxx
+
+    If BACKUP_DATABASE_URL is not set, DATABASE_URL will be used instead.
 """
 
 import gzip
@@ -184,6 +195,22 @@ class Command(BaseCommand):
     def _get_database_config(self):
         """Extract database configuration from Django settings."""
         db_settings = settings.DATABASES["default"]
+
+        # Use BACKUP_DATABASE_URL if available (direct connection for pg_dump)
+        # This is needed for Neon.tech and other managed databases that use connection pooling
+        # The pooler URL won't work with pg_dump, so we need the direct connection URL
+        if "BACKUP_DATABASE_URL" in os.environ:
+            database_url = os.environ["BACKUP_DATABASE_URL"]
+            parsed = urlparse(database_url)
+
+            return {
+                "host": parsed.hostname,
+                "port": parsed.port or 5432,
+                "name": parsed.path.lstrip("/"),
+                "user": parsed.username,
+                "password": parsed.password,
+                "url": database_url,  # Keep for pg_dump
+            }
 
         # Handle DATABASE_URL if present (Neon, Heroku, etc.)
         if "DATABASE_URL" in os.environ:

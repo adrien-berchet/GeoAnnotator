@@ -787,6 +787,10 @@ aws s3api head-object \
 
 ### Troubleshooting
 
+> **📖 Comprehensive Guide**: For detailed troubleshooting, including **"Control plane request failed"** errors with Neon.tech and other managed databases, see [Database Backup Troubleshooting](./database-backup-troubleshooting.md).
+
+**Quick Fixes:**
+
 **Error: "pg_dump not found"**
 
 Install PostgreSQL client tools:
@@ -798,6 +802,16 @@ apt-get install postgresql-client
 # Alpine (Docker)
 apk add postgresql-client
 ```
+
+**Error: "Control plane request failed" (Neon.tech)**
+
+Use the **direct connection URL** instead of the pooled connection. Set:
+
+```bash
+BACKUP_DATABASE_URL=postgresql://user:password@ep-xxxxx.region.aws.neon.tech/neondb?sslmode=require&options=endpoint%3Dep-xxxxx
+```
+
+See [Database Backup Troubleshooting](./database-backup-troubleshooting.md) for details.
 
 **Error: "AWS_STORAGE_BUCKET_NAME not configured"**
 
