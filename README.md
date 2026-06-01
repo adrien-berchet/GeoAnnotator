@@ -371,8 +371,4 @@ npm test src/components/auth/LoginForm.test.tsx
 
 ## License
 
-[License information to be added]
-
-## Contact
-
-[Contact information to be added]
+MIT Licence
